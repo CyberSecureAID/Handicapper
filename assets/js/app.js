@@ -69,19 +69,34 @@ async function cargarLista() {
   }
   const titulo = ligaActiva ? t('seccion.partidos') : t('seccion.destacados');
   cont.innerHTML = `<div class="seccion-t">${titulo}</div>` + partidos.map(tarjetaPartido).join('');
-  cont.querySelectorAll('.pmatch').forEach(el => el.onclick = () => abrirDetalle(el.dataset.id, el));
+  const tarjetas = [...cont.querySelectorAll('.pmatch')];
+  tarjetas.forEach(el => el.onclick = () => abrirDetalle(el.dataset.id, el));
+
+  // Selección por defecto en WEB: el próximo partido a jugarse (o el primero),
+  // para que el panel derecho nunca esté vacío. No abre la hoja de móvil.
+  const panel = $('panel');
+  const enWeb = panel && getComputedStyle(panel).display !== 'none';
+  if (enWeb) {
+    const prox = partidos.find(p => p.estado === 'vivo')
+              || partidos.find(p => p.estado === 'proximo')
+              || partidos[0];
+    if (prox) {
+      const el = tarjetas.find(x => x.dataset.id === prox.id);
+      abrirDetalle(prox.id, el, { soloPanel: true });
+    }
+  }
 }
 
 /* -------- Detalle -------- */
-async function abrirDetalle(id, el) {
+async function abrirDetalle(id, el, opts = {}) {
   partidoSel = id;
   document.querySelectorAll('.pmatch').forEach(x => x.classList.toggle('sel', x === el));
   const p = await detallePartido(id);
   const html = detalle(p, { bloquear: false });
   const panel = $('panel'), hoja = $('hoja');
   if (panel) panel.innerHTML = html;
-  if (hoja) { hoja.querySelector('.hoja-cuerpo').innerHTML = html; hoja.classList.add('abierta'); }
-  // Conectar botón compartir (puede estar en panel o en hoja)
+  // En móvil abre la hoja a pantalla completa, salvo que sea selección por defecto.
+  if (hoja && !opts.soloPanel) { hoja.querySelector('.hoja-cuerpo').innerHTML = html; hoja.classList.add('abierta'); }
   document.querySelectorAll('[data-compartir]').forEach(b => b.onclick = async () => {
     const pp = await detallePartido(b.dataset.compartir);
     if (pp) compartirPartido(pp);
