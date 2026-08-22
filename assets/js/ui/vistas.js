@@ -112,7 +112,7 @@ export function detalle(p, opciones = {}) {
     </div>
     <div class="det-vs">
       <div class="col">${escudo(p.local)}<div class="nom">${esc(p.local.nombre)}</div><div class="rec">${esc(p.local.record||'')}</div></div>
-      <div class="mid">VS</div>
+      <div class="mid"><img class="vs-img" src="assets/imagenes/vs.png" alt="VS" onerror="this.replaceWith(document.createTextNode('VS'))"></div>
       <div class="col">${escudo(p.visita)}<div class="nom">${esc(p.visita.nombre)}</div><div class="rec">${esc(p.visita.record||'')}</div></div>
     </div>
     <div class="det-hora">${esc(p.inicio)}</div>
