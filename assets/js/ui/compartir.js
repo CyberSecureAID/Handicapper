@@ -1,36 +1,25 @@
 /* ============================================================
-   COMPARTIR — construye la imagen sobre la PLANTILLA del usuario
-   (assets/imagenes/compartir.jpg). Coloca: logos en los círculos,
-   nombres de equipo (tapando "EQUIPO 1/2") y los valores de la
-   comparación en cada fila. Descarga un PNG.
-
-   Nota: la plantilla trae etiquetas fijas (RÉCORD, PUNTOS POR
-   PARTIDO, ...). Se rellenan las filas cuyo dato exista; el resto
-   queda "--". El RÉCORD se rellena siempre.
+   COMPARTIR — imagen premium sobre la plantilla del usuario
+   (assets/imagenes/compartir.jpg, marco 1254x1254).
+   Composición:
+     - Marca arriba.
+     - Logo de cada equipo ARRIBA de su nombre (nombres hacia afuera).
+     - VS grande en el centro.
+     - Medallón central: logo del equipo FAVORITO + su probabilidad.
+     - Debajo: hasta 11 filas de datos (izquierda / etiqueta / derecha).
    ============================================================ */
+import { t } from './idioma.js';
 
-const ORO = '#E8B84B', AZUL = '#7cc8f5', BL = '#eef5fb', GRIS = '#78848f';
-
-/* Plantilla nativa 1254x1254. Coordenadas en ese sistema. */
+const ORO = '#E8B84B', AZUL = '#5cbdf0', BL = '#eef5fb', GRIS = '#9aa6b2';
 const TPL = 'assets/imagenes/compartir.jpg';
+const VS = 'assets/imagenes/vs.png';
 const N = 1254;
-const FILA_Y0 = 411, FILA_DY = 59.7, X_IZQ = 276, X_DER = 975;
-const CIRC = [{x:132,y:262},{x:1122,y:262}], CIRC_R = 50;
 
-/* Orden de filas de la plantilla y palabras clave para mapear datos */
-const FILAS = [
-  ['record','récord','record'],
-  ['puntos por','carreras','goles a favor','points'],
-  ['puntos en contra','goles en contra','contra'],
-  ['diferencial','dif'],
-  ['% de tiros','fg%','tiros'],
-  ['3pt','triples','3p'],
-  ['tiros libres','ft%','libres'],
-  ['rebotes'],
-  ['asistencias','asist'],
-  ['robos','steals'],
-  ['bloqueos','tapones','blocks'],
-];
+/* posiciones (sistema nativo 1254) */
+const EQ = { izq: 300, der: 954, logoY: 152, logoR: 62, nomY: 258 };
+const VSC = { x: 627, y: 212, w: 200 };
+const FAV = { x: 627, y: 356, w: 340, h: 82 };
+const FILA = { y0: 466, dy: 42, xl: 300, xk: 627, xr: 954, max: 11 };
 
 function cargarImg(url) {
   return new Promise((res) => {
@@ -40,62 +29,70 @@ function cargarImg(url) {
 }
 function fit(g, s, maxW, base, fam) {
   let sz = base; g.font = `800 ${sz}px ${fam}`;
-  while (g.measureText(s).width > maxW && sz > 12) { sz -= 1; g.font = `800 ${sz}px ${fam}`; }
+  while (g.measureText(s).width > maxW && sz > 11) { sz--; g.font = `800 ${sz}px ${fam}`; }
+  return g.font;
 }
-function ctext(g, s, x, y, font, color) {
-  g.font = font; g.fillStyle = color; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillText(s, x, y);
+function C(g, s, x, y, font, color) {
+  g.font = font; g.fillStyle = color; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y);
 }
-function norm(s){ return (s||'').toString().toLowerCase(); }
-
-/* Mapea los datos del partido a las 11 filas de la plantilla */
-function valoresFilas(p) {
-  const filas = FILAS.map(() => ['--','--']);
-  filas[0] = [p.local.record || '--', p.visita.record || '--'];
-  (p.datos || []).forEach(d => {
-    const et = norm(d.etiqueta);
-    for (let i = 1; i < FILAS.length; i++) {
-      if (FILAS[i].some(k => et.includes(k))) { filas[i] = [d.local ?? '--', d.visita ?? '--']; break; }
-    }
-  });
-  return filas;
+function logoEnCirculo(g, im, cx, cy, r, ab, color) {
+  g.save(); g.beginPath(); g.arc(cx, cy, r, 0, Math.PI*2); g.closePath();
+  g.fillStyle = color || '#0b1220'; g.fill();
+  g.clip();
+  if (im) g.drawImage(im, cx-r*0.8, cy-r*0.8, r*1.6, r*1.6);
+  else C(g, ab, cx, cy, `800 ${Math.round(r*0.7)}px "Chakra Petch", sans-serif`, BL);
+  g.restore();
 }
 
 export async function compartirPartido(p) {
-  const [tpl, ll, lv] = await Promise.all([cargarImg(TPL), cargarImg(p.local.logo), cargarImg(p.visita.logo)]);
+  const [tpl, vs, ll, lv] = await Promise.all([cargarImg(TPL), cargarImg(VS), cargarImg(p.local.logo), cargarImg(p.visita.logo)]);
+  const m = p.mercado || {};
+  const localFav = (m.local||0) >= (m.visita||0);
 
   function generar(conLogos) {
     const cv = document.createElement('canvas'); cv.width = N; cv.height = N;
     const g = cv.getContext('2d');
-    if (tpl) g.drawImage(tpl, 0, 0, N, N);
-    else { g.fillStyle = '#0a0d11'; g.fillRect(0,0,N,N); }
+    if (tpl) g.drawImage(tpl, 0, 0, N, N); else { g.fillStyle='#0a0d11'; g.fillRect(0,0,N,N); }
 
-    // Círculos: logo o sigla
-    CIRC.forEach((c, idx) => {
-      const im = conLogos ? (idx===0?ll:lv) : null;
-      const ab = idx===0 ? p.local.abrev : p.visita.abrev;
-      g.save(); g.beginPath(); g.arc(c.x, c.y, CIRC_R, 0, Math.PI*2); g.closePath(); g.clip();
-      g.fillStyle = '#0b1220'; g.fillRect(c.x-CIRC_R, c.y-CIRC_R, CIRC_R*2, CIRC_R*2);
-      if (im) g.drawImage(im, c.x-CIRC_R*0.8, c.y-CIRC_R*0.8, CIRC_R*1.6, CIRC_R*1.6);
-      else ctext(g, ab, c.x, c.y, '800 30px "Chakra Petch", sans-serif', BL);
-      g.restore();
-    });
+    // Marca
+    C(g, 'HANDICAPPER', 627, 60, '800 40px "Chakra Petch", sans-serif', ORO);
 
-    // Placas + nombres (tapan EQUIPO 1/2)
-    const placa = (x0,x1) => { g.fillStyle = '#0a0f17'; g.strokeStyle = 'rgba(255,255,255,.16)'; g.lineWidth = 1;
-      g.beginPath(); g.roundRect(x0,228,x1-x0,84,16); g.fill(); g.stroke(); };
-    placa(186,466); placa(788,1068);
-    fit(g, p.local.nombre.toUpperCase(), 250, 32, '"Chakra Petch", sans-serif');
-    ctext(g, p.local.nombre.toUpperCase(), 326, 270, g.font, BL);
-    fit(g, p.visita.nombre.toUpperCase(), 250, 32, '"Chakra Petch", sans-serif');
-    ctext(g, p.visita.nombre.toUpperCase(), 928, 270, g.font, BL);
+    // Logos arriba + nombres (hacia afuera)
+    logoEnCirculo(g, conLogos?ll:null, EQ.izq, EQ.logoY, EQ.logoR, p.local.abrev, '#0e1830');
+    logoEnCirculo(g, conLogos?lv:null, EQ.der, EQ.logoY, EQ.logoR, p.visita.abrev, '#2a0f14');
+    let f = fit(g, p.local.nombre.toUpperCase(), 300, 30, '"Chakra Petch", sans-serif');
+    C(g, p.local.nombre.toUpperCase(), EQ.izq, EQ.nomY, f, BL);
+    f = fit(g, p.visita.nombre.toUpperCase(), 300, 30, '"Chakra Petch", sans-serif');
+    C(g, p.visita.nombre.toUpperCase(), EQ.der, EQ.nomY, f, BL);
 
-    // Valores por fila
-    const filas = valoresFilas(p);
-    filas.forEach((par, i) => {
-      const y = Math.round(FILA_Y0 + FILA_DY*i);
-      ctext(g, String(par[0]), X_IZQ, y, '800 27px "Chakra Petch", sans-serif', par[0]==='--'?GRIS:ORO);
-      ctext(g, String(par[1]), X_DER, y, '800 27px "Chakra Petch", sans-serif', par[1]==='--'?GRIS:AZUL);
+    // VS grande al centro
+    if (vs) { const h = VSC.w*(vs.height/vs.width);
+      g.save(); g.shadowColor='rgba(0,0,0,.5)'; g.shadowBlur=16; g.shadowOffsetY=5;
+      g.drawImage(vs, VSC.x-VSC.w/2, VSC.y-h/2, VSC.w, h); g.restore();
+    } else C(g, 'VS', VSC.x, VSC.y, '800 64px "Chakra Petch", sans-serif', BL);
+
+    // Medallón favorito (logo + %)
+    const fx = FAV.x, fy = FAV.y;
+    g.fillStyle = 'rgba(16,22,32,.9)'; g.strokeStyle = ORO; g.lineWidth = 2;
+    g.beginPath(); g.roundRect(fx-FAV.w/2, fy-FAV.h/2, FAV.w, FAV.h, 41); g.fill(); g.stroke();
+    const favIm = conLogos ? (localFav?ll:lv) : null;
+    const favAb = localFav ? p.local.abrev : p.visita.abrev;
+    const favPct = localFav ? (m.local||0) : (m.visita||0);
+    const favCol = localFav ? ORO : AZUL;
+    logoEnCirculo(g, favIm, fx-FAV.w/2+45, fy, 33, favAb, localFav?'#0e1830':'#2a0f14');
+    C(g, favPct + '%', fx+35, fy, '800 42px "Chakra Petch", sans-serif', favCol);
+
+    // Filas de datos (hasta 11)
+    const datos = (p.datos || []).slice(0, FILA.max);
+    datos.forEach((dd, i) => {
+      const y = FILA.y0 + FILA.dy*i;
+      let ff = fit(g, String(dd.local), 250, 24, '"Chakra Petch", sans-serif');
+      C(g, String(dd.local), FILA.xl, y, ff, ORO);
+      g.font = '700 19px "Inter", sans-serif';
+      while (g.measureText(String(dd.etiqueta)).width > 320 && parseInt(g.font)>12) g.font = `700 ${parseInt(g.font)-1}px "Inter", sans-serif`;
+      C(g, String(dd.etiqueta), FILA.xk, y, g.font, GRIS);
+      ff = fit(g, String(dd.visita), 250, 24, '"Chakra Petch", sans-serif');
+      C(g, String(dd.visita), FILA.xr, y, ff, AZUL);
     });
     return cv;
   }
@@ -116,6 +113,6 @@ export async function compartirPartido(p) {
     cv.getContext('2d').getImageData(0,0,1,1);   // lanza si CORS contaminó
     descargar(cv);
   } catch (_) {
-    descargar(generar(false));   // sin logos externos, con siglas
+    descargar(generar(false));
   }
 }

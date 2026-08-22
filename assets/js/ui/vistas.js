@@ -25,28 +25,14 @@ function escudo(eq) {
 export function tarjetaPartido(p) {
   const vivo = p.estado === 'vivo';
   const m = p.mercado || {};
-  const tieneEmpate = m.empate != null;
-  const ganaLocal = (m.local || 0) >= (m.visita || 0);
+  const localGana = (m.local || 0) >= (m.visita || 0);
 
-  const barra = `
-    <div class="vs-prob">
-      <div class="titu">${t('prob.titulo')}</div>
-      <div class="cifras">
-        <div class="lado izq ${ganaLocal?'gana':''}">
-          <span class="ab">${esc(p.local.abrev)}</span>
-          <span class="num">${m.local||0}%</span>
-        </div>
-        ${tieneEmpate ? `<div class="empate-mid"><div class="e-num">${m.empate}%</div><div class="e-lb">${t('prob.empate')}</div></div>` : ''}
-        <div class="lado der ${!ganaLocal?'gana':''}">
-          <span class="ab">${esc(p.visita.abrev)}</span>
-          <span class="num">${m.visita||0}%</span>
-        </div>
-      </div>
-      <div class="barra">
-        <i class="s-local" style="width:${m.local||0}%"></i>
-        ${tieneEmpate ? `<i class="s-empate" style="width:${m.empate}%"></i>` : ''}
-        <i class="s-visita" style="width:${m.visita||0}%"></i>
-      </div>
+  const ladoEq = (eq, pct, clase, gana) => `
+    <div class="lado-eq">
+      ${escudo(eq)}
+      <div class="nom">${esc(eq.nombre)}</div>
+      <div class="rec">${esc(eq.record || '')}</div>
+      <div class="pct ${clase} ${gana ? 'gana' : ''}">${pct || 0}%</div>
     </div>`;
 
   const chip = p.analista ? `<div class="tiene-analisis">${IC.estrella} ${t('match.analisis')}</div>` : '';
@@ -57,19 +43,19 @@ export function tarjetaPartido(p) {
       <span class="liga-tag">${esc(p.liga)}</span>
       <span class="hora ${vivo?'vivo':''}">${esc(p.inicio)}</span>
     </div>
-    <div class="equipos">
-      <div class="eq">${escudo(p.local)}
-        <span class="nom">${esc(p.local.nombre)}</span>
-        <span class="rec">${esc(p.local.record||'')}</span>
-        ${p.marcador ? `<span class="marc">${p.marcador.local}</span>` : ''}
+    <div class="duelo">
+      ${ladoEq(p.local, m.local, 'oro', localGana)}
+      <div class="vs-col">
+        <img class="vs-mini" src="assets/imagenes/vs.png" alt="VS" onerror="this.replaceWith(document.createTextNode('VS'))">
+        ${m.empate != null ? `<div class="empate">${t('prob.empate')} ${m.empate}%</div>` : ''}
       </div>
-      <div class="eq">${escudo(p.visita)}
-        <span class="nom">${esc(p.visita.nombre)}</span>
-        <span class="rec">${esc(p.visita.record||'')}</span>
-        ${p.marcador ? `<span class="marc">${p.marcador.visita}</span>` : ''}
-      </div>
+      ${ladoEq(p.visita, m.visita, 'azul', !localGana)}
     </div>
-    ${barra}
+    <div class="barra">
+      <i class="s-local" style="width:${m.local||0}%"></i>
+      ${m.empate != null ? `<i class="s-empate" style="width:${m.empate}%"></i>` : ''}
+      <i class="s-visita" style="width:${m.visita||0}%"></i>
+    </div>
     ${chip}
   </div>`;
 }
@@ -84,6 +70,13 @@ export function detalle(p, opciones = {}) {
       <span class="k">${esc(d.etiqueta)}</span>
       <span class="r">${esc(d.visita)}</span>
     </div>`).join('');
+
+  const cab = `
+    <div class="datos-head">
+      <span class="h-l">${esc(p.local.abrev)}</span>
+      <span class="h-k">${t('det.comparativa')}</span>
+      <span class="h-r">${esc(p.visita.abrev)}</span>
+    </div>`;
 
   const a = p.analista;
   let bloqueAnalista = '';
@@ -116,7 +109,7 @@ export function detalle(p, opciones = {}) {
       <div class="col">${escudo(p.visita)}<div class="nom">${esc(p.visita.nombre)}</div><div class="rec">${esc(p.visita.record||'')}</div></div>
     </div>
     <div class="det-hora">${esc(p.inicio)}</div>
-    <div class="datos-t">${t('det.comparativa')}</div>
+    ${cab}
     ${filas || `<div class="vacio" style="padding:20px">${t('det.sindatos')}</div>`}
     ${bloqueAnalista}
   `;
