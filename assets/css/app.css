@@ -91,70 +91,91 @@
 
 .seccion-t { font-family: var(--display); font-weight: 800; font-size: 16px; color: var(--tinta); margin: 6px 2px 14px; }
 
-/* ---------- Tarjeta de partido ---------- */
+/* ---------- Tarjeta de partido (premium) ---------- */
 .pmatch {
-  background: var(--tarjeta); border: 1px solid var(--linea);
-  border-radius: var(--r-lg); padding: 16px 18px; margin-bottom: 14px;
-  cursor: pointer; transition: border-color var(--trans), transform .12s, box-shadow var(--trans);
+  position: relative;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--tarjeta) 100%, transparent), var(--tarjeta-alta));
+  border: 1px solid var(--linea);
+  border-radius: var(--r-xl); padding: 18px 20px 20px; margin-bottom: 16px;
+  cursor: pointer; overflow: hidden;
+  transition: border-color var(--trans), transform .14s ease, box-shadow var(--trans);
   box-shadow: var(--sombra-tarjeta);
 }
-.pmatch:hover { border-color: rgba(232,184,75,.55); box-shadow: var(--sombra); transform: translateY(-3px); }
+/* filo dorado superior sutil */
+.pmatch::before {
+  content:''; position:absolute; top:0; left:18px; right:18px; height:2px; border-radius:2px;
+  background: linear-gradient(90deg, transparent, rgba(232,184,75,.55), transparent);
+  opacity:.7;
+}
+.pmatch:hover { border-color: rgba(232,184,75,.6); box-shadow: 0 0 0 1px rgba(232,184,75,.12), var(--sombra); transform: translateY(-4px); }
 .pmatch.sel { border-color: var(--oro); box-shadow: 0 0 0 1px var(--oro), var(--sombra); }
 
-.pmatch .cab { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
-.pmatch .liga-tag { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--tinta-3); }
+.pmatch .cab { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.pmatch .liga-tag { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--tinta-3); padding: 3px 8px; border: 1px solid var(--linea); border-radius: 6px; }
 .pmatch .hora { margin-left: auto; font-size: 12px; color: var(--tinta-3); font-weight: 700; }
 .pmatch .hora.vivo { color: var(--rojo); display: inline-flex; align-items: center; gap: 5px; }
-.pmatch .hora.vivo::before { content:''; width: 7px; height: 7px; border-radius: 50%; background: var(--rojo); animation: lat 1.3s infinite; }
+.pmatch .hora.vivo::before { content:''; width: 7px; height: 7px; border-radius: 50%; background: var(--rojo);
+  box-shadow: 0 0 8px var(--rojo); animation: lat 1.3s infinite; }
 @keyframes lat { 50% { opacity: .25; } }
 
-.pmatch .equipos { display: flex; flex-direction: column; gap: 11px; }
-.pmatch .eq { display: flex; align-items: center; gap: 13px; }
+.pmatch .equipos { display: flex; flex-direction: column; gap: 13px; }
+.pmatch .eq { display: flex; align-items: center; gap: 14px; }
 .escudo {
-  width: 38px; height: 38px; border-radius: 10px; flex: 0 0 auto;
+  width: 46px; height: 46px; border-radius: 13px; flex: 0 0 auto;
   display: flex; align-items: center; justify-content: center;
-  background: var(--logo-bg); border: 1px solid var(--escudo-borde); overflow: hidden;
-  box-shadow: var(--sombra-boton);
+  background:
+    radial-gradient(circle at 30% 25%, #ffffff, var(--logo-bg));
+  border: 1px solid var(--escudo-borde); overflow: hidden;
+  box-shadow: var(--sombra-boton), inset 0 1px 0 rgba(255,255,255,.6);
 }
-.escudo img { width: 30px; height: 30px; object-fit: contain; }
-.escudo .fallback { font-family: var(--display); font-weight: 800; font-size: 12px; color: #333; }
-.pmatch .eq .nom { font-weight: 700; font-size: 15.5px; }
+.escudo img { width: 36px; height: 36px; object-fit: contain; }
+.escudo .fallback { font-family: var(--display); font-weight: 800; font-size: 14px; color: #222; }
+.pmatch .eq .nom { font-weight: 700; font-size: 16px; letter-spacing: -.1px; }
 .pmatch .eq .rec { margin-left: 9px; font-size: 12px; color: var(--tinta-3); font-family: var(--mono); }
-.pmatch .eq .marc { margin-left: auto; font-family: var(--mono); font-weight: 800; font-size: 19px; }
+.pmatch .eq .marc { margin-left: auto; font-family: var(--display); font-weight: 800; font-size: 22px; }
 
 /* ============================================================
-   PROBABILIDAD — pieza de alto impacto (enfrentamiento A vs B)
+   PROBABILIDAD — pieza central de alto impacto
    ============================================================ */
 .vs-prob {
-  margin-top: 15px; padding: 14px; border-radius: var(--r-md);
-  background: var(--fondo-2); border: 1px solid var(--linea-suave);
+  margin-top: 17px; padding: 15px 16px 16px; border-radius: var(--r-md);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--fondo-2) 92%, transparent), var(--fondo-2));
+  border: 1px solid var(--linea-suave);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
 }
-.vs-prob .titu { font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--tinta-3); text-align: center; margin-bottom: 9px; }
-.vs-prob .cifras { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 8px; }
-.vs-prob .lado { display: flex; flex-direction: column; }
+.vs-prob .titu { font-family: var(--mono); font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--tinta-3); text-align: center; margin-bottom: 11px; }
+.vs-prob .cifras { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 10px; }
+.vs-prob .lado { display: flex; flex-direction: column; gap: 2px; }
 .vs-prob .lado.der { align-items: flex-end; }
-.vs-prob .lado .ab { font-family: var(--mono); font-size: 11px; color: var(--tinta-3); font-weight: 700; }
-.vs-prob .lado .num { font-family: var(--display); font-weight: 800; font-size: 30px; line-height: 1; }
+.vs-prob .lado .ab { font-family: var(--mono); font-size: 10.5px; color: var(--tinta-3); font-weight: 700; letter-spacing: .06em; }
+.vs-prob .lado .num { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: .9; }
 .vs-prob .lado.izq .num { color: var(--oro); }
 .vs-prob .lado.der .num { color: var(--azul); }
-.vs-prob .lado.gana .num { position: relative; }
-.vs-prob .empate-mid { align-self: center; text-align: center; }
+.vs-prob .lado.gana .num { text-shadow: 0 0 22px currentColor; }   /* leve glow al favorito */
+.vs-prob .empate-mid { align-self: center; text-align: center; padding-bottom: 3px; }
 .vs-prob .empate-mid .e-num { font-family: var(--mono); font-weight: 800; font-size: 15px; color: var(--tinta-2); }
-.vs-prob .empate-mid .e-lb { font-size: 9px; color: var(--tinta-3); text-transform: uppercase; letter-spacing: .08em; }
+.vs-prob .empate-mid .e-lb { font-size: 8.5px; color: var(--tinta-3); text-transform: uppercase; letter-spacing: .1em; }
 
-/* barra segmentada con brillo */
-.vs-prob .barra { position: relative; height: 12px; border-radius: 20px; overflow: hidden;
-  background: var(--linea); display: flex; gap: 2px; }
+/* barra tipo "enfrentamiento" con brillo y costura central */
+.vs-prob .barra { position: relative; height: 14px; border-radius: 20px; overflow: hidden;
+  background: var(--linea); display: flex; gap: 2px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.35); }
 .vs-prob .barra i { display: block; height: 100%; position: relative; }
 .vs-prob .barra .s-local { background: linear-gradient(90deg, var(--oro-2), var(--oro)); }
-.vs-prob .barra .s-empate { background: var(--tinta-3); }
-.vs-prob .barra .s-visita { background: linear-gradient(90deg, var(--azul), #6cc5f0); }
-.vs-prob .barra i::after { content:''; position:absolute; inset:0; background: linear-gradient(180deg, rgba(255,255,255,.28), transparent 60%); }
+.vs-prob .barra .s-empate { background: linear-gradient(180deg, #9aa4b0, var(--tinta-3)); }
+.vs-prob .barra .s-visita { background: linear-gradient(90deg, #6cc5f0, var(--azul)); }
+.vs-prob .barra i::after { content:''; position:absolute; inset:0;
+  background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 55%); }
 
-.tiene-analisis { display: inline-flex; align-items: center; gap: 6px; margin-top: 13px;
-  padding: 6px 12px; border-radius: 8px; background: var(--oro-suave); color: var(--oro);
-  font-size: 11.5px; font-weight: 800; box-shadow: var(--sombra-boton); }
+.tiene-analisis { display: inline-flex; align-items: center; gap: 6px; margin-top: 15px;
+  padding: 7px 13px; border-radius: 9px;
+  background: linear-gradient(180deg, var(--oro-suave), transparent);
+  border: 1px solid rgba(232,184,75,.35);
+  color: var(--oro); font-size: 11.5px; font-weight: 800; box-shadow: var(--sombra-boton); }
 .tiene-analisis svg { width: 13px; height: 13px; }
 
 /* ---------- Panel derecho ---------- */
