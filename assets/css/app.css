@@ -111,7 +111,7 @@
 
 /* ---------- Centro ---------- */
 .centro { min-width: 0; padding: 20px; }
-.pestanas { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+.pestanas { display: none; }   /* ligas ya están en la barra izquierda (web) y en el drawer (móvil) */
 .pestana {
   height: 38px; padding: 0 17px; border: 1px solid var(--linea);
   border-radius: 21px; background: var(--tarjeta); color: var(--tinta-2);
@@ -165,8 +165,10 @@
 .escudo img { width: 36px; height: 36px; object-fit: contain; }
 .escudo .fallback { font-family: var(--display); font-weight: 800; font-size: 14px; color: #222; }
 .pmatch .eq .nom { font-weight: 800; font-size: 17px; letter-spacing: -.2px; color: var(--tinta); }
-.pmatch .eq .rec { margin-left: 10px; font-size: 13px; color: var(--tinta-2); font-family: var(--mono); font-weight: 700;
-  padding: 3px 9px; border-radius: 7px; background: var(--fondo-2); border: 1px solid var(--linea-suave); }
+.pmatch .eq .rec { margin-left: 11px; font-size: 12px; color: var(--tinta-2); font-family: var(--mono); font-weight: 800;
+  letter-spacing: .03em; padding: 4px 10px; border-radius: 999px;
+  background: var(--oro-suave); border: 1px solid rgba(232,184,75,.28); color: var(--oro-2); }
+[data-tema="oscuro"] .pmatch .eq .rec { color: var(--oro); }
 .pmatch .eq .marc { margin-left: auto; font-family: var(--display); font-weight: 800; font-size: 24px; color: var(--oro); }
 
 /* ============================================================
