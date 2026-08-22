@@ -31,6 +31,7 @@ handicapper/
       ui/
         vistas.js
         iconos.js
+        tema.js
       analisis/        (vacia por ahora; se usa en la Fase 2)
 ```
 
