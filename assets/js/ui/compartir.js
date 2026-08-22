@@ -1,25 +1,21 @@
 /* ============================================================
-   COMPARTIR — imagen premium sobre la plantilla del usuario
-   (assets/imagenes/compartir.jpg, marco 1254x1254).
-   Composición:
+   COMPARTIR — imagen premium sobre la plantilla (1254x1254).
      - Marca arriba.
-     - Logo de cada equipo ARRIBA de su nombre (nombres hacia afuera).
-     - VS grande en el centro.
-     - Medallón central: logo del equipo FAVORITO + su probabilidad.
-     - Debajo: hasta 11 filas de datos (izquierda / etiqueta / derecha).
+     - Logos grandes y bajos + VS (imagen) grande al centro.
+     - Nombres grandes con efecto plateado y sombra (3D).
+     - Probabilidad grande con barra.
+     - Datos repartidos para llenar la tarjeta (hasta 11 filas).
+   Textos propios en el idioma activo (inglés por defecto).
    ============================================================ */
 import { t } from './idioma.js';
 
-const ORO = '#E8B84B', AZUL = '#5cbdf0', BL = '#eef5fb', GRIS = '#9aa6b2';
+const ORO = '#E8B84B', ORO2 = '#c79426', AZUL = '#5cbdf0', GRIS = '#96a2ae';
 const TPL = 'assets/imagenes/compartir.jpg';
 const VS = 'assets/imagenes/vs.png';
 const N = 1254;
 
-/* posiciones (sistema nativo 1254) */
-const EQ = { izq: 300, der: 954, logoY: 152, logoR: 62, nomY: 258 };
-const VSC = { x: 627, y: 212, w: 200 };
-const FAV = { x: 627, y: 356, w: 340, h: 82 };
-const FILA = { y0: 466, dy: 42, xl: 300, xk: 627, xr: 954, max: 11 };
+const EQ = { izq: 305, der: 949, logoY: 250, logoR: 80, nomY: 372 };
+const VSC = { x: 627, y: 250, w: 240 };
 
 function cargarImg(url) {
   return new Promise((res) => {
@@ -30,17 +26,29 @@ function cargarImg(url) {
 function fit(g, s, maxW, base, fam) {
   let sz = base; g.font = `800 ${sz}px ${fam}`;
   while (g.measureText(s).width > maxW && sz > 11) { sz--; g.font = `800 ${sz}px ${fam}`; }
-  return g.font;
+  return sz;
 }
 function C(g, s, x, y, font, color) {
   g.font = font; g.fillStyle = color; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(s, x, y);
 }
-function logoEnCirculo(g, im, cx, cy, r, ab, color) {
+/* Texto con efecto plateado (degradado) y sombra 3D */
+function plateado(g, s, x, y, sz) {
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = `800 ${sz}px "Chakra Petch", sans-serif`;
+  const grad = g.createLinearGradient(0, y - sz*0.6, 0, y + sz*0.6);
+  grad.addColorStop(0, '#ffffff'); grad.addColorStop(.5, '#d6dde6'); grad.addColorStop(1, '#9aa6b3');
+  g.save();
+  g.shadowColor = 'rgba(0,0,0,.55)'; g.shadowBlur = 6; g.shadowOffsetX = 2; g.shadowOffsetY = 3;
+  g.fillStyle = grad; g.fillText(s, x, y);
+  g.restore();
+}
+function logoCirc(g, im, cx, cy, r, ab, fondo) {
   g.save(); g.beginPath(); g.arc(cx, cy, r, 0, Math.PI*2); g.closePath();
-  g.fillStyle = color || '#0b1220'; g.fill();
+  g.fillStyle = fondo; g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.15)'; g.lineWidth = 2; g.stroke();
   g.clip();
-  if (im) g.drawImage(im, cx-r*0.8, cy-r*0.8, r*1.6, r*1.6);
-  else C(g, ab, cx, cy, `800 ${Math.round(r*0.7)}px "Chakra Petch", sans-serif`, BL);
+  if (im) g.drawImage(im, cx-r*0.78, cy-r*0.78, r*1.56, r*1.56);
+  else C(g, ab, cx, cy, `800 ${Math.round(r*0.62)}px "Chakra Petch", sans-serif`, '#eef5fb');
   g.restore();
 }
 
@@ -55,44 +63,50 @@ export async function compartirPartido(p) {
     if (tpl) g.drawImage(tpl, 0, 0, N, N); else { g.fillStyle='#0a0d11'; g.fillRect(0,0,N,N); }
 
     // Marca
-    C(g, 'HANDICAPPER', 627, 60, '800 40px "Chakra Petch", sans-serif', ORO);
+    C(g, 'HANDICAPPER', 627, 74, '800 42px "Chakra Petch", sans-serif', ORO);
 
-    // Logos arriba + nombres (hacia afuera)
-    logoEnCirculo(g, conLogos?ll:null, EQ.izq, EQ.logoY, EQ.logoR, p.local.abrev, '#0e1830');
-    logoEnCirculo(g, conLogos?lv:null, EQ.der, EQ.logoY, EQ.logoR, p.visita.abrev, '#2a0f14');
-    let f = fit(g, p.local.nombre.toUpperCase(), 300, 30, '"Chakra Petch", sans-serif');
-    C(g, p.local.nombre.toUpperCase(), EQ.izq, EQ.nomY, f, BL);
-    f = fit(g, p.visita.nombre.toUpperCase(), 300, 30, '"Chakra Petch", sans-serif');
-    C(g, p.visita.nombre.toUpperCase(), EQ.der, EQ.nomY, f, BL);
-
-    // VS grande al centro
+    // Logos grandes + VS grande
+    logoCirc(g, conLogos?ll:null, EQ.izq, EQ.logoY, EQ.logoR, p.local.abrev, '#0e1830');
+    logoCirc(g, conLogos?lv:null, EQ.der, EQ.logoY, EQ.logoR, p.visita.abrev, '#2a0f14');
     if (vs) { const h = VSC.w*(vs.height/vs.width);
-      g.save(); g.shadowColor='rgba(0,0,0,.5)'; g.shadowBlur=16; g.shadowOffsetY=5;
+      g.save(); g.shadowColor='rgba(0,0,0,.55)'; g.shadowBlur=18; g.shadowOffsetY=6;
       g.drawImage(vs, VSC.x-VSC.w/2, VSC.y-h/2, VSC.w, h); g.restore();
-    } else C(g, 'VS', VSC.x, VSC.y, '800 64px "Chakra Petch", sans-serif', BL);
+    } else C(g, 'VS', VSC.x, VSC.y, '800 70px "Chakra Petch", sans-serif', '#eef5fb');
 
-    // Medallón favorito (logo + %)
-    const fx = FAV.x, fy = FAV.y;
-    g.fillStyle = 'rgba(16,22,32,.9)'; g.strokeStyle = ORO; g.lineWidth = 2;
-    g.beginPath(); g.roundRect(fx-FAV.w/2, fy-FAV.h/2, FAV.w, FAV.h, 41); g.fill(); g.stroke();
-    const favIm = conLogos ? (localFav?ll:lv) : null;
-    const favAb = localFav ? p.local.abrev : p.visita.abrev;
-    const favPct = localFav ? (m.local||0) : (m.visita||0);
-    const favCol = localFav ? ORO : AZUL;
-    logoEnCirculo(g, favIm, fx-FAV.w/2+45, fy, 33, favAb, localFav?'#0e1830':'#2a0f14');
-    C(g, favPct + '%', fx+35, fy, '800 42px "Chakra Petch", sans-serif', favCol);
+    // Nombres plateados con sombra
+    let sz = fit(g, p.local.nombre.toUpperCase(), 330, 40, '"Chakra Petch", sans-serif');
+    plateado(g, p.local.nombre.toUpperCase(), EQ.izq, EQ.nomY, sz);
+    sz = fit(g, p.visita.nombre.toUpperCase(), 330, 40, '"Chakra Petch", sans-serif');
+    plateado(g, p.visita.nombre.toUpperCase(), EQ.der, EQ.nomY, sz);
 
-    // Filas de datos (hasta 11)
-    const datos = (p.datos || []).slice(0, FILA.max);
+    // Probabilidad grande
+    C(g, t('share.prob'), 627, 452, '800 20px "Inter", sans-serif', GRIS);
+    C(g, (m.local||0)+'%', EQ.izq, 518, `800 ${localFav?70:60}px "Chakra Petch", sans-serif`, ORO);
+    C(g, (m.visita||0)+'%', EQ.der, 518, `800 ${!localFav?70:60}px "Chakra Petch", sans-serif`, AZUL);
+    // barra
+    const bx0=185, bx1=1069, by=562, bh=24, w=bx1-bx0;
+    g.fillStyle='#1a212c'; g.beginPath(); g.roundRect(bx0,by,w,bh,12); g.fill();
+    const wl=Math.max(0,Math.min(w,w*(m.local||0)/100));
+    const gl=g.createLinearGradient(bx0,0,bx0+wl,0); gl.addColorStop(0,ORO2); gl.addColorStop(1,ORO);
+    g.fillStyle=gl; g.beginPath(); g.roundRect(bx0,by,wl,bh,12); g.fill();
+    const wv=Math.max(0,Math.min(w,w*(m.visita||0)/100));
+    const gv=g.createLinearGradient(bx1-wv,0,bx1,0); gv.addColorStop(0,AZUL); gv.addColorStop(1,'#8fd4f6');
+    g.fillStyle=gv; g.beginPath(); g.roundRect(bx1-wv,by,wv,bh,12); g.fill();
+    g.fillStyle='rgba(255,255,255,.2)'; g.beginPath(); g.roundRect(bx0,by,w,bh*0.45,12); g.fill();
+
+    // Datos repartidos (hasta 11), con zebra sutil
+    const datos = (p.datos || []).slice(0, 11);
+    const y0=632, y1=858, n=datos.length, dy = n>1 ? (y1-y0)/(n-1) : 0;
     datos.forEach((dd, i) => {
-      const y = FILA.y0 + FILA.dy*i;
-      let ff = fit(g, String(dd.local), 250, 24, '"Chakra Petch", sans-serif');
-      C(g, String(dd.local), FILA.xl, y, ff, ORO);
-      g.font = '700 19px "Inter", sans-serif';
-      while (g.measureText(String(dd.etiqueta)).width > 320 && parseInt(g.font)>12) g.font = `700 ${parseInt(g.font)-1}px "Inter", sans-serif`;
-      C(g, String(dd.etiqueta), FILA.xk, y, g.font, GRIS);
-      ff = fit(g, String(dd.visita), 250, 24, '"Chakra Petch", sans-serif');
-      C(g, String(dd.visita), FILA.xr, y, ff, AZUL);
+      const y = Math.round(y0 + dy*i);
+      if (i % 2 === 0) { g.fillStyle='rgba(255,255,255,.05)'; g.beginPath(); g.roundRect(175, y-19, 904, 38, 10); g.fill(); }
+      let s = fit(g, String(dd.local), 250, 27, '"Chakra Petch", sans-serif');
+      C(g, String(dd.local), EQ.izq, y, `800 ${s}px "Chakra Petch", sans-serif`, ORO);
+      let ks = 19; g.font = `700 ${ks}px "Inter", sans-serif`;
+      while (g.measureText(String(dd.etiqueta)).width > 330 && ks > 12) { ks--; g.font=`700 ${ks}px "Inter", sans-serif`; }
+      C(g, String(dd.etiqueta).toUpperCase(), 627, y, `700 ${ks}px "Inter", sans-serif`, GRIS);
+      s = fit(g, String(dd.visita), 250, 27, '"Chakra Petch", sans-serif');
+      C(g, String(dd.visita), EQ.der, y, `800 ${s}px "Chakra Petch", sans-serif`, AZUL);
     });
     return cv;
   }
@@ -110,9 +124,7 @@ export async function compartirPartido(p) {
 
   try {
     const cv = generar(true);
-    cv.getContext('2d').getImageData(0,0,1,1);   // lanza si CORS contaminó
+    cv.getContext('2d').getImageData(0,0,1,1);
     descargar(cv);
-  } catch (_) {
-    descargar(generar(false));
-  }
+  } catch (_) { descargar(generar(false)); }
 }
