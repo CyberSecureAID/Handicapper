@@ -31,6 +31,24 @@ function actualizarLogo() {
   img.src = 'assets/imagenes/' + archivo;
 }
 
+/* -------- Menú lateral móvil (drawer) -------- */
+function pintarDrawer() {
+  const cont = $('drawer-ligas');
+  if (!cont) return;
+  const items = [{ id: null, nombre: t('liga.todos'), icono: 'diana' }, ...LIGAS];
+  cont.innerHTML = items.map(l => `
+    <button class="liga ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">
+      <span class="ic">${IC[l.icono] || ''}</span>${l.nombre}
+    </button>`).join('');
+  cont.querySelectorAll('.liga').forEach(b => b.onclick = () => {
+    ligaActiva = b.dataset.liga || null;
+    pintarLigas(); pintarDrawer(); cargarLista(); cerrarDrawer();
+  });
+  const dt = $('drawer-t'); if (dt) dt.textContent = t('nav.deportes');
+}
+function abrirDrawer() { $('drawer')?.classList.add('abierto'); $('drawer-bg')?.classList.add('abierto'); }
+function cerrarDrawer() { $('drawer')?.classList.remove('abierto'); $('drawer-bg')?.classList.remove('abierto'); }
+
 /* -------- Sidebar de ligas -------- */
 function pintarLigas() {
   const cont = $('lista-ligas');
@@ -144,7 +162,7 @@ function aplicarTextos() {
 
 /* -------- Re-render al cambiar idioma -------- */
 function repintarTodo() {
-  aplicarTextos(); pintarLigas(); pintarPestanas(); initTabbar(); cargarLista();
+  aplicarTextos(); pintarLigas(); pintarPestanas(); pintarDrawer(); initTabbar(); cargarLista();
   const panel = $('panel');
   if (panel && !partidoSel) panel.innerHTML = `<div class="vacio"><div class="ic">${IC.grafico}</div>${t('det.vacio')}</div>`;
 }
@@ -157,9 +175,19 @@ function init() {
   aplicarTextos();
   pintarLigas();
   pintarPestanas();
+  pintarDrawer();
   cargarLista();
   initTabbar();
   initBotonIdioma();
+
+  // Hamburguesa / drawer (móvil)
+  $('hamb')?.addEventListener('click', abrirDrawer);
+  $('drawer-x')?.addEventListener('click', cerrarDrawer);
+  $('drawer-bg')?.addEventListener('click', cerrarDrawer);
+
+  // Botón "Volver" de la hoja de detalle (móvil) — ahora sí funciona
+  const cerrar = document.querySelector('#hoja .cerrar');
+  if (cerrar) cerrar.addEventListener('click', cerrarHoja);
 
   // Reaccionar a cambios de tema/tamaño para el logo
   const btnTema = $('tema-btn');
