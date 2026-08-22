@@ -98,9 +98,16 @@
   font-size: 14.5px; font-weight: 600; text-align: left; transition: all var(--trans);
 }
 .side .liga .ic { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; color: var(--tinta-3); font-size: 20px; }
+.liga-logo { height: 24px; width: auto; max-width: 34px; object-fit: contain; display: block; }
 .side .liga:hover { background: var(--tarjeta); color: var(--tinta); box-shadow: var(--sombra-boton); }
-.side .liga.on { background: var(--oro-suave); border-color: rgba(232,184,75,.4); color: var(--oro); }
+.side .liga.on { background: var(--oro-suave); border-color: rgba(232,184,75,.45); color: var(--oro); }
 .side .liga.on .ic { color: var(--oro); }
+/* En tema claro el dorado sobre blanco se pierde: seleccionado = chip oscuro legible */
+[data-tema="claro"] .side .liga.on,
+[data-tema="claro"] .drawer .liga.on {
+  background: #14202e; border-color: #14202e; color: #ffffff;
+}
+[data-tema="claro"] .side .liga.on .ic, [data-tema="claro"] .drawer .liga.on .ic { color: var(--oro); }
 
 /* ---------- Centro ---------- */
 .centro { min-width: 0; padding: 20px; }
