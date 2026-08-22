@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="es" data-tema="oscuro">
+<html lang="en" data-tema="oscuro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Handicapper — Análisis y datos para tus predicciones deportivas</title>
+  <title>Handicapper — Sports data and analysis for smarter predictions</title>
+  <link rel="icon" type="image/png" href="assets/imagenes/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700;800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -13,20 +14,24 @@
 <body>
 
   <header class="top">
-    <div class="marca"><span class="dot"></span>Handi<b>capper</b></div>
+    <div class="marca" id="marca">
+      <img class="logo-img" id="logo-img" alt="Handicapper">
+      <span class="logo-txt"><span class="dot"></span>Handi<b>capper</b></span>
+    </div>
     <label class="buscar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input type="text" placeholder="Buscar equipo o liga">
+      <input type="text" placeholder="Search team or league">
     </label>
     <div class="acc">
-      <button class="tema-btn" id="tema-btn" aria-label="Cambiar tema"></button>
-      <button class="btn-oro">Suscribirse · $1.99</button>
+      <button class="util-btn" id="idioma-btn" aria-label="Language"></button>
+      <button class="util-btn" id="tema-btn" aria-label="Theme"></button>
+      <button class="btn-oro">Subscribe · $1.99</button>
     </div>
   </header>
 
   <div class="marco">
     <aside class="side">
-      <div class="eyebrow">Deportes</div>
+      <div class="eyebrow">Sports</div>
       <div id="lista-ligas"></div>
     </aside>
 
@@ -38,13 +43,13 @@
     <aside class="panel" id="panel">
       <div class="vacio">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="34" height="34"><path d="M4 4v16h16"/><path d="M7 14l3-3 3 2 4-6"/></svg></div>
-        Elige un partido para ver su análisis completo.
+        Pick a match to see the full analysis.
       </div>
     </aside>
   </div>
 
   <div class="hoja-detalle" id="hoja">
-    <button class="cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M15 5l-7 7 7 7"/></svg> Volver</button>
+    <button class="cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M15 5l-7 7 7 7"/></svg> Back</button>
     <div class="hoja-cuerpo"></div>
   </div>
 
