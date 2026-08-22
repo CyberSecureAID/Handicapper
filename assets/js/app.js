@@ -5,6 +5,7 @@
 import { LIGAS, listarPartidos, detallePartido } from './datos/proveedor.js';
 import { tarjetaPartido, detalle } from './ui/vistas.js';
 import { IC } from './ui/iconos.js';
+import { initTema } from './ui/tema.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -98,6 +99,7 @@ function initTabbar() {
 
 /* -------- Arranque -------- */
 function init() {
+  initTema();
   pintarLigas();
   pintarPestanas();
   cargarLista();
