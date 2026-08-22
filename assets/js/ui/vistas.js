@@ -5,6 +5,19 @@
 import { IC } from './iconos.js';
 import { t } from './idioma.js';
 
+/* Icono (cuño) de cada liga para la esquina de la tarjeta */
+const LIGA_ICONO = {
+  mlb: 'dep-mlb', nba: 'dep-nba', nfl: 'dep-nfl', nhl: 'dep-nhl',
+  epl: 'dep-premier', laliga: 'dep-laliga', ucl: 'dep-champions',
+  seriea: 'dep-seriea', bundes: 'dep-bundesliga',
+};
+function ligaCuno(p) {
+  const k = LIGA_ICONO[p.ligaId];
+  if (k) return `<img class="liga-cuno" src="assets/imagenes/${k}.png" alt="${esc(p.liga)}"
+    onerror="this.replaceWith(document.createTextNode('${esc(p.liga)}'))">`;
+  return `<span class="liga-tag">${esc(p.liga)}</span>`;
+}
+
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -40,7 +53,7 @@ export function tarjetaPartido(p) {
   return `
   <div class="pmatch" data-id="${esc(p.id)}">
     <div class="cab">
-      <span class="liga-tag">${esc(p.liga)}</span>
+      ${ligaCuno(p)}
       <span class="hora ${vivo?'vivo':''}">${esc(p.inicio)}</span>
     </div>
     <div class="duelo">

@@ -9,7 +9,7 @@
    ============================================================ */
 import { t } from './idioma.js';
 
-const ORO = '#E8B84B', ORO2 = '#c79426', AZUL = '#5cbdf0', GRIS = '#96a2ae';
+const ORO = '#E8B84B', ORO2 = '#c79426', AZUL = '#3ca8e8', GRIS = '#9aa6b2';
 const TPL = 'assets/imagenes/compartir.jpg';
 const VS = 'assets/imagenes/vs.png';
 const N = 1254;
@@ -42,13 +42,15 @@ function plateado(g, s, x, y, sz) {
   g.fillStyle = grad; g.fillText(s, x, y);
   g.restore();
 }
-function logoCirc(g, im, cx, cy, r, ab, fondo) {
+function logoCirc(g, im, cx, cy, r, ab) {
   g.save(); g.beginPath(); g.arc(cx, cy, r, 0, Math.PI*2); g.closePath();
-  g.fillStyle = fondo; g.fill();
-  g.strokeStyle = 'rgba(255,255,255,.15)'; g.lineWidth = 2; g.stroke();
+  const gr = g.createLinearGradient(cx-r, cy-r, cx+r, cy+r);
+  gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, '#e9edf2');
+  g.fillStyle = gr; g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 3; g.stroke();
   g.clip();
-  if (im) g.drawImage(im, cx-r*0.78, cy-r*0.78, r*1.56, r*1.56);
-  else C(g, ab, cx, cy, `800 ${Math.round(r*0.62)}px "Chakra Petch", sans-serif`, '#eef5fb');
+  if (im) g.drawImage(im, cx-r*0.74, cy-r*0.74, r*1.48, r*1.48);
+  else C(g, ab, cx, cy, `800 ${Math.round(r*0.6)}px "Chakra Petch", sans-serif`, '#20262e');
   g.restore();
 }
 
@@ -66,8 +68,8 @@ export async function compartirPartido(p) {
     C(g, 'HANDICAPPER', 627, 74, '800 42px "Chakra Petch", sans-serif', ORO);
 
     // Logos grandes + VS grande
-    logoCirc(g, conLogos?ll:null, EQ.izq, EQ.logoY, EQ.logoR, p.local.abrev, '#0e1830');
-    logoCirc(g, conLogos?lv:null, EQ.der, EQ.logoY, EQ.logoR, p.visita.abrev, '#2a0f14');
+    logoCirc(g, conLogos?ll:null, EQ.izq, EQ.logoY, EQ.logoR, p.local.abrev);
+    logoCirc(g, conLogos?lv:null, EQ.der, EQ.logoY, EQ.logoR, p.visita.abrev);
     if (vs) { const h = VSC.w*(vs.height/vs.width);
       g.save(); g.shadowColor='rgba(0,0,0,.55)'; g.shadowBlur=18; g.shadowOffsetY=6;
       g.drawImage(vs, VSC.x-VSC.w/2, VSC.y-h/2, VSC.w, h); g.restore();
@@ -99,13 +101,14 @@ export async function compartirPartido(p) {
     const y0=632, y1=858, n=datos.length, dy = n>1 ? (y1-y0)/(n-1) : 0;
     datos.forEach((dd, i) => {
       const y = Math.round(y0 + dy*i);
-      if (i % 2 === 0) { g.fillStyle='rgba(255,255,255,.05)'; g.beginPath(); g.roundRect(175, y-19, 904, 38, 10); g.fill(); }
-      let s = fit(g, String(dd.local), 250, 27, '"Chakra Petch", sans-serif');
+      if (i > 0) { g.strokeStyle = 'rgba(255,255,255,.11)'; g.lineWidth = 1;
+        g.beginPath(); g.moveTo(210, Math.round(y - dy/2)); g.lineTo(1044, Math.round(y - dy/2)); g.stroke(); }
+      let s = fit(g, String(dd.local), 250, 28, '"Chakra Petch", sans-serif');
       C(g, String(dd.local), EQ.izq, y, `800 ${s}px "Chakra Petch", sans-serif`, ORO);
-      let ks = 19; g.font = `700 ${ks}px "Inter", sans-serif`;
+      let ks = 18; g.font = `700 ${ks}px "Inter", sans-serif`;
       while (g.measureText(String(dd.etiqueta)).width > 330 && ks > 12) { ks--; g.font=`700 ${ks}px "Inter", sans-serif`; }
       C(g, String(dd.etiqueta).toUpperCase(), 627, y, `700 ${ks}px "Inter", sans-serif`, GRIS);
-      s = fit(g, String(dd.visita), 250, 27, '"Chakra Petch", sans-serif');
+      s = fit(g, String(dd.visita), 250, 28, '"Chakra Petch", sans-serif');
       C(g, String(dd.visita), EQ.der, y, `800 ${s}px "Chakra Petch", sans-serif`, AZUL);
     });
     return cv;
