@@ -52,25 +52,25 @@
 
 /* ---------- TEMA CLARO ---------- */
 [data-tema="claro"] {
-  --fondo:        #f4f6f9;
-  --fondo-2:      #ffffff;
+  --fondo:        #e4e9f1;   /* fondo con tono (no gris muerto): las tarjetas blancas resaltan */
+  --fondo-2:      #eef2f7;
   --tarjeta:      #ffffff;
-  --tarjeta-alta: #f7f9fc;
-  --linea:        #e3e8ef;
-  --linea-suave:  rgba(0,0,0,.05);
-  --tinta:        #0f1720;
-  --tinta-2:      #47535f;
-  --tinta-3:      #8a95a1;
-  --oro-suave:    rgba(232,184,75,.18);
-  --verde-suave:  rgba(31,170,83,.14);
-  --rojo-suave:   rgba(229,64,90,.12);
-  --sombra:       0 20px 50px rgba(23,38,64,.22);
-  --sombra-suave: 0 6px 18px rgba(23,38,64,.14);
-  --sombra-tarjeta: 0 1px 3px rgba(23,38,64,.10), 0 6px 14px rgba(23,38,64,.12), 0 16px 32px rgba(23,38,64,.14);
-  --sombra-boton: 0 1px 2px rgba(23,38,64,.12), 0 4px 10px rgba(23,38,64,.14);
-  --sombra-input: inset 0 1px 3px rgba(23,38,64,.08);
-  --logo-bg:      #f2f4f7;
-  --escudo-borde: #dde3ec;
+  --tarjeta-alta: #f6f8fc;
+  --linea:        #cdd6e2;   /* borde más definido */
+  --linea-suave:  rgba(20,34,60,.10);
+  --tinta:        #0b131c;
+  --tinta-2:      #33404d;   /* datos secundarios más oscuros, no gris pálido */
+  --tinta-3:      #6b7887;
+  --oro-suave:    rgba(232,184,75,.20);
+  --verde-suave:  rgba(31,170,83,.16);
+  --rojo-suave:   rgba(229,64,90,.14);
+  --sombra:       0 24px 60px rgba(23,38,64,.28);
+  --sombra-suave: 0 8px 22px rgba(23,38,64,.16);
+  --sombra-tarjeta: 0 1px 3px rgba(23,38,64,.14), 0 10px 22px rgba(23,38,64,.16), 0 22px 44px rgba(23,38,64,.14);
+  --sombra-boton: 0 1px 2px rgba(23,38,64,.14), 0 4px 12px rgba(23,38,64,.16);
+  --sombra-input: inset 0 1px 3px rgba(23,38,64,.10);
+  --logo-bg:      #eef2f7;
+  --escudo-borde: #cdd6e2;
 }
 
 * { box-sizing: border-box; }

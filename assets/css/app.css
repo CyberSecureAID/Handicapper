@@ -16,6 +16,30 @@
   border-bottom: 1px solid var(--linea);
 }
 
+/* Hamburguesa (solo móvil) */
+.hamb { display: none; width: 42px; height: 42px; align-items: center; justify-content: center;
+  border: 1px solid var(--linea); border-radius: 11px; background: var(--tarjeta); color: var(--tinta);
+  box-shadow: var(--sombra-boton); }
+
+/* Menú lateral deslizante */
+.drawer-bg { position: fixed; inset: 0; z-index: 79; background: rgba(0,0,0,.5); opacity: 0;
+  visibility: hidden; transition: opacity var(--trans), visibility var(--trans); }
+.drawer-bg.abierto { opacity: 1; visibility: visible; }
+.drawer { position: fixed; top: 0; left: 0; bottom: 0; z-index: 80; width: 82%; max-width: 320px;
+  background: var(--fondo); border-right: 1px solid var(--linea); box-shadow: var(--sombra);
+  transform: translateX(-102%); transition: transform .26s cubic-bezier(.4,0,.2,1);
+  padding: 16px 14px; overflow-y: auto; }
+.drawer.abierto { transform: translateX(0); }
+.drawer-cab { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 4px 6px 0; }
+.drawer-x { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--linea); border-radius: 10px; background: var(--tarjeta); color: var(--tinta-2); }
+.drawer .liga { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 14px; margin: 4px 0;
+  border: 1px solid transparent; border-radius: 12px; background: none; color: var(--tinta-2);
+  font-size: 15.5px; font-weight: 700; text-align: left; }
+.drawer .liga .ic { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; color: var(--tinta-3); font-size: 20px; }
+.drawer .liga.on { background: var(--oro-suave); border-color: rgba(232,184,75,.4); color: var(--oro); }
+.drawer .liga.on .ic { color: var(--oro); }
+
 /* Logo: imagen con respaldo a texto si el PNG no existe aún */
 .marca { display: flex; align-items: center; gap: 10px; height: 100%; }
 .marca .logo-img { height: 30px; width: auto; object-fit: contain; display: none; }
@@ -133,9 +157,10 @@
 }
 .escudo img { width: 36px; height: 36px; object-fit: contain; }
 .escudo .fallback { font-family: var(--display); font-weight: 800; font-size: 14px; color: #222; }
-.pmatch .eq .nom { font-weight: 700; font-size: 16px; letter-spacing: -.1px; }
-.pmatch .eq .rec { margin-left: 9px; font-size: 12px; color: var(--tinta-3); font-family: var(--mono); }
-.pmatch .eq .marc { margin-left: auto; font-family: var(--display); font-weight: 800; font-size: 22px; }
+.pmatch .eq .nom { font-weight: 800; font-size: 17px; letter-spacing: -.2px; color: var(--tinta); }
+.pmatch .eq .rec { margin-left: 10px; font-size: 13px; color: var(--tinta-2); font-family: var(--mono); font-weight: 700;
+  padding: 3px 9px; border-radius: 7px; background: var(--fondo-2); border: 1px solid var(--linea-suave); }
+.pmatch .eq .marc { margin-left: auto; font-family: var(--display); font-weight: 800; font-size: 24px; color: var(--oro); }
 
 /* ============================================================
    PROBABILIDAD — pieza central de alto impacto
@@ -207,11 +232,11 @@
 .det-hora { text-align: center; font-size: 12px; color: var(--tinta-3); font-weight: 600; margin-bottom: 6px; }
 
 .datos-t { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--tinta-3); margin: 20px 0 8px; }
-.drow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 10px; border-radius: 9px; }
+.drow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 12px 10px; border-radius: 10px; }
 .drow:nth-child(even) { background: var(--fondo-2); }
-.drow .l { text-align: right; font-weight: 700; font-size: 13px; }
-.drow .r { text-align: left; font-weight: 700; font-size: 13px; }
-.drow .k { padding: 0 12px; font-size: 10px; color: var(--tinta-3); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+.drow .l { text-align: right; font-weight: 800; font-size: 15px; color: var(--tinta); }
+.drow .r { text-align: left; font-weight: 800; font-size: 15px; color: var(--tinta); }
+.drow .k { padding: 0 14px; font-size: 10.5px; color: var(--tinta-3); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; font-weight: 700; }
 
 /* Bloque analista */
 .analista { margin-top: 20px; padding: 17px; border-radius: var(--r-lg);
@@ -241,21 +266,19 @@
   .marco { grid-template-columns: 1fr; }
   .side { display: none; }
   .panel { display: none; }
-  .centro { padding: 14px 13px 90px; }
+  .centro { padding: 16px 13px 90px; }
 
-  /* Menú de ligas deslizable. El scroll horizontal recorta el eje vertical,
-     así que damos aire arriba/abajo suficiente para que la pastilla y su
-     sombra quepan completas y no se vean cortadas. */
-  .pestanas { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
-    margin: 0 -13px 12px; padding: 14px 13px 14px; }
-  .pestanas::-webkit-scrollbar { display: none; }
-  .pestana { flex: 0 0 auto; box-shadow: 0 1px 2px rgba(0,0,0,.18); }
+  /* En móvil el menú de ligas vive en el drawer (hamburguesa). Fuera las pastillas. */
+  .pestanas { display: none; }
+  .hamb { display: inline-flex; }
 
-  .top { padding: 0 14px; gap: 10px; }
+  .top { padding: 0 12px; gap: 10px; }
   .top .buscar { display: none; }
+  .marca { margin: 0 auto 0 4px; }        /* logo pegado al inicio, junto a la hamburguesa */
   .marca .logo-img { height: 28px; }
-  .btn-oro { padding: 0 13px; font-size: 12.5px; }
-  .util-btn { padding: 0 9px; min-width: 38px; height: 38px; }
+  .btn-oro { padding: 0 12px; font-size: 12px; }
+  .util-btn { padding: 0 8px; min-width: 36px; height: 36px; }
+  .util-btn#idioma-btn { font-size: 11px; }
 
   .tabbar {
     display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
