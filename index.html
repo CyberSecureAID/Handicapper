@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Handicapper — Análisis y datos para tus predicciones deportivas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700;800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+
+  <!-- Cabecera -->
+  <header class="top">
+    <div class="marca"><span class="dot"></span>Handi<b>capper</b></div>
+    <label class="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input type="text" placeholder="Buscar equipo o liga"></label>
+    <div class="acc">
+      <button class="btn-oro">Suscribirse · $1.99</button>
+    </div>
+  </header>
+
+  <!-- Rejilla: sidebar · centro · panel -->
+  <div class="marco">
+
+    <!-- Izquierda (web): ligas -->
+    <aside class="side">
+      <div class="eyebrow">Deportes</div>
+      <div id="lista-ligas"></div>
+    </aside>
+
+    <!-- Centro: pestañas (móvil) + lista de partidos -->
+    <main class="centro">
+      <div class="pestanas" id="pestanas"></div>
+      <div id="lista"></div>
+    </main>
+
+    <!-- Derecha (web): detalle/análisis -->
+    <aside class="panel" id="panel">
+      <div class="vacio"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="30" height="30"><path d="M4 4v16h16"/><path d="M7 14l3-3 3 2 4-6"/></svg></div>Elige un partido para ver su análisis completo.</div>
+    </aside>
+  </div>
+
+  <!-- Hoja de detalle a pantalla completa (solo móvil) -->
+  <div class="hoja-detalle" id="hoja">
+    <button class="cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M15 5l-7 7 7 7"/></svg> Volver</button>
+    <div class="hoja-cuerpo"></div>
+  </div>
+
+  <!-- Barra inferior (solo móvil) -->
+  <nav class="tabbar" id="tabbar"></nav>
+
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
