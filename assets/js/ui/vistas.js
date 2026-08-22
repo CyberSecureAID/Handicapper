@@ -1,23 +1,31 @@
 /* ============================================================
-   VISTAS — construye el HTML de la lista de partidos y del detalle.
-   No sabe de dónde vienen los datos (los recibe ya listos).
+   VISTAS — HTML de la lista de partidos y del detalle.
+   Renderiza los logos reales con respaldo (abreviatura) si falla la carga.
    ============================================================ */
-
 import { IC } from './iconos.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-/* ---- Tarjeta de un partido (lista central) ---- */
+/* Escudo con logo + respaldo: si la imagen no carga, muestra la abreviatura */
+function escudo(eq) {
+  const ab = esc(eq.abrev || '');
+  if (eq.logo) {
+    return `<span class="escudo">
+      <img src="${esc(eq.logo)}" alt="${ab}" loading="lazy"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <span class="fallback" style="display:none">${ab}</span>
+    </span>`;
+  }
+  return `<span class="escudo"><span class="fallback" style="display:flex">${ab}</span></span>`;
+}
+
+/* ---- Tarjeta de un partido ---- */
 export function tarjetaPartido(p) {
   const vivo = p.estado === 'vivo';
-  const marcador = p.marcador
-    ? `<span class="marc">${p.marcador.local}</span>` : '';
-  const marcadorV = p.marcador
-    ? `<span class="marc">${p.marcador.visita}</span>` : '';
-
   const m = p.mercado || {};
   const tieneEmpate = m.empate != null;
+
   const barra = `
     <div class="prob">
       <div class="barras">
@@ -27,13 +35,12 @@ export function tarjetaPartido(p) {
       </div>
       <div class="leyenda">
         <span><b>${m.local||0}%</b> ${esc(p.local.abrev)}</span>
-        ${tieneEmpate ? `<span><b>${m.empate}%</b> X</span>` : ''}
+        ${tieneEmpate ? `<span><b>${m.empate}%</b> Empate</span>` : ''}
         <span>${esc(p.visita.abrev)} <b>${m.visita||0}%</b></span>
       </div>
     </div>`;
 
-  const chip = p.analista
-    ? `<div class="tiene-analisis">${IC.estrella} Análisis del experto disponible</div>` : '';
+  const chip = p.analista ? `<div class="tiene-analisis">${IC.estrella} Análisis del experto</div>` : '';
 
   return `
   <div class="pmatch" data-id="${esc(p.id)}">
@@ -42,17 +49,15 @@ export function tarjetaPartido(p) {
       <span class="hora ${vivo?'vivo':''}">${esc(p.inicio)}</span>
     </div>
     <div class="equipos">
-      <div class="eq">
-        <span class="escudo">${esc(p.local.abrev)}</span>
+      <div class="eq">${escudo(p.local)}
         <span class="nom">${esc(p.local.nombre)}</span>
         <span class="rec">${esc(p.local.record||'')}</span>
-        ${marcador}
+        ${p.marcador ? `<span class="marc">${p.marcador.local}</span>` : ''}
       </div>
-      <div class="eq">
-        <span class="escudo">${esc(p.visita.abrev)}</span>
+      <div class="eq">${escudo(p.visita)}
         <span class="nom">${esc(p.visita.nombre)}</span>
         <span class="rec">${esc(p.visita.record||'')}</span>
-        ${marcadorV}
+        ${p.marcador ? `<span class="marc">${p.marcador.visita}</span>` : ''}
       </div>
     </div>
     ${barra}
@@ -60,7 +65,7 @@ export function tarjetaPartido(p) {
   </div>`;
 }
 
-/* ---- Detalle de un partido (panel derecho / hoja móvil) ---- */
+/* ---- Detalle de un partido ---- */
 export function detalle(p, opciones = {}) {
   if (!p) return `<div class="vacio"><div class="ic">${IC.grafico}</div>Elige un partido para ver su análisis completo.</div>`;
 
@@ -74,7 +79,7 @@ export function detalle(p, opciones = {}) {
   const a = p.analista;
   let bloqueAnalista = '';
   if (a) {
-    const bloqueado = !!opciones.bloquear;   // si el usuario no ha pagado
+    const bloqueado = !!opciones.bloquear;
     bloqueAnalista = `
       <div class="analista ${bloqueado?'bloqueado':''}">
         <div class="cab">
@@ -92,20 +97,13 @@ export function detalle(p, opciones = {}) {
   }
 
   return `
-    <div class="det-cab"><span class="det-liga">${esc(p.liga)}</span><span class="det-liga">${esc(p.inicio)}</span></div>
+    <div class="det-cab"><span class="det-liga">${esc(p.liga)}</span><span class="det-liga">${esc(p.estado==='vivo'?'En vivo':'Próximo')}</span></div>
     <div class="det-vs">
-      <div class="col">
-        <div class="escudo">${esc(p.local.abrev)}</div>
-        <div class="nom">${esc(p.local.nombre)}</div>
-        <div class="rec">${esc(p.local.record||'')}</div>
-      </div>
+      <div class="col">${escudo(p.local)}<div class="nom">${esc(p.local.nombre)}</div><div class="rec">${esc(p.local.record||'')}</div></div>
       <div class="mid">VS</div>
-      <div class="col">
-        <div class="escudo">${esc(p.visita.abrev)}</div>
-        <div class="nom">${esc(p.visita.nombre)}</div>
-        <div class="rec">${esc(p.visita.record||'')}</div>
-      </div>
+      <div class="col">${escudo(p.visita)}<div class="nom">${esc(p.visita.nombre)}</div><div class="rec">${esc(p.visita.record||'')}</div></div>
     </div>
+    <div class="det-hora">${esc(p.inicio)}</div>
     <div class="datos-t">Comparativa de datos</div>
     ${filas || '<div class="vacio" style="padding:20px">Sin datos detallados.</div>'}
     ${bloqueAnalista}
