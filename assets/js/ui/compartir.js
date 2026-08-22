@@ -6,6 +6,7 @@
    ============================================================ */
 
 const ORO = '#E8B84B', ORO2 = '#c79426', AZUL = '#3f9fe0', TINTA = '#eef3f8', GRIS = '#8a97a6';
+import { t } from './idioma.js';
 
 function cargarImg(url) {
   return new Promise((res) => {
@@ -108,50 +109,52 @@ function render(g, p, ll, lv, vs) {
   txt(g, (p.liga || '').toUpperCase() + '  ·  ' + (p.inicio || ''), W/2, 188, '700 21px "Inter", sans-serif', GRIS);
 
   /* Equipos + VS */
-  const yc = 360, size = 190;
+  const yc = 372, size = 196;
   loseta(g, 262, yc, size, ll, p.local.abrev);
   loseta(g, 818, yc, size, lv, p.visita.abrev);
 
   if (vs) {
-    const vw = 190, vh = vw * (vs.height / vs.width);
+    const vw = 196, vh = vw * (vs.height / vs.width);
     g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 18; g.shadowOffsetY = 6;
     g.drawImage(vs, W/2 - vw/2, yc - vh/2, vw, vh); g.restore();
   } else {
     txt(g, 'VS', W/2, yc + 18, '800 60px "Chakra Petch", sans-serif', GRIS);
   }
 
-  txt(g, p.local.nombre, 262, yc + 150, '700 27px "Inter", sans-serif', TINTA);
-  txt(g, p.visita.nombre, 818, yc + 150, '700 27px "Inter", sans-serif', TINTA);
-  if (p.local.record)  txt(g, p.local.record, 262, yc + 182, '600 18px "Inter", sans-serif', GRIS);
-  if (p.visita.record) txt(g, p.visita.record, 818, yc + 182, '600 18px "Inter", sans-serif', GRIS);
+  // Nombres GRANDES y en blanco; récord destacado con color
+  txt(g, p.local.nombre, 262, yc + 158, '800 30px "Chakra Petch", sans-serif', TINTA);
+  txt(g, p.visita.nombre, 818, yc + 158, '800 30px "Chakra Petch", sans-serif', TINTA);
+  if (p.local.record)  txt(g, p.local.record, 262, yc + 196, '800 24px "Chakra Petch", sans-serif', ORO);
+  if (p.visita.record) txt(g, p.visita.record, 818, yc + 196, '800 24px "Chakra Petch", sans-serif', AZUL);
 
   /* Probabilidad */
   const m = p.mercado || {};
-  txt(g, 'PROBABILIDAD DE VICTORIA', W/2, 655, '700 18px "Inter", sans-serif', GRIS);
-  txt(g, (m.local||0) + '%', 240, 745, '800 82px "Chakra Petch", sans-serif', ORO, 'left');
-  txt(g, (m.visita||0) + '%', 840, 745, '800 82px "Chakra Petch", sans-serif', AZUL, 'right');
-  if (m.empate != null) txt(g, 'X ' + m.empate + '%', W/2, 725, '700 24px "Inter", sans-serif', '#b8c1cc');
+  txt(g, t('share.prob'), W/2, 672, '800 19px "Inter", sans-serif', GRIS);
+  txt(g, (m.local||0) + '%', 240, 764, '800 86px "Chakra Petch", sans-serif', ORO, 'left');
+  txt(g, (m.visita||0) + '%', 840, 764, '800 86px "Chakra Petch", sans-serif', AZUL, 'right');
+  if (m.empate != null) txt(g, 'X ' + m.empate + '%', W/2, 742, '800 26px "Inter", sans-serif', '#c3ccd6');
 
-  const bx = 120, bw = W - 240, by = 780, bh = 30;
-  g.fillStyle = '#1a212c'; rrect(g, bx, by, bw, bh, 15); g.fill();
+  const bx = 120, bw = W - 240, by = 796, bh = 32;
+  g.fillStyle = '#1a212c'; rrect(g, bx, by, bw, bh, 16); g.fill();
   const wl = Math.max(0, Math.min(bw, bw * (m.local||0)/100));
   const gl = g.createLinearGradient(bx, 0, bx+wl, 0); gl.addColorStop(0, ORO2); gl.addColorStop(1, ORO);
-  g.fillStyle = gl; rrect(g, bx, by, wl, bh, 15); g.fill();
+  g.fillStyle = gl; rrect(g, bx, by, wl, bh, 16); g.fill();
   const wv = Math.max(0, Math.min(bw, bw * (m.visita||0)/100));
   const gv = g.createLinearGradient(bx+bw-wv, 0, bx+bw, 0); gv.addColorStop(0, AZUL); gv.addColorStop(1, '#7ccbf2');
-  g.fillStyle = gv; rrect(g, bx+bw-wv, by, wv, bh, 15); g.fill();
-  g.fillStyle = 'rgba(255,255,255,.22)'; rrect(g, bx, by, bw, bh*0.45, 15); g.fill();
+  g.fillStyle = gv; rrect(g, bx+bw-wv, by, wv, bh, 16); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.22)'; rrect(g, bx, by, bw, bh*0.45, 16); g.fill();
 
   /* Veredicto */
   if (p.analista) {
-    const ax = 120, aw = W - 240, ay = 858, ah = 150;
+    const ax = 120, aw = W - 240, ay = 872, ah = 132;
     const af = g.createLinearGradient(ax, ay, ax, ay+ah);
-    af.addColorStop(0, 'rgba(232,184,75,.16)'); af.addColorStop(1, 'rgba(232,184,75,.04)');
-    g.fillStyle = af; g.strokeStyle = 'rgba(232,184,75,.5)'; g.lineWidth = 2;
+    af.addColorStop(0, 'rgba(232,184,75,.18)'); af.addColorStop(1, 'rgba(232,184,75,.05)');
+    g.fillStyle = af; g.strokeStyle = 'rgba(232,184,75,.55)'; g.lineWidth = 2;
     rrect(g, ax, ay, aw, ah, 20); g.fill(); g.stroke();
-    txt(g, 'VEREDICTO DEL ANALISTA', W/2, ay + 42, '700 19px "Inter", sans-serif', ORO);
-    txt(g, p.analista.veredicto + '   ·   ' + p.analista.probabilidad + '%', W/2, ay + 100, '800 44px "Chakra Petch", sans-serif', TINTA);
+    txt(g, t('share.veredicto'), W/2, ay + 40, '800 18px "Inter", sans-serif', ORO);
+    txt(g, p.analista.veredicto + '   ·   ' + p.analista.probabilidad + '%', W/2, ay + 92, '800 42px "Chakra Petch", sans-serif', TINTA);
   }
 
-  txt(g, 'Análisis completo en  handicapper', W/2, H - 66, '700 24px "Inter", sans-serif', GRIS);
+  /* Pie (separado, sin encimarse) */
+  txt(g, t('share.pie'), W/2, 1032, '700 22px "Inter", sans-serif', GRIS);
 }
