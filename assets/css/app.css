@@ -98,7 +98,7 @@
   cursor: pointer; transition: border-color var(--trans), transform .12s, box-shadow var(--trans);
   box-shadow: var(--sombra-tarjeta);
 }
-.pmatch:hover { border-color: rgba(232,184,75,.5); box-shadow: var(--sombra); transform: translateY(-2px); }
+.pmatch:hover { border-color: rgba(232,184,75,.55); box-shadow: var(--sombra); transform: translateY(-3px); }
 .pmatch.sel { border-color: var(--oro); box-shadow: 0 0 0 1px var(--oro), var(--sombra); }
 
 .pmatch .cab { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
@@ -220,9 +220,10 @@
   .panel { display: none; }
   .centro { padding: 14px 13px 90px; }
 
-  /* Menú de ligas: fila deslizable que NO se corta */
-  .pestanas { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
-    margin: 0 -13px 16px; padding: 0 13px 4px; }
+  /* Menú de ligas: fila deslizable que NO se corta.
+     overflow-x recorta también arriba/abajo, así que damos aire vertical. */
+  .pestanas { flex-wrap: nowrap; overflow-x: auto; overflow-y: visible; scrollbar-width: none;
+    margin: 0 -13px 14px; padding: 10px 13px 12px; }
   .pestanas::-webkit-scrollbar { display: none; }
   .pestana { flex: 0 0 auto; }
 

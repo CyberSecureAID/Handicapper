@@ -41,11 +41,11 @@
   --oro-suave:    rgba(232,184,75,.14);
   --verde-suave:  rgba(31,170,83,.16);
   --rojo-suave:   rgba(229,64,90,.16);
-  --sombra:       0 10px 34px rgba(0,0,0,.5);
-  --sombra-suave: 0 2px 10px rgba(0,0,0,.35);
-  --sombra-tarjeta: 0 1px 0 rgba(255,255,255,.03), 0 6px 18px rgba(0,0,0,.35);
-  --sombra-boton: 0 1px 2px rgba(0,0,0,.4);
-  --sombra-input: inset 0 1px 2px rgba(0,0,0,.3);
+  --sombra:       0 16px 44px rgba(0,0,0,.62);
+  --sombra-suave: 0 4px 14px rgba(0,0,0,.45);
+  --sombra-tarjeta: inset 0 1px 0 rgba(255,255,255,.06), 0 2px 4px rgba(0,0,0,.5), 0 12px 26px rgba(0,0,0,.5);
+  --sombra-boton: inset 0 1px 0 rgba(255,255,255,.05), 0 2px 6px rgba(0,0,0,.5);
+  --sombra-input: inset 0 1px 3px rgba(0,0,0,.4);
   --logo-bg:      #ffffff;
   --escudo-borde: #242c37;
 }
@@ -64,13 +64,13 @@
   --oro-suave:    rgba(232,184,75,.18);
   --verde-suave:  rgba(31,170,83,.14);
   --rojo-suave:   rgba(229,64,90,.12);
-  --sombra:       0 12px 32px rgba(20,30,50,.14);
-  --sombra-suave: 0 4px 14px rgba(20,30,50,.10);
-  --sombra-tarjeta: 0 1px 3px rgba(20,30,50,.08), 0 8px 20px rgba(20,30,50,.08);
-  --sombra-boton: 0 1px 2px rgba(20,30,50,.10), 0 2px 6px rgba(20,30,50,.06);
-  --sombra-input: 0 1px 2px rgba(20,30,50,.06);
+  --sombra:       0 20px 50px rgba(23,38,64,.22);
+  --sombra-suave: 0 6px 18px rgba(23,38,64,.14);
+  --sombra-tarjeta: 0 1px 3px rgba(23,38,64,.10), 0 6px 14px rgba(23,38,64,.12), 0 16px 32px rgba(23,38,64,.14);
+  --sombra-boton: 0 1px 2px rgba(23,38,64,.12), 0 4px 10px rgba(23,38,64,.14);
+  --sombra-input: inset 0 1px 3px rgba(23,38,64,.08);
   --logo-bg:      #f2f4f7;
-  --escudo-borde: #e3e8ef;
+  --escudo-borde: #dde3ec;
 }
 
 * { box-sizing: border-box; }
