@@ -1,55 +1,102 @@
 /* ============================================================
-   COMPARTIR — genera una imagen PNG PREMIUM del partido, para
-   promoción: fondo con textura, marco dorado, logos de los equipos,
-   el VS metálico en el medio, probabilidades y veredicto del analista.
-   Sin librerías: se dibuja en <canvas> y se descarga.
+   COMPARTIR — construye la imagen sobre la PLANTILLA del usuario
+   (assets/imagenes/compartir.jpg). Coloca: logos en los círculos,
+   nombres de equipo (tapando "EQUIPO 1/2") y los valores de la
+   comparación en cada fila. Descarga un PNG.
+
+   Nota: la plantilla trae etiquetas fijas (RÉCORD, PUNTOS POR
+   PARTIDO, ...). Se rellenan las filas cuyo dato exista; el resto
+   queda "--". El RÉCORD se rellena siempre.
    ============================================================ */
 
-const ORO = '#E8B84B', ORO2 = '#c79426', AZUL = '#3f9fe0', TINTA = '#eef3f8', GRIS = '#8a97a6';
-import { t } from './idioma.js';
+const ORO = '#E8B84B', AZUL = '#7cc8f5', BL = '#eef5fb', GRIS = '#78848f';
+
+/* Plantilla nativa 1254x1254. Coordenadas en ese sistema. */
+const TPL = 'assets/imagenes/compartir.jpg';
+const N = 1254;
+const FILA_Y0 = 411, FILA_DY = 59.7, X_IZQ = 276, X_DER = 975;
+const CIRC = [{x:132,y:262},{x:1122,y:262}], CIRC_R = 50;
+
+/* Orden de filas de la plantilla y palabras clave para mapear datos */
+const FILAS = [
+  ['record','récord','record'],
+  ['puntos por','carreras','goles a favor','points'],
+  ['puntos en contra','goles en contra','contra'],
+  ['diferencial','dif'],
+  ['% de tiros','fg%','tiros'],
+  ['3pt','triples','3p'],
+  ['tiros libres','ft%','libres'],
+  ['rebotes'],
+  ['asistencias','asist'],
+  ['robos','steals'],
+  ['bloqueos','tapones','blocks'],
+];
 
 function cargarImg(url) {
   return new Promise((res) => {
-    if (!url) return res(null);
-    const im = new Image();
-    im.crossOrigin = 'anonymous';
-    im.onload = () => res(im);
-    im.onerror = () => res(null);
-    im.src = url;
+    const im = new Image(); im.crossOrigin = 'anonymous';
+    im.onload = () => res(im); im.onerror = () => res(null); im.src = url;
   });
 }
-function txt(g, s, x, y, font, color, align = 'center') {
-  g.font = font; g.fillStyle = color; g.textAlign = align; g.textBaseline = 'alphabetic';
+function fit(g, s, maxW, base, fam) {
+  let sz = base; g.font = `800 ${sz}px ${fam}`;
+  while (g.measureText(s).width > maxW && sz > 12) { sz -= 1; g.font = `800 ${sz}px ${fam}`; }
+}
+function ctext(g, s, x, y, font, color) {
+  g.font = font; g.fillStyle = color; g.textAlign = 'center'; g.textBaseline = 'middle';
   g.fillText(s, x, y);
 }
-function rrect(g, x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
+function norm(s){ return (s||'').toString().toLowerCase(); }
 
-/* dibuja un logo dentro de una loseta blanca redondeada con sombra */
-function loseta(g, cx, cy, size, im, ab) {
-  const r = size/2;
-  g.save();
-  g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = 26; g.shadowOffsetY = 10;
-  const grad = g.createLinearGradient(cx-r, cy-r, cx+r, cy+r);
-  grad.addColorStop(0, '#ffffff'); grad.addColorStop(1, '#e9edf2');
-  g.fillStyle = grad; rrect(g, cx-r, cy-r, size, size, size*0.28); g.fill();
-  g.restore();
-  if (im) {
-    const s = size*0.66;
-    g.drawImage(im, cx - s/2, cy - s/2, s, s);
-  } else {
-    txt(g, ab, cx, cy + size*0.14, `800 ${Math.round(size*0.42)}px "Chakra Petch", sans-serif`, '#20262e');
-  }
+/* Mapea los datos del partido a las 11 filas de la plantilla */
+function valoresFilas(p) {
+  const filas = FILAS.map(() => ['--','--']);
+  filas[0] = [p.local.record || '--', p.visita.record || '--'];
+  (p.datos || []).forEach(d => {
+    const et = norm(d.etiqueta);
+    for (let i = 1; i < FILAS.length; i++) {
+      if (FILAS[i].some(k => et.includes(k))) { filas[i] = [d.local ?? '--', d.visita ?? '--']; break; }
+    }
+  });
+  return filas;
 }
 
 export async function compartirPartido(p) {
-  const [ll, lv, vs] = await Promise.all([
-    cargarImg(p.local.logo), cargarImg(p.visita.logo), cargarImg('assets/imagenes/vs.png')
-  ]);
+  const [tpl, ll, lv] = await Promise.all([cargarImg(TPL), cargarImg(p.local.logo), cargarImg(p.visita.logo)]);
 
   function generar(conLogos) {
-    const cv = document.createElement('canvas');
-    cv.width = 1080; cv.height = 1080;
-    render(cv.getContext('2d'), p, conLogos ? ll : null, conLogos ? lv : null, vs);
+    const cv = document.createElement('canvas'); cv.width = N; cv.height = N;
+    const g = cv.getContext('2d');
+    if (tpl) g.drawImage(tpl, 0, 0, N, N);
+    else { g.fillStyle = '#0a0d11'; g.fillRect(0,0,N,N); }
+
+    // Círculos: logo o sigla
+    CIRC.forEach((c, idx) => {
+      const im = conLogos ? (idx===0?ll:lv) : null;
+      const ab = idx===0 ? p.local.abrev : p.visita.abrev;
+      g.save(); g.beginPath(); g.arc(c.x, c.y, CIRC_R, 0, Math.PI*2); g.closePath(); g.clip();
+      g.fillStyle = '#0b1220'; g.fillRect(c.x-CIRC_R, c.y-CIRC_R, CIRC_R*2, CIRC_R*2);
+      if (im) g.drawImage(im, c.x-CIRC_R*0.8, c.y-CIRC_R*0.8, CIRC_R*1.6, CIRC_R*1.6);
+      else ctext(g, ab, c.x, c.y, '800 30px "Chakra Petch", sans-serif', BL);
+      g.restore();
+    });
+
+    // Placas + nombres (tapan EQUIPO 1/2)
+    const placa = (x0,x1) => { g.fillStyle = '#0a0f17'; g.strokeStyle = 'rgba(255,255,255,.16)'; g.lineWidth = 1;
+      g.beginPath(); g.roundRect(x0,228,x1-x0,84,16); g.fill(); g.stroke(); };
+    placa(186,466); placa(788,1068);
+    fit(g, p.local.nombre.toUpperCase(), 250, 32, '"Chakra Petch", sans-serif');
+    ctext(g, p.local.nombre.toUpperCase(), 326, 270, g.font, BL);
+    fit(g, p.visita.nombre.toUpperCase(), 250, 32, '"Chakra Petch", sans-serif');
+    ctext(g, p.visita.nombre.toUpperCase(), 928, 270, g.font, BL);
+
+    // Valores por fila
+    const filas = valoresFilas(p);
+    filas.forEach((par, i) => {
+      const y = Math.round(FILA_Y0 + FILA_DY*i);
+      ctext(g, String(par[0]), X_IZQ, y, '800 27px "Chakra Petch", sans-serif', par[0]==='--'?GRIS:ORO);
+      ctext(g, String(par[1]), X_DER, y, '800 27px "Chakra Petch", sans-serif', par[1]==='--'?GRIS:AZUL);
+    });
     return cv;
   }
 
@@ -64,97 +111,11 @@ export async function compartirPartido(p) {
     }, 'image/png');
   }
 
-  // Intento con logos; si el canvas queda "contaminado" por CORS, reintento sin
-  // los logos externos (siglas), conservando el VS y toda la estética.
   try {
     const cv = generar(true);
-    cv.toBlob(() => {}, 'image/png');   // dispara el chequeo de seguridad
-    // Verificación real: getImageData lanza si está contaminado
-    cv.getContext('2d').getImageData(0, 0, 1, 1);
+    cv.getContext('2d').getImageData(0,0,1,1);   // lanza si CORS contaminó
     descargar(cv);
   } catch (_) {
-    descargar(generar(false));
+    descargar(generar(false));   // sin logos externos, con siglas
   }
-}
-
-/* ---- Dibujo completo de la tarjeta ---- */
-function render(g, p, ll, lv, vs) {
-  const W = 1080, H = 1080;
-
-  /* Fondo con textura */
-  const bg = g.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, '#141b26'); bg.addColorStop(.55, '#0c111a'); bg.addColorStop(1, '#05080d');
-  g.fillStyle = bg; g.fillRect(0, 0, W, H);
-
-  const glow = g.createRadialGradient(W/2, 210, 40, W/2, 210, 620);
-  glow.addColorStop(0, 'rgba(232,184,75,.16)'); glow.addColorStop(1, 'rgba(232,184,75,0)');
-  g.fillStyle = glow; g.fillRect(0, 0, W, H);
-
-  g.save(); g.globalAlpha = .04; g.strokeStyle = '#ffffff'; g.lineWidth = 2;
-  for (let i = -H; i < W; i += 26) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + H, H); g.stroke(); }
-  g.restore();
-
-  const vig = g.createRadialGradient(W/2, H/2, 340, W/2, H/2, 760);
-  vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(0,0,0,.5)');
-  g.fillStyle = vig; g.fillRect(0, 0, W, H);
-
-  g.strokeStyle = 'rgba(232,184,75,.5)'; g.lineWidth = 3;
-  rrect(g, 34, 34, W-68, H-68, 34); g.stroke();
-  g.strokeStyle = 'rgba(232,184,75,.14)'; g.lineWidth = 1;
-  rrect(g, 46, 46, W-92, H-92, 28); g.stroke();
-
-  /* Marca */
-  txt(g, 'HANDICAPPER', W/2, 132, '800 50px "Chakra Petch", sans-serif', ORO);
-  g.strokeStyle = ORO2; g.lineWidth = 3; g.beginPath(); g.moveTo(W/2-70, 150); g.lineTo(W/2+70, 150); g.stroke();
-  txt(g, (p.liga || '').toUpperCase() + '  ·  ' + (p.inicio || ''), W/2, 188, '700 21px "Inter", sans-serif', GRIS);
-
-  /* Equipos + VS */
-  const yc = 372, size = 196;
-  loseta(g, 262, yc, size, ll, p.local.abrev);
-  loseta(g, 818, yc, size, lv, p.visita.abrev);
-
-  if (vs) {
-    const vw = 196, vh = vw * (vs.height / vs.width);
-    g.save(); g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 18; g.shadowOffsetY = 6;
-    g.drawImage(vs, W/2 - vw/2, yc - vh/2, vw, vh); g.restore();
-  } else {
-    txt(g, 'VS', W/2, yc + 18, '800 60px "Chakra Petch", sans-serif', GRIS);
-  }
-
-  // Nombres GRANDES y en blanco; récord destacado con color
-  txt(g, p.local.nombre, 262, yc + 158, '800 30px "Chakra Petch", sans-serif', TINTA);
-  txt(g, p.visita.nombre, 818, yc + 158, '800 30px "Chakra Petch", sans-serif', TINTA);
-  if (p.local.record)  txt(g, p.local.record, 262, yc + 196, '800 24px "Chakra Petch", sans-serif', ORO);
-  if (p.visita.record) txt(g, p.visita.record, 818, yc + 196, '800 24px "Chakra Petch", sans-serif', AZUL);
-
-  /* Probabilidad */
-  const m = p.mercado || {};
-  txt(g, t('share.prob'), W/2, 672, '800 19px "Inter", sans-serif', GRIS);
-  txt(g, (m.local||0) + '%', 240, 764, '800 86px "Chakra Petch", sans-serif', ORO, 'left');
-  txt(g, (m.visita||0) + '%', 840, 764, '800 86px "Chakra Petch", sans-serif', AZUL, 'right');
-  if (m.empate != null) txt(g, 'X ' + m.empate + '%', W/2, 742, '800 26px "Inter", sans-serif', '#c3ccd6');
-
-  const bx = 120, bw = W - 240, by = 796, bh = 32;
-  g.fillStyle = '#1a212c'; rrect(g, bx, by, bw, bh, 16); g.fill();
-  const wl = Math.max(0, Math.min(bw, bw * (m.local||0)/100));
-  const gl = g.createLinearGradient(bx, 0, bx+wl, 0); gl.addColorStop(0, ORO2); gl.addColorStop(1, ORO);
-  g.fillStyle = gl; rrect(g, bx, by, wl, bh, 16); g.fill();
-  const wv = Math.max(0, Math.min(bw, bw * (m.visita||0)/100));
-  const gv = g.createLinearGradient(bx+bw-wv, 0, bx+bw, 0); gv.addColorStop(0, AZUL); gv.addColorStop(1, '#7ccbf2');
-  g.fillStyle = gv; rrect(g, bx+bw-wv, by, wv, bh, 16); g.fill();
-  g.fillStyle = 'rgba(255,255,255,.22)'; rrect(g, bx, by, bw, bh*0.45, 16); g.fill();
-
-  /* Veredicto */
-  if (p.analista) {
-    const ax = 120, aw = W - 240, ay = 872, ah = 132;
-    const af = g.createLinearGradient(ax, ay, ax, ay+ah);
-    af.addColorStop(0, 'rgba(232,184,75,.18)'); af.addColorStop(1, 'rgba(232,184,75,.05)');
-    g.fillStyle = af; g.strokeStyle = 'rgba(232,184,75,.55)'; g.lineWidth = 2;
-    rrect(g, ax, ay, aw, ah, 20); g.fill(); g.stroke();
-    txt(g, t('share.veredicto'), W/2, ay + 40, '800 18px "Inter", sans-serif', ORO);
-    txt(g, p.analista.veredicto + '   ·   ' + p.analista.probabilidad + '%', W/2, ay + 92, '800 42px "Chakra Petch", sans-serif', TINTA);
-  }
-
-  /* Pie (separado, sin encimarse) */
-  txt(g, t('share.pie'), W/2, 1032, '700 22px "Inter", sans-serif', GRIS);
 }
