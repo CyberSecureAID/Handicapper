@@ -1,0 +1,64 @@
+/* ============================================================
+   TOKENS — única fuente de estilo (colores, tipografías, medidas)
+   Tema oscuro estilo Hard Rock Bet, con el dorado de la marca.
+   ============================================================ */
+:root {
+  /* Superficies (gris carbón, de más oscuro a más claro) */
+  --fondo:        #0b0e12;
+  --fondo-2:      #12161c;
+  --tarjeta:      #161b22;
+  --tarjeta-alta: #1c222b;
+  --linea:        #262c36;
+  --linea-suave:  rgba(255,255,255,.06);
+
+  /* Texto */
+  --tinta:        #eef2f6;
+  --tinta-2:      #b8c1cc;
+  --tinta-3:      #7d8794;
+
+  /* Acento (dorado de la marca) */
+  --oro:          #E8B84B;
+  --oro-2:        #c79426;
+  --oro-suave:    rgba(232,184,75,.14);
+
+  /* Estados */
+  --verde:        #2ee86a;
+  --verde-suave:  rgba(46,232,106,.14);
+  --rojo:         #ff5a6a;
+  --rojo-suave:   rgba(255,90,106,.14);
+  --azul:         #38bdf8;
+
+  /* Tipografías */
+  --display: "Chakra Petch", system-ui, sans-serif;  /* titulares, marcador */
+  --sans:    "Inter", system-ui, sans-serif;         /* cuerpo */
+  --mono:    ui-monospace, "SF Mono", Menlo, monospace; /* números, cuotas */
+
+  /* Medidas */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+
+  --sombra: 0 8px 28px rgba(0,0,0,.45);
+  --sombra-suave: 0 2px 10px rgba(0,0,0,.3);
+
+  /* Estructura */
+  --ancho-max: 1360px;
+  --sidebar-w: 248px;
+  --panel-w:   360px;
+  --barra-alta: 62px;   /* barra inferior móvil */
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--fondo);
+  color: var(--tinta);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--linea); border-radius: 20px; }
+::-webkit-scrollbar-track { background: transparent; }
