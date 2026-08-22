@@ -25,7 +25,7 @@ function actualizarLogo() {
   const movil = window.matchMedia('(max-width: 1023px)').matches;
   let archivo;
   if (movil) archivo = oscuro ? 'logo-h-oscuro.png' : 'logo-h-claro.png';
-  else       archivo = oscuro ? 'logo-nombre-oscuro.png' : 'logo-nombre-claro.png';
+  else       archivo = 'logo-nombre-oscuro.png';   // escritorio: siempre el blanco/dorado (se ve mejor en ambos temas)
   img.onload = () => { img.classList.add('visible'); cont.classList.add('tiene-img'); };
   img.onerror = () => { img.classList.remove('visible'); cont.classList.remove('tiene-img'); };
   img.src = 'assets/imagenes/' + archivo;
@@ -35,10 +35,10 @@ function actualizarLogo() {
 function pintarDrawer() {
   const cont = $('drawer-ligas');
   if (!cont) return;
-  const items = [{ id: null, nombre: t('liga.todos'), icono: 'diana' }, ...LIGAS];
+  const items = [{ id: null, nombre: t('liga.todos'), corto: t('liga.todos'), logo: 'assets/imagenes/dep-todos.png' }, ...LIGAS];
   cont.innerHTML = items.map(l => `
     <button class="liga ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">
-      <span class="ic">${IC[l.icono] || ''}</span>${l.nombre}
+      <span class="ic">${ligaIcono(l)}</span>${l.corto || l.nombre}
     </button>`).join('');
   cont.querySelectorAll('.liga').forEach(b => b.onclick = () => {
     ligaActiva = b.dataset.liga || null;
@@ -49,14 +49,20 @@ function pintarDrawer() {
 function abrirDrawer() { $('drawer')?.classList.add('abierto'); $('drawer-bg')?.classList.add('abierto'); }
 function cerrarDrawer() { $('drawer')?.classList.remove('abierto'); $('drawer-bg')?.classList.remove('abierto'); }
 
+/* Icono de una liga: imagen si existe, con respaldo a icono SVG */
+function ligaIcono(l) {
+  if (l.logo) return `<img class="liga-logo" src="${l.logo}" alt="" onerror="this.style.display='none'">`;
+  return IC[l.icono] || IC.diana;
+}
+
 /* -------- Sidebar de ligas -------- */
 function pintarLigas() {
   const cont = $('lista-ligas');
   if (!cont) return;
-  const items = [{ id: null, nombre: t('liga.todos'), icono: 'diana' }, ...LIGAS];
+  const items = [{ id: null, nombre: t('liga.todos'), logo: 'assets/imagenes/dep-todos.png' }, ...LIGAS];
   cont.innerHTML = items.map(l => `
     <button class="liga ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">
-      <span class="ic">${IC[l.icono] || ''}</span>${l.nombre}
+      <span class="ic">${ligaIcono(l)}</span>${l.nombre}
     </button>`).join('');
   cont.querySelectorAll('.liga').forEach(b => b.onclick = () => {
     ligaActiva = b.dataset.liga || null; pintarLigas(); pintarPestanas(); cargarLista();
