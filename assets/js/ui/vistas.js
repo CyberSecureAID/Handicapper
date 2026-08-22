@@ -3,6 +3,7 @@
    Renderiza los logos reales con respaldo (abreviatura) si falla la carga.
    ============================================================ */
 import { IC } from './iconos.js';
+import { t } from './idioma.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -25,22 +26,30 @@ export function tarjetaPartido(p) {
   const vivo = p.estado === 'vivo';
   const m = p.mercado || {};
   const tieneEmpate = m.empate != null;
+  const ganaLocal = (m.local || 0) >= (m.visita || 0);
 
   const barra = `
-    <div class="prob">
-      <div class="barras">
-        <i class="b-local" style="width:${m.local||0}%"></i>
-        ${tieneEmpate ? `<i class="b-empate" style="width:${m.empate}%"></i>` : ''}
-        <i class="b-visita" style="width:${m.visita||0}%"></i>
+    <div class="vs-prob">
+      <div class="titu">${t('prob.titulo')}</div>
+      <div class="cifras">
+        <div class="lado izq ${ganaLocal?'gana':''}">
+          <span class="ab">${esc(p.local.abrev)}</span>
+          <span class="num">${m.local||0}%</span>
+        </div>
+        ${tieneEmpate ? `<div class="empate-mid"><div class="e-num">${m.empate}%</div><div class="e-lb">${t('prob.empate')}</div></div>` : ''}
+        <div class="lado der ${!ganaLocal?'gana':''}">
+          <span class="ab">${esc(p.visita.abrev)}</span>
+          <span class="num">${m.visita||0}%</span>
+        </div>
       </div>
-      <div class="leyenda">
-        <span><b>${m.local||0}%</b> ${esc(p.local.abrev)}</span>
-        ${tieneEmpate ? `<span><b>${m.empate}%</b> Empate</span>` : ''}
-        <span>${esc(p.visita.abrev)} <b>${m.visita||0}%</b></span>
+      <div class="barra">
+        <i class="s-local" style="width:${m.local||0}%"></i>
+        ${tieneEmpate ? `<i class="s-empate" style="width:${m.empate}%"></i>` : ''}
+        <i class="s-visita" style="width:${m.visita||0}%"></i>
       </div>
     </div>`;
 
-  const chip = p.analista ? `<div class="tiene-analisis">${IC.estrella} Análisis del experto</div>` : '';
+  const chip = p.analista ? `<div class="tiene-analisis">${IC.estrella} ${t('match.analisis')}</div>` : '';
 
   return `
   <div class="pmatch" data-id="${esc(p.id)}">
@@ -67,7 +76,7 @@ export function tarjetaPartido(p) {
 
 /* ---- Detalle de un partido ---- */
 export function detalle(p, opciones = {}) {
-  if (!p) return `<div class="vacio"><div class="ic">${IC.grafico}</div>Elige un partido para ver su análisis completo.</div>`;
+  if (!p) return `<div class="vacio"><div class="ic">${IC.grafico}</div>${t('det.vacio')}</div>`;
 
   const filas = (p.datos || []).map(d => `
     <div class="drow">
@@ -83,7 +92,7 @@ export function detalle(p, opciones = {}) {
     bloqueAnalista = `
       <div class="analista ${bloqueado?'bloqueado':''}">
         <div class="cab">
-          <span class="tt">${IC.estrella} Veredicto del Analista</span>
+          <span class="tt">${IC.estrella} ${t('analista.titulo')}</span>
           <span class="autor">${esc(a.autor||'')}</span>
         </div>
         <div class="veredicto">
@@ -92,20 +101,23 @@ export function detalle(p, opciones = {}) {
         </div>
         <div class="medidor"><i style="width:${a.probabilidad}%"></i></div>
         <div class="texto">${esc(a.texto)}</div>
-        ${bloqueado ? `<div class="candado">${IC.candado} Suscríbete para leer el análisis completo</div>` : ''}
+        ${bloqueado ? `<div class="candado">${IC.candado} ${t('analista.candado')}</div>` : ''}
       </div>`;
   }
 
   return `
-    <div class="det-cab"><span class="det-liga">${esc(p.liga)}</span><span class="det-liga">${esc(p.estado==='vivo'?'En vivo':'Próximo')}</span></div>
+    <div class="det-cab">
+      <span class="det-liga">${esc(p.liga)}</span>
+      <button class="compartir" data-compartir="${esc(p.id)}">${IC.compartir} ${t('compartir')}</button>
+    </div>
     <div class="det-vs">
       <div class="col">${escudo(p.local)}<div class="nom">${esc(p.local.nombre)}</div><div class="rec">${esc(p.local.record||'')}</div></div>
       <div class="mid">VS</div>
       <div class="col">${escudo(p.visita)}<div class="nom">${esc(p.visita.nombre)}</div><div class="rec">${esc(p.visita.record||'')}</div></div>
     </div>
     <div class="det-hora">${esc(p.inicio)}</div>
-    <div class="datos-t">Comparativa de datos</div>
-    ${filas || '<div class="vacio" style="padding:20px">Sin datos detallados.</div>'}
+    <div class="datos-t">${t('det.comparativa')}</div>
+    ${filas || `<div class="vacio" style="padding:20px">${t('det.sindatos')}</div>`}
     ${bloqueAnalista}
   `;
 }
