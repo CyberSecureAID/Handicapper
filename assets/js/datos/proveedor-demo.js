@@ -14,12 +14,15 @@ const LG = {
 };
 
 export const LIGAS = [
-  { id: 'mlb',    nombre: 'MLB',              icono: 'beisbol' },
-  { id: 'nba',    nombre: 'NBA',              icono: 'basket' },
-  { id: 'nfl',    nombre: 'NFL',              icono: 'futbolAmericano' },
-  { id: 'epl',    nombre: 'Premier League',   icono: 'futbol' },
-  { id: 'laliga', nombre: 'LaLiga',           icono: 'futbol' },
-  { id: 'ucl',    nombre: 'Champions League', icono: 'futbol' },
+  { id: 'mlb',    nombre: 'MLB',              corto: 'MLB',      logo: 'assets/imagenes/dep-mlb.png' },
+  { id: 'nba',    nombre: 'NBA',              corto: 'NBA',      logo: 'assets/imagenes/dep-nba.png' },
+  { id: 'nfl',    nombre: 'NFL',              corto: 'NFL',      logo: 'assets/imagenes/dep-nfl.png' },
+  { id: 'nhl',    nombre: 'NHL',              corto: 'NHL',      logo: 'assets/imagenes/dep-nhl.png' },
+  { id: 'epl',    nombre: 'Premier League',   corto: 'Premier',  logo: 'assets/imagenes/dep-premier.png' },
+  { id: 'laliga', nombre: 'LaLiga',           corto: 'LaLiga',   logo: 'assets/imagenes/dep-laliga.png' },
+  { id: 'ucl',    nombre: 'Champions League', corto: 'Champions',logo: 'assets/imagenes/dep-champions.png' },
+  { id: 'seriea', nombre: 'Serie A',          corto: 'Serie A',  logo: 'assets/imagenes/dep-seriea.png' },
+  { id: 'bundes', nombre: 'Bundesliga',       corto: 'Bundes.',  logo: 'assets/imagenes/dep-bundesliga.png' },
 ];
 
 const P = [
