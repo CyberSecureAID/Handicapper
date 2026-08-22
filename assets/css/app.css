@@ -155,7 +155,7 @@
 .vs-prob .lado .num { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: .9; }
 .vs-prob .lado.izq .num { color: var(--oro); }
 .vs-prob .lado.der .num { color: var(--azul); }
-.vs-prob .lado.gana .num { text-shadow: 0 0 22px currentColor; }   /* leve glow al favorito */
+.vs-prob .lado.gana .num { text-shadow: 0 1px 1px rgba(0,0,0,.25); }   /* sutil, sin brillo agresivo */
 .vs-prob .empate-mid { align-self: center; text-align: center; padding-bottom: 3px; }
 .vs-prob .empate-mid .e-num { font-family: var(--mono); font-weight: 800; font-size: 15px; color: var(--tinta-2); }
 .vs-prob .empate-mid .e-lb { font-size: 8.5px; color: var(--tinta-3); text-transform: uppercase; letter-spacing: .1em; }
@@ -202,6 +202,7 @@
 .det-vs .col .nom { font-weight: 700; font-size: 14px; line-height: 1.25; }
 .det-vs .col .rec { font-size: 11.5px; color: var(--tinta-3); font-family: var(--mono); margin-top: 3px; }
 .det-vs .mid { align-self: center; font-family: var(--display); color: var(--tinta-3); font-weight: 800; font-size: 13px; }
+.det-vs .mid .vs-img { width: 62px; height: auto; display: block; filter: drop-shadow(0 3px 6px rgba(0,0,0,.35)); }
 .det-hora { text-align: center; font-size: 12px; color: var(--tinta-3); font-weight: 600; margin-bottom: 6px; }
 
 .datos-t { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--tinta-3); margin: 20px 0 8px; }
@@ -241,12 +242,13 @@
   .panel { display: none; }
   .centro { padding: 14px 13px 90px; }
 
-  /* Menú de ligas: fila deslizable que NO se corta.
-     overflow-x recorta también arriba/abajo, así que damos aire vertical. */
-  .pestanas { flex-wrap: nowrap; overflow-x: auto; overflow-y: visible; scrollbar-width: none;
-    margin: 0 -13px 14px; padding: 10px 13px 12px; }
+  /* Menú de ligas deslizable. El scroll horizontal recorta el eje vertical,
+     así que damos aire arriba/abajo suficiente para que la pastilla y su
+     sombra quepan completas y no se vean cortadas. */
+  .pestanas { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+    margin: 0 -13px 12px; padding: 14px 13px 14px; }
   .pestanas::-webkit-scrollbar { display: none; }
-  .pestana { flex: 0 0 auto; }
+  .pestana { flex: 0 0 auto; box-shadow: 0 1px 2px rgba(0,0,0,.18); }
 
   .top { padding: 0 14px; gap: 10px; }
   .top .buscar { display: none; }
