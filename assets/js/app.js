@@ -82,32 +82,42 @@ function pintarPestanas() {
 }
 
 /* -------- Lista central -------- */
+let _partidos = [];      // últimos partidos cargados (para el buscador)
+let _busqueda = '';
+
 async function cargarLista() {
   const cont = $('lista');
   if (!cont) return;
   cont.innerHTML = `<div class="seccion-t">${t('cargando')}</div>`;
-  const partidos = await listarPartidos(ligaActiva);
-  if (!partidos.length) {
+  _partidos = await listarPartidos(ligaActiva);
+  pintarLista();
+}
+
+function pintarLista() {
+  const cont = $('lista');
+  if (!cont) return;
+  const q = _busqueda.trim().toLowerCase();
+  let lista = _partidos;
+  if (q) {
+    lista = _partidos.filter(p => {
+      const campos = [p.local?.nombre, p.local?.abrev, p.visita?.nombre, p.visita?.abrev, p.liga];
+      return campos.some(c => (c || '').toLowerCase().includes(q));
+    });
+  }
+  if (!lista.length) {
     cont.innerHTML = `<div class="vacio" style="padding:50px;text-align:center">${t('vacio.lista')}</div>`;
     return;
   }
-  const titulo = ligaActiva ? t('seccion.partidos') : t('seccion.destacados');
-  cont.innerHTML = `<div class="seccion-t">${titulo}</div>` + partidos.map(tarjetaPartido).join('');
+  const titulo = q ? t('seccion.partidos') : (ligaActiva ? t('seccion.partidos') : t('seccion.destacados'));
+  cont.innerHTML = `<div class="seccion-t">${titulo}</div>` + lista.map(tarjetaPartido).join('');
   const tarjetas = [...cont.querySelectorAll('.pmatch')];
   tarjetas.forEach(el => el.onclick = () => abrirDetalle(el.dataset.id, el));
 
-  // Selección por defecto en WEB: el próximo partido a jugarse (o el primero),
-  // para que el panel derecho nunca esté vacío. No abre la hoja de móvil.
   const panel = $('panel');
   const enWeb = panel && getComputedStyle(panel).display !== 'none';
   if (enWeb) {
-    const prox = partidos.find(p => p.estado === 'vivo')
-              || partidos.find(p => p.estado === 'proximo')
-              || partidos[0];
-    if (prox) {
-      const el = tarjetas.find(x => x.dataset.id === prox.id);
-      abrirDetalle(prox.id, el, { soloPanel: true });
-    }
+    const prox = lista.find(p => p.estado === 'vivo') || lista.find(p => p.estado === 'proximo') || lista[0];
+    if (prox) { const el = tarjetas.find(x => x.dataset.id === prox.id); abrirDetalle(prox.id, el, { soloPanel: true }); }
   }
 }
 
@@ -210,6 +220,10 @@ function init() {
   $('hamb')?.addEventListener('click', abrirDrawer);
   $('drawer-x')?.addEventListener('click', cerrarDrawer);
   $('drawer-bg')?.addEventListener('click', cerrarDrawer);
+
+  // Buscador
+  const bi = $('buscar-input');
+  if (bi) bi.addEventListener('input', () => { _busqueda = bi.value; pintarLista(); });
 
   // Botón "Volver" de la hoja de detalle (móvil) — ahora sí funciona
   const cerrar = document.querySelector('#hoja .cerrar');
