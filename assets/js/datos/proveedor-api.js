@@ -105,40 +105,62 @@ function equiposDe(comp) {
   return { local: eq(local), visita: eq(visita) };
 }
 
+/* Convierte un moneyline (número o texto "+120"/"-150") a número */
+function mlNum(v) {
+  if (v == null) return null;
+  if (typeof v === 'number') return v;
+  const m = String(v).replace(/\s/g, '').match(/-?\+?\d+/);
+  return m ? Number(m[0].replace('+', '')) : null;
+}
+
 /* Mercado (probabilidades) desde las cuotas si existen; si no, desde el récord */
 function mercadoDe(comp, futbol, local, visita) {
-  const odds = comp?.odds?.[0];
-  // 1) moneyline por equipo (más fiable cuando está)
-  const mlH = odds?.homeTeamOdds?.moneyLine ?? odds?.homeTeamOdds?.current?.moneyLine?.american;
-  const mlA = odds?.awayTeamOdds?.moneyLine ?? odds?.awayTeamOdds?.current?.moneyLine?.american;
+  const odds = comp?.odds?.[0] || {};
+  const hto = odds.homeTeamOdds || {}, ato = odds.awayTeamOdds || {};
+  // moneyline en múltiples ubicaciones/formatos posibles
+  const mlH = mlNum(hto.moneyLine ?? hto.current?.moneyLine?.american ?? hto.close?.moneyLine?.american ?? hto.open?.moneyLine?.american);
+  const mlA = mlNum(ato.moneyLine ?? ato.current?.moneyLine?.american ?? ato.close?.moneyLine?.american ?? ato.open?.moneyLine?.american);
   let pL = probDeMoneyline(mlH), pV = probDeMoneyline(mlA);
+
+  // si solo hay un lado, el otro es el complemento
+  if (pL != null && pV == null) pV = 1 - pL;
+  if (pV != null && pL == null) pL = 1 - pV;
+
   if (pL != null && pV != null) {
-    const empate = futbol ? Math.max(0, 1 - pL - pV) : null;
-    const tot = pL + pV + (empate || 0);
-    return norm(pL/tot, empate != null ? empate/tot : null, pV/tot, futbol);
+    if (futbol) {
+      // reservamos el empate y repartimos el resto según las cuotas
+      const e = 0.26, r = 1 - e, s = (pL + pV) || 1;
+      return norm(pL/s*r, e, pV/s*r, true);
+    }
+    const s = pL + pV; return norm(pL/s, null, pV/s, false);
   }
-  // 2) fallback: a partir del % de victorias del récord
-  const wL = winPct(local.record), wV = winPct(visita.record);
+
+  // fallback: % de victorias del récord (fútbol = V-E-D)
+  const wL = winPct(local.record, futbol), wV = winPct(visita.record, futbol);
   if (wL != null && wV != null && (wL + wV) > 0) {
-    if (futbol) { const e = 0.26; const r = 1 - e; const s = wL + wV || 1;
-      return norm(wL/s*r, e, wV/s*r, true); }
+    if (futbol) { const e = 0.26, r = 1 - e, s = wL + wV; return norm(wL/s*r, e, wV/s*r, true); }
     const s = wL + wV; return norm(wL/s, null, wV/s, false);
   }
-  // 3) sin datos: 50/50 (o 38/26/36 en fútbol)
+  // sin datos
   return futbol ? { local: 38, empate: 26, visita: 36 } : { local: 50, empate: null, visita: 50 };
 }
 function norm(l, e, v, futbol) {
-  const L = Math.round(l * 100);
-  const V = Math.round(v * 100);
+  let L = Math.round(l * 100), V = Math.round(v * 100);
   if (futbol) { const E = Math.max(0, 100 - L - V); return { local: L, empate: E, visita: V }; }
-  return { local: L, empate: null, visita: 100 - L };
+  L = Math.max(1, Math.min(99, L)); return { local: L, empate: null, visita: 100 - L };
 }
-function winPct(record) {
+/* % de victorias. Fútbol: récord "V-E-D" (cuenta empate como medio punto) */
+function winPct(record, futbol) {
   if (!record) return null;
+  if (futbol) {
+    const m = String(record).match(/(\d+)\s*-\s*(\d+)\s*-\s*(\d+)/);
+    if (!m) return null;
+    const w = +m[1], d = +m[2], l = +m[3], tot = w + d + l;
+    return tot > 0 ? (w + d*0.5) / tot : null;
+  }
   const m = String(record).match(/(\d+)\s*-\s*(\d+)/);
   if (!m) return null;
-  const w = +m[1], l = +m[2];
-  const tot = w + l;
+  const w = +m[1], l = +m[2], tot = w + l;
   return tot > 0 ? w / tot : null;
 }
 
@@ -195,17 +217,17 @@ function datosDe(comp, futbol, local, visita) {
 /* --- Interfaz pública --- */
 
 export async function listarPartidos(ligaId = null) {
-  const ids = ligaId ? [ligaId] : ['mlb', 'nba', 'nfl', 'epl', 'laliga'];  // destacados
+  // "Todos" = todas las ligas en temporada; por liga = solo esa
+  const ids = ligaId ? [ligaId] : ['mlb', 'epl', 'laliga', 'seriea', 'bundes', 'ucl', 'nba', 'nfl', 'nhl'];
   const nombre = (id) => (LIGAS.find(l => l.id === id) || {}).nombre || id.toUpperCase();
   const listas = await Promise.all(ids.map(async id => {
     const ruta = RUTA[id]; if (!ruta) return [];
     try {
       const data = await pedir(`${BASE}/${ruta}/scoreboard`);
       const eventos = data?.events || [];
-      return eventos.slice(0, ligaId ? 30 : 3).map(ev => aMatch(ev, id, nombre(id)));
+      return eventos.slice(0, ligaId ? 40 : 6).map(ev => aMatch(ev, id, nombre(id)));
     } catch (_) { return []; }
   }));
-  // Ordena: en vivo primero, luego próximos, luego finales
   const orden = { vivo: 0, proximo: 1, final: 2 };
   return listas.flat().sort((a, b) => (orden[a.estado] - orden[b.estado]));
 }
@@ -214,17 +236,45 @@ export async function detallePartido(id) {
   const [ligaId, evId] = String(id).split(':');
   const ruta = RUTA[ligaId]; if (!ruta) return null;
   const nombre = (LIGAS.find(l => l.id === ligaId) || {}).nombre || ligaId.toUpperCase();
-  // 1) intenta con el scoreboard (ya cacheado normalmente)
+  const futbol = esFutbol(ligaId);
+
+  let m = null;
+  // 1) scoreboard (normalmente ya cacheado)
   try {
     const data = await pedir(`${BASE}/${ruta}/scoreboard`);
     const ev = (data?.events || []).find(e => String(e.id) === String(evId));
-    if (ev) return aMatch(ev, ligaId, nombre);
+    if (ev) m = aMatch(ev, ligaId, nombre);
   } catch (_) {}
-  // 2) fallback: endpoint de resumen del evento
+
+  // 2) enriquecer con el resumen: predicción de ESPN + más estadísticas
   try {
-    const data = await pedir(`${BASE}/${ruta}/summary?event=${evId}`);
-    const ev = data?.header?.competitions?.[0] ? { id: evId, competitions: data.header.competitions, status: data.header.competitions[0].status, date: data.header.competitions[0].date } : null;
-    if (ev) return aMatch(ev, ligaId, nombre);
+    const s = await pedir(`${BASE}/${ruta}/summary?event=${evId}`);
+    if (!m && s?.header?.competitions?.[0]) {
+      const c = s.header.competitions[0];
+      m = aMatch({ id: evId, competitions: [c], status: c.status, date: c.date }, ligaId, nombre);
+    }
+    // Predicción de ESPN (home/away win %). Si la tenemos, manda sobre el récord.
+    const pred = s?.predictor;
+    const hg = Number(pred?.homeTeam?.gameProjection);
+    const ag = Number(pred?.awayTeam?.gameProjection);
+    if (m && isFinite(hg) && isFinite(ag) && (hg + ag) > 0 && esPlano(m.mercado, futbol)) {
+      if (futbol) {
+        const e = 26, r = (100 - e) / 100, tot = hg + ag || 1;
+        const L = Math.round((hg / tot) * 100 * r);
+        const V = Math.round((ag / tot) * 100 * r);
+        m.mercado = { local: L, empate: Math.max(0, 100 - L - V), visita: V };
+      } else {
+        const L = Math.max(1, Math.min(99, Math.round(hg)));
+        m.mercado = { local: L, empate: null, visita: 100 - L };
+      }
+    }
   } catch (_) {}
-  return null;
+
+  return m;
+}
+
+/* ¿el mercado quedó en el "plano" por falta de datos? */
+function esPlano(mk, futbol) {
+  if (!mk) return true;
+  return futbol ? (mk.local === 38 && mk.visita === 36) : (mk.local === 50 && mk.visita === 50);
 }
