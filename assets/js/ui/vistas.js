@@ -76,44 +76,99 @@ export function tarjetaPartido(p) {
 /* ---- Detalle de un partido ---- */
 export function detalle(p, opciones = {}) {
   if (!p) return `<div class="vacio"><div class="ic">${IC.grafico}</div>${t('det.vacio')}</div>`;
+  const L = (x) => esc(Lg(x));
 
-  const filas = (p.datos || []).map(d => `
-    <div class="drow">
-      <span class="l">${esc(Lg(d.local))}</span>
-      <span class="k">${esc(Lg(d.etiqueta))}</span>
-      <span class="r">${esc(Lg(d.visita))}</span>
-    </div>`).join('');
+  // Cuenta atrás / hora local + sede
+  let infoJuego = '';
+  {
+    const partes = [];
+    if (p.cuando) {
+      const d = new Date(p.cuando);
+      if (!isNaN(d)) {
+        const hora = d.toLocaleString(undefined, { weekday:'short', hour:'numeric', minute:'2-digit' });
+        partes.push(`<div class="ij"><span class="ij-k">${t('det.horario')}</span><span class="ij-v">${esc(hora)}</span></div>`);
+        if (p.estado === 'proximo') partes.push(`<div class="ij"><span class="ij-k">${t('det.faltan')}</span><span class="ij-v cuenta" data-cuando="${esc(p.cuando)}">—</span></div>`);
+      }
+    }
+    if (p.sede) partes.push(`<div class="ij"><span class="ij-k">${t('det.sede')}</span><span class="ij-v">${L(p.sede)}</span></div>`);
+    if (partes.length) infoJuego = `<div class="det-info">${partes.join('')}</div>`;
+  }
 
-  const cab = `
-    <div class="datos-head">
-      <span class="h-l">${esc(p.local.abrev)}</span>
-      <span class="h-k">${t('det.comparativa')}</span>
-      <span class="h-r">${esc(p.visita.abrev)}</span>
+  // Probabilidad (barra)
+  const m = p.mercado || {};
+  const tieneEmpate = m.empate != null;
+  const prob = `
+    <div class="det-sec-t">${t('prob.titulo')}</div>
+    <div class="det-prob">
+      <div class="dp-lado"><span class="dp-ab">${esc(p.local.abrev)}</span><span class="dp-num oro">${m.local||0}%</span></div>
+      ${tieneEmpate ? `<div class="dp-mid"><span class="dp-num2">${m.empate}%</span><span class="dp-lb">${t('prob.empate')}</span></div>` : ''}
+      <div class="dp-lado der"><span class="dp-ab">${esc(p.visita.abrev)}</span><span class="dp-num azul">${m.visita||0}%</span></div>
+    </div>
+    <div class="det-barra">
+      <i class="s-local" style="width:${m.local||0}%"></i>
+      ${tieneEmpate ? `<i class="s-empate" style="width:${m.empate}%"></i>` : ''}
+      <i class="s-visita" style="width:${m.visita||0}%"></i>
     </div>`;
 
+  // Lanzadores probables (MLB) o jugadores clave
+  function listaJugadores(lado, eq) {
+    const arr = (p.jugadores && p.jugadores[lado]) || [];
+    const prob = eq && eq.probable ? `<div class="pj"><span class="pj-n">${esc(eq.probable)}</span><span class="pj-e">${t('det.probable')}</span></div>` : '';
+    const items = arr.slice(0,3).map(j => `<div class="pj"><span class="pj-n">${esc(j.nombre)} ${j.pos?`<em>${esc(j.pos)}</em>`:''}</span><span class="pj-d">${esc(j.dato)} <small>${esc(j.etiqueta)}</small></span></div>`).join('');
+    return prob + items;
+  }
+  const hayJug = (p.jugadores && (p.jugadores.local.length || p.jugadores.visita.length)) || p.local.probable || p.visita.probable;
+  const jugadores = hayJug ? `
+    <div class="det-sec-t">${t('det.jugadores')}</div>
+    <div class="det-jug">
+      <div class="dj-col"><div class="dj-cab">${esc(p.local.abrev)}</div>${listaJugadores('local', p.local) || `<div class="pj vacia">${t('det.nodata')}</div>`}</div>
+      <div class="dj-col"><div class="dj-cab">${esc(p.visita.abrev)}</div>${listaJugadores('visita', p.visita) || `<div class="pj vacia">${t('det.nodata')}</div>`}</div>
+    </div>` : '';
+
+  // Lesionados
+  function listaLes(lado) {
+    const arr = (p.lesionados && p.lesionados[lado]) || [];
+    if (!arr.length) return `<div class="pj vacia">${t('det.sinlesiones')}</div>`;
+    return arr.slice(0,5).map(x => `<div class="pj les"><span class="pj-n">${esc(x.nombre)} ${x.pos?`<em>${esc(x.pos)}</em>`:''}</span><span class="pj-est">${esc(x.estado)}</span></div>`).join('');
+  }
+  const hayLes = p.lesionados && (p.lesionados.local.length || p.lesionados.visita.length);
+  const lesionados = hayLes ? `
+    <div class="det-sec-t">${t('det.lesionados')}</div>
+    <div class="det-jug">
+      <div class="dj-col"><div class="dj-cab">${esc(p.local.abrev)}</div>${listaLes('local')}</div>
+      <div class="dj-col"><div class="dj-cab">${esc(p.visita.abrev)}</div>${listaLes('visita')}</div>
+    </div>` : '';
+
+  // Comparativa de datos (sin repetir el récord)
+  const filas = (p.datos || []).map(d => `
+    <div class="drow">
+      <span class="l">${L(d.local)}</span>
+      <span class="k">${L(d.etiqueta)}</span>
+      <span class="r">${L(d.visita)}</span>
+    </div>`).join('');
+  const comparativa = filas ? `
+    <div class="datos-head"><span class="h-l">${esc(p.local.abrev)}</span><span class="h-k">${t('det.comparativa')}</span><span class="h-r">${esc(p.visita.abrev)}</span></div>
+    ${filas}` : '';
+
+  // Analista
   const a = p.analista;
   let bloqueAnalista = '';
   if (a) {
     const bloqueado = !!opciones.bloquear;
     bloqueAnalista = `
       <div class="analista ${bloqueado?'bloqueado':''}">
-        <div class="cab">
-          <span class="tt">${IC.estrella} ${t('analista.titulo')}</span>
-          <span class="autor">${esc(Lg(a.autor)||'')}</span>
-        </div>
-        <div class="veredicto">
-          <span class="fav">${esc(Lg(a.veredicto))}</span>
-          <span class="pct">${a.probabilidad}%</span>
-        </div>
+        <div class="cab"><span class="tt">${IC.estrella} ${t('analista.titulo')}</span><span class="autor">${esc(Lg(a.autor)||'')}</span></div>
+        <div class="veredicto"><span class="fav">${esc(Lg(a.veredicto))}</span><span class="pct">${a.probabilidad}%</span></div>
         <div class="medidor"><i style="width:${a.probabilidad}%"></i></div>
         <div class="texto">${esc(Lg(a.texto))}</div>
         ${bloqueado ? `<div class="candado">${IC.candado} ${t('analista.candado')}</div>` : ''}
       </div>`;
   }
 
+  const cuno = ligaCuno(p);
   return `
     <div class="det-cab">
-      <span class="det-liga">${esc(p.liga)}</span>
+      ${cuno}
       <button class="compartir" data-compartir="${esc(p.id)}">${IC.compartir} ${t('compartir')}</button>
     </div>
     <div class="det-vs">
@@ -121,9 +176,11 @@ export function detalle(p, opciones = {}) {
       <div class="mid"><img class="vs-img" src="assets/imagenes/vs.png" alt="VS" onerror="this.replaceWith(document.createTextNode('VS'))"></div>
       <div class="col">${escudo(p.visita)}<div class="nom">${esc(p.visita.nombre)}</div><div class="rec">${esc(p.visita.record||'')}</div></div>
     </div>
-    <div class="det-hora">${esc(Lg(p.inicio))}</div>
-    ${cab}
-    ${filas || `<div class="vacio" style="padding:20px">${t('det.sindatos')}</div>`}
+    ${infoJuego}
+    ${prob}
+    ${jugadores}
+    ${lesionados}
+    ${comparativa}
     ${bloqueAnalista}
   `;
 }
