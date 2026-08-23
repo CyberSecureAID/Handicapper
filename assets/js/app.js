@@ -125,6 +125,26 @@ async function abrirDetalle(id, el, opts = {}) {
     const pp = await detallePartido(b.dataset.compartir);
     if (pp) compartirPartido(pp);
   });
+  actualizarCuenta();
+}
+
+/* Cuenta atrás "empieza en Xh Ym", se refresca cada 30s */
+let _cuentaTimer = null;
+function actualizarCuenta() {
+  const pinta = () => {
+    document.querySelectorAll('.cuenta[data-cuando]').forEach(el => {
+      const d = new Date(el.dataset.cuando);
+      if (isNaN(d)) { el.textContent = '—'; return; }
+      let ms = d - Date.now();
+      if (ms <= 0) { el.textContent = '—'; return; }
+      const h = Math.floor(ms / 3600000);
+      const m = Math.floor((ms % 3600000) / 60000);
+      el.textContent = (h > 0 ? h + 'h ' : '') + m + 'm';
+    });
+  };
+  pinta();
+  if (_cuentaTimer) clearInterval(_cuentaTimer);
+  _cuentaTimer = setInterval(pinta, 30000);
 }
 
 function cerrarHoja() { const h = $('hoja'); if (h) h.classList.remove('abierta'); }
