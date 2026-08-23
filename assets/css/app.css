@@ -206,10 +206,62 @@
 
 /* ---------- Panel derecho ---------- */
 .panel { position: sticky; top: var(--cab-alta); height: calc(100vh - var(--cab-alta));
-  overflow-y: auto; border-left: 1px solid var(--linea); padding: 20px; }
-.vacio { color: var(--tinta-3); font-size: 13.5px; text-align: center; padding: 70px 24px; }
+  overflow-y: auto; border-left: 1px solid var(--linea); padding: 18px;
+  background:
+    linear-gradient(180deg, rgba(10,14,20,.82), rgba(6,9,14,.9)),
+    url('../imagenes/textura-tarjeta.jpg');
+  background-size: cover; background-position: center; color: #eef3f8; }
+.panel .det-liga, .panel .nom, .panel .drow .l, .panel .drow .r { color: #eef3f8; }
+.panel .liga-cuno { height: 26px; width: auto; max-width: 46px; object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
+.vacio { color: #8a97a6; font-size: 13.5px; text-align: center; padding: 70px 24px; }
 .vacio .ic { display: flex; justify-content: center; margin-bottom: 14px; opacity: .5; }
 .vacio .ic svg { width: 34px; height: 34px; }
+
+/* Info del juego: horario, cuenta atrás, sede */
+.det-info { display: flex; flex-direction: column; gap: 8px; margin: 16px 0 4px;
+  padding: 13px 14px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
+.det-info .ij { display: flex; align-items: center; justify-content: space-between; }
+.det-info .ij-k { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #96a2ae; }
+.det-info .ij-v { font-weight: 800; font-size: 13.5px; color: #f2f6fb; }
+.det-info .ij-v.cuenta { color: var(--oro); font-family: var(--mono); }
+
+/* Títulos de sección */
+.det-sec-t { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: #96a2ae; margin: 20px 0 10px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.09); }
+
+/* Probabilidad */
+.det-prob { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 10px; }
+.det-prob .dp-lado { display: flex; flex-direction: column; gap: 2px; }
+.det-prob .dp-lado.der { align-items: flex-end; }
+.det-prob .dp-ab { font-family: var(--mono); font-size: 11px; color: #96a2ae; font-weight: 700; }
+.det-prob .dp-num { font-family: var(--display); font-weight: 800; font-size: 30px; line-height: 1;
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+.det-prob .dp-num.oro { background-image: linear-gradient(180deg, #ffe9a8, #e0a52b); }
+.det-prob .dp-num.azul { background-image: linear-gradient(180deg, #7fd8ff, #1f78c2); }
+.det-prob .dp-mid { text-align: center; align-self: center; }
+.det-prob .dp-num2 { font-family: var(--mono); font-weight: 800; font-size: 15px; color: #c3ccd6; }
+.det-prob .dp-lb { display: block; font-size: 8.5px; text-transform: uppercase; letter-spacing: .1em; color: #96a2ae; }
+.det-barra { position: relative; height: 12px; border-radius: 20px; overflow: hidden; display: flex; gap: 2px;
+  background: rgba(255,255,255,.08); box-shadow: inset 0 1px 3px rgba(0,0,0,.5); }
+.det-barra i { display: block; height: 100%; }
+.det-barra .s-local { background: linear-gradient(90deg, #c79426, #ffe08a); }
+.det-barra .s-empate { background: linear-gradient(180deg, #9aa4b0, #6b7683); }
+.det-barra .s-visita { background: linear-gradient(90deg, #7fd8ff, #1f78c2); }
+
+/* Jugadores / lesionados: dos columnas */
+.det-jug { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dj-col { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 10px 11px; }
+.dj-cab { font-family: var(--mono); font-size: 11px; font-weight: 800; color: var(--oro); margin-bottom: 8px; letter-spacing: .05em; }
+.pj { display: flex; flex-direction: column; gap: 1px; padding: 6px 0; border-top: 1px solid rgba(255,255,255,.06); }
+.pj:first-of-type { border-top: 0; }
+.pj-n { font-size: 12.5px; font-weight: 700; color: #eef3f8; }
+.pj-n em { font-style: normal; color: #96a2ae; font-size: 10.5px; margin-left: 4px; }
+.pj-d { font-size: 11px; color: #c3ccd6; font-family: var(--mono); }
+.pj-d small { color: #96a2ae; }
+.pj-e { font-size: 10px; color: var(--oro); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.pj-est { font-size: 10.5px; color: #e5405a; font-weight: 700; }
+.pj.vacia { color: #8a97a6; font-size: 11.5px; }
+.pj.les .pj-n { color: #dfe6ee; }
 
 .det-cab { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
 .det-cab .det-liga { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--tinta-3); }
@@ -225,7 +277,7 @@
 .det-vs .col { flex: 1; text-align: center; }
 .det-vs .col .escudo { width: 58px; height: 58px; margin: 0 auto 10px; border-radius: 15px; }
 .det-vs .col .escudo img { width: 46px; height: 46px; }
-.det-vs .col .nom { font-weight: 800; font-size: 15px; line-height: 1.25; color: var(--tinta); }
+.det-vs .col .nom { font-weight: 800; font-size: 15px; line-height: 1.25; color: #f2f6fb; }
 .det-vs .col .rec { font-size: 12px; color: var(--oro); font-family: var(--mono); font-weight: 800; margin-top: 4px; }
 .det-vs .mid { align-self: center; font-family: var(--display); color: var(--tinta-3); font-weight: 800; font-size: 13px; }
 .det-vs .mid .vs-img { width: 66px; height: auto; display: block; filter: drop-shadow(0 3px 6px rgba(0,0,0,.35)); }
@@ -240,8 +292,9 @@
 
 .drow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 12px 12px; border-radius: 10px; }
 .drow:nth-child(even) { background: var(--fondo-2); }
-.drow .l { text-align: right; font-weight: 800; font-size: 15px; color: var(--tinta); }
-.drow .r { text-align: left; font-weight: 800; font-size: 15px; color: var(--tinta); }
+.drow .l { text-align: right; font-weight: 800; font-size: 15px; color: #eef3f8; }
+.drow .r { text-align: left; font-weight: 800; font-size: 15px; color: #eef3f8; }
+.drow:nth-child(even) { background: rgba(255,255,255,.05); }
 .drow .k { padding: 0 14px; font-size: 10px; color: var(--tinta-3); text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; font-weight: 700; }
 
 /* Bloque analista */
@@ -297,7 +350,11 @@
   .tabbar .t .ic svg { width: 21px; height: 21px; }
   .tabbar .t.on { color: var(--oro); }
 
-  .hoja-detalle { position: fixed; inset: 0; z-index: 70; background: var(--fondo); overflow-y: auto; padding: 14px 15px calc(90px + env(safe-area-inset-bottom,0)); }
+  .hoja-detalle { position: fixed; inset: 0; z-index: 70; overflow-y: auto; padding: 14px 15px calc(90px + env(safe-area-inset-bottom,0));
+    background: linear-gradient(180deg, rgba(10,14,20,.88), rgba(6,9,14,.94)), url('../imagenes/textura-tarjeta.jpg');
+    background-size: cover; background-position: center; color: #eef3f8; }
+  .hoja-detalle .det-liga, .hoja-detalle .nom, .hoja-detalle .drow .l, .hoja-detalle .drow .r { color: #eef3f8; }
+  .hoja-detalle .liga-cuno { height: 26px; width: auto; max-width: 46px; object-fit: contain; }
   .hoja-detalle.abierta { display: block; }
   .hoja-detalle .cerrar { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 10px; background: var(--tarjeta); border: 1px solid var(--linea); color: var(--tinta-2); height: 38px; padding: 0 15px; border-radius: 11px; font-weight: 700; font-size: 13px; box-shadow: var(--sombra-boton); }
   .hoja-detalle .cerrar svg { width: 15px; height: 15px; }
