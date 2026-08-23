@@ -95,11 +95,14 @@ function equiposDe(comp) {
   const local = cs.find(c => c.homeAway === 'home') || cs[0];
   const visita = cs.find(c => c.homeAway === 'away') || cs[1];
   const eq = (c) => ({
+    id: c?.team?.id,
     nombre: c?.team?.displayName || c?.team?.name || '—',
     abrev: c?.team?.abbreviation || (c?.team?.displayName || '??').slice(0, 3).toUpperCase(),
     record: c?.records?.[0]?.summary || c?.team?.record || '',
     logo: c?.team?.logo || (c?.team?.logos?.[0]?.href) || '',
     score: c?.score,
+    // lanzador probable (MLB) si viene en el scoreboard
+    probable: c?.probables?.[0]?.athlete?.displayName || c?.probables?.[0]?.athlete?.fullName || null,
     _c: c,
   });
   return { local: eq(local), visita: eq(visita) };
@@ -174,25 +177,25 @@ function aMatch(ev, ligaId, ligaNombre) {
     id: `${ligaId}:${ev.id}`,
     liga: ligaNombre, ligaId,
     inicio: inicioDe(ev),
+    cuando: ev?.date || comp?.date || null,          // ISO para la cuenta atrás
+    sede: comp?.venue?.fullName || null,
     estado,
-    local:  { nombre: local.nombre, abrev: local.abrev, record: local.record, logo: local.logo },
-    visita: { nombre: visita.nombre, abrev: visita.abrev, record: visita.record, logo: visita.logo },
+    local:  { id: local.id, nombre: local.nombre, abrev: local.abrev, record: local.record, logo: local.logo, probable: local.probable },
+    visita: { id: visita.id, nombre: visita.nombre, abrev: visita.abrev, record: visita.record, logo: visita.logo, probable: visita.probable },
     marcador: (estado !== 'proximo' && local.score != null)
       ? { local: Number(local.score), visita: Number(visita.score) } : null,
     mercado: mercadoDe(comp, futbol, local, visita),
     datos: datosDe(comp, futbol, local, visita),
-    analista: null,   // las señales del analista vendrán del panel (Fase 6)
+    jugadores: null,     // se llena en el detalle (líderes)
+    lesionados: null,    // se llena en el detalle
+    analista: null,
   };
   return m;
 }
 
-/* Filas de comparación básicas con lo que trae el scoreboard */
+/* Filas de comparación (sin repetir el récord, que ya va en la cabecera) */
 function datosDe(comp, futbol, local, visita) {
   const filas = [];
-  if (local.record || visita.record)
-    filas.push({ etiqueta: { en: 'Record', es: 'Récord' }, local: local.record || '—', visita: visita.record || '—' });
-
-  // estadísticas del competidor si vienen (varía por deporte)
   const stats = (c) => {
     const o = {};
     (c?._c?.statistics || []).forEach(s => { if (s?.name) o[s.name] = s.displayValue; });
@@ -207,11 +210,53 @@ function datosDe(comp, futbol, local, visita) {
     par('possessionPct', 'Possession %', 'Posesión %');
     par('shotsOnTarget', 'Shots on target', 'Tiros a puerta');
     par('wins', 'Wins', 'Victorias');
+    par('goalsAgainst', 'Goals against', 'Goles en contra');
   } else {
     par('avgPointsFor', 'Points/game', 'Puntos/juego');
     par('avgPointsAgainst', 'Points against', 'Puntos en contra');
   }
   return filas;
+}
+
+/* Líderes/jugadores clave por equipo desde el summary */
+function lideresDe(summary, localId, visitaId) {
+  const out = { local: [], visita: [] };
+  const grupos = summary?.leaders || summary?.boxscore?.leaders || [];
+  grupos.forEach(g => {
+    const tid = String(g?.team?.id || '');
+    const destino = tid === String(localId) ? out.local : (tid === String(visitaId) ? out.visita : null);
+    if (!destino) return;
+    (g?.leaders || []).slice(0, 3).forEach(cat => {
+      const top = cat?.leaders?.[0];
+      const at = top?.athlete;
+      if (at) destino.push({
+        nombre: at.displayName || at.shortName || at.fullName || '',
+        pos: at.position?.abbreviation || at.position?.name || '',
+        etiqueta: cat.displayName || cat.shortDisplayName || cat.name || '',
+        dato: top.displayValue || '',
+      });
+    });
+  });
+  return out;
+}
+
+/* Lesionados por equipo desde el summary */
+function lesionadosDe(summary, localId, visitaId) {
+  const out = { local: [], visita: [] };
+  (summary?.injuries || []).forEach(g => {
+    const tid = String(g?.team?.id || '');
+    const destino = tid === String(localId) ? out.local : (tid === String(visitaId) ? out.visita : null);
+    if (!destino) return;
+    (g?.injuries || []).slice(0, 5).forEach(inj => {
+      const at = inj?.athlete;
+      if (at) destino.push({
+        nombre: at.displayName || at.fullName || '',
+        pos: at.position?.abbreviation || '',
+        estado: inj?.status || inj?.type?.description || '',
+      });
+    });
+  });
+  return out;
 }
 
 /* --- Interfaz pública --- */
@@ -267,6 +312,12 @@ export async function detallePartido(id) {
         const L = Math.max(1, Math.min(99, Math.round(hg)));
         m.mercado = { local: L, empate: null, visita: 100 - L };
       }
+    }
+    // Jugadores clave y lesionados
+    if (m) {
+      m.jugadores = lideresDe(s, m.local.id, m.visita.id);
+      m.lesionados = lesionadosDe(s, m.local.id, m.visita.id);
+      if (!m.sede) m.sede = s?.gameInfo?.venue?.fullName || null;
     }
   } catch (_) {}
 
