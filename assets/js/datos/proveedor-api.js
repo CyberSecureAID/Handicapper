@@ -94,17 +94,22 @@ function equiposDe(comp) {
   const cs = comp?.competitors || [];
   const local = cs.find(c => c.homeAway === 'home') || cs[0];
   const visita = cs.find(c => c.homeAway === 'away') || cs[1];
-  const eq = (c) => ({
-    id: c?.team?.id,
-    nombre: c?.team?.displayName || c?.team?.name || '—',
-    abrev: c?.team?.abbreviation || (c?.team?.displayName || '??').slice(0, 3).toUpperCase(),
-    record: c?.records?.[0]?.summary || c?.team?.record || '',
-    logo: c?.team?.logo || (c?.team?.logos?.[0]?.href) || '',
-    score: c?.score,
-    // lanzador probable (MLB) si viene en el scoreboard
-    probable: c?.probables?.[0]?.athlete?.displayName || c?.probables?.[0]?.athlete?.fullName || null,
-    _c: c,
-  });
+  const eq = (c) => {
+    const recs = c?.records || [];
+    const rec = (t) => (recs.find(r => (r.type || r.name || '').toLowerCase() === t)?.summary) || null;
+    return {
+      id: c?.team?.id,
+      nombre: c?.team?.displayName || c?.team?.name || '—',
+      abrev: c?.team?.abbreviation || (c?.team?.displayName || '??').slice(0, 3).toUpperCase(),
+      record: rec('total') || recs[0]?.summary || c?.team?.record || '',
+      recordCasa: rec('home'),
+      recordFuera: rec('road') || rec('away'),
+      logo: c?.team?.logo || (c?.team?.logos?.[0]?.href) || '',
+      score: c?.score,
+      probable: c?.probables?.[0]?.athlete?.displayName || c?.probables?.[0]?.athlete?.fullName || null,
+      _c: c,
+    };
+  };
   return { local: eq(local), visita: eq(visita) };
 }
 
@@ -124,11 +129,17 @@ function factorLocal(ligaId, futbol) {
   return base / (1 - base);
 }
 
-/* Modelo honesto sin cuota: Log5 (fuerza relativa por récord) + localía.
-   Separa mucho más que normalizar el récord de forma lineal. */
+/* Modelo honesto sin cuota: Log5 (fuerza relativa) + localía.
+   Usa el récord EN CASA del local y el de VISITA del rival si existen
+   (más predictivo); si no, el récord total. Separa mucho más que
+   normalizar el récord de forma lineal. */
 function modeloSinCuota(ligaId, futbol, local, visita) {
-  let pL = winPct(local.record, futbol); if (pL == null) pL = 0.5;
-  let pV = winPct(visita.record, futbol); if (pV == null) pV = 0.5;
+  let pL = winPct(local.recordCasa, futbol);
+  if (pL == null) pL = winPct(local.record, futbol);
+  if (pL == null) pL = 0.5;
+  let pV = winPct(visita.recordFuera, futbol);
+  if (pV == null) pV = winPct(visita.record, futbol);
+  if (pV == null) pV = 0.5;
   pL = Math.min(0.85, Math.max(0.15, pL));
   pV = Math.min(0.85, Math.max(0.15, pV));
   // Log5: prob de que el local gane (sin considerar empate)
