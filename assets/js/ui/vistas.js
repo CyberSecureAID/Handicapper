@@ -3,7 +3,7 @@
    Renderiza los logos reales con respaldo (abreviatura) si falla la carga.
    ============================================================ */
 import { IC } from './iconos.js';
-import { t, Lg } from './idioma.js';
+import { t, Lg, idiomaActual } from './idioma.js';
 
 /* Icono (cuño) de cada liga para la esquina de la tarjeta */
 const LIGA_ICONO = {
@@ -94,11 +94,20 @@ export function detalle(p, opciones = {}) {
     if (partes.length) infoJuego = `<div class="det-info">${partes.join('')}</div>`;
   }
 
-  // Probabilidad (barra)
+  // Probabilidad (barra) + confianza + explicación
   const m = p.mercado || {};
   const tieneEmpate = m.empate != null;
+  const confMap = {
+    'alta':     { en: 'High confidence', es: 'Confianza alta', c: 'alta' },
+    'media':    { en: 'Medium confidence', es: 'Confianza media', c: 'media' },
+    'baja':     { en: 'Low confidence', es: 'Confianza baja', c: 'baja' },
+    'muy baja': { en: 'Very low confidence', es: 'Confianza muy baja', c: 'muybaja' },
+  };
+  const cf = confMap[p.confianza] || null;
+  const badge = cf ? `<span class="conf ${cf.c}">${idiomaActual()==='es'?cf.es:cf.en}</span>` : '';
+  const factoresTxt = p.factores ? `<div class="det-factores">${esc(Lg(p.factores))}</div>` : '';
   const prob = `
-    <div class="det-sec-t">${t('prob.titulo')}</div>
+    <div class="det-sec-t">${t('prob.titulo')} ${badge}</div>
     <div class="det-prob">
       <div class="dp-lado"><span class="dp-ab">${esc(p.local.abrev)}</span><span class="dp-num oro">${m.local||0}%</span></div>
       ${tieneEmpate ? `<div class="dp-mid"><span class="dp-num2">${m.empate}%</span><span class="dp-lb">${t('prob.empate')}</span></div>` : ''}
@@ -108,7 +117,8 @@ export function detalle(p, opciones = {}) {
       <i class="s-local" style="width:${m.local||0}%"></i>
       ${tieneEmpate ? `<i class="s-empate" style="width:${m.empate}%"></i>` : ''}
       <i class="s-visita" style="width:${m.visita||0}%"></i>
-    </div>`;
+    </div>
+    ${factoresTxt}`;
 
   // Lanzadores probables (MLB) o jugadores clave
   function listaJugadores(lado, eq) {
