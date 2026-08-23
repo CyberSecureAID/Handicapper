@@ -127,28 +127,30 @@
 .pmatch {
   position: relative;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--tarjeta) 100%, transparent), var(--tarjeta-alta));
-  border: 1px solid var(--linea);
-  border-radius: var(--r-xl); padding: 18px 20px 20px; margin-bottom: 16px;
+    linear-gradient(180deg, rgba(10,14,20,.72), rgba(6,9,14,.82)),
+    url('../imagenes/textura-tarjeta.jpg');
+  background-size: cover; background-position: center;
+  border: 1px solid rgba(232,184,75,.22);
+  border-radius: var(--r-xl); padding: 20px 20px 22px; margin-bottom: 16px;
   cursor: pointer; overflow: hidden;
   transition: border-color var(--trans), transform .14s ease, box-shadow var(--trans);
   box-shadow: var(--sombra-tarjeta);
 }
-/* filo dorado superior sutil */
+/* filo dorado superior */
 .pmatch::before {
-  content:''; position:absolute; top:0; left:18px; right:18px; height:2px; border-radius:2px;
-  background: linear-gradient(90deg, transparent, rgba(232,184,75,.55), transparent);
-  opacity:.7;
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background: linear-gradient(90deg, transparent, var(--oro), transparent);
+  opacity:.85;
 }
-.pmatch:hover { border-color: rgba(232,184,75,.6); box-shadow: 0 0 0 1px rgba(232,184,75,.12), var(--sombra); transform: translateY(-4px); }
+.pmatch:hover { border-color: rgba(232,184,75,.7); box-shadow: 0 0 0 1px rgba(232,184,75,.18), var(--sombra); transform: translateY(-4px); }
 .pmatch.sel { border-color: var(--oro); box-shadow: 0 0 0 1px var(--oro), var(--sombra); }
 
 .pmatch .cab { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
 .pmatch .liga-cuno { height: 26px; width: auto; max-width: 46px; object-fit: contain; display: block;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
 .pmatch .liga-tag { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--tinta-3); padding: 3px 8px; border: 1px solid var(--linea); border-radius: 6px; }
-.pmatch .hora { margin-left: auto; font-size: 12px; color: var(--tinta-3); font-weight: 700; }
+  color: #c3ccd6; padding: 3px 8px; border: 1px solid rgba(255,255,255,.18); border-radius: 6px; }
+.pmatch .hora { margin-left: auto; font-size: 12px; color: #aeb8c3; font-weight: 700; }
 .pmatch .hora.vivo { color: var(--rojo); display: inline-flex; align-items: center; gap: 5px; }
 .pmatch .hora.vivo::before { content:''; width: 7px; height: 7px; border-radius: 50%; background: var(--rojo);
   box-shadow: 0 0 8px var(--rojo); animation: lat 1.3s infinite; }
@@ -167,42 +169,38 @@
 /* ============================================================
    DUELO — equipo · VS · equipo, con dato y % debajo de cada uno
    ============================================================ */
-.duelo { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 10px; margin-top: 4px; }
-.lado-eq { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 7px; }
+.duelo { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 10px; margin-top: 8px; }
+.lado-eq { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
 .lado-eq .escudo { margin-bottom: 2px; }
-.lado-eq .nom { font-weight: 800; font-size: 15.5px; line-height: 1.2; color: var(--tinta); min-height: 2.4em;
-  display: flex; align-items: center; }
-.lado-eq .rec { font-family: var(--mono); font-weight: 800; font-size: 12px; letter-spacing: .03em;
-  color: var(--oro-2); padding: 3px 11px; border-radius: 999px;
-  background: var(--oro-suave); border: 1px solid rgba(232,184,75,.28); }
-[data-tema="oscuro"] .lado-eq .rec { color: var(--oro); }
-.lado-eq .pct { font-family: var(--display); font-weight: 800; font-size: 32px; line-height: 1; margin-top: 2px; }
-.lado-eq .pct.oro { color: var(--oro); }
-.lado-eq .pct.azul { color: var(--azul); }
-.lado-eq .pct.gana { position: relative; }
-.lado-eq .pct.gana::after { content:''; display:block; width: 26px; height: 3px; border-radius: 3px;
-  background: currentColor; margin: 6px auto 0; opacity: .9; }
+.lado-eq .nom { font-weight: 800; font-size: 16px; line-height: 1.2; color: #f2f6fb; min-height: 2.4em;
+  display: flex; align-items: center; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+.lado-eq .rec { font-family: var(--mono); font-weight: 700; font-size: 12.5px; letter-spacing: .04em;
+  color: #c3ccd6; }
+.lado-eq .pct { font-family: var(--display); font-weight: 800; font-size: 40px; line-height: 1; margin-top: 4px;
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lado-eq .pct.oro  { background-image: linear-gradient(180deg, #ffe9a8, #e0a52b); }
+.lado-eq .pct.azul { background-image: linear-gradient(180deg, #7fd8ff, #1f78c2); }
+.lado-eq .pct.gana { font-size: 46px; }
 
-.vs-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; align-self: center; padding-top: 14px; }
-.vs-col .vs-mini { width: 62px; height: auto; filter: drop-shadow(0 3px 6px rgba(0,0,0,.4)); }
-.vs-col .empate { font-family: var(--mono); font-size: 10.5px; font-weight: 700; color: var(--tinta-3);
-  white-space: nowrap; }
+.vs-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; align-self: center; padding-top: 22px; }
+.vs-col .vs-mini { width: 92px; height: auto; filter: drop-shadow(0 4px 8px rgba(0,0,0,.55)); }
+.vs-col .empate { font-family: var(--mono); font-size: 11px; font-weight: 700; color: #aeb8c3; white-space: nowrap; }
 
 /* Barra de probabilidad */
 .pmatch .barra { position: relative; height: 12px; border-radius: 20px; overflow: hidden;
-  background: var(--linea); display: flex; gap: 2px; margin-top: 16px;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,.35); }
+  background: rgba(255,255,255,.08); display: flex; gap: 2px; margin-top: 18px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.5); }
 .pmatch .barra i { display: block; height: 100%; position: relative; }
-.pmatch .barra .s-local { background: linear-gradient(90deg, var(--oro-2), var(--oro)); }
-.pmatch .barra .s-empate { background: linear-gradient(180deg, #9aa4b0, var(--tinta-3)); }
-.pmatch .barra .s-visita { background: linear-gradient(90deg, #6cc5f0, var(--azul)); }
+.pmatch .barra .s-local { background: linear-gradient(90deg, #c79426, #ffe08a); }
+.pmatch .barra .s-empate { background: linear-gradient(180deg, #9aa4b0, #6b7683); }
+.pmatch .barra .s-visita { background: linear-gradient(90deg, #7fd8ff, #1f78c2); }
 .pmatch .barra i::after { content:''; position:absolute; inset:0;
   background: linear-gradient(180deg, rgba(255,255,255,.32), rgba(255,255,255,0) 55%); }
 
-.tiene-analisis { display: inline-flex; align-items: center; gap: 6px; margin-top: 15px;
+.tiene-analisis { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px;
   padding: 7px 13px; border-radius: 9px;
-  background: linear-gradient(180deg, var(--oro-suave), transparent);
-  border: 1px solid rgba(232,184,75,.35);
+  background: linear-gradient(180deg, rgba(232,184,75,.2), rgba(232,184,75,.06));
+  border: 1px solid rgba(232,184,75,.4);
   color: var(--oro); font-size: 11.5px; font-weight: 800; box-shadow: var(--sombra-boton); }
 .tiene-analisis svg { width: 13px; height: 13px; }
 
