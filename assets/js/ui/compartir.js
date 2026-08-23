@@ -7,7 +7,7 @@
      - Datos repartidos para llenar la tarjeta (hasta 11 filas).
    Textos propios en el idioma activo (inglés por defecto).
    ============================================================ */
-import { t } from './idioma.js';
+import { t, Lg } from './idioma.js';
 
 const ORO = '#E8B84B', ORO2 = '#c79426', AZUL = '#3ca8e8', GRIS = '#9aa6b2';
 const TPL = 'assets/imagenes/compartir.jpg';
@@ -103,13 +103,13 @@ export async function compartirPartido(p) {
       const y = Math.round(y0 + dy*i);
       if (i > 0) { g.strokeStyle = 'rgba(255,255,255,.11)'; g.lineWidth = 1;
         g.beginPath(); g.moveTo(210, Math.round(y - dy/2)); g.lineTo(1044, Math.round(y - dy/2)); g.stroke(); }
-      let s = fit(g, String(dd.local), 250, 28, '"Chakra Petch", sans-serif');
-      C(g, String(dd.local), EQ.izq, y, `800 ${s}px "Chakra Petch", sans-serif`, ORO);
+      let s = fit(g, String(Lg(dd.local)), 250, 28, '"Chakra Petch", sans-serif');
+      C(g, String(Lg(dd.local)), EQ.izq, y, `800 ${s}px "Chakra Petch", sans-serif`, ORO);
       let ks = 18; g.font = `700 ${ks}px "Inter", sans-serif`;
-      while (g.measureText(String(dd.etiqueta)).width > 330 && ks > 12) { ks--; g.font=`700 ${ks}px "Inter", sans-serif`; }
-      C(g, String(dd.etiqueta).toUpperCase(), 627, y, `700 ${ks}px "Inter", sans-serif`, GRIS);
-      s = fit(g, String(dd.visita), 250, 28, '"Chakra Petch", sans-serif');
-      C(g, String(dd.visita), EQ.der, y, `800 ${s}px "Chakra Petch", sans-serif`, AZUL);
+      while (g.measureText(String(Lg(dd.etiqueta))).width > 330 && ks > 12) { ks--; g.font=`700 ${ks}px "Inter", sans-serif`; }
+      C(g, String(Lg(dd.etiqueta)).toUpperCase(), 627, y, `700 ${ks}px "Inter", sans-serif`, GRIS);
+      s = fit(g, String(Lg(dd.visita)), 250, 28, '"Chakra Petch", sans-serif');
+      C(g, String(Lg(dd.visita)), EQ.der, y, `800 ${s}px "Chakra Petch", sans-serif`, AZUL);
     });
     return cv;
   }

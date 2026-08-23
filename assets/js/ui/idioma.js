@@ -78,6 +78,12 @@ let _idioma = 'en';   // por defecto inglés
 
 export function idiomaActual() { return _idioma; }
 
+/* Resuelve un valor que puede ser texto o {en, es} según el idioma activo */
+export function Lg(v) {
+  if (v && typeof v === 'object' && !Array.isArray(v)) return v[_idioma] ?? v.en ?? '';
+  return v;
+}
+
 export function t(clave) {
   return (DIC[_idioma] && DIC[_idioma][clave]) || (DIC.en[clave]) || clave;
 }

@@ -3,7 +3,7 @@
    Renderiza los logos reales con respaldo (abreviatura) si falla la carga.
    ============================================================ */
 import { IC } from './iconos.js';
-import { t } from './idioma.js';
+import { t, Lg } from './idioma.js';
 
 /* Icono (cuño) de cada liga para la esquina de la tarjeta */
 const LIGA_ICONO = {
@@ -54,7 +54,7 @@ export function tarjetaPartido(p) {
   <div class="pmatch" data-id="${esc(p.id)}">
     <div class="cab">
       ${ligaCuno(p)}
-      <span class="hora ${vivo?'vivo':''}">${esc(p.inicio)}</span>
+      <span class="hora ${vivo?'vivo':''}">${esc(Lg(p.inicio))}</span>
     </div>
     <div class="duelo">
       ${ladoEq(p.local, m.local, 'oro', localGana)}
@@ -79,9 +79,9 @@ export function detalle(p, opciones = {}) {
 
   const filas = (p.datos || []).map(d => `
     <div class="drow">
-      <span class="l">${esc(d.local)}</span>
-      <span class="k">${esc(d.etiqueta)}</span>
-      <span class="r">${esc(d.visita)}</span>
+      <span class="l">${esc(Lg(d.local))}</span>
+      <span class="k">${esc(Lg(d.etiqueta))}</span>
+      <span class="r">${esc(Lg(d.visita))}</span>
     </div>`).join('');
 
   const cab = `
@@ -99,14 +99,14 @@ export function detalle(p, opciones = {}) {
       <div class="analista ${bloqueado?'bloqueado':''}">
         <div class="cab">
           <span class="tt">${IC.estrella} ${t('analista.titulo')}</span>
-          <span class="autor">${esc(a.autor||'')}</span>
+          <span class="autor">${esc(Lg(a.autor)||'')}</span>
         </div>
         <div class="veredicto">
-          <span class="fav">${esc(a.veredicto)}</span>
+          <span class="fav">${esc(Lg(a.veredicto))}</span>
           <span class="pct">${a.probabilidad}%</span>
         </div>
         <div class="medidor"><i style="width:${a.probabilidad}%"></i></div>
-        <div class="texto">${esc(a.texto)}</div>
+        <div class="texto">${esc(Lg(a.texto))}</div>
         ${bloqueado ? `<div class="candado">${IC.candado} ${t('analista.candado')}</div>` : ''}
       </div>`;
   }
@@ -121,7 +121,7 @@ export function detalle(p, opciones = {}) {
       <div class="mid"><img class="vs-img" src="assets/imagenes/vs.png" alt="VS" onerror="this.replaceWith(document.createTextNode('VS'))"></div>
       <div class="col">${escudo(p.visita)}<div class="nom">${esc(p.visita.nombre)}</div><div class="rec">${esc(p.visita.record||'')}</div></div>
     </div>
-    <div class="det-hora">${esc(p.inicio)}</div>
+    <div class="det-hora">${esc(Lg(p.inicio))}</div>
     ${cab}
     ${filas || `<div class="vacio" style="padding:20px">${t('det.sindatos')}</div>`}
     ${bloqueAnalista}
