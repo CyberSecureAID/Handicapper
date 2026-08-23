@@ -88,19 +88,24 @@
 
 /* ---------- Sidebar de ligas ---------- */
 .side { position: sticky; top: var(--cab-alta); height: calc(100vh - var(--cab-alta));
-  overflow-y: auto; border-right: 1px solid var(--linea); padding: 18px 12px; }
+  overflow-y: auto; border-right: 1px solid var(--linea); padding: 18px 12px;
+  background:
+    linear-gradient(180deg, rgba(10,14,20,.82), rgba(6,9,14,.9)),
+    url('../imagenes/textura-tarjeta.jpg');
+  background-size: cover; background-position: center; }
+.side .eyebrow { color: #96a2ae; }
 .eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
   text-transform: uppercase; color: var(--tinta-3); margin: 4px 10px 12px; }
 .side .liga {
   display: flex; align-items: center; gap: 12px; width: 100%;
   padding: 11px 13px; margin: 4px 0; border: 1px solid transparent;
-  border-radius: 12px; background: none; color: var(--tinta-2);
+  border-radius: 12px; background: none; color: #c3ccd6;
   font-size: 14.5px; font-weight: 600; text-align: left; transition: all var(--trans);
 }
-.side .liga .ic { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; color: var(--tinta-3); font-size: 20px; }
+.side .liga .ic { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; color: #96a2ae; font-size: 20px; }
 .liga-logo { height: 24px; width: auto; max-width: 34px; object-fit: contain; display: block; }
-.side .liga:hover { background: var(--tarjeta); color: var(--tinta); box-shadow: var(--sombra-boton); }
-.side .liga.on { background: var(--oro-suave); border-color: rgba(232,184,75,.45); color: var(--oro); }
+.side .liga:hover { background: rgba(255,255,255,.07); color: #fff; }
+.side .liga.on { background: var(--oro-suave); border-color: rgba(232,184,75,.5); color: var(--oro); }
 .side .liga.on .ic { color: var(--oro); }
 /* En tema claro el dorado sobre blanco se pierde: seleccionado = chip oscuro legible */
 [data-tema="claro"] .side .liga.on,
