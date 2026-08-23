@@ -15,6 +15,7 @@
    ============================================================ */
 
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports';
+import { analizar } from '../analisis/motor.js';
 
 /* Mapa de nuestras ligas -> ruta ESPN {deporte}/{liga} */
 const RUTA = {
@@ -121,51 +122,16 @@ function mlNum(v) {
   return m ? Number(m[0].replace('+', '')) : null;
 }
 
-/* Ventaja de localía por deporte (prob. base del local entre iguales) */
-const HFA = { mlb: 0.54, nba: 0.60, nfl: 0.57, nhl: 0.55, _soc: 0.46 };
-function factorLocal(ligaId, futbol) {
-  const base = futbol ? HFA._soc : (HFA[ligaId] ?? 0.55);
-  // convertir prob base (entre iguales) a un factor multiplicativo de cuota
-  return base / (1 - base);
-}
 
-/* Modelo honesto sin cuota: Log5 (fuerza relativa) + localía.
-   Usa el récord EN CASA del local y el de VISITA del rival si existen
-   (más predictivo); si no, el récord total. Separa mucho más que
-   normalizar el récord de forma lineal. */
-function modeloSinCuota(ligaId, futbol, local, visita) {
-  let pL = winPct(local.recordCasa, futbol);
-  if (pL == null) pL = winPct(local.record, futbol);
-  if (pL == null) pL = 0.5;
-  let pV = winPct(visita.recordFuera, futbol);
-  if (pV == null) pV = winPct(visita.record, futbol);
-  if (pV == null) pV = 0.5;
-  pL = Math.min(0.85, Math.max(0.15, pL));
-  pV = Math.min(0.85, Math.max(0.15, pV));
-  // Log5: prob de que el local gane (sin considerar empate)
-  const den = pL + pV - 2 * pL * pV;
-  let e = den > 0 ? (pL - pL * pV) / den : 0.5;
-  // Ventaja de localía (en espacio de cuotas)
-  const oddsL = (e / (1 - e)) * factorLocal(ligaId, futbol);
-  let pLocal = oddsL / (1 + oddsL);
-  pLocal = Math.min(0.9, Math.max(0.1, pLocal));
-  if (futbol) {
-    const e26 = 0.26, r = 1 - e26;
-    const L = Math.round(pLocal * r * 100), V = Math.round((1 - pLocal) * r * 100);
-    return { local: L, empate: Math.max(0, 100 - L - V), visita: V };
-  }
-  const L = Math.round(pLocal * 100);
-  return { local: L, empate: null, visita: 100 - L };
-}
 
-/* Mercado: cuota real si existe (mejor señal); si no, modelo Log5+localía */
+/* Lee la cuota real si existe. Devuelve { prob, fuente } donde
+   fuente='cuota' si se usó moneyline; si no, { prob:null, fuente:null }
+   y será el MOTOR quien calcule la probabilidad. */
 function mercadoDe(comp, futbol, local, visita, ligaId) {
   const o = comp?.odds?.[0] || {};
   const hto = o.homeTeamOdds || {}, ato = o.awayTeamOdds || {};
   let mlH = mlNum(hto.moneyLine ?? hto.current?.moneyLine?.american ?? hto.close?.moneyLine?.american ?? hto.open?.moneyLine?.american);
   let mlA = mlNum(ato.moneyLine ?? ato.current?.moneyLine?.american ?? ato.close?.moneyLine?.american ?? ato.open?.moneyLine?.american);
-
-  // parsear "ABBR -150" de details si falta un lado
   if ((mlH == null || mlA == null) && o.details) {
     const dm = String(o.details).match(/([A-Z]{2,4})\s*([+-]\d+)/);
     if (dm) {
@@ -174,18 +140,17 @@ function mercadoDe(comp, futbol, local, visita, ligaId) {
       else if (favAb === visita.abrev && mlA == null) mlA = favMl;
     }
   }
-
   let pL = probDeMoneyline(mlH), pV = probDeMoneyline(mlA);
   if (pL != null && pV == null) pV = 1 - pL;
   if (pV != null && pL == null) pL = 1 - pV;
-
   if (pL != null && pV != null) {
     const s = pL + pV || 1;
-    if (futbol) { const e = 0.26, r = 1 - e; return norm(pL/s*r, e, pV/s*r, true); }
-    return norm(pL/s, null, pV/s, false);
+    const prob = futbol
+      ? norm(pL/s*(1-0.26), 0.26, pV/s*(1-0.26), true)
+      : norm(pL/s, null, pV/s, false);
+    return { prob, fuente: 'cuota' };
   }
-  // sin cuota: modelo
-  return modeloSinCuota(ligaId, futbol, local, visita);
+  return { prob: null, fuente: null };
 }
 function norm(l, e, v, futbol) {
   let L = Math.round(l * 100), V = Math.round(v * 100);
@@ -213,23 +178,31 @@ function aMatch(ev, ligaId, ligaNombre) {
   const futbol = esFutbol(ligaId);
   const { local, visita } = equiposDe(comp);
   const estado = estadoDe(ev);
+  const mk = mercadoDe(comp, futbol, local, visita, ligaId);
   const m = {
     id: `${ligaId}:${ev.id}`,
-    liga: ligaNombre, ligaId,
+    liga: ligaNombre, ligaId, futbol,
     inicio: inicioDe(ev),
-    cuando: ev?.date || comp?.date || null,          // ISO para la cuenta atrás
+    cuando: ev?.date || comp?.date || null,
     sede: comp?.venue?.fullName || null,
     estado,
-    local:  { id: local.id, nombre: local.nombre, abrev: local.abrev, record: local.record, logo: local.logo, probable: local.probable },
-    visita: { id: visita.id, nombre: visita.nombre, abrev: visita.abrev, record: visita.record, logo: visita.logo, probable: visita.probable },
+    local:  { id: local.id, nombre: local.nombre, abrev: local.abrev, record: local.record, recordCasa: local.recordCasa, recordFuera: local.recordFuera, logo: local.logo, probable: local.probable },
+    visita: { id: visita.id, nombre: visita.nombre, abrev: visita.abrev, record: visita.record, recordCasa: visita.recordCasa, recordFuera: visita.recordFuera, logo: visita.logo, probable: visita.probable },
     marcador: (estado !== 'proximo' && local.score != null)
       ? { local: Number(local.score), visita: Number(visita.score) } : null,
-    mercado: mercadoDe(comp, futbol, local, visita, ligaId),
+    mercado: mk.prob,          // cuota real si la hay; si no, null
+    _fuenteProb: mk.fuente,    // 'cuota' | null
     datos: datosDe(comp, futbol, local, visita),
-    jugadores: null,     // se llena en el detalle (líderes)
-    lesionados: null,    // se llena en el detalle
+    jugadores: null,
+    lesionados: null,
     analista: null,
   };
+  // El MOTOR calcula la probabilidad final (con regresión a la media y confianza)
+  const r = analizar(m);
+  m.mercado = { local: r.local, empate: r.empate, visita: r.visita };
+  m.confianza = r.confianza;
+  m.sinDatos = r.sinDatos;
+  m.factores = r.factores;
   return m;
 }
 
@@ -349,6 +322,7 @@ export async function detallePartido(id) {
         const tot = pL + pV || 1;
         if (futbol) { const e = 0.26, r = 1 - e; const L = Math.round(pL/tot*r*100), V = Math.round(pV/tot*r*100); m.mercado = { local: L, empate: Math.max(0, 100 - L - V), visita: V }; }
         else { const L = Math.max(1, Math.min(99, Math.round(pL/tot*100))); m.mercado = { local: L, empate: null, visita: 100 - L }; }
+        m._fuenteProb = 'cuota';
       }
     }
     // Predicción de ESPN (home/away win %). Si no hay cuota, la usamos.
@@ -365,6 +339,13 @@ export async function detallePartido(id) {
         const L = Math.max(1, Math.min(99, Math.round(hg)));
         m.mercado = { local: L, empate: null, visita: 100 - L };
       }
+      m._fuenteProb = 'prediccion';
+    }
+    // Re-ejecutar el motor con la mejor señal disponible (cuota/predicción)
+    if (m && m._fuenteProb) {
+      const r = analizar(m);
+      m.mercado = { local: r.local, empate: r.empate, visita: r.visita };
+      m.confianza = r.confianza; m.sinDatos = r.sinDatos; m.factores = r.factores;
     }
     // Jugadores clave y lesionados
     if (m) {
@@ -377,8 +358,3 @@ export async function detallePartido(id) {
   return m;
 }
 
-/* ¿el mercado quedó en el "plano" por falta de datos? */
-function esPlano(mk, futbol) {
-  if (!mk) return true;
-  return futbol ? (mk.local === 38 && mk.visita === 36) : (mk.local === 50 && mk.visita === 50);
-}
