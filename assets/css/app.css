@@ -233,6 +233,14 @@
 /* Títulos de sección */
 .det-sec-t { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
   color: #96a2ae; margin: 20px 0 10px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.09); }
+.conf { font-family: var(--body); font-size: 9.5px; font-weight: 800; letter-spacing: .04em; text-transform: none;
+  padding: 3px 9px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+.conf.alta   { background: rgba(31,170,83,.18); color: #48d17e; border: 1px solid rgba(31,170,83,.4); }
+.conf.media  { background: rgba(232,184,75,.16); color: var(--oro); border: 1px solid rgba(232,184,75,.4); }
+.conf.baja   { background: rgba(232,120,60,.16); color: #ef9a5a; border: 1px solid rgba(232,120,60,.4); }
+.conf.muybaja{ background: rgba(150,162,174,.16); color: #aeb8c3; border: 1px solid rgba(150,162,174,.35); }
+.det-factores { margin-top: 12px; font-size: 12.5px; line-height: 1.5; color: #c3ccd6;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 11px 13px; }
 
 /* Probabilidad */
 .det-prob { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 10px; }
