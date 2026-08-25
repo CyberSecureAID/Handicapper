@@ -1,0 +1,135 @@
+/* ============================================================
+   LANDING + PRICING — estética deportiva premium, responsive.
+   ============================================================ */
+.pantalla { min-height: 100vh; }
+body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
+
+/* Barra superior de landing/pricing */
+.lnav { display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 28px; position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--fondo) 82%, transparent); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--linea); }
+.lnav .marca .logo-img { height: 30px; }
+.lnav-acc { display: flex; align-items: center; gap: 10px; }
+.lbtn { height: 40px; padding: 0 18px; border-radius: 11px; font-weight: 800; font-size: 13.5px;
+  cursor: pointer; border: 1px solid transparent; transition: all var(--trans); white-space: nowrap; }
+.lbtn.ghost { background: transparent; border-color: var(--linea); color: var(--tinta); }
+.lbtn.ghost:hover { border-color: var(--oro); color: var(--oro); }
+.lbtn.oro { background: linear-gradient(180deg, var(--oro), var(--oro-2)); color: #3a2800;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 2px 8px rgba(0,0,0,.2); }
+.lbtn.oro:hover { filter: brightness(1.05); }
+.lbtn.grande { height: 52px; padding: 0 28px; font-size: 15px; border-radius: 13px; }
+
+/* HERO */
+.hero { position: relative; overflow: hidden;
+  background: linear-gradient(180deg, rgba(8,11,16,.6), rgba(6,9,14,.9)), url('../imagenes/textura-tarjeta.jpg');
+  background-size: cover; background-position: center; }
+[data-tema="claro"] .hero { background: linear-gradient(180deg, #0b1017, #0e141d); }
+.hero-glow { position: absolute; top: -30%; left: 50%; transform: translateX(-50%);
+  width: 900px; height: 700px; background: radial-gradient(circle, rgba(232,184,75,.16), transparent 60%); pointer-events: none; }
+.hero-in { position: relative; max-width: 1200px; margin: 0 auto; padding: 70px 28px 80px;
+  display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; }
+.hero-badge { display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--oro); padding: 7px 14px; border-radius: 999px;
+  background: rgba(232,184,75,.12); border: 1px solid rgba(232,184,75,.3); margin-bottom: 20px; }
+.hero-h1 { font-family: var(--display); font-weight: 800; font-size: clamp(34px, 5vw, 58px);
+  line-height: 1.04; letter-spacing: -.02em; color: #f4f7fb; margin: 0 0 18px; }
+.hero-sub { font-size: clamp(15px, 1.6vw, 18px); line-height: 1.6; color: #b8c2cd; max-width: 520px; margin: 0 0 28px; }
+.hero-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 30px; }
+.hero-mini { display: flex; gap: 26px; flex-wrap: wrap; }
+.hero-mini span { display: flex; flex-direction: column; }
+.hero-mini b { font-family: var(--display); font-size: 26px; color: var(--oro); }
+.hero-mini i { font-style: normal; font-size: 12px; color: #96a2ae; }
+
+/* Tarjeta flotante del hero */
+.hero-art { display: flex; justify-content: center; }
+.hero-card { width: 100%; max-width: 380px; border-radius: 20px; padding: 22px;
+  background: linear-gradient(180deg, rgba(14,20,30,.9), rgba(8,12,18,.95)), url('../imagenes/textura-tarjeta.jpg');
+  background-size: cover; border: 1px solid rgba(232,184,75,.25);
+  box-shadow: 0 30px 70px rgba(0,0,0,.5); transform: rotate(-2deg); }
+.hc-top { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.hc-top img { height: 24px; }
+.hc-top span { margin-left: auto; font-size: 12px; color: #96a2ae; font-weight: 700; }
+.hc-duel { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+.hc-eq { text-align: center; }
+.hc-logo { width: 54px; height: 54px; margin: 0 auto 10px; border-radius: 14px; background: linear-gradient(135deg,#fff,#e9edf2);
+  display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 800; color: #20262e; }
+.hc-vs { width: 56px; height: auto; }
+.hc-pct { font-family: var(--display); font-weight: 800; font-size: 30px; }
+.hc-pct.oro { color: var(--oro); } .hc-pct.azul { color: #5cbdf0; }
+.hc-bar { height: 10px; border-radius: 10px; background: rgba(255,255,255,.1); overflow: hidden; margin: 16px 0 12px; }
+.hc-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--oro-2), var(--oro)); }
+.hc-tag { font-size: 11px; color: var(--oro); font-weight: 700; text-align: center; }
+
+/* Secciones */
+.lsec { max-width: 1200px; margin: 0 auto; padding: 60px 28px; }
+.lsec-t { font-family: var(--display); font-weight: 800; font-size: clamp(24px,3vw,34px); color: var(--tinta); margin-bottom: 30px; }
+.lsec-t.center { text-align: center; }
+.lfeatures { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.lfeat { padding: 24px 20px; border-radius: 16px; background: var(--tarjeta); border: 1px solid var(--linea);
+  box-shadow: var(--sombra-tarjeta); }
+.lf-ic { font-size: 26px; margin-bottom: 12px; }
+.lfeat h3 { font-size: 16px; color: var(--tinta); margin: 0 0 8px; }
+.lfeat p { font-size: 13.5px; line-height: 1.55; color: var(--tinta-2); margin: 0; }
+
+/* PLANES */
+.planes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: stretch;
+  max-width: 1000px; margin: 0 auto; }
+.plan { position: relative; display: flex; flex-direction: column; padding: 28px 24px;
+  border-radius: 18px; background: var(--tarjeta); border: 1px solid var(--linea); box-shadow: var(--sombra-tarjeta); }
+.plan.destacado { border-color: var(--oro); box-shadow: 0 0 0 1px var(--oro), 0 24px 60px rgba(0,0,0,.3);
+  transform: scale(1.03); }
+.plan-etq { position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(180deg, var(--oro), var(--oro-2)); color: #3a2800; font-weight: 800; font-size: 11px;
+  padding: 5px 14px; border-radius: 999px; letter-spacing: .03em; white-space: nowrap; }
+.plan-nom { font-family: var(--display); font-weight: 800; font-size: 22px; color: var(--tinta); }
+.plan-resumen { font-size: 13px; color: var(--tinta-2); margin: 6px 0 16px; min-height: 34px; }
+.plan-precio { display: flex; align-items: baseline; gap: 4px; }
+.pp-num { font-family: var(--display); font-weight: 800; font-size: 40px; color: var(--tinta); }
+.pp-suf { font-size: 14px; color: var(--tinta-3); font-weight: 700; }
+.plan-ahorro { display: inline-block; margin-top: 8px; font-size: 11.5px; font-weight: 800; color: #1faa53;
+  background: rgba(31,170,83,.14); border: 1px solid rgba(31,170,83,.3); padding: 3px 10px; border-radius: 999px; }
+.plan-feats { list-style: none; padding: 0; margin: 18px 0 22px; display: flex; flex-direction: column; gap: 11px; }
+.plan-feats li { display: flex; align-items: flex-start; gap: 9px; font-size: 13.5px; color: var(--tinta); line-height: 1.4; }
+.plan-feats li svg { color: var(--oro); flex: 0 0 auto; margin-top: 2px; }
+.plan-btn { margin-top: auto; height: 46px; border-radius: 12px; border: 1px solid var(--linea);
+  background: var(--fondo-2); color: var(--tinta); font-weight: 800; font-size: 14px; cursor: pointer; transition: all var(--trans); }
+.plan-btn:hover { border-color: var(--oro); }
+.plan-btn.oro { background: linear-gradient(180deg, var(--oro), var(--oro-2)); color: #3a2800; border: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
+
+/* Pantalla de pricing */
+.pricing-wrap { max-width: 1040px; margin: 0 auto; padding: 50px 28px 70px; }
+.pricing-head { text-align: center; margin-bottom: 36px; }
+.pricing-head .hero-h1 { color: var(--tinta); }
+.pricing-head .hero-sub { margin-left: auto; margin-right: auto; color: var(--tinta-2); }
+.ciclo-toggle { display: inline-flex; gap: 4px; background: var(--fondo-2); border: 1px solid var(--linea);
+  border-radius: 12px; padding: 4px; margin-top: 22px; }
+.ciclo { height: 40px; padding: 0 20px; border: 0; border-radius: 9px; background: none; color: var(--tinta-2);
+  font-weight: 700; font-size: 13.5px; cursor: pointer; }
+.ciclo.on { background: var(--oro); color: #3a2800; }
+.pricing-nota { text-align: center; color: var(--tinta-3); font-size: 12.5px; margin-top: 26px; }
+
+/* Footer */
+.lfoot { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  max-width: 1200px; margin: 0 auto; padding: 30px 28px; border-top: 1px solid var(--linea);
+  color: var(--tinta-3); font-size: 12.5px; flex-wrap: wrap; }
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+  .hero-in { grid-template-columns: 1fr; gap: 30px; padding: 44px 20px 56px; }
+  .hero-art { order: -1; }
+  .hero-card { transform: none; max-width: 340px; }
+  .lfeatures { grid-template-columns: 1fr 1fr; }
+  .planes-grid { grid-template-columns: 1fr; max-width: 420px; }
+  .plan.destacado { transform: none; }
+  .lnav { padding: 14px 16px; }
+  .lnav .lbtn.ghost#btn-login { display: none; }
+  .lsec { padding: 44px 20px; }
+}
+@media (max-width: 560px) {
+  .lfeatures { grid-template-columns: 1fr; }
+  .hero-mini { gap: 18px; }
+  .lnav-acc { gap: 7px; }
+  .lbtn { padding: 0 13px; font-size: 12.5px; }
+}
