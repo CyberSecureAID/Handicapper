@@ -10,6 +10,8 @@ import { initIdioma, fijarIdioma, idiomaActual, t } from './ui/idioma.js';
 import { compartirPartido } from './ui/compartir.js';
 import { iniciarAuth, registrarCorreo, entrarCorreo, entrarGoogle, salir, mensajeError, estaConfigurado } from './auth/auth.js';
 import { initAuthUI, abrirAuth } from './auth/auth-ui.js';
+import { initNavegacion, mostrarPantalla, aplicarI18n } from './ui/navegacion.js';
+import { fijarSuscripcion, tieneAcceso, limpiarVistaPrevia } from './auth/estado-pago.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -209,12 +211,7 @@ function repintarTodo() {
 function init() {
   initTema();
   initIdioma();
-  actualizarLogo();
   aplicarTextos();
-  pintarLigas();
-  pintarPestanas();
-  pintarDrawer();
-  cargarLista();
   initTabbar();
   initBotonIdioma();
 
@@ -240,7 +237,35 @@ function init() {
   // Autenticación (Firebase). Si no está configurado, queda en modo invitado.
   initAuthUI({ registrar: registrarCorreo, entrar: entrarCorreo, google: entrarGoogle, salir, mensajeError });
   $('cuenta-btn')?.addEventListener('click', onCuentaClick);
-  iniciarAuth(pintarCuenta);
+
+  // Router de pantallas (landing / planes / plataforma)
+  initNavegacion({
+    abrirAuth: (modo) => abrirAuth(modo),
+    salir: async () => { limpiarVistaPrevia(); await salir(); },
+    alEntrarApp: () => entrarPlataforma(),
+  });
+
+  iniciarAuth(onSesion);
+}
+
+let _appArrancada = false;
+
+/* Decide la pantalla según sesión + acceso */
+function onSesion(usuario) {
+  pintarCuenta(usuario);
+  fijarSuscripcion(usuario?.suscripcion || null);
+  if (!usuario) { mostrarPantalla('landing'); return; }
+  if (tieneAcceso()) entrarPlataforma();
+  else mostrarPantalla('pricing');
+}
+
+/* Entra a la plataforma (y arranca la app la primera vez) */
+function entrarPlataforma() {
+  mostrarPantalla('app');
+  if (!_appArrancada) {
+    _appArrancada = true;
+    actualizarLogo(); pintarLigas(); pintarPestanas(); pintarDrawer(); cargarLista();
+  }
 }
 
 /* Estado de sesión actual (usuario o null) */
@@ -288,7 +313,7 @@ function toggleCuentaMenu() {
     <div class="quien"><b>${_sesion.nombre || ''}</b><span>${_sesion.email || ''}</span></div>
     <button id="cm-salir">${IC.salir || ''} ${t('auth.salir')}</button>`;
   document.body.appendChild(menu);
-  menu.querySelector('#cm-salir').onclick = async () => { await salir(); cerrarCuentaMenu(); };
+  menu.querySelector('#cm-salir').onclick = async () => { limpiarVistaPrevia(); await salir(); cerrarCuentaMenu(); };
   setTimeout(() => document.addEventListener('click', cerrarSiFuera), 0);
 }
 function cerrarCuentaMenu() { $('cuenta-menu')?.classList.remove('abierto'); document.removeEventListener('click', cerrarSiFuera); }
