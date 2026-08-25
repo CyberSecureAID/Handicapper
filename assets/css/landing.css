@@ -1,6 +1,19 @@
 /* ============================================================
    LANDING + PRICING — estética deportiva premium, responsive.
    ============================================================ */
+/* El lobby y la pantalla de planes SIEMPRE en oscuro (sin modo claro) */
+#landing-screen, #pricing-screen {
+  --fondo:#0a0d11; --fondo-2:#10151b; --tarjeta:#151b23; --tarjeta-alta:#1b222c;
+  --linea:#242c37; --tinta:#eef2f6; --tinta-2:#aab4c0; --tinta-3:#6b7683;
+  --oro-suave:rgba(232,184,75,.14);
+  --sombra-tarjeta: inset 0 1px 0 rgba(255,255,255,.06), 0 2px 4px rgba(0,0,0,.5), 0 12px 26px rgba(0,0,0,.5);
+  background: var(--fondo); color: var(--tinta);
+}
+/* Barra del lobby: transparente y flotante sobre el video (sin franja) */
+#landing-screen .lnav {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+  background: transparent; backdrop-filter: none; border-bottom: 0;
+}
 .pantalla { min-height: 100vh; }
 #landing-screen { position: relative; }
 .particulas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
@@ -37,7 +50,7 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 220px; z-index: 2;
   pointer-events: none; background: linear-gradient(180deg, transparent, var(--fondo) 92%); }
 .hero-in { position: relative; z-index: 3; max-width: 1200px; margin: 0 auto; width: 100%;
-  padding: clamp(48px, 9vh, 96px) 28px 90px; }
+  padding: clamp(96px, 12vh, 130px) 28px 90px; }
 .hero-txt { max-width: 640px; }
 .hero-badge { display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--oro); padding: 8px 15px; border-radius: 999px;
