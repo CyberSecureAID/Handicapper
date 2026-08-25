@@ -82,9 +82,15 @@ function construirModal() {
   setModo('entrar');
 }
 
-export function abrirAuth() {
+export function abrirAuth(modo) {
   const el = document.getElementById('auth-modal');
-  if (el) { el.classList.add('abierto'); document.querySelector('#auth-email')?.focus(); }
+  if (!el) return;
+  if (modo === 'registrar' || modo === 'entrar') {
+    const tab = el.querySelector(`.auth-tab[data-modo="${modo}"]`);
+    if (tab) tab.click();
+  }
+  el.classList.add('abierto');
+  setTimeout(() => document.querySelector('#auth-email')?.focus(), 50);
 }
 export function cerrarAuth() {
   document.getElementById('auth-modal')?.classList.remove('abierto');
