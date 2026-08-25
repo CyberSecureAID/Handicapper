@@ -6,6 +6,7 @@ import { t, Lg, idiomaActual, fijarIdioma } from './idioma.js';
 import { alternarTema } from './tema.js';
 import { PLANES } from '../datos/planes.js';
 import { marcarVistaPrevia } from '../auth/estado-pago.js';
+import { iniciarParticulas, arrancar as arrancarParticulas, parar as pararParticulas } from './particulas.js';
 
 let _cb = {};          // callbacks del app: { abrirAuth, salir, alEntrarApp }
 let _ciclo = 'mensual';
@@ -31,7 +32,26 @@ export function initNavegacion(callbacks) {
   pintarPlanes();
   actualizarBotonIdiomaLanding();
   arrancarVideoHero();
+  activarTiltTarjetas();
+  iniciarParticulas('particulas');
   document.addEventListener('idioma-cambio', () => { aplicarI18n(); pintarPlanes(); actualizarBotonIdiomaLanding(); });
+}
+
+/* Inclinación 3D + brillo que sigue el cursor en las tarjetas de features */
+function activarTiltTarjetas() {
+  document.querySelectorAll('.lfeat').forEach(card => {
+    card.addEventListener('pointermove', (e) => {
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width;
+      const py = (e.clientY - r.top) / r.height;
+      const rx = (0.5 - py) * 8;    // grados
+      const ry = (px - 0.5) * 10;
+      card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
+      card.style.setProperty('--mx', (px * 100) + '%');
+      card.style.setProperty('--my', (py * 100) + '%');
+    });
+    card.addEventListener('pointerleave', () => { card.style.transform = ''; });
+  });
 }
 
 /* El video (assets/video/fondo.mp4) se reproduce UNA vez y, al no
@@ -112,6 +132,7 @@ export function mostrarPantalla(nombre) {
     if (el) el.style.display = (n === nombre) ? '' : 'none';
   });
   document.body.classList.toggle('en-app', nombre === 'app');
+  if (nombre === 'landing') arrancarParticulas(); else pararParticulas();
   window.scrollTo(0, 0);
 }
 
