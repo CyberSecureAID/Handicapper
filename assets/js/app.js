@@ -8,6 +8,8 @@ import { IC } from './ui/iconos.js';
 import { initTema } from './ui/tema.js';
 import { initIdioma, fijarIdioma, idiomaActual, t } from './ui/idioma.js';
 import { compartirPartido } from './ui/compartir.js';
+import { iniciarAuth, registrarCorreo, entrarCorreo, entrarGoogle, salir, mensajeError, estaConfigurado } from './auth/auth.js';
+import { initAuthUI, abrirAuth } from './auth/auth-ui.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -234,6 +236,64 @@ function init() {
   if (btnTema) btnTema.addEventListener('click', () => setTimeout(actualizarLogo, 0));
   window.addEventListener('resize', actualizarLogo);
   document.addEventListener('idioma-cambio', repintarTodo);
+
+  // Autenticación (Firebase). Si no está configurado, queda en modo invitado.
+  initAuthUI({ registrar: registrarCorreo, entrar: entrarCorreo, google: entrarGoogle, salir, mensajeError });
+  $('cuenta-btn')?.addEventListener('click', onCuentaClick);
+  iniciarAuth(pintarCuenta);
+}
+
+/* Estado de sesión actual (usuario o null) */
+let _sesion = null;
+
+function pintarCuenta(usuario) {
+  _sesion = usuario;
+  const btn = $('cuenta-btn');
+  if (!btn) return;
+  if (usuario) {
+    const inicial = (usuario.nombre || usuario.email || '?').charAt(0).toUpperCase();
+    btn.classList.add('logueado');
+    btn.title = usuario.nombre || usuario.email;
+    btn.innerHTML = usuario.foto
+      ? `<img class="av-img" src="${usuario.foto}" alt="" style="width:22px;height:22px;border-radius:50%">`
+      : `<span class="av-ini">${inicial}</span>`;
+  } else {
+    btn.classList.remove('logueado');
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>`;
+  }
+  cerrarCuentaMenu();
+}
+
+function onCuentaClick() {
+  if (!_sesion) {
+    if (!estaConfigurado()) { avisoFirebase(); return; }
+    abrirAuth();
+  } else {
+    toggleCuentaMenu();
+  }
+}
+
+function avisoFirebase() {
+  // Si Firebase aún no está configurado, informamos con claridad.
+  abrirAuth();  // el modal se abre; al intentar, mostrará el aviso de config
+}
+
+function toggleCuentaMenu() {
+  let menu = $('cuenta-menu');
+  if (menu) { menu.classList.toggle('abierto'); return; }
+  menu = document.createElement('div');
+  menu.id = 'cuenta-menu';
+  menu.className = 'cuenta-menu abierto';
+  menu.innerHTML = `
+    <div class="quien"><b>${_sesion.nombre || ''}</b><span>${_sesion.email || ''}</span></div>
+    <button id="cm-salir">${IC.salir || ''} ${t('auth.salir')}</button>`;
+  document.body.appendChild(menu);
+  menu.querySelector('#cm-salir').onclick = async () => { await salir(); cerrarCuentaMenu(); };
+  setTimeout(() => document.addEventListener('click', cerrarSiFuera), 0);
+}
+function cerrarCuentaMenu() { $('cuenta-menu')?.classList.remove('abierto'); document.removeEventListener('click', cerrarSiFuera); }
+function cerrarSiFuera(e) {
+  if (!e.target.closest('#cuenta-menu') && !e.target.closest('#cuenta-btn')) cerrarCuentaMenu();
 }
 
 document.addEventListener('DOMContentLoaded', init);
