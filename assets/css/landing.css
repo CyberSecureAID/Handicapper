@@ -20,56 +20,49 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .lbtn.oro:hover { filter: brightness(1.05); }
 .lbtn.grande { height: 52px; padding: 0 28px; font-size: 15px; border-radius: 13px; }
 
-/* HERO */
-.hero { position: relative; overflow: hidden;
-  background: linear-gradient(180deg, rgba(8,11,16,.6), rgba(6,9,14,.9)), url('../imagenes/textura-tarjeta.jpg');
-  background-size: cover; background-position: center; }
-[data-tema="claro"] .hero { background: linear-gradient(180deg, #0b1017, #0e141d); }
-.hero-glow { position: absolute; top: -30%; left: 50%; transform: translateX(-50%);
-  width: 900px; height: 700px; background: radial-gradient(circle, rgba(232,184,75,.16), transparent 60%); pointer-events: none; }
-.hero-in { position: relative; max-width: 1200px; margin: 0 auto; padding: 70px 28px 80px;
-  display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; }
+/* HERO con video de fondo en bucle */
+.hero { position: relative; overflow: hidden; min-height: 88vh; display: flex; align-items: center;
+  background: #06090e; }
+.hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;
+  filter: saturate(1.05) contrast(1.02); }
+.hero-veil { position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(6,9,14,.55) 0%, rgba(6,9,14,.35) 40%, rgba(6,9,14,.85) 100%),
+    radial-gradient(1200px 600px at 20% 30%, rgba(232,184,75,.10), transparent 60%),
+    linear-gradient(90deg, rgba(6,9,14,.75) 0%, rgba(6,9,14,.15) 55%, rgba(6,9,14,.0) 100%); }
+.hero-in { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; width: 100%;
+  padding: 90px 28px; }
+.hero-txt { max-width: 640px; }
 .hero-badge { display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--oro); padding: 7px 14px; border-radius: 999px;
-  background: rgba(232,184,75,.12); border: 1px solid rgba(232,184,75,.3); margin-bottom: 20px; }
-.hero-h1 { font-family: var(--display); font-weight: 800; font-size: clamp(34px, 5vw, 58px);
-  line-height: 1.04; letter-spacing: -.02em; color: #f4f7fb; margin: 0 0 18px; }
-.hero-sub { font-size: clamp(15px, 1.6vw, 18px); line-height: 1.6; color: #b8c2cd; max-width: 520px; margin: 0 0 28px; }
-.hero-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 30px; }
-.hero-mini { display: flex; gap: 26px; flex-wrap: wrap; }
+  text-transform: uppercase; color: var(--oro); padding: 8px 15px; border-radius: 999px;
+  background: rgba(232,184,75,.12); border: 1px solid rgba(232,184,75,.35); margin-bottom: 22px;
+  backdrop-filter: blur(4px); }
+.hero-h1 { font-family: var(--display); font-weight: 800; font-size: clamp(38px, 6vw, 66px);
+  line-height: 1.02; letter-spacing: -.02em; color: #fff; margin: 0 0 20px;
+  text-shadow: 0 2px 30px rgba(0,0,0,.5); }
+.hero-sub { font-size: clamp(16px, 1.7vw, 19px); line-height: 1.6; color: #d3dae2; max-width: 560px; margin: 0 0 30px;
+  text-shadow: 0 1px 12px rgba(0,0,0,.5); }
+.hero-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 34px; }
+.hero-mini { display: flex; gap: 30px; flex-wrap: wrap; }
 .hero-mini span { display: flex; flex-direction: column; }
-.hero-mini b { font-family: var(--display); font-size: 26px; color: var(--oro); }
-.hero-mini i { font-style: normal; font-size: 12px; color: #96a2ae; }
-
-/* Tarjeta flotante del hero */
-.hero-art { display: flex; justify-content: center; }
-.hero-card { width: 100%; max-width: 380px; border-radius: 20px; padding: 22px;
-  background: linear-gradient(180deg, rgba(14,20,30,.9), rgba(8,12,18,.95)), url('../imagenes/textura-tarjeta.jpg');
-  background-size: cover; border: 1px solid rgba(232,184,75,.25);
-  box-shadow: 0 30px 70px rgba(0,0,0,.5); transform: rotate(-2deg); }
-.hc-top { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
-.hc-top img { height: 24px; }
-.hc-top span { margin-left: auto; font-size: 12px; color: #96a2ae; font-weight: 700; }
-.hc-duel { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
-.hc-eq { text-align: center; }
-.hc-logo { width: 54px; height: 54px; margin: 0 auto 10px; border-radius: 14px; background: linear-gradient(135deg,#fff,#e9edf2);
-  display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 800; color: #20262e; }
-.hc-vs { width: 56px; height: auto; }
-.hc-pct { font-family: var(--display); font-weight: 800; font-size: 30px; }
-.hc-pct.oro { color: var(--oro); } .hc-pct.azul { color: #5cbdf0; }
-.hc-bar { height: 10px; border-radius: 10px; background: rgba(255,255,255,.1); overflow: hidden; margin: 16px 0 12px; }
-.hc-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--oro-2), var(--oro)); }
-.hc-tag { font-size: 11px; color: var(--oro); font-weight: 700; text-align: center; }
+.hero-mini b { font-family: var(--display); font-size: 28px; color: #fff; }
+.hero-mini i { font-style: normal; font-size: 12px; color: #aeb8c3; }
 
 /* Secciones */
 .lsec { max-width: 1200px; margin: 0 auto; padding: 60px 28px; }
 .lsec-t { font-family: var(--display); font-weight: 800; font-size: clamp(24px,3vw,34px); color: var(--tinta); margin-bottom: 30px; }
 .lsec-t.center { text-align: center; }
 .lfeatures { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
-.lfeat { padding: 24px 20px; border-radius: 16px; background: var(--tarjeta); border: 1px solid var(--linea);
-  box-shadow: var(--sombra-tarjeta); }
-.lf-ic { font-size: 26px; margin-bottom: 12px; }
-.lfeat h3 { font-size: 16px; color: var(--tinta); margin: 0 0 8px; }
+.lfeat { padding: 28px 22px; border-radius: 18px;
+  background: linear-gradient(180deg, var(--tarjeta), var(--tarjeta-alta));
+  border: 1px solid var(--linea); box-shadow: var(--sombra-tarjeta); transition: transform .18s ease, border-color var(--trans); }
+.lfeat:hover { transform: translateY(-4px); border-color: rgba(232,184,75,.5); }
+.lf-ic { width: 48px; height: 48px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px; color: var(--oro);
+  background: linear-gradient(180deg, rgba(232,184,75,.16), rgba(232,184,75,.05));
+  border: 1px solid rgba(232,184,75,.3); }
+.lf-ic svg { width: 24px; height: 24px; }
+.lfeat h3 { font-size: 16px; color: var(--tinta); margin: 0 0 8px; font-weight: 800; }
 .lfeat p { font-size: 13.5px; line-height: 1.55; color: var(--tinta-2); margin: 0; }
 
 /* PLANES */
@@ -117,15 +110,18 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 
 /* ---- Responsive ---- */
 @media (max-width: 900px) {
-  .hero-in { grid-template-columns: 1fr; gap: 30px; padding: 44px 20px 56px; }
-  .hero-art { order: -1; }
-  .hero-card { transform: none; max-width: 340px; }
+  .hero { min-height: 78vh; }
+  .hero-in { padding: 60px 20px; }
   .lfeatures { grid-template-columns: 1fr 1fr; }
   .planes-grid { grid-template-columns: 1fr; max-width: 420px; }
   .plan.destacado { transform: none; }
   .lnav { padding: 14px 16px; }
   .lnav .lbtn.ghost#btn-login { display: none; }
   .lsec { padding: 44px 20px; }
+  /* En móvil no cargamos el video (datos/rendimiento): queda el póster */
+  .hero-video { display: none; }
+  .hero { background: linear-gradient(180deg, rgba(6,9,14,.5), rgba(6,9,14,.92)), url('../imagenes/textura-tarjeta.jpg');
+    background-size: cover; background-position: center; }
 }
 @media (max-width: 560px) {
   .lfeatures { grid-template-columns: 1fr; }
