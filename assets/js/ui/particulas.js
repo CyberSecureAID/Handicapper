@@ -45,14 +45,14 @@ function redim() {
 
 function generar(w, h) {
   // Pocas partículas para que sea sutil (densidad por área)
-  const n = Math.min(90, Math.round((w * h) / 34000));
+  const n = Math.min(140, Math.round((w * h) / 24000));
   _ps = [];
   for (let i = 0; i < n; i++) {
     _ps.push({
       x: Math.random() * w,
       y: Math.random() * h,
       r: 0.6 + Math.random() * 2.4,                 // tamaños variados
-      vx: 0.06 + Math.random() * 0.5,               // deriva a la derecha, ritmos distintos
+      vx: -(0.06 + Math.random() * 0.5),            // deriva a la IZQUIERDA, ritmos distintos
       vy: (Math.random() - 0.5) * 0.25,             // vaivén vertical suave
       a: 0.06 + Math.random() * 0.22,               // opacidad
       f: Math.random() * Math.PI * 2,               // fase para el parpadeo
@@ -71,7 +71,7 @@ function paso(dt) {
   for (const p of _ps) {
     p.x += p.vx * s;
     p.y += p.vy * s + Math.sin((_t / 1000) * p.fv + p.f) * 0.15;
-    if (p.x > w + 5) { p.x = -5; p.y = Math.random() * h; }
+    if (p.x < -5) { p.x = w + 5; p.y = Math.random() * h; }
     if (p.y < -5) p.y = h + 5; if (p.y > h + 5) p.y = -5;
     const tw = p.a * (0.6 + 0.4 * Math.sin((_t / 1000) * p.fv + p.f));
     const c = p.calida ? '232,200,140' : '210,225,245';
