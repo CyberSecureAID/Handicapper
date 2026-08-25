@@ -30,7 +30,25 @@ export function initNavegacion(callbacks) {
   aplicarI18n();
   pintarPlanes();
   actualizarBotonIdiomaLanding();
+  cargarVideoHero();
   document.addEventListener('idioma-cambio', () => { aplicarI18n(); pintarPlanes(); actualizarBotonIdiomaLanding(); });
+}
+
+/* Carga el video de fondo solo en escritorio (en móvil queda el póster).
+   Sube tu video a assets/video/fondo.mp4 y se reproducirá en bucle. */
+function cargarVideoHero() {
+  const v = document.getElementById('hero-video');
+  if (!v) return;
+  const esMovil = window.matchMedia('(max-width: 900px)').matches;
+  if (esMovil) return;
+  const fuente = document.createElement('source');
+  fuente.src = 'assets/video/fondo.mp4';
+  fuente.type = 'video/mp4';
+  v.appendChild(fuente);
+  v.load();
+  const play = () => v.play().catch(() => {});
+  v.addEventListener('canplay', play, { once: true });
+  play();
 }
 
 function bind(id, fn) { const el = document.getElementById(id); if (el) el.onclick = fn; }
