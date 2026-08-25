@@ -10,9 +10,103 @@
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700;800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/landing.css">
 </head>
 <body>
 
+<!-- ============================ LANDING ============================ -->
+<section id="landing-screen" class="pantalla">
+  <header class="lnav">
+    <div class="marca">
+      <img class="logo-img" id="logo-landing" alt="Handicapper" src="assets/imagenes/logo-nombre-oscuro.png">
+    </div>
+    <div class="lnav-acc">
+      <button class="util-btn" id="idioma-btn-l" aria-label="Language"></button>
+      <button class="util-btn" id="tema-btn-l" aria-label="Theme"></button>
+      <button class="lbtn ghost" id="btn-login" data-i18n="auth.entrar">Log in</button>
+      <button class="lbtn oro" id="btn-register" data-i18n="auth.registrar">Sign up</button>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-in">
+      <div class="hero-txt">
+        <div class="hero-badge" data-i18n="lp.badge">Sports data & honest probability</div>
+        <h1 class="hero-h1" data-i18n="lp.h1">Know the edge before the whistle.</h1>
+        <p class="hero-sub" data-i18n="lp.sub">Verifiable stats, real market signals and an honest win probability for every match — no hype, just the numbers that matter.</p>
+        <div class="hero-cta">
+          <button class="lbtn oro grande" id="btn-hero" data-i18n="lp.cta">Get started</button>
+          <button class="lbtn ghost grande" id="btn-hero-2" data-i18n="lp.cta2">See plans</button>
+        </div>
+        <div class="hero-mini">
+          <span><b>9</b> <i data-i18n="lp.leagues">leagues</i></span>
+          <span><b>100%</b> <i data-i18n="lp.public">public data</i></span>
+          <span><b>$1.99</b> <i data-i18n="lp.from">to start</i></span>
+        </div>
+      </div>
+      <div class="hero-art">
+        <div class="hero-card">
+          <div class="hc-top"><img src="assets/imagenes/dep-mlb.png" alt=""><span data-i18n="lp.today">Today</span></div>
+          <div class="hc-duel">
+            <div class="hc-eq"><div class="hc-logo">NYY</div><div class="hc-pct oro">62%</div></div>
+            <img class="hc-vs" src="assets/imagenes/vs.png" alt="VS">
+            <div class="hc-eq"><div class="hc-logo">TOR</div><div class="hc-pct azul">38%</div></div>
+          </div>
+          <div class="hc-bar"><i style="width:62%"></i></div>
+          <div class="hc-tag" data-i18n="lp.conf">Medium confidence · home edge</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lsec">
+    <div class="lsec-t" data-i18n="lp.whyt">Why Handicapper</div>
+    <div class="lfeatures">
+      <div class="lfeat"><div class="lf-ic">📊</div><h3 data-i18n="lp.f1t">Real, verifiable data</h3><p data-i18n="lp.f1d">Records, form, injuries and market odds pulled live for every game.</p></div>
+      <div class="lfeat"><div class="lf-ic">🎯</div><h3 data-i18n="lp.f2t">Honest probability</h3><p data-i18n="lp.f2d">A transparent model with a confidence level — never a fake 50/50.</p></div>
+      <div class="lfeat"><div class="lf-ic">🔔</div><h3 data-i18n="lp.f3t">Alerts that matter</h3><p data-i18n="lp.f3d">Get notified when a match crosses our confidence threshold.</p></div>
+      <div class="lfeat"><div class="lf-ic">🏆</div><h3 data-i18n="lp.f4t">Analyst verdicts</h3><p data-i18n="lp.f4d">Pro picks and written reports from our desk on top games.</p></div>
+    </div>
+  </div>
+
+  <div class="lsec">
+    <div class="lsec-t center" data-i18n="lp.pricet">Choose your level</div>
+    <div id="landing-planes"></div>
+  </div>
+
+  <footer class="lfoot">
+    <span>© Handicapper</span>
+    <span class="lfoot-note" data-i18n="lp.legal">Informational analysis, not betting advice.</span>
+  </footer>
+</section>
+
+<!-- ============================ PLANES ============================ -->
+<section id="pricing-screen" class="pantalla" style="display:none">
+  <header class="lnav">
+    <div class="marca"><img class="logo-img" alt="Handicapper" src="assets/imagenes/logo-nombre-oscuro.png"></div>
+    <div class="lnav-acc">
+      <button class="util-btn" id="idioma-btn-p" aria-label="Language"></button>
+      <button class="lbtn ghost" id="btn-salir-planes" data-i18n="auth.salir">Log out</button>
+    </div>
+  </header>
+  <div class="pricing-wrap">
+    <div class="pricing-head">
+      <div class="hero-badge" data-i18n="pl.welcome">Welcome — pick a plan</div>
+      <h1 class="hero-h1" data-i18n="pl.h1">Unlock the full platform.</h1>
+      <p class="hero-sub" data-i18n="pl.sub">Start monthly with a low barrier, or save with annual — two months free.</p>
+      <div class="ciclo-toggle">
+        <button class="ciclo on" data-ciclo="mensual" data-i18n="pl.monthly">Monthly</button>
+        <button class="ciclo" data-ciclo="anual" data-i18n="pl.annual">Annual · save 17%</button>
+      </div>
+    </div>
+    <div id="pricing-planes"></div>
+    <p class="pricing-nota" data-i18n="pl.nota">Cancel anytime. Prices in USD.</p>
+  </div>
+</section>
+
+<!-- ============================ PLATAFORMA ============================ -->
+<div id="app-screen" class="pantalla" style="display:none">
   <header class="top">
     <button class="hamb" id="hamb" aria-label="Menu">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -31,11 +125,9 @@
       <button class="util-btn cuenta-btn" id="cuenta-btn" aria-label="Account">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
       </button>
-      <button class="btn-oro">Subscribe · $1.99</button>
     </div>
   </header>
 
-  <!-- Menú lateral (móvil): se abre con la hamburguesa -->
   <div class="drawer-bg" id="drawer-bg"></div>
   <aside class="drawer" id="drawer">
     <div class="drawer-cab">
@@ -52,12 +144,10 @@
       <div class="eyebrow">Sports</div>
       <div id="lista-ligas"></div>
     </aside>
-
     <main class="centro">
       <div class="pestanas" id="pestanas"></div>
       <div id="lista"></div>
     </main>
-
     <aside class="panel" id="panel">
       <div class="vacio">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="34" height="34"><path d="M4 4v16h16"/><path d="M7 14l3-3 3 2 4-6"/></svg></div>
@@ -72,6 +162,7 @@
   </div>
 
   <nav class="tabbar" id="tabbar"></nav>
+</div>
 
   <script type="module" src="assets/js/app.js"></script>
 </body>
