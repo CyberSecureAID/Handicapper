@@ -3,7 +3,6 @@
    render de los planes e internacionalización de la landing.
    ============================================================ */
 import { t, Lg, idiomaActual, fijarIdioma } from './idioma.js';
-import { alternarTema } from './tema.js';
 import { PLANES } from '../datos/planes.js';
 import { marcarVistaPrevia } from '../auth/estado-pago.js';
 import { iniciarParticulas, arrancar as arrancarParticulas, parar as pararParticulas } from './particulas.js';
@@ -19,8 +18,7 @@ export function initNavegacion(callbacks) {
   bind('btn-hero', () => _cb.abrirAuth?.('registrar'));
   bind('btn-hero-2', () => document.getElementById('landing-planes')?.scrollIntoView({ behavior: 'smooth' }));
   bind('btn-salir-planes', () => _cb.salir?.());
-  // Tema / idioma en landing y pricing
-  ['tema-btn-l', 'tema-btn-p'].forEach(id => bind(id, alternarTema));
+  // Idioma en landing y pricing
   ['idioma-btn-l', 'idioma-btn-p'].forEach(id => bind(id, () => fijarIdioma(idiomaActual() === 'en' ? 'es' : 'en')));
   // Toggle mensual/anual
   document.querySelectorAll('.ciclo').forEach(b => b.onclick = () => {
