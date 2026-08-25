@@ -118,10 +118,6 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
   .lnav { padding: 14px 16px; }
   .lnav .lbtn.ghost#btn-login { display: none; }
   .lsec { padding: 44px 20px; }
-  /* En móvil no cargamos el video (datos/rendimiento): queda el póster */
-  .hero-video { display: none; }
-  .hero { background: linear-gradient(180deg, rgba(6,9,14,.5), rgba(6,9,14,.92)), url('../imagenes/textura-tarjeta.jpg');
-    background-size: cover; background-position: center; }
 }
 @media (max-width: 560px) {
   .lfeatures { grid-template-columns: 1fr; }
