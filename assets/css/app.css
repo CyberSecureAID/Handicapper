@@ -178,12 +178,14 @@
 .pm-prob-c span { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: #7f8b98; font-weight: 700; }
 .pm-prob-c .pm-bar { width: 100%; height: 4px; border-radius: 4px; background: rgba(255,255,255,.09); overflow: hidden; margin-top: 6px; }
 .pm-prob-c .pm-bar u { display: block; height: 100%; border-radius: 4px; }
-.pm-prob-c.local b { color: #38a9f0; }
-.pm-prob-c.local .pm-bar u { background: linear-gradient(90deg,#1683d8,#3cb0ff); }
-.pm-prob-c.empate b { color: #9aa6b2; }
-.pm-prob-c.empate .pm-bar u { background: linear-gradient(90deg,#6b7683,#9aa6b2); }
-.pm-prob-c.visita b { color: #e8b84b; }
-.pm-prob-c.visita .pm-bar u { background: linear-gradient(90deg,#c79426,#ffe08a); }
+.pm-prob-c.alta b { color: #38a9f0; }
+.pm-prob-c.alta .pm-bar u { background: linear-gradient(90deg,#1683d8,#3cb0ff); }
+.pm-prob-c.baja b { color: #f0353a; }
+.pm-prob-c.baja .pm-bar u { background: linear-gradient(90deg,#c62f34,#f0353a); }
+.pm-prob-c.media b { color: #9aa6b2; }
+.pm-prob-c.media .pm-bar u { background: linear-gradient(90deg,#6b7683,#9aa6b2); }
+.pm-prob-c.nula b { color: #6b7683; }
+.pm-prob-c.nula .pm-bar u { background: transparent; }
 
 /* Acciones (derecha) */
 .pm-actions { display: flex; align-items: center; gap: 10px; }
