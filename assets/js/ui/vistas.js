@@ -172,20 +172,26 @@ export function detalle(p, opciones = {}) {
         fn = parts.length > 1 ? parts.slice(0, -1).join(' ') : '';
         ln = parts.length > 1 ? parts.slice(-1)[0] : j0.nombre;
         if (j0.pos) meta.push(esc(j0.pos));
-        stats = lid.filter(x => x.nombre === j0.nombre).slice(0, 4).map(x => ({ v: x.dato, k: x.etiqueta }));
-        if (stats.length < 2) stats = lid.slice(0, 4).map(x => ({ v: x.dato, k: x.etiqueta }));
+        // Solo stats limpias y cortas (evita etiquetas largas que se montan).
+        const corta = (k) => { const s = String(k || '').replace(/([a-z])([A-Z])/g, '$1 $2'); return s.length > 10 ? s.slice(0, 10) : s; };
+        const vistos = new Set();
+        stats = lid.filter(x => x.nombre === j0.nombre && x.dato != null && String(x.dato).length <= 6)
+          .filter(x => { const k = x.etiqueta; if (vistos.has(k)) return false; vistos.add(k); return true; })
+          .slice(0, 4).map(x => ({ v: x.dato, k: corta(x.etiqueta) }));
       }
     }
     const foto = jug ? fotoJugador(jug, p.ligaId) : null;
-    const fig = figuraAbridor(p.ligaId);
+    // Figura de respaldo: béisbol usa la de pie; el resto usa la distinta por lado.
+    const fig = p.ligaId === 'mlb' ? figuraAbridor(p.ligaId) : figuraLado(p.ligaId, lado);
     const photo = foto
       ? `<img class="hd-pit-photo" src="${esc(foto)}" alt="" loading="lazy"
-           onerror="this.onerror=null;this.src='${esc(fig)}'">`
-      : `<img class="hd-pit-photo" src="${esc(fig)}" alt="">`;
-    return `<div class="hd-pit ${lado}">${photo}
+           onerror="this.onerror=null;this.src='${esc(fig)}';this.classList.add('is-figura')">`
+      : `<img class="hd-pit-photo is-figura" src="${esc(fig)}" alt="">`;
+    const sideC = lado === 'local' ? 'l' : 'r';
+    return `<div class="hd-pit ${sideC}">${photo}
       <div class="hd-pit-info">
         <span class="hd-pit-badge">${IC.estrella || ''} ${badgeT}</span>
-        <div class="hd-pit-sub">${ES ? 'Anunciado para hoy' : 'Announced for today'}</div>
+        <div class="hd-pit-sub">${a && a.nombre ? (ES ? 'Anunciado para hoy' : 'Announced for today') : (ES ? 'Líder del equipo' : 'Team leader')}</div>
         ${fn ? `<span class="hd-pit-fn">${esc(fn)}</span>` : ''}
         <span class="hd-pit-ln">${esc(ln)} ${num}</span>
         ${meta.length ? `<div class="hd-pit-meta">${meta.join(' · ')}</div>` : ''}
@@ -295,20 +301,38 @@ export function detalle(p, opciones = {}) {
     return `<div class="hd-an-txt" style="margin-top:12px;color:var(--tinta-3)">${esc(ES ? f.es : f.en)}</div>`;
   }
 
+  /* Roster completo de un equipo (todos los jugadores) */
+  function rosterCol(lado) {
+    const eq = p[lado];
+    const arr = (p.plantilla && p.plantilla[lado] && p.plantilla[lado].length ? p.plantilla[lado]
+      : (p.jugadores && p.jugadores[lado]) || []);
+    const vistos = new Set();
+    const lista = arr.filter(j => { const n = j.nombre; if (!n || vistos.has(n)) return false; vistos.add(n); return true; });
+    const rows = lista.map(j => `<div class="hd-rp">${avatar(j, p.ligaId)}
+      <span class="hd-rp-nm">${esc(j.nombre)}</span>${j.pos ? `<span class="hd-rp-pos">${esc(j.pos)}</span>` : ''}</div>`).join('');
+    return `<div class="hd-roster-col"><b>${esc(eq.abrev || eq.nombre)}</b>${rows || `<div class="hd-empty">${ES ? 'Roster no disponible.' : 'Roster unavailable.'}</div>`}</div>`;
+  }
+  function equiposHTML() {
+    return `<div class="hd-roster">${rosterCol('local')}${rosterCol('visita')}</div>`;
+  }
+
   const cmp = filasComparacion();
   const cmpHTML = cmp.length ? `<div class="hd-cmp">${cmp.join('')}</div>` : `<div class="hd-cmp-nd">${ES ? 'Sin estadísticas comparables todavía.' : 'No comparable stats yet.'}</div>`;
 
-  /* --- Paneles por pestaña (solo se muestran los que tienen datos) --- */
+  /* --- Pestañas NO redundantes: cada una muestra algo distinto --- */
   const panes = [];
-  panes.push({ id: 'comparacion', txt: ES ? 'Comparación' : 'Comparison',
-    html: `${donutsHTML()}${cmpHTML}${h2hHTML()}` });
-  panes.unshift({ id: 'resumen', txt: ES ? 'Resumen' : 'Overview',
-    html: `${donutsHTML()}${analistaHTML() || `<div class="hd-an-txt" style="text-align:center;color:var(--tinta-3);padding:8px 0">${ES ? 'Probabilidad del modelo Handicapper.' : 'Handicapper model probability.'}</div>`}${factoresHTML()}` });
-  if (cmp.length) panes.push({ id: 'estadisticas', txt: ES ? 'Estadísticas' : 'Stats', html: `<div class="hd-cmp">${cmp.join('')}</div>` });
+  // Resumen: probabilidad + veredicto del analista + factores del modelo (sin barras).
+  panes.push({ id: 'resumen', txt: ES ? 'Resumen' : 'Overview',
+    html: `${donutsHTML()}${analistaHTML()}${factoresHTML() || `<div class="hd-an-txt" style="text-align:center;color:var(--tinta-3);padding:8px 0">${ES ? 'Probabilidad del modelo Handicapper con las señales del partido.' : 'Handicapper model probability from the match signals.'}</div>`}` });
+  // Comparación: donuts + barras (sin h2h, para no repetir).
+  panes.push({ id: 'comparacion', txt: ES ? 'Comparación' : 'Comparison', on: true, html: `${donutsHTML()}${cmpHTML}` });
+  // Equipos: roster COMPLETO de ambos.
+  panes.push({ id: 'equipos', txt: ES ? 'Equipos' : 'Teams', html: equiposHTML() });
+  // Enfrentamientos: solo si hay serie real.
   if (p.serie && (p.serie.local != null || p.serie.visita != null)) panes.push({ id: 'enfrentamientos', txt: ES ? 'Enfrentamientos' : 'Head to head', html: h2hHTML() });
 
-  const tabsHTML = panes.map((pane, i) => `<button class="hd-tab ${pane.id === 'comparacion' ? 'on' : ''}" data-tab="${pane.id}">${esc(pane.txt)}</button>`).join('');
-  const panesHTML = panes.map(pane => `<div class="hd-pane-c ${pane.id === 'comparacion' ? 'on' : ''}" data-pane="${pane.id}" ${pane.id === 'comparacion' ? '' : 'style="display:none"'}>${pane.html}</div>`).join('');
+  const tabsHTML = panes.map(pane => `<button class="hd-tab ${pane.on ? 'on' : ''}" data-tab="${pane.id}">${esc(pane.txt)}</button>`).join('');
+  const panesHTML = panes.map(pane => `<div class="hd-pane-c ${pane.on ? 'on' : ''}" data-pane="${pane.id}" ${pane.on ? '' : 'style="display:none"'}>${pane.html}</div>`).join('');
 
   const venueSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>`;
   const shareSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg>`;

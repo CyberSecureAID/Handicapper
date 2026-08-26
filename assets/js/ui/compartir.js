@@ -9,7 +9,7 @@
    ============================================================ */
 import { t, Lg } from './idioma.js';
 
-const ORO = '#E8B84B', ORO2 = '#c79426', AZUL = '#3ca8e8', GRIS = '#9aa6b2';
+const ORO = '#E8B84B', ORO2 = '#c79426', AZUL = '#1d9bf0', ROJO = '#e23b3f', GRIS = '#9aa6b2';
 const TPL = 'assets/imagenes/compartir.jpg';
 const VS = 'assets/imagenes/vs.png';
 const N = 1254;
@@ -83,33 +83,38 @@ export async function compartirPartido(p) {
 
     // Probabilidad grande
     C(g, t('share.prob'), 627, 452, '800 20px "Inter", sans-serif', GRIS);
-    C(g, (m.local||0)+'%', EQ.izq, 518, `800 ${localFav?70:60}px "Chakra Petch", sans-serif`, ORO);
-    C(g, (m.visita||0)+'%', EQ.der, 518, `800 ${!localFav?70:60}px "Chakra Petch", sans-serif`, AZUL);
+    C(g, (m.local||0)+'%', EQ.izq, 518, `800 ${localFav?70:60}px "Chakra Petch", sans-serif`, AZUL);
+    C(g, (m.visita||0)+'%', EQ.der, 518, `800 ${!localFav?70:60}px "Chakra Petch", sans-serif`, ROJO);
     // barra
     const bx0=185, bx1=1069, by=562, bh=24, w=bx1-bx0;
     g.fillStyle='#1a212c'; g.beginPath(); g.roundRect(bx0,by,w,bh,12); g.fill();
     const wl=Math.max(0,Math.min(w,w*(m.local||0)/100));
-    const gl=g.createLinearGradient(bx0,0,bx0+wl,0); gl.addColorStop(0,ORO2); gl.addColorStop(1,ORO);
+    const gl=g.createLinearGradient(bx0,0,bx0+wl,0); gl.addColorStop(0,'#1683d8'); gl.addColorStop(1,AZUL);
     g.fillStyle=gl; g.beginPath(); g.roundRect(bx0,by,wl,bh,12); g.fill();
     const wv=Math.max(0,Math.min(w,w*(m.visita||0)/100));
-    const gv=g.createLinearGradient(bx1-wv,0,bx1,0); gv.addColorStop(0,AZUL); gv.addColorStop(1,'#8fd4f6');
+    const gv=g.createLinearGradient(bx1-wv,0,bx1,0); gv.addColorStop(0,ROJO); gv.addColorStop(1,'#c62f34');
     g.fillStyle=gv; g.beginPath(); g.roundRect(bx1-wv,by,wv,bh,12); g.fill();
     g.fillStyle='rgba(255,255,255,.2)'; g.beginPath(); g.roundRect(bx0,by,w,bh*0.45,12); g.fill();
 
-    // Datos repartidos (hasta 11), con zebra sutil
-    const datos = (p.datos || []).slice(0, 11);
+    // Datos de comparación (usa comparativa real; si no, p.datos)
+    let datos = [];
+    if (p.comparativa && p.comparativa.length) {
+      datos = p.comparativa.slice(0, 11).map(c => ({ local: c.local, visita: c.visita, etiqueta: { en: c.en || c.k, es: c.es || c.k } }));
+    } else {
+      datos = (p.datos || []).slice(0, 11);
+    }
     const y0=632, y1=858, n=datos.length, dy = n>1 ? (y1-y0)/(n-1) : 0;
     datos.forEach((dd, i) => {
       const y = Math.round(y0 + dy*i);
       if (i > 0) { g.strokeStyle = 'rgba(255,255,255,.11)'; g.lineWidth = 1;
         g.beginPath(); g.moveTo(210, Math.round(y - dy/2)); g.lineTo(1044, Math.round(y - dy/2)); g.stroke(); }
       let s = fit(g, String(Lg(dd.local)), 250, 28, '"Chakra Petch", sans-serif');
-      C(g, String(Lg(dd.local)), EQ.izq, y, `800 ${s}px "Chakra Petch", sans-serif`, ORO);
+      C(g, String(Lg(dd.local)), EQ.izq, y, `800 ${s}px "Chakra Petch", sans-serif`, AZUL);
       let ks = 18; g.font = `700 ${ks}px "Inter", sans-serif`;
       while (g.measureText(String(Lg(dd.etiqueta))).width > 330 && ks > 12) { ks--; g.font=`700 ${ks}px "Inter", sans-serif`; }
       C(g, String(Lg(dd.etiqueta)).toUpperCase(), 627, y, `700 ${ks}px "Inter", sans-serif`, GRIS);
       s = fit(g, String(Lg(dd.visita)), 250, 28, '"Chakra Petch", sans-serif');
-      C(g, String(Lg(dd.visita)), EQ.der, y, `800 ${s}px "Chakra Petch", sans-serif`, AZUL);
+      C(g, String(Lg(dd.visita)), EQ.der, y, `800 ${s}px "Chakra Petch", sans-serif`, ROJO);
     });
     return cv;
   }
