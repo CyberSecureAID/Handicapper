@@ -303,6 +303,81 @@
 .det-vs .col .escudo img { width: 46px; height: 46px; }
 .det-vs .col .nom { font-weight: 800; font-size: 15px; line-height: 1.25; color: #f2f6fb; }
 .det-vs .col .rec { font-size: 12px; color: var(--oro); font-family: var(--mono); font-weight: 800; margin-top: 4px; }
+
+/* ===== DETALLE PREMIUM: bloques con protagonismo ===== */
+.panel .det-block { margin-top: 18px; }
+.panel .det-sec-t.big { font-size: 11px; letter-spacing: .12em; color: #cdd6e0; margin: 0 0 12px;
+  display: flex; align-items: center; gap: 7px; }
+.panel .det-sec-t.big svg { width: 14px; height: 14px; }
+.panel .det-sec-t.big.alert { color: #ff8a9b; }
+.panel .det-sec-t.big.alert svg { color: #ff8a9b; }
+.mini-logo { width: 16px; height: 16px; object-fit: contain; vertical-align: middle; }
+
+/* Duelo de abridores (protagonista) */
+.duelo-abr { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: 10px; }
+.abr-card { position: relative; background: linear-gradient(180deg,#141c26,#0e141b);
+  border: 1px solid var(--linea); border-radius: 16px; padding: 16px 12px 14px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 7px; overflow: hidden; }
+.abr-card.local { border-top: 3px solid var(--oro); }
+.abr-card.visita { border-top: 3px solid #2f9fe0; }
+.abr-card::after { content: ''; position: absolute; inset: 0; background: radial-gradient(120% 80% at 50% -20%, rgba(255,255,255,.06), transparent 60%); pointer-events: none; }
+.abr-eq { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10px;
+  font-weight: 800; letter-spacing: .08em; color: #96a2ae; }
+.abr-avatar { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--display); font-weight: 800; font-size: 20px; color: #0b0f14;
+  background: linear-gradient(180deg,#eef3f8,#b9c4d0); margin-top: 2px; }
+.abr-card.local .abr-avatar { background: linear-gradient(180deg,#ffe9a8,#e0a52b); }
+.abr-card.visita .abr-avatar { background: linear-gradient(180deg,#bfe6fb,#4aa8e6); }
+.abr-nom { font-weight: 800; font-size: 14.5px; color: #f2f6fb; line-height: 1.2; }
+.abr-mano { font-size: 10px; font-weight: 800; letter-spacing: .05em; padding: 3px 10px; border-radius: 999px; }
+.abr-mano.lhp { background: rgba(92,189,240,.18); color: #7fd8ff; border: 1px solid rgba(92,189,240,.4); }
+.abr-mano.rhp { background: rgba(232,184,75,.16); color: var(--oro); border: 1px solid rgba(232,184,75,.4); }
+.abr-stats { display: flex; justify-content: center; gap: 14px; margin-top: 4px; }
+.abr-st { display: flex; flex-direction: column; align-items: center; margin: 0 8px; }
+.abr-st b { font-family: var(--display); font-size: 17px; color: #f2f6fb; line-height: 1; }
+.abr-st small { font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: #8a97a6; margin-top: 3px; }
+.abr-card.sin { justify-content: center; }
+.abr-nd { font-size: 11.5px; color: #8a97a6; }
+.abr-vs { align-self: center; font-family: var(--mono); font-weight: 800; font-size: 12px; color: #6b7683; }
+
+/* Columnas duales (líderes / lesionados) */
+.det-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.duo-col { background: rgba(255,255,255,.03); border: 1px solid var(--linea); border-radius: 13px; padding: 12px; }
+.duo-cab { display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10.5px; font-weight: 800;
+  letter-spacing: .06em; color: var(--oro); margin-bottom: 9px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,.07); }
+.duo-nd { font-size: 11.5px; color: #8a97a6; }
+.duo-nd.ok { color: #7fbf95; }
+.lid-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(255,255,255,.05); }
+.lid-row:first-of-type { border-top: 0; }
+.lid-n { font-size: 12px; font-weight: 700; color: #eef3f8; }
+.lid-n em { font-style: normal; color: #96a2ae; font-size: 10px; margin-left: 3px; }
+.lid-d { text-align: right; white-space: nowrap; }
+.lid-d b { font-family: var(--mono); font-size: 12.5px; color: #f2f6fb; }
+.lid-d small { display: block; font-size: 8.5px; text-transform: uppercase; letter-spacing: .06em; color: #8a97a6; }
+.les-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid rgba(255,255,255,.05); }
+.les-row:first-of-type { border-top: 0; }
+.les-n { font-size: 12px; font-weight: 700; color: #dfe6ee; }
+.les-n em { font-style: normal; color: #96a2ae; font-size: 10px; margin-left: 3px; }
+.les-est { font-size: 10px; font-weight: 800; color: #ff8a9b; background: rgba(229,64,90,.14);
+  border: 1px solid rgba(229,64,90,.35); border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+
+/* Comparativa: barra de récord enfrentada */
+.cmp-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 9px; margin-bottom: 12px; }
+.cmp-l, .cmp-r { font-family: var(--mono); font-size: 12px; font-weight: 800; color: #eef3f8; }
+.cmp-r { text-align: right; }
+.cmp-bar { height: 10px; border-radius: 999px; overflow: hidden; display: flex; background: #0b0f14; }
+.cmp-bar .cl { background: linear-gradient(90deg,#c79426,#ffe08a); }
+.cmp-bar .cr { background: linear-gradient(90deg,#1f78c2,#7fd8ff); }
+.cmp-k { grid-column: 1 / -1; text-align: center; font-size: 8.5px; text-transform: uppercase; letter-spacing: .1em; color: #8a97a6; }
+
+.panel .det-nota { display: flex; align-items: flex-start; gap: 7px; margin-top: 11px; font-size: 11.5px; line-height: 1.5;
+  color: #c9d3dd; background: rgba(92,189,240,.08); border: 1px solid rgba(92,189,240,.22); border-radius: 11px; padding: 10px 12px; }
+.panel .det-nota svg { width: 14px; height: 14px; color: #7fd8ff; flex: 0 0 auto; margin-top: 1px; }
+
+@media (max-width: 560px) {
+  .duelo-abr { grid-template-columns: 1fr; }
+  .abr-vs { padding: 4px 0; }
+}
 .det-vs .mid { align-self: center; font-family: var(--display); color: var(--tinta-3); font-weight: 800; font-size: 13px; }
 .det-vs .mid .vs-img { width: 66px; height: auto; display: block; filter: drop-shadow(0 3px 6px rgba(0,0,0,.35)); }
 .det-hora { text-align: center; font-size: 12px; color: var(--tinta-3); font-weight: 600; margin-bottom: 14px; }
