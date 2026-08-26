@@ -8,6 +8,7 @@ import { LIGAS, listarPartidos, detallePartido } from '../datos/proveedor.js';
 import { PLANES, planPorId } from '../datos/planes.js';
 import { salir, usuarioActual } from '../auth/auth.js';
 import { marcarVistaPrevia } from '../auth/estado-pago.js';
+import { idiomaActual } from '../ui/idioma.js';
 
 let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = [];
 let _ligaSel = null, _partidos = [], _cargandoPart = false;
