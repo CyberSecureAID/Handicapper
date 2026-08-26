@@ -43,17 +43,32 @@ export function fotoESPN(ligaId, espnId) {
   return `https://a.espncdn.com/i/headshots/${b}/players/full/${espnId}.png`;
 }
 
-/* Mejor foto disponible para un jugador (prioriza recortes TRANSPARENTES). */
+/* Mejor foto disponible para un jugador (prioriza recortes TRANSPARENTES).
+   Orden: foto oficial (MLB/NBA por ID) -> el headshot REAL que entrega ESPN
+   en el roster (URL válida, transparente) -> URL construida de ESPN. */
 export function fotoJugador(jug, ligaId) {
   if (!jug) return null;
   if (jug.fotoOficial) return jug.fotoOficial;           // MLB oficial (transparente)
   if (ligaId === 'mlb' && jug.mlbId) return fotoMLB(jug.mlbId);
   if (ligaId === 'nba' && jug.nbaId) return fotoNBA(jug.nbaId);
-  // Recorte "full" de ESPN (fondo transparente). Se prefiere al headshot crudo,
-  // que a veces trae un fondo blanco/gris feo.
-  const espnCut = fotoESPN(ligaId, jug.id || jug.playerId || jug.athleteId);
-  if (espnCut) return espnCut;
-  return href(jug.foto || jug.headshot);                 // último recurso
+  // El headshot que ESPN ENTREGA (href real). Es la URL correcta y existe de
+  // verdad; para fútbol es la única que funciona (la construida suele fallar).
+  const real = href(jug.foto || jug.headshot);
+  if (real) return real;
+  // Respaldo: URL construida por ID (sirve sobre todo en NBA/NFL/MLB/NHL).
+  return fotoESPN(ligaId, jug.id || jug.playerId || jug.athleteId);
+}
+
+/* Cadena de URLs de foto para onerror (intenta varias antes de rendirse). */
+export function cadenaFotoStr(jug, ligaId) {
+  const urls = [];
+  const add = (u) => { if (u && !urls.includes(u)) urls.push(u); };
+  add(jug.fotoOficial);
+  if (ligaId === 'mlb') add(fotoMLB(jug.mlbId));
+  if (ligaId === 'nba') add(fotoNBA(jug.nbaId));
+  add(href(jug.foto || jug.headshot));
+  add(fotoESPN(ligaId, jug.id || jug.playerId || jug.athleteId));
+  return urls;
 }
 
 /* Lista de URLs de respaldo (para onerror en cadena) */
