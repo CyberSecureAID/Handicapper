@@ -35,12 +35,12 @@
 .hd-tabs { display:flex; gap:24px; overflow-x:auto; scrollbar-width:none; }
 .hd-tabs::-webkit-scrollbar { display:none; }
 .hd-tab { padding:13px 2px; font-size:12px; letter-spacing:.07em; text-transform:uppercase; font-weight:700;
-  color:var(--tinta-3); border-bottom:2px solid transparent; white-space:nowrap; background:none; }
+  color:var(--tinta-3); border:0; border-bottom:2px solid transparent; white-space:nowrap; background:none; cursor:pointer; }
 .hd-tab.on { color:#fff; border-bottom-color:var(--c-loc); }
 .hd-tab:hover { color:var(--tinta-2); }
 .hd-acc { position:absolute; right:12px; top:50%; transform:translateY(-50%); display:flex; gap:8px; }
 .hd-acc button { display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px; border-radius:9px;
-  background:rgba(255,255,255,.05); border:1px solid var(--linea); color:var(--tinta-2); font-size:12px; font-weight:700; }
+  background:rgba(255,255,255,.05); border:1px solid var(--linea); color:var(--tinta-2); font-size:12px; font-weight:700; cursor:pointer; }
 .hd-acc button svg { width:15px; height:15px; }
 .hd-acc button:hover { color:#fff; border-color:var(--c-loc); }
 .hd-acc button.x:hover { color:#fff; background:var(--c-vis); border-color:transparent; }
@@ -56,14 +56,17 @@
 /* ---------- TARJETA DE ABRIDOR ---------- */
 .hd-pit { position:relative; border-radius:14px; overflow:hidden; min-height:180px; border:1px solid var(--linea);
   background-size:cover; background-position:center; }
-.hd-pit.l { background-image:linear-gradient(100deg, rgba(11,15,23,.15) 0%, rgba(11,15,23,.55) 46%, rgba(11,15,23,.96) 72%), var(--bg-loc); }
-.hd-pit.r { background-image:linear-gradient(260deg, rgba(11,15,23,.15) 0%, rgba(11,15,23,.55) 46%, rgba(11,15,23,.96) 72%), var(--bg-vis); }
-.hd-pit-photo { position:absolute; bottom:0; height:100%; width:auto; max-width:44%; object-fit:contain; object-position:bottom; z-index:1;
+.hd-pit.l { background:linear-gradient(105deg, #1a72b4 0%, #124a76 42%, #0a1a2b 100%); }
+.hd-pit.r { background:linear-gradient(255deg, #c23a3e 0%, #7a2226 42%, #2a0f11 100%); }
+.hd-pit-photo { position:absolute; bottom:0; z-index:1; object-fit:contain; object-position:bottom;
   filter:drop-shadow(0 6px 14px rgba(0,0,0,.55)); }
-.hd-pit.l .hd-pit-photo { left:0; }
-.hd-pit.r .hd-pit-photo { right:0; }
+.hd-pit-photo:not(.is-figura) { height:100%; width:auto; max-width:46%; }
+.hd-pit-photo.is-figura { height:96%; width:auto; max-width:42%; }   /* figuras: misma altura ambos lados */
+.hd-pit.l .hd-pit-photo { left:8px; }
+.hd-pit.r .hd-pit-photo { right:8px; }
 .hd-pit-info { position:relative; z-index:2; width:60%; margin-left:auto; padding:14px 15px; text-align:right; }
 .hd-pit.r .hd-pit-info { margin-left:0; margin-right:auto; text-align:left; }
+.hd-pit-info > * { text-shadow:0 1px 6px rgba(0,0,0,.7); }
 .hd-pit-badge { display:inline-flex; align-items:center; gap:6px; font-size:10px; letter-spacing:.08em; text-transform:uppercase;
   font-weight:800; padding:5px 10px; border-radius:7px; color:#fff; }
 .hd-pit.l .hd-pit-badge { background:linear-gradient(90deg,var(--c-loc-2),var(--c-loc)); }
@@ -77,10 +80,20 @@
 .hd-pit-temp { font-size:9px; letter-spacing:.1em; color:var(--tinta-3); font-weight:700; text-transform:uppercase; margin-top:11px; }
 .hd-pit-st { display:flex; gap:0; margin-top:7px; justify-content:flex-end; background:rgba(8,11,17,.55); border-radius:9px; padding:6px 2px; }
 .hd-pit.r .hd-pit-st { justify-content:flex-start; }
-.hd-pit-st > div { flex:1 1 0; min-width:0; text-align:center; padding:0 4px; position:relative; }
+.hd-pit-st > div { flex:1 1 0; min-width:0; text-align:center; padding:0 4px; position:relative; overflow:hidden; }
 .hd-pit-st > div + div::before { content:""; position:absolute; left:0; top:15%; height:70%; width:1px; background:var(--linea); }
-.hd-pit-st b { display:block; font-family:"Chakra Petch",sans-serif; font-size:17px; font-weight:800; color:#fff; }
-.hd-pit-st span { display:block; font-size:8.5px; letter-spacing:.04em; color:var(--tinta-3); text-transform:uppercase; font-weight:700; margin-top:1px; }
+.hd-pit-st b { display:block; font-family:"Chakra Petch",sans-serif; font-size:16px; font-weight:800; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hd-pit-st span { display:block; font-size:8px; letter-spacing:.03em; color:var(--tinta-3); text-transform:uppercase; font-weight:700; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* Roster completo (pestaña Equipos) */
+.hd-roster { display:grid; grid-template-columns:1fr 1fr; gap:0 22px; }
+.hd-roster-col b { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--tinta-2); font-weight:800; margin:2px 0 8px; padding-bottom:6px; border-bottom:1px solid var(--linea); }
+.hd-rp { display:flex; align-items:center; gap:9px; padding:5px 0; font-size:12.5px; }
+.hd-rp .hd-av { width:26px; height:26px; }
+.hd-rp .hd-av-i { font-size:11px; }
+.hd-rp-nm { flex:1; min-width:0; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hd-rp-pos { font-size:10px; color:var(--tinta-3); font-weight:700; }
+@media (max-width:520px){ .hd-roster { grid-template-columns:1fr; gap:0; } }
 
 /* ---------- BLOQUES ---------- */
 .hd-blk-t { font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; font-weight:800; color:var(--tinta-2);
@@ -175,7 +188,9 @@
 }
 @media (max-width:520px) {
   .hd-hd-venue { display:none; }
-  .hd-hd-name { font-size:15px; }
+  .hd-hd-name { font-size:14px; white-space:normal; line-height:1.05; }
+  .hd-hd-day { font-size:12px; }
+  .hd-hd-city { font-size:8.5px; }
   .hd-pit-ln { font-size:24px; }
   .hd-cmp-row { grid-template-columns:46px 1fr 46px; gap:8px; }
   .hd-cmp-v { font-size:13.5px; }
