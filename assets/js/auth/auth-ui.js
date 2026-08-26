@@ -32,7 +32,14 @@ function construirModal() {
       <form class="auth-form" id="auth-form">
         <label class="auth-campo nombre-campo"><span>${t('auth.nombre')}</span><input type="text" id="auth-nombre" autocomplete="name"></label>
         <label class="auth-campo"><span>${t('auth.correo')}</span><input type="email" id="auth-email" autocomplete="email" required></label>
-        <label class="auth-campo"><span>${t('auth.clave')}</span><input type="password" id="auth-pass" autocomplete="current-password" required minlength="6"></label>
+        <label class="auth-campo"><span>${t('auth.clave')}</span>
+          <div class="auth-pass-wrap">
+            <input type="password" id="auth-pass" autocomplete="current-password" required minlength="6">
+            <button type="button" class="auth-ojo" id="auth-ojo" aria-label="Show password">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </label>
         <div class="auth-error" id="auth-error"></div>
         <button type="submit" class="auth-enviar" id="auth-enviar">${t('auth.entrar')}</button>
       </form>
@@ -51,6 +58,12 @@ function construirModal() {
 
   el.querySelectorAll('.auth-tab').forEach(b => b.onclick = () => setModo(b.dataset.modo));
   el.querySelector('#auth-x').onclick = cerrarAuth;
+  const ojo = el.querySelector('#auth-ojo'), passIn = el.querySelector('#auth-pass');
+  if (ojo && passIn) ojo.onclick = () => {
+    const ver = passIn.type === 'password';
+    passIn.type = ver ? 'text' : 'password';
+    ojo.classList.toggle('on', ver);
+  };
   el.onclick = (e) => { if (e.target === el) cerrarAuth(); };
 
   el.querySelector('#auth-google').onclick = async () => {
