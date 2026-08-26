@@ -71,12 +71,55 @@ async function bateadoresEquipo(teamId) {
   } catch (_) { return []; }
 }
 
+/* Estadísticas de equipo (temporada) para la comparación central.
+   Devuelve las 10 categorías de la referencia con datos reales. */
+async function statsEquipo(teamId, anio) {
+  try {
+    const s = await j(`${API}/teams/${teamId}/stats?stats=season&group=hitting,pitching,fielding&season=${anio}`);
+    const bloque = (grupo) => (s.stats || []).find(x => (x.group?.displayName || x.group) === grupo || x.type?.displayName === grupo);
+    const hit = (s.stats || []).find(x => /hitting/i.test(x.group?.displayName || x.group || ''))?.splits?.[0]?.stat || {};
+    const pit = (s.stats || []).find(x => /pitching/i.test(x.group?.displayName || x.group || ''))?.splits?.[0]?.stat || {};
+    const fld = (s.stats || []).find(x => /fielding/i.test(x.group?.displayName || x.group || ''))?.splits?.[0]?.stat || {};
+    const jg = Number(hit.gamesPlayed) || Number(pit.gamesPlayed) || 0;
+    const rpg = (hit.runs != null && jg) ? (hit.runs / jg).toFixed(2) : null;
+    return {
+      avg: hit.avg ?? null, rpg, obp: hit.obp ?? null, slg: hit.slg ?? null, hr: hit.homeRuns ?? null,
+      era: pit.era ?? null, whip: pit.whip ?? null,
+      k9: pit.strikeoutsPer9Inn ?? (pit.strikeOuts && pit.inningsPitched ? (pit.strikeOuts / parseFloat(pit.inningsPitched) * 9).toFixed(1) : null),
+      fld: fld.fielding ?? null, err: fld.errors ?? null,
+    };
+  } catch (_) { return null; }
+}
+
+/* Une stats de ambos equipos en el arreglo de comparación */
+function comparativa(L, V) {
+  if (!L || !V) return null;
+  const defs = [
+    ['avg', 'Promedio de bateo', 'Batting average', false],
+    ['rpg', 'Carreras por juego', 'Runs per game', false],
+    ['obp', 'OBP (embase)', 'On-base %', false],
+    ['slg', 'SLG (poder)', 'Slugging', false],
+    ['hr', 'Jonrones', 'Home runs', false],
+    ['era', 'ERA (equipo)', 'Team ERA', true],
+    ['whip', 'WHIP (equipo)', 'Team WHIP', true],
+    ['k9', 'Ponches por 9 IP', 'Strikeouts per 9', false],
+    ['fld', 'Fielding %', 'Fielding %', false],
+    ['err', 'Errores', 'Errors', true],
+  ];
+  const out = [];
+  defs.forEach(([k, es, en, inv]) => {
+    if (L[k] != null && V[k] != null) out.push({ k, es, en, local: String(L[k]), visita: String(V[k]), inv });
+  });
+  return out.length ? out : null;
+}
+
 export async function enriquecerMLB(fechaISO, local, visita) {
   try {
     const g = await buscarGame(fechaISO, local.abrev, visita.abrev);
     if (!g) return null;
     const homeId = g.teams?.home?.team?.id, awayId = g.teams?.away?.team?.id;
     const ppH = g.teams?.home?.probablePitcher, ppA = g.teams?.away?.probablePitcher;
+    const anio = new Date().getFullYear();
 
     const armar = async (pp) => {
       if (!pp?.id) return null;
@@ -87,12 +130,14 @@ export async function enriquecerMLB(fechaISO, local, visita) {
         num: st.num, pos: st.pos, edad: st.edad, altura: st.altura, peso: st.peso,
       };
     };
-    const [abH, abA, batH, batA] = await Promise.all([
+    const [abH, abA, batH, batA, seqH, seqA] = await Promise.all([
       armar(ppH), armar(ppA), bateadoresEquipo(homeId), bateadoresEquipo(awayId),
+      statsEquipo(homeId, anio), statsEquipo(awayId, anio),
     ]);
     return {
       abridor: { local: abH, visita: abA },
       bateadores: { local: batH, visita: batA },
+      comparativa: comparativa(seqH, seqA),
     };
   } catch (_) { return null; }
 }

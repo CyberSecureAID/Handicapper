@@ -432,8 +432,23 @@ export async function detallePartido(id) {
             if (of.abridor?.visita) m.visita.abridor = { ...(m.visita.abridor || {}), ...limpio(of.abridor.visita) };
             if (of.bateadores?.local?.length) m.bateadores.local = of.bateadores.local;
             if (of.bateadores?.visita?.length) m.bateadores.visita = of.bateadores.visita;
+            if (of.comparativa?.length) m.comparativa = of.comparativa;
           }
         } catch (_) {}
+      } else {
+        // Resto de ligas: comparación desde las estadísticas de equipo del summary.
+        m.comparativa = comparativaSummary(s, m.local.id, m.visita.id, ligaId);
+        // Si no hay jugadores (frecuente en próximos de NBA/NHL), trae el roster.
+        if ((!m.jugadores?.local?.length && !m.plantilla?.local?.length) ||
+            (!m.jugadores?.visita?.length && !m.plantilla?.visita?.length)) {
+          try {
+            const [rl, rv] = await Promise.all([
+              rosterEquipo(ruta, m.local.id), rosterEquipo(ruta, m.visita.id),
+            ]);
+            if (rl?.length) m.plantilla.local = rl;
+            if (rv?.length) m.plantilla.visita = rv;
+          } catch (_) {}
+        }
       }
 
       // Si no hubo cuota ni proyección, re-ejecuta el motor con los datos
@@ -449,8 +464,49 @@ export async function detallePartido(id) {
   return m;
 }
 
-/* Roster / plantilla con estadísticas por jugador (desde boxscore o rosters).
-   Devoto: intenta varias formas del summary de ESPN y falla en silencio. */
+/* Comparación de equipos desde el boxscore del summary (no-MLB): usa las
+   estadísticas de temporada/juego que ESPN ya devolvió, sin llamadas extra. */
+function comparativaSummary(summary, localId, visitaId, ligaId) {
+  const teams = summary?.boxscore?.teams || [];
+  const byId = (id) => teams.find(t => String(t?.team?.id) === String(id));
+  const tl = byId(localId), tv = byId(visitaId);
+  if (!tl || !tv) return null;
+  const mapa = (t) => {
+    const o = {};
+    (t?.statistics || []).forEach(s => { const k = (s.name || s.label || '').toLowerCase(); if (k) o[k] = s.displayValue ?? s.value; });
+    return o;
+  };
+  const L = mapa(tl), V = mapa(tv);
+  const claves = Object.keys(L).filter(k => V[k] != null).slice(0, 10);
+  const et = (k) => k.replace(/([A-Z])/g, ' $1').replace(/^\w/, c => c.toUpperCase());
+  const inv = /against|allowed|turnover|foul|error/i;
+  const out = [];
+  claves.forEach(k => {
+    if (L[k] == null || V[k] == null) return;
+    out.push({ k: et(k), es: et(k), en: et(k), local: String(L[k]), visita: String(V[k]), inv: inv.test(k) });
+  });
+  return out.length ? out : null;
+}
+
+/* Roster de un equipo desde ESPN (para próximos de NBA/NHL sin jugadores). */
+async function rosterEquipo(ruta, teamId) {
+  if (!teamId) return [];
+  try {
+    const d = await pedir(`${BASE}/${ruta}/teams/${teamId}/roster`);
+    const items = d?.athletes || [];
+    const planos = [];
+    const empujar = (a) => {
+      if (!a) return;
+      planos.push({
+        nombre: a.displayName || a.fullName || a.shortName || '',
+        pos: a.position?.abbreviation || a.position?.name || '',
+        id: a.id || null, foto: a.headshot?.href || a.headshot || null, stats: {},
+      });
+    };
+    items.forEach(grp => { if (Array.isArray(grp?.items)) grp.items.forEach(empujar); else empujar(grp); });
+    return planos.slice(0, 12);
+  } catch (_) { return []; }
+}
 function rosterDe(summary, localId, visitaId) {
   const out = { local: [], visita: [] };
   const meter = (lado, at, stats, pos) => {
