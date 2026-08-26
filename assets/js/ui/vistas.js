@@ -120,20 +120,39 @@ export function detalle(p, opciones = {}) {
     </div>
     ${factoresTxt}`;
 
-  // Lanzadores probables (MLB) o jugadores clave
+  // Abridor anunciado (con mano LHP/RHP) + líderes reales del equipo
+  function manoTxt(m) {
+    if (m === 'L') return t('det.lhp');
+    if (m === 'R') return t('det.rhp');
+    return '';
+  }
   function listaJugadores(lado, eq) {
     const arr = (p.jugadores && p.jugadores[lado]) || [];
-    const prob = eq && eq.probable ? `<div class="pj"><span class="pj-n">${esc(eq.probable)}</span><span class="pj-e">${t('det.probable')}</span></div>` : '';
-    const items = arr.slice(0,3).map(j => `<div class="pj"><span class="pj-n">${esc(j.nombre)} ${j.pos?`<em>${esc(j.pos)}</em>`:''}</span><span class="pj-d">${esc(j.dato)} <small>${esc(j.etiqueta)}</small></span></div>`).join('');
-    return prob + items;
+    let html = '';
+    if (eq && eq.abridor && eq.abridor.nombre) {
+      const a = eq.abridor;
+      const mano = a.mano ? `<span class="pj-mano ${a.mano === 'L' ? 'zurdo' : 'derecho'}">${manoTxt(a.mano)}</span>` : '';
+      const stats = [a.wl ? a.wl : null, a.era ? 'ERA ' + a.era : null].filter(Boolean).join(' · ');
+      html += `<div class="pj abridor">
+        <span class="pj-rol">${t('det.abridor')}</span>
+        <span class="pj-n">${esc(a.nombre)} ${mano}</span>
+        ${stats ? `<span class="pj-d">${esc(stats)}</span>` : ''}
+      </div>`;
+    }
+    html += arr.slice(0, 4).map(j => `<div class="pj"><span class="pj-n">${esc(j.nombre)} ${j.pos ? `<em>${esc(j.pos)}</em>` : ''}</span><span class="pj-d">${esc(j.dato)} <small>${esc(j.etiqueta)}</small></span></div>`).join('');
+    return html;
   }
-  const hayJug = (p.jugadores && (p.jugadores.local.length || p.jugadores.visita.length)) || p.local.probable || p.visita.probable;
+  const hayJug = (p.jugadores && (p.jugadores.local.length || p.jugadores.visita.length)) || p.local.abridor || p.visita.abridor;
+  // Nota de tendencia si algún abridor es zurdo (dato real: los zurdos son minoría)
+  const hayZurdo = (p.local.abridor && p.local.abridor.mano === 'L') || (p.visita.abridor && p.visita.abridor.mano === 'L');
+  const notaZurdo = hayZurdo ? `<div class="det-nota">${t('det.notazurdo')}</div>` : '';
   const jugadores = hayJug ? `
     <div class="det-sec-t">${t('det.jugadores')}</div>
     <div class="det-jug">
       <div class="dj-col"><div class="dj-cab">${esc(p.local.abrev)}</div>${listaJugadores('local', p.local) || `<div class="pj vacia">${t('det.nodata')}</div>`}</div>
       <div class="dj-col"><div class="dj-cab">${esc(p.visita.abrev)}</div>${listaJugadores('visita', p.visita) || `<div class="pj vacia">${t('det.nodata')}</div>`}</div>
-    </div>` : '';
+    </div>
+    ${notaZurdo}` : '';
 
   // Lesionados
   function listaLes(lado) {
