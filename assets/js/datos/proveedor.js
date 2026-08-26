@@ -16,14 +16,14 @@
    ============================================================ */
 import * as demo from './proveedor-demo.js';
 import * as espn from './proveedor-api.js';
-// Futuras fuentes (entran por la Función de Firebase, con su key oculta):
-// import * as sportmonks from './proveedor-sportmonks.js';
+import * as sportsdb from './proveedor-sportsdb.js';   // enriquecedor GRATIS (info de equipos)
+// Futuras fuentes con API key (necesitan Función de Firebase para ocultar la key):
 // import * as apifootball from './proveedor-apifootball.js';
 
 const MODO = 'api';            // 'demo' | 'api'
 const BASE = espn;             // fuente base: provee la lista de partidos
 const ENRIQUECEDORES = [       // fuentes que solo añaden lo que falta
-  // sportmonks, apifootball,
+  sportsdb,
 ];
 
 /* ---- Interfaz pública (idéntica a antes) ---- */
