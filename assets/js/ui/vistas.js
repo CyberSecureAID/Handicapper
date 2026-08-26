@@ -40,42 +40,60 @@ function escudoMini(eq) {
   return '';
 }
 
-/* ---- Tarjeta de un partido ---- */
+/* ---- Tarjeta de un partido (lobby) — idéntica a la referencia ---- */
 export function tarjetaPartido(p) {
+  const ES = idiomaActual() === 'es';
   const vivo = p.estado === 'vivo';
   const m = p.mercado || {};
-  const localGana = (m.local || 0) >= (m.visita || 0);
+  const hayEmpate = m.empate != null;
 
-  const ladoEq = (eq, pct, clase, gana) => `
-    <div class="lado-eq">
-      ${escudo(eq)}
-      <div class="nom">${esc(eq.nombre)}</div>
-      <div class="rec">${esc(eq.record || '')}</div>
-      <div class="pct ${clase} ${gana ? 'gana' : ''}">${pct || 0}%</div>
-    </div>`;
+  const icoReloj = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`;
+  const icoPin = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>`;
+  const icoInfo = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>`;
+  const icoStar = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6 .8-4.4 4.1 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.4l6-.8z"/></svg>`;
+  const icoChev = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`;
 
-  const chip = p.analista ? `<div class="tiene-analisis">${IC.estrella} ${t('match.analisis')}</div>` : '';
+  const posLinea = (eq) => eq.posicion != null
+    ? `${eq.posicion}° ${ES ? 'Posición' : 'Position'}`
+    : (eq.division || eq.record || '');
+
+  const logoBig = (eq) => eq.logo
+    ? `<span class="pm-logo"><img src="${esc(eq.logo)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="pm-logo-fb" style="display:none">${esc(eq.abrev || '')}</span></span>`
+    : `<span class="pm-logo"><span class="pm-logo-fb" style="display:flex">${esc(eq.abrev || '')}</span></span>`;
+
+  const teamTx = (eq) => `<div class="pm-team-tx">
+    <span class="pm-team-nm">${esc(eq.nombre)}</span>
+    <span class="pm-team-pos">${esc(posLinea(eq))}</span></div>`;
+
+  const col = (val, etq, clase) => `<div class="pm-prob-c ${clase}">
+    <b>${val == null ? '--' : val + '%'}</b><span>${etq}</span>
+    <i class="pm-bar"><u style="width:${val == null ? 0 : val}%"></u></i></div>`;
 
   return `
   <div class="pmatch" data-id="${esc(p.id)}">
-    <div class="cab">
-      ${ligaCuno(p)}
-      <span class="hora ${vivo?'vivo':''}">${esc(Lg(p.inicio))}</span>
+    <div class="pm-liga">
+      <div class="pm-liga-top">${ligaCuno(p)}<span class="pm-liga-nm">${esc(p.liga)}</span></div>
+      <div class="pm-meta ${vivo ? 'vivo' : ''}">${icoReloj}<span>${esc(Lg(p.inicio))}</span></div>
+      ${p.sede ? `<div class="pm-meta">${icoPin}<span>${esc(Lg(p.sede))}</span></div>` : ''}
     </div>
-    <div class="duelo">
-      ${ladoEq(p.local, m.local, 'oro', localGana)}
-      <div class="vs-col">
-        <img class="vs-mini" src="assets/imagenes/vs.png" alt="VS" onerror="this.replaceWith(document.createTextNode('VS'))">
-        ${m.empate != null ? `<div class="empate">${t('prob.empate')} ${m.empate}%</div>` : ''}
+
+    <div class="pm-team l">${logoBig(p.local)}${teamTx(p.local)}</div>
+
+    <div class="pm-prob">
+      <div class="pm-prob-t">${ES ? 'Probabilidad estimada' : 'Estimated probability'} <span class="pm-info">${icoInfo}</span></div>
+      <div class="pm-prob-cols">
+        ${col(m.local, ES ? 'Local' : 'Home', 'local')}
+        ${col(hayEmpate ? m.empate : null, ES ? 'Empate' : 'Draw', 'empate')}
+        ${col(m.visita, ES ? 'Visitante' : 'Away', 'visita')}
       </div>
-      ${ladoEq(p.visita, m.visita, 'azul', !localGana)}
     </div>
-    <div class="barra">
-      <i class="s-local" style="width:${m.local||0}%"></i>
-      ${m.empate != null ? `<i class="s-empate" style="width:${m.empate}%"></i>` : ''}
-      <i class="s-visita" style="width:${m.visita||0}%"></i>
+
+    <div class="pm-team r">${teamTx(p.visita)}${logoBig(p.visita)}</div>
+
+    <div class="pm-actions">
+      <button class="pm-fav" data-fav="${esc(p.id)}" aria-label="Favorito">${icoStar}</button>
+      <button class="pm-ver" data-ver="${esc(p.id)}">${ES ? 'Ver Análisis' : 'View Analysis'} ${icoChev}</button>
     </div>
-    ${chip}
   </div>`;
 }
 
@@ -158,7 +176,8 @@ export function detalle(p, opciones = {}) {
       if (a.so != null) stats.push({ v: a.so, k: 'SO' });
       if (a.whip != null) stats.push({ v: a.whip, k: 'WHIP' });
     } else {
-      const lid = (p.jugadores && p.jugadores[lado]) || [];
+      let lid = (p.jugadores && p.jugadores[lado]) || [];
+      if (!lid.length && p.plantilla && p.plantilla[lado] && p.plantilla[lado].length) lid = p.plantilla[lado];
       const j0 = lid[0];
       badgeT = ES ? 'Jugador destacado' : 'Featured player';
       if (!j0) { jug = null; ln = ES ? 'Por confirmar' : 'TBD'; }
@@ -204,9 +223,10 @@ export function detalle(p, opciones = {}) {
     let arr = (p.bateadores && p.bateadores[lado]) || [];
     let titulo = ES ? 'Mejores bateadores (AVG)' : 'Top batters (AVG)';
     if (!arr.length) {
-      const lid = (p.jugadores && p.jugadores[lado]) || [];
+      let lid = (p.jugadores && p.jugadores[lado]) || [];
+      if (!lid.length && p.plantilla && p.plantilla[lado]) lid = p.plantilla[lado];
       const vistos = new Set();
-      arr = lid.filter(x => { if (vistos.has(x.nombre)) return false; vistos.add(x.nombre); return true; })
+      arr = lid.filter(x => { if (!x.nombre || vistos.has(x.nombre)) return false; vistos.add(x.nombre); return true; })
         .slice(0, 3).map(x => ({ nombre: x.nombre, pos: x.pos, avg: x.dato, id: x.id, foto: x.foto, et: x.etiqueta }));
       titulo = ES ? 'Líderes del equipo' : 'Team leaders';
     }
@@ -302,19 +322,39 @@ export function detalle(p, opciones = {}) {
     return `<div class="hd-an-txt" style="margin-top:12px;color:var(--tinta-3)">${esc(ES ? f.es : f.en)}</div>`;
   }
 
-  /* Roster completo de un equipo (todos los jugadores) */
+  /* Roster completo de un equipo (todos los jugadores) — clicable */
   function rosterCol(lado) {
     const eq = p[lado];
+    const sideC = lado === 'local' ? 'l' : 'r';
     const arr = (p.plantilla && p.plantilla[lado] && p.plantilla[lado].length ? p.plantilla[lado]
       : (p.jugadores && p.jugadores[lado]) || []);
     const vistos = new Set();
     const lista = arr.filter(j => { const n = j.nombre; if (!n || vistos.has(n)) return false; vistos.add(n); return true; });
-    const rows = lista.map(j => `<div class="hd-rp">${avatar(j, p.ligaId)}
-      <span class="hd-rp-nm">${esc(j.nombre)}</span>${j.pos ? `<span class="hd-rp-pos">${esc(j.pos)}</span>` : ''}</div>`).join('');
+    const rows = lista.map(j => {
+      const foto = fotoJugador(j, p.ligaId) || '';
+      return `<div class="hd-rp" role="button" tabindex="0" data-side="${sideC}" data-nm="${esc(j.nombre)}" data-pos="${esc(j.pos || '')}" data-foto="${esc(foto)}">${avatar(j, p.ligaId)}
+      <span class="hd-rp-nm">${esc(j.nombre)}</span>${j.pos ? `<span class="hd-rp-pos">${esc(j.pos)}</span>` : ''}</div>`;
+    }).join('');
     return `<div class="hd-roster-col"><b>${esc(eq.abrev || eq.nombre)}</b>${rows || `<div class="hd-empty">${ES ? 'Roster no disponible.' : 'Roster unavailable.'}</div>`}</div>`;
   }
   function equiposHTML() {
     return `<div class="hd-roster">${rosterCol('local')}${rosterCol('visita')}</div>`;
+  }
+
+  /* ESTADÍSTICAS: distinta a Comparación — récord/casa/fuera + números crudos en tabla */
+  function estadisticasHTML() {
+    const filas = [];
+    const fila = (k, l, r) => (l || r) ? filas.push(`<div class="hd-tb-row"><span class="hd-tb-l">${esc(l ?? '—')}</span><span class="hd-tb-k">${esc(k)}</span><span class="hd-tb-r">${esc(r ?? '—')}</span></div>`) : 0;
+    fila(ES ? 'Récord' : 'Record', p.local.record, p.visita.record);
+    fila(ES ? 'Casa' : 'Home', p.local.recordCasa, p.visita.recordCasa);
+    fila(ES ? 'Fuera' : 'Away', p.local.recordFuera, p.visita.recordFuera);
+    let extras = '';
+    if (p.comparativa && p.comparativa.length) {
+      extras = `<div class="hd-tb-sep">${ES ? 'Temporada' : 'Season'}</div>` + p.comparativa.map(c =>
+        `<div class="hd-tb-row"><span class="hd-tb-l">${esc(c.local)}</span><span class="hd-tb-k">${esc(ES ? (c.es || c.k) : (c.en || c.k))}</span><span class="hd-tb-r">${esc(c.visita)}</span></div>`).join('');
+    }
+    if (!filas.length && !extras) return `<div class="hd-cmp-nd">${ES ? 'Sin estadísticas todavía.' : 'No stats yet.'}</div>`;
+    return `<div class="hd-tb"><div class="hd-tb-head"><span>${esc(p.local.abrev)}</span><span></span><span>${esc(p.visita.abrev)}</span></div>${filas.join('')}${extras}</div>`;
   }
 
   const cmp = filasComparacion();
@@ -331,7 +371,7 @@ export function detalle(p, opciones = {}) {
   // Equipos: roster COMPLETO de ambos.
   panes.push({ id: 'equipos', txt: ES ? 'Equipos' : 'Teams', html: equiposHTML() });
   // Estadísticas: barras a pantalla completa.
-  if (cmp.length) panes.push({ id: 'estadisticas', txt: ES ? 'Estadísticas' : 'Stats', html: cmpHTML });
+  if (cmp.length || p.local.record) panes.push({ id: 'estadisticas', txt: ES ? 'Estadísticas' : 'Stats', html: estadisticasHTML() });
   // Enfrentamientos: solo si hay serie real.
   if (tieneSerie) panes.push({ id: 'enfrentamientos', txt: ES ? 'Enfrentamientos' : 'Head to head', html: h2hHTML() });
 
