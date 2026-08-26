@@ -107,6 +107,9 @@ function equiposDe(comp) {
   const eq = (c) => {
     const recs = c?.records || [];
     const rec = (t) => (recs.find(r => (r.type || r.name || '').toLowerCase() === t)?.summary) || null;
+    const rank = c?.curatedRank?.current;
+    const posicion = (rank != null && rank > 0 && rank < 500) ? rank : null;
+    const division = c?.team?.standingSummary || c?.standingSummary || null;
     return {
       id: c?.team?.id,
       nombre: c?.team?.displayName || c?.team?.name || '—',
@@ -114,6 +117,7 @@ function equiposDe(comp) {
       record: rec('total') || recs[0]?.summary || c?.team?.record || '',
       recordCasa: rec('home'),
       recordFuera: rec('road') || rec('away'),
+      posicion, division,
       logo: c?.team?.logo || (c?.team?.logos?.[0]?.href) || '',
       score: c?.score,
       abridor: abridorDe(c),
@@ -222,8 +226,8 @@ function aMatch(ev, ligaId, ligaNombre) {
     cuando: ev?.date || comp?.date || null,
     sede: comp?.venue?.fullName || null,
     estado,
-    local:  { id: local.id, nombre: local.nombre, abrev: local.abrev, record: local.record, recordCasa: local.recordCasa, recordFuera: local.recordFuera, logo: local.logo, abridor: local.abridor },
-    visita: { id: visita.id, nombre: visita.nombre, abrev: visita.abrev, record: visita.record, recordCasa: visita.recordCasa, recordFuera: visita.recordFuera, logo: visita.logo, abridor: visita.abridor },
+    local:  { id: local.id, nombre: local.nombre, abrev: local.abrev, record: local.record, recordCasa: local.recordCasa, recordFuera: local.recordFuera, posicion: local.posicion, division: local.division, logo: local.logo, abridor: local.abridor },
+    visita: { id: visita.id, nombre: visita.nombre, abrev: visita.abrev, record: visita.record, recordCasa: visita.recordCasa, recordFuera: visita.recordFuera, posicion: visita.posicion, division: visita.division, logo: visita.logo, abridor: visita.abridor },
     marcador: (estado !== 'proximo' && local.score != null)
       ? { local: Number(local.score), visita: Number(visita.score) } : null,
     mercado: mk.prob,          // cuota real si la hay; si no, null

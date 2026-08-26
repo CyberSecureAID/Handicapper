@@ -43,15 +43,17 @@ export function fotoESPN(ligaId, espnId) {
   return `https://a.espncdn.com/i/headshots/${b}/players/full/${espnId}.png`;
 }
 
-/* Mejor foto disponible para un jugador (prioriza lo oficial). */
+/* Mejor foto disponible para un jugador (prioriza recortes TRANSPARENTES). */
 export function fotoJugador(jug, ligaId) {
   if (!jug) return null;
-  if (jug.fotoOficial) return jug.fotoOficial;           // ya resuelta (p.ej. MLB oficial)
+  if (jug.fotoOficial) return jug.fotoOficial;           // MLB oficial (transparente)
   if (ligaId === 'mlb' && jug.mlbId) return fotoMLB(jug.mlbId);
   if (ligaId === 'nba' && jug.nbaId) return fotoNBA(jug.nbaId);
-  const directa = href(jug.foto || jug.headshot);        // headshot que trae ESPN
-  if (directa) return directa;
-  return fotoESPN(ligaId, jug.id || jug.playerId || jug.athleteId);
+  // Recorte "full" de ESPN (fondo transparente). Se prefiere al headshot crudo,
+  // que a veces trae un fondo blanco/gris feo.
+  const espnCut = fotoESPN(ligaId, jug.id || jug.playerId || jug.athleteId);
+  if (espnCut) return espnCut;
+  return href(jug.foto || jug.headshot);                 // último recurso
 }
 
 /* Lista de URLs de respaldo (para onerror en cadena) */
