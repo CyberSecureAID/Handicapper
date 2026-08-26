@@ -278,14 +278,18 @@ function init() {
 let _appArrancada = false;
 
 /* Decide la pantalla según sesión + acceso */
-function onSesion(usuario, extra) {
+async function onSesion(usuario, extra) {
   pintarCuenta(usuario);
   fijarSuscripcion(usuario?.suscripcion || null);
   if (extra && extra.bloqueado) { mostrarPantalla('landing'); avisarBloqueo(); return; }
   if (!usuario) { mostrarPantalla('landing'); return; }
-  // Ruta secreta del panel de administración: #mesa (la seguridad real
-  // está en Firestore; si no eres admin, no verás datos).
-  if ((location.hash || '').toLowerCase() === '#mesa') { abrirPanelMesa(); return; }
+  // ¿Es administrador? Se comprueba en Firestore. Si lo es, entra a su
+  // panel (nunca a la pantalla de pago).
+  let admin = false;
+  try { const { esAdmin } = await import('./mesa/mesa-datos.js'); admin = await esAdmin(); } catch (_) {}
+  if (admin) { abrirPanelMesa(); return; }
+  // Usuario normal que intenta forzar #mesa: se limpia y sigue el flujo.
+  if ((location.hash || '').toLowerCase() === '#mesa') { try { history.replaceState(null, '', location.pathname); } catch (_) {} }
   if (tieneAcceso()) entrarPlataforma();
   else mostrarPantalla('pricing');
 }
@@ -311,10 +315,11 @@ function entrarPlataforma() {
 /* Llamado desde el panel: ver el sitio como admin, sin recargar */
 export function entrarComoAdmin() {
   const mesa = document.getElementById('mesa-screen');
-  if (mesa) mesa.style.display = 'none';
+  if (mesa) { mesa.style.display = 'none'; mesa.innerHTML = ''; }
   document.body.classList.remove('en-mesa');
   entrarPlataforma();
 }
+if (typeof window !== 'undefined') window.__handiVerSitio = entrarComoAdmin;
 
 /* Estado de sesión actual (usuario o null) */
 let _sesion = null;
