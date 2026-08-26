@@ -7,9 +7,11 @@
   --oro:          #E8B84B;
   --oro-2:        #c79426;
 
-  --verde:        #1faa53;
-  --rojo:         #e5405a;
-  --azul:         #2f9fe0;
+  --verde:        #2e9e57;
+  --rojo:         #e23b3f;
+  --azul:         #1d9bf0;
+  --azul-2:       #1683d8;
+  --rojo-2:       #c62f34;
 
   /* Tipografías */
   --display: "Chakra Petch", system-ui, sans-serif;
@@ -27,27 +29,28 @@
   --trans: .18s ease;
 }
 
-/* ---------- TEMA OSCURO (por defecto) ---------- */
+/* ---------- TEMA OSCURO (por defecto) — paleta navy tipo panel deportivo ---------- */
 :root, [data-tema="oscuro"] {
-  --fondo:        #0a0d11;
-  --fondo-2:      #10151b;
-  --tarjeta:      #151b23;
-  --tarjeta-alta: #1b222c;
-  --linea:        #242c37;
+  --fondo:        #070b12;
+  --fondo-2:      #0c131e;
+  --tarjeta:      #0f1826;
+  --tarjeta-alta: #16202f;
+  --linea:        #1e2a3a;
   --linea-suave:  rgba(255,255,255,.06);
-  --tinta:        #eef2f6;
-  --tinta-2:      #aab4c0;
-  --tinta-3:      #6b7683;
+  --tinta:        #f2f5f8;
+  --tinta-2:      #9aa7b6;
+  --tinta-3:      #6b7887;
   --oro-suave:    rgba(232,184,75,.14);
-  --verde-suave:  rgba(31,170,83,.16);
-  --rojo-suave:   rgba(229,64,90,.16);
+  --verde-suave:  rgba(46,158,87,.16);
+  --rojo-suave:   rgba(226,59,63,.16);
+  --azul-suave:   rgba(29,155,240,.14);
   --sombra:       0 16px 44px rgba(0,0,0,.62);
   --sombra-suave: 0 4px 14px rgba(0,0,0,.45);
-  --sombra-tarjeta: inset 0 1px 0 rgba(255,255,255,.06), 0 2px 4px rgba(0,0,0,.5), 0 12px 26px rgba(0,0,0,.5);
+  --sombra-tarjeta: inset 0 1px 0 rgba(255,255,255,.05), 0 2px 4px rgba(0,0,0,.5), 0 12px 26px rgba(0,0,0,.5);
   --sombra-boton: inset 0 1px 0 rgba(255,255,255,.05), 0 2px 6px rgba(0,0,0,.5);
   --sombra-input: inset 0 1px 3px rgba(0,0,0,.4);
   --logo-bg:      #ffffff;
-  --escudo-borde: #242c37;
+  --escudo-borde: #1e2a3a;
 }
 
 /* ---------- TEMA CLARO ---------- */
