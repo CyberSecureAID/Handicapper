@@ -202,19 +202,31 @@ puede alojar gratis sin backend/tarjeta). No basta con parches: se necesita una
 
 ---
 
-## 8. Motor de probabilidad — ESTADO: DEFECTUOSO (pendiente #1 de producto)
+## 8. Motor de probabilidad — ESTADO: RECONSTRUIDO
 
-`assets/js/analisis/motor.js`. **Hoy no sirve como deberia.** Tira **casi todos los
-partidos con el mismo porcentaje** (la gran mayoria ~55% vs ~45%, muchos ~52%), sin
-diferenciar de verdad entre partidos. Esto **rompe el valor** de la pagina: un
-porcentaje que no se apoya en datos visibles y que ademas siempre es igual no vende.
+`assets/js/analisis/motor.js`. **Reconstruido** como modelo **aditivo en
+log-odds** que combina varias señales reales, así que la probabilidad **varía
+de verdad** entre partidos (ya no ~55/45 en todos).
 
-- **Consecuencia:** mientras el motor no mejore, la propuesta esta coja. Es
-  prioridad de producto **rehacer el motor** para que produzca probabilidades
-  realistas y variadas, apoyadas en los datos que mostramos (abridores, records,
-  lesionados, lideres, forma, etc.).
-- **No se ha tocado a proposito** en las ultimas iteraciones (se pidio arreglar
-  primero UI/flujo), pero queda registrado como deuda critica.
+Jerarquía de señales:
+1. **Cuota real** del mercado (si el proveedor la trajo) — manda, confianza alta.
+2. **Proyección de ESPN** (predictor) — manda, confianza media.
+3. **Modelo propio** cuando no hay 1 ni 2:
+   - Fuerza por récord con **regresión ligera** a la media (prior corto por liga).
+   - **Forma situacional**: récord en casa (local) / fuera (visita).
+   - **Ventaja de localía** por deporte (en log-odds).
+   - **Duelo de abridores por ERA** (MLB) cuando está disponible — mueve el
+     favorito de verdad.
+   - **Lesionados clave** (resta al equipo con más bajas).
+4. **Confianza** por nº de señales + tamaño de muestra. Con pocos datos se
+   acerca (poco) al centro y se dice; nunca un 52% de relleno.
+
+El **detalle re-ejecuta el motor tras enriquecer** (ERA del abridor,
+lesionados), de modo que la ficha muestra una probabilidad más afinada que la
+lista. Banco de prueba: dispersión típica ~35–85% en no-fútbol.
+
+**Pendiente/futuro:** sumar diferencial de carreras/puntos (pythagórico) y
+más fuentes de datos (§6) para subir aún más la precisión.
 
 ---
 
@@ -324,7 +336,7 @@ Ruta interna, abierta desde el perfil del admin. Secciones:
 | Roster/stats por jugador | Anadido (defensivo, a validar en navegador) |
 | Dashboard 16:9 de detalle | **En construccion, NO terminado, poco responsivo** |
 | Panel admin (Overview/Users/Analysis) | En construccion |
-| **Motor de probabilidad** | **Defectuoso - prioridad #1** |
+| **Motor de probabilidad** | **Reconstruido (modelo multi-factor)** |
 | Pagos Stripe | Pendiente de claves |
 | Cripto BSC | Futuro |
 | LLC en EE. UU. | Por registrar |
