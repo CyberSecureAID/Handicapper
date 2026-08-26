@@ -136,17 +136,21 @@ function abrirModalDetalle(html, id) {
   bg.id = 'det-modal-bg';
   bg.innerHTML = `
     <div class="det-modal" role="dialog" aria-modal="true">
-      <button class="det-modal-share" data-compartir="${id || ''}">${IC.compartir || ''} ${t('compartir')}</button>
-      <button class="det-modal-x" id="det-modal-x" aria-label="Close">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
       <div class="det-modal-cuerpo panel">${html}</div>
     </div>`;
   document.body.appendChild(bg);
   document.body.classList.add('det-abierto');
-  bg.querySelector('#det-modal-x').onclick = cerrarModalDetalle;
+  bg.querySelector('[data-cerrar]')?.addEventListener('click', cerrarModalDetalle);
   bg.onclick = (e) => { if (e.target === bg) cerrarModalDetalle(); };
   document.addEventListener('keydown', _escDetalle);
+  // Pestañas del panel (cambian el centro)
+  bg.querySelectorAll('.hd-tab[data-tab]').forEach(tab => tab.addEventListener('click', () => {
+    const id = tab.dataset.tab;
+    bg.querySelectorAll('.hd-tab[data-tab]').forEach(t2 => t2.classList.toggle('on', t2 === tab));
+    bg.querySelectorAll('.hd-pane-c[data-pane]').forEach(pane => {
+      pane.style.display = (pane.dataset.pane === id) ? 'block' : 'none';
+    });
+  }));
   bg.querySelectorAll('[data-compartir]').forEach(b => b.onclick = async (e) => {
     e.stopPropagation();
     const pp = await detallePartido(b.dataset.compartir);
