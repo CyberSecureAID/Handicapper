@@ -125,17 +125,18 @@ async function abrirDetalle(id, el) {
   const p = await detallePartido(id);
   if (p) await aplicarAnalista(p);
   const html = detalle(p, { bloquear: false });
-  abrirModalDetalle(html);
+  abrirModalDetalle(html, id);
   actualizarCuenta();
 }
 
-function abrirModalDetalle(html) {
+function abrirModalDetalle(html, id) {
   cerrarModalDetalle();
   const bg = document.createElement('div');
   bg.className = 'det-modal-bg';
   bg.id = 'det-modal-bg';
   bg.innerHTML = `
     <div class="det-modal" role="dialog" aria-modal="true">
+      <button class="det-modal-share" data-compartir="${id || ''}">${IC.compartir || ''} ${t('compartir')}</button>
       <button class="det-modal-x" id="det-modal-x" aria-label="Close">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
@@ -146,7 +147,8 @@ function abrirModalDetalle(html) {
   bg.querySelector('#det-modal-x').onclick = cerrarModalDetalle;
   bg.onclick = (e) => { if (e.target === bg) cerrarModalDetalle(); };
   document.addEventListener('keydown', _escDetalle);
-  bg.querySelectorAll('[data-compartir]').forEach(b => b.onclick = async () => {
+  bg.querySelectorAll('[data-compartir]').forEach(b => b.onclick = async (e) => {
+    e.stopPropagation();
     const pp = await detallePartido(b.dataset.compartir);
     if (pp) { await aplicarAnalista(pp); compartirPartido(pp); }
   });
