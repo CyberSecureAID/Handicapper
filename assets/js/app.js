@@ -134,17 +134,18 @@ function _toggleFav(id) {
 
 /* -------- Detalle (modal emergente premium) -------- */
 async function abrirDetalle(id, el) {
-  partidoSel = id;
   document.querySelectorAll('.pmatch').forEach(x => x.classList.toggle('sel', x === el));
   // 1) Mostrar YA el modal con los datos que la lista ya tiene (instantáneo).
   const base = _partidos.find(x => x.id === id) || null;
   abrirModalDetalle(detalle(base, { bloquear: false, cargando: true }), id);
+  partidoSel = id;   // IMPORTANTE: después de abrirModalDetalle (que resetea partidoSel)
   actualizarCuenta();
   // 2) Enriquecer en segundo plano y actualizar el contenido cuando llegue.
   try {
     const p = await detallePartido(id);
     if (!p || partidoSel !== id) return;        // el usuario ya cerró/cambió
     await aplicarAnalista(p);
+    if (partidoSel !== id) return;
     const cuerpo = document.querySelector('#det-modal-bg .det-modal-cuerpo');
     if (cuerpo) { cuerpo.innerHTML = detalle(p, { bloquear: false }); _reengancharModal(); }
   } catch (_) {}
