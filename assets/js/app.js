@@ -231,6 +231,11 @@ function repintarTodo() {
 
 /* -------- Arranque -------- */
 function init() {
+  // Anti-parpadeo: si vamos al panel, oculta la landing desde el inicio
+  if ((location.hash || '').toLowerCase() === '#mesa') {
+    const l = document.getElementById('landing-screen'); if (l) l.style.display = 'none';
+    const mesa = document.getElementById('mesa-screen'); if (mesa) { mesa.style.display = ''; mesa.innerHTML = '<div class="mesa-cargando">Loading…</div>'; }
+  }
   initTema();
   initIdioma();
   aplicarTextos();
@@ -301,6 +306,14 @@ function entrarPlataforma() {
     _appArrancada = true;
     actualizarLogo(); pintarLigas(); pintarPestanas(); pintarDrawer(); cargarLista();
   }
+}
+
+/* Llamado desde el panel: ver el sitio como admin, sin recargar */
+export function entrarComoAdmin() {
+  const mesa = document.getElementById('mesa-screen');
+  if (mesa) mesa.style.display = 'none';
+  document.body.classList.remove('en-mesa');
+  entrarPlataforma();
 }
 
 /* Estado de sesión actual (usuario o null) */
