@@ -54,7 +54,7 @@ function render() {
           <button class="mesa-ver" id="mesa-ver-sitio">${IC.eye} View site</button>
           <div class="mesa-yo">
             <div class="mesa-yo-av">${(u?.nombre || u?.email || '?').charAt(0).toUpperCase()}</div>
-            <div class="mesa-yo-txt"><b>${esc(u?.nombre || '')}</b><span>${esc(u?.email || '')}</span></div>
+            <div class="mesa-yo-txt"><b>${esc(u?.nombre || '')}</b><span>${esc(correoCorto(u?.email || ''))}</span></div>
           </div>
           <button class="mesa-salir" id="mesa-salir">${IC.exit} Log out</button>
         </nav>
@@ -71,6 +71,22 @@ function render() {
   _cont.querySelector('#mesa-burger').onclick = () => _cont.querySelector('#mesa-nav').classList.toggle('abierto');
   _cont.querySelector('#mesa-salir').onclick = async () => { await salir(); location.hash = ''; location.reload(); };
   _cont.querySelector('#mesa-ver-sitio').onclick = () => verSitio();
+
+  // Delegación de clicks (inmune a re-renders): liga, partido, borrar, bloquear
+  const main = _cont.querySelector('#mesa-main');
+  if (main && !main._delegado) {
+    main._delegado = true;
+    main.addEventListener('click', (e) => {
+      const liga = e.target.closest('[data-liga]');
+      if (liga) { seleccionarLiga(liga.dataset.liga); return; }
+      const match = e.target.closest('[data-match]');
+      if (match) { abrirModalSenal(match.dataset.match); return; }
+      const del = e.target.closest('[data-del]');
+      if (del) { eliminarAnalisis(del.dataset.del, del); return; }
+      const bloq = e.target.closest('[data-bloq]');
+      if (bloq) { toggleBloqueo(bloq.dataset.bloq, bloq); return; }
+    });
+  }
   pintarTab();
 }
 
@@ -93,6 +109,19 @@ function rolAdmin(u) {
   const a = _admins.find(x => x.uid === u.uid || (x.email && u.email && x.email.toLowerCase() === u.email.toLowerCase()));
   if (!a) return null;
   return a.rol || (u.email && u.email.toLowerCase().includes('oscar') ? 'Admin analyst' : 'Admin developer');
+}
+/* Correo compacto: yamicelan…@gmail.com */
+function correoCorto(e) {
+  const s = String(e || ''); const i = s.indexOf('@');
+  if (i < 0) return s;
+  const u = s.slice(0, i), d = s.slice(i);
+  return (u.length > 6 ? u.slice(0, 5) + '…' : u) + d;
+}
+/* Nombre de equipo compacto para las tarjetas del panel (con el logo al lado basta) */
+function nombreCortoEquipo(nombre) {
+  const w = String(nombre || '').trim().split(/\s+/).filter(Boolean);
+  if (w.length <= 2) return nombre;
+  return w[0].charAt(0).toUpperCase() + '. ' + w.slice(-1)[0];
 }
 
 function pintarTab() {
@@ -153,7 +182,7 @@ function vistaUsuarios() {
         : (sub.activo ? `<span class="pill on">${(planPorId(sub.plan)?.nombre || 'Active')}</span>` : `<span class="pill">Inactive</span>`));
     const vence = sub.vence ? new Date(sub.vence).toLocaleDateString() : '—';
     return `<tr class="${u.bloqueado ? 'blocked' : ''}">
-      <td data-l="User"><div class="u-nom">${esc(u.nombre || '—')}</div><div class="u-mail">${esc(u.email || '')}</div></td>
+      <td data-l="User"><div class="u-nom">${esc(u.nombre || (u.email || '').split('@')[0] || '—')}</div><div class="u-mail">${esc(correoCorto(u.email || ''))}</div></td>
       <td data-l="Status">${estado}</td>
       <td data-l="Expires">${vence}</td>
       <td data-l="Plan"><select data-plan="${u.uid}" class="u-select">
@@ -174,11 +203,6 @@ function vistaUsuarios() {
     </div>`;
 }
 function enlazarUsuarios() {
-  _cont.querySelectorAll('[data-bloq]').forEach(b => b.onclick = async () => {
-    const uid = b.dataset.bloq; const u = _usuarios.find(x => x.uid === uid); if (!u) return;
-    b.disabled = true;
-    try { await fijarBloqueo(uid, !u.bloqueado); u.bloqueado = !u.bloqueado; pintarTab(); } catch (_) { b.disabled = false; }
-  });
   _cont.querySelectorAll('[data-plan]').forEach(sel => sel.onchange = async () => {
     const uid = sel.dataset.plan; const u = _usuarios.find(x => x.uid === uid); if (!u) return;
     const planId = sel.value;
@@ -187,6 +211,11 @@ function enlazarUsuarios() {
     else { const v = new Date(); v.setMonth(v.getMonth() + 1); sub = { activo: true, plan: planId, vence: v.toISOString(), metodo: 'manual' }; }
     try { await fijarSuscripcionUsuario(uid, sub); u.suscripcion = sub; pintarTab(); } catch (_) {}
   });
+}
+async function toggleBloqueo(uid, btn) {
+  const u = _usuarios.find(x => x.uid === uid); if (!u) return;
+  if (btn) btn.disabled = true;
+  try { await fijarBloqueo(uid, !u.bloqueado); u.bloqueado = !u.bloqueado; pintarTab(); } catch (_) { if (btn) btn.disabled = false; }
 }
 
 /* ================= ANALYSIS ================= */
@@ -222,7 +251,7 @@ function tarjetaPartidoAdmin(p) {
   const ya = _analisis.find(a => a.matchId === p.id);
   const eq = (e, pct, cls) => `<div class="anc-eq">
       <img class="anc-logo" src="${esc(e.logo || '')}" alt="" onerror="this.style.visibility='hidden'">
-      <span class="anc-nom">${esc(e.nombre)}</span>
+      <span class="anc-nom">${esc(nombreCortoEquipo(e.nombre))}</span>
       <span class="anc-pct ${cls}">${pct ?? '—'}%</span>
     </div>`;
   return `<button class="an-card ${ya ? 'tiene' : ''}" data-match="${esc(p.id)}">
@@ -234,16 +263,16 @@ function tarjetaPartidoAdmin(p) {
 }
 
 function enlazarAnalisis() {
-  _cont.querySelectorAll('[data-liga]').forEach(b => b.onclick = async () => {
-    _ligaSel = b.dataset.liga; _cargandoPart = true; _partidos = []; pintarTab();
-    try { _partidos = await listarPartidos(_ligaSel); } catch (_) { _partidos = []; }
-    _cargandoPart = false; pintarTab();
-  });
-  _cont.querySelectorAll('[data-match]').forEach(b => b.onclick = () => abrirModalSenal(b.dataset.match));
-  _cont.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
-    b.disabled = true;
-    try { await borrarAnalisis(b.dataset.del); _analisis = await listarAnalisis(); pintarTab(); } catch (_) { b.disabled = false; }
-  });
+  // Los clicks de liga/partido/borrar se gestionan por delegación en render().
+  // (Se mantiene la función por compatibilidad con pintarTab.)
+}
+function seleccionarLiga(id) {
+  _ligaSel = id; _cargandoPart = true; _partidos = []; pintarTab();
+  listarPartidos(id).then(ps => { _partidos = ps || []; }).catch(() => { _partidos = []; }).finally(() => { _cargandoPart = false; pintarTab(); });
+}
+async function eliminarAnalisis(matchId, btn) {
+  if (btn) btn.disabled = true;
+  try { await borrarAnalisis(matchId); _analisis = await listarAnalisis(); pintarTab(); } catch (_) { if (btn) btn.disabled = false; }
 }
 
 /* Modal de señal: dos sectores. Izquierda = análisis de la página
