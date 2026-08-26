@@ -436,6 +436,13 @@
 .auth-campo input { width: 100%; height: 44px; border-radius: 10px; border: 1px solid rgba(255,255,255,.14);
   background: rgba(255,255,255,.05); color: #fff; padding: 0 13px; font-size: 14px; }
 .auth-campo input:focus { outline: none; border-color: var(--oro); background: rgba(255,255,255,.08); }
+.auth-pass-wrap { position: relative; }
+.auth-pass-wrap input { padding-right: 44px; }
+.auth-ojo { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px;
+  display: inline-flex; align-items: center; justify-content: center; border: 0; background: none;
+  color: #8a97a6; cursor: pointer; border-radius: 8px; }
+.auth-ojo:hover { color: #eef3f8; }
+.auth-ojo.on { color: var(--oro); }
 .auth-error { color: #ff8a9b; font-size: 12.5px; min-height: 18px; margin-bottom: 6px; font-weight: 600; }
 .auth-enviar { width: 100%; height: 48px; border: 0; border-radius: 12px;
   background: linear-gradient(180deg, var(--oro), var(--oro-2)); color: #3a2800; font-weight: 800; font-size: 15px;
