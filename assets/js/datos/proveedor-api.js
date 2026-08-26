@@ -17,6 +17,7 @@
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports';
 import { analizar } from '../analisis/motor.js';
 import { enriquecerMLB } from './mlb-oficial.js';
+import { comparativaEquiposESPN } from './equipos-stats.js';
 
 /* Mapa de nuestras ligas -> ruta ESPN {deporte}/{liga} */
 const RUTA = {
@@ -436,8 +437,12 @@ export async function detallePartido(id) {
           }
         } catch (_) {}
       } else {
-        // Resto de ligas: comparación desde las estadísticas de equipo del summary.
-        m.comparativa = comparativaSummary(s, m.local.id, m.visita.id, ligaId);
+        // Resto de ligas: estadísticas de TEMPORADA por equipo (core API),
+        // que existen antes del partido. Respaldo: boxscore del summary.
+        const anio = new Date().getFullYear();
+        let comp = null;
+        try { comp = await comparativaEquiposESPN(ruta, m.local.id, m.visita.id, anio); } catch (_) {}
+        m.comparativa = comp || comparativaSummary(s, m.local.id, m.visita.id, ligaId);
       }
 
       // Roster COMPLETO de ambos equipos (todos los jugadores) para la pestaña Equipos.
