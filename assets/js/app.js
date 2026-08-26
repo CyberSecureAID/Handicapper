@@ -11,7 +11,7 @@ import { compartirPartido } from './ui/compartir.js';
 import { iniciarAuth, registrarCorreo, entrarCorreo, entrarGoogle, salir, mensajeError, estaConfigurado } from './auth/auth.js';
 import { initAuthUI, abrirAuth } from './auth/auth-ui.js';
 import { initNavegacion, mostrarPantalla, aplicarI18n } from './ui/navegacion.js';
-import { fijarSuscripcion, tieneAcceso, limpiarVistaPrevia } from './auth/estado-pago.js';
+import { fijarSuscripcion, tieneAcceso, limpiarVistaPrevia, marcarVistaPrevia } from './auth/estado-pago.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -231,11 +231,6 @@ function repintarTodo() {
 
 /* -------- Arranque -------- */
 function init() {
-  // Anti-parpadeo: si vamos al panel, oculta la landing desde el inicio
-  if ((location.hash || '').toLowerCase() === '#mesa') {
-    const l = document.getElementById('landing-screen'); if (l) l.style.display = 'none';
-    const mesa = document.getElementById('mesa-screen'); if (mesa) { mesa.style.display = ''; mesa.innerHTML = '<div class="mesa-cargando">Loading…</div>'; }
-  }
   initTema();
   initIdioma();
   aplicarTextos();
@@ -278,18 +273,21 @@ function init() {
 let _appArrancada = false;
 
 /* Decide la pantalla según sesión + acceso */
+let _esAdmin = false;
+
 async function onSesion(usuario, extra) {
   pintarCuenta(usuario);
   fijarSuscripcion(usuario?.suscripcion || null);
   if (extra && extra.bloqueado) { mostrarPantalla('landing'); avisarBloqueo(); return; }
-  if (!usuario) { mostrarPantalla('landing'); return; }
-  // ¿Es administrador? Se comprueba en Firestore. Si lo es, entra a su
-  // panel (nunca a la pantalla de pago).
-  let admin = false;
-  try { const { esAdmin } = await import('./mesa/mesa-datos.js'); admin = await esAdmin(); } catch (_) {}
-  if (admin) { abrirPanelMesa(); return; }
-  // Usuario normal que intenta forzar #mesa: se limpia y sigue el flujo.
+  if (!usuario) { _esAdmin = false; mostrarPantalla('landing'); return; }
+  // ¿Es administrador? (se comprueba en Firestore; la seguridad real está ahí)
+  _esAdmin = false;
+  try { const { esAdmin } = await import('./mesa/mesa-datos.js'); _esAdmin = await esAdmin(); } catch (_) {}
+  pintarCuenta(usuario);   // repinta para mostrar la opción de panel si es admin
+  // Si alguien puso #mesa en la URL, lo limpiamos: el panel se abre desde el perfil.
   if ((location.hash || '').toLowerCase() === '#mesa') { try { history.replaceState(null, '', location.pathname); } catch (_) {} }
+  // El admin entra a la PÁGINA NORMAL con todo desbloqueado.
+  if (_esAdmin) { marcarVistaPrevia('premium'); entrarPlataforma(); return; }
   if (tieneAcceso()) entrarPlataforma();
   else mostrarPantalla('pricing');
 }
@@ -342,7 +340,8 @@ function pintarCuenta(usuario) {
   cerrarCuentaMenu();
 }
 
-function onCuentaClick() {
+function onCuentaClick(e) {
+  if (e) { e.stopPropagation(); }
   if (!_sesion) {
     if (!estaConfigurado()) { avisoFirebase(); return; }
     abrirAuth();
@@ -351,27 +350,29 @@ function onCuentaClick() {
   }
 }
 
-function avisoFirebase() {
-  // Si Firebase aún no está configurado, informamos con claridad.
-  abrirAuth();  // el modal se abre; al intentar, mostrará el aviso de config
-}
+function avisoFirebase() { abrirAuth(); }
 
 function toggleCuentaMenu() {
-  let menu = $('cuenta-menu');
-  if (menu) { menu.classList.toggle('abierto'); return; }
-  menu = document.createElement('div');
+  const existe = $('cuenta-menu');
+  if (existe) { existe.remove(); document.removeEventListener('click', cerrarSiFuera); return; }
+  const menu = document.createElement('div');
   menu.id = 'cuenta-menu';
   menu.className = 'cuenta-menu abierto';
+  const botonPanel = _esAdmin
+    ? `<button id="cm-panel">${IC.grafico || ''} ${idiomaActual() === 'es' ? 'Panel administrativo' : 'Admin panel'}</button>` : '';
   menu.innerHTML = `
-    <div class="quien"><b>${_sesion.nombre || ''}</b><span>${_sesion.email || ''}</span></div>
+    <div class="quien"><b>${esc(_sesion.nombre || '')}</b><span>${esc(_sesion.email || '')}</span></div>
+    ${botonPanel}
     <button id="cm-salir">${IC.salir || ''} ${t('auth.salir')}</button>`;
   document.body.appendChild(menu);
-  menu.querySelector('#cm-salir').onclick = async () => { limpiarVistaPrevia(); await salir(); cerrarCuentaMenu(); };
+  menu.querySelector('#cm-panel')?.addEventListener('click', () => { cerrarCuentaMenu(); abrirPanelMesa(); });
+  menu.querySelector('#cm-salir').addEventListener('click', async () => { limpiarVistaPrevia(); await salir(); cerrarCuentaMenu(); });
   setTimeout(() => document.addEventListener('click', cerrarSiFuera), 0);
 }
-function cerrarCuentaMenu() { $('cuenta-menu')?.classList.remove('abierto'); document.removeEventListener('click', cerrarSiFuera); }
+function cerrarCuentaMenu() { $('cuenta-menu')?.remove(); document.removeEventListener('click', cerrarSiFuera); }
 function cerrarSiFuera(e) {
   if (!e.target.closest('#cuenta-menu') && !e.target.closest('#cuenta-btn')) cerrarCuentaMenu();
 }
+function esc(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 document.addEventListener('DOMContentLoaded', init);
