@@ -50,6 +50,7 @@ export async function iniciarAuth(alCambiar) {
   const ok = await cargar();
   if (!ok) { alCambiar?.(null); return; }
   _fbAuth.onAuthStateChanged(_auth, async (u) => {
+    const intencional = _intencional; _intencional = false;
     if (u) {
       _usuario = { uid: u.uid, email: u.email, nombre: u.displayName || (u.email || '').split('@')[0], foto: u.photoURL || null };
       const perfil = await asegurarPerfil(_usuario);
@@ -64,7 +65,7 @@ export async function iniciarAuth(alCambiar) {
     } else {
       _usuario = null;
     }
-    alCambiar?.(_usuario);
+    alCambiar?.(_usuario, { intencional });
   });
 }
 
@@ -88,8 +89,11 @@ async function asegurarPerfil(user) {
   } catch (_) { return null; }
 }
 
+let _intencional = false;
+
 export async function registrarCorreo(email, pass, nombre) {
   if (!await cargar()) throw new Error('Firebase no configurado');
+  _intencional = true;
   const cred = await _fbAuth.createUserWithEmailAndPassword(_auth, email, pass);
   if (nombre) { try { await _fbAuth.updateProfile(cred.user, { displayName: nombre }); } catch (_) {} }
   return cred.user;
@@ -97,12 +101,14 @@ export async function registrarCorreo(email, pass, nombre) {
 
 export async function entrarCorreo(email, pass) {
   if (!await cargar()) throw new Error('Firebase no configurado');
+  _intencional = true;
   const cred = await _fbAuth.signInWithEmailAndPassword(_auth, email, pass);
   return cred.user;
 }
 
 export async function entrarGoogle() {
   if (!await cargar()) throw new Error('Firebase no configurado');
+  _intencional = true;
   const prov = new _fbAuth.GoogleAuthProvider();
   const cred = await _fbAuth.signInWithPopup(_auth, prov);
   return cred.user;
