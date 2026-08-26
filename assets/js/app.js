@@ -114,9 +114,22 @@ function pintarLista() {
   }
   const titulo = q ? t('seccion.partidos') : (ligaActiva ? t('seccion.partidos') : t('seccion.destacados'));
   cont.innerHTML = `<div class="seccion-t">${titulo}</div>` + lista.map(tarjetaPartido).join('');
-  const tarjetas = [...cont.querySelectorAll('.pmatch')];
-  tarjetas.forEach(el => el.onclick = () => abrirDetalle(el.dataset.id, el));
+  const favs = _favs();
+  cont.querySelectorAll('.pmatch').forEach(el => {
+    el.onclick = (e) => { if (e.target.closest('.pm-fav')) return; abrirDetalle(el.dataset.id, el); };
+  });
+  cont.querySelectorAll('.pm-fav').forEach(b => {
+    if (favs.includes(b.dataset.fav)) b.classList.add('on');
+    b.onclick = (e) => { e.stopPropagation(); _toggleFav(b.dataset.fav); b.classList.toggle('on'); };
+  });
 }
+
+/* Favoritos: persistencia simple en localStorage */
+function _favs() { try { return JSON.parse(localStorage.getItem('hc_favs') || '[]'); } catch (_) { return []; } }
+function _toggleFav(id) {
+  const f = _favs(); const i = f.indexOf(id);
+  if (i >= 0) f.splice(i, 1); else f.push(id);
+  try { localStorage.setItem('hc_favs', JSON.stringify(f)); } catch (_) {}
 
 /* -------- Detalle (modal emergente premium) -------- */
 async function abrirDetalle(id, el) {
@@ -155,6 +168,28 @@ function abrirModalDetalle(html, id) {
     e.stopPropagation();
     const pp = await detallePartido(b.dataset.compartir);
     if (pp) { await aplicarAnalista(pp); compartirPartido(pp); }
+  });
+  // Seleccionar un jugador en Equipos: su foto/nombre aparece en la tarjeta de su lado.
+  const seleccionarJugador = (row) => {
+    const side = row.dataset.side; // 'l' | 'r'
+    const card = bg.querySelector(`.hd-pit.${side}`);
+    if (!card) return;
+    const nm = row.dataset.nm || '';
+    const partes = nm.trim().split(/\s+/);
+    const fn = partes.length > 1 ? partes.slice(0, -1).join(' ') : '';
+    const ln = partes.length > 1 ? partes.slice(-1)[0] : nm;
+    const foto = row.dataset.foto || '';
+    const img = card.querySelector('.hd-pit-photo');
+    if (img && foto) { img.classList.remove('is-figura'); img.onerror = null; img.src = foto; }
+    const fnEl = card.querySelector('.hd-pit-fn'); if (fnEl) fnEl.textContent = fn;
+    const lnEl = card.querySelector('.hd-pit-ln'); if (lnEl) lnEl.textContent = ln;
+    const subEl = card.querySelector('.hd-pit-sub'); if (subEl) subEl.textContent = row.dataset.pos || '';
+    bg.querySelectorAll('.hd-rp.sel').forEach(x => x.classList.remove('sel'));
+    row.classList.add('sel');
+  };
+  bg.querySelectorAll('.hd-rp[data-nm]').forEach(row => {
+    row.addEventListener('click', () => seleccionarJugador(row));
+    row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); seleccionarJugador(row); } });
   });
 }
 function cerrarModalDetalle() {
