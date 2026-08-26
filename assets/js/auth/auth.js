@@ -39,6 +39,12 @@ async function cargar() {
 export function usuarioActual() { return _usuario; }
 export function estaConfigurado() { return firebaseListo; }
 
+/* Accesores internos para el panel de administración (mesa) */
+export async function _asegurarListo() { return cargar(); }
+export function _obtenerDB() { return _db; }
+export function _obtenerStore() { return _fbStore; }
+export function _obtenerAuth() { return _auth; }
+
 /* Arranca la autenticación y avisa cada vez que cambia el estado */
 export async function iniciarAuth(alCambiar) {
   const ok = await cargar();
@@ -46,7 +52,15 @@ export async function iniciarAuth(alCambiar) {
   _fbAuth.onAuthStateChanged(_auth, async (u) => {
     if (u) {
       _usuario = { uid: u.uid, email: u.email, nombre: u.displayName || (u.email || '').split('@')[0], foto: u.photoURL || null };
-      await asegurarPerfil(_usuario);
+      const perfil = await asegurarPerfil(_usuario);
+      // Si el administrador bloqueó esta cuenta, se cierra la sesión de inmediato.
+      if (perfil && perfil.bloqueado) {
+        _usuario = null;
+        try { await _fbAuth.signOut(_auth); } catch (_) {}
+        alCambiar?.(null, { bloqueado: true });
+        return;
+      }
+      if (perfil) { _usuario.suscripcion = perfil.suscripcion || null; _usuario.rol = perfil.rol || 'usuario'; }
     } else {
       _usuario = null;
     }
@@ -54,21 +68,24 @@ export async function iniciarAuth(alCambiar) {
   });
 }
 
-/* Crea el documento de perfil si no existe (con estado de suscripción) */
+/* Crea el documento de perfil si no existe; devuelve el perfil actual */
 async function asegurarPerfil(user) {
   try {
     const { doc, getDoc, setDoc, serverTimestamp } = _fbStore;
     const ref = doc(_db, 'usuarios', user.uid);
     const snap = await getDoc(ref);
     if (!snap.exists()) {
-      await setDoc(ref, {
+      const nuevo = {
         email: user.email, nombre: user.nombre,
         creado: serverTimestamp(),
         suscripcion: { activo: false, plan: null, vence: null, metodo: null },
-        rol: 'usuario',
-      });
+        rol: 'usuario', bloqueado: false,
+      };
+      await setDoc(ref, nuevo);
+      return nuevo;
     }
-  } catch (_) { /* si las reglas aún no permiten, no rompe el login */ }
+    return snap.data();
+  } catch (_) { return null; }
 }
 
 export async function registrarCorreo(email, pass, nombre) {
