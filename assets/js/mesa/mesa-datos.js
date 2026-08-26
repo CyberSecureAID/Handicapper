@@ -19,6 +19,18 @@ export async function esAdmin() {
   } catch (_) { return false; }
 }
 
+/* Lista los UID que son administradores (colección admins) */
+export async function listarAdmins() {
+  if (!await _asegurarListo()) return [];
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const q = await S.getDocs(S.collection(db, 'admins'));
+    const out = [];
+    q.forEach(d => out.push({ uid: d.id, ...d.data() }));
+    return out;
+  } catch (_) { return []; }
+}
+
 /* Lista todos los usuarios registrados (solo admins por reglas) */
 export async function listarUsuarios() {
   if (!await _asegurarListo()) return [];
