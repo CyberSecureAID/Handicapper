@@ -77,30 +77,31 @@ export function tarjetaPartido(p) {
   </div>`;
 }
 
-/* ---- Detalle de un partido ---- */
+/* ---- Detalle de un partido: DASHBOARD horizontal de estadísticas ---- */
+
+/* Silueta humana (SVG) para las fichas de jugador */
+function silueta(cls) {
+  return `<svg class="fig ${cls}" viewBox="0 0 120 250" aria-hidden="true">
+    <circle cx="60" cy="30" r="20"/>
+    <path d="M60 52c-13 0-22 6-25 17l-9 46c-2 9 11 12 14 3l7-30 2 1-2 44-9 66c-2 10 13 13 16 3l9-58 9 58c3 10 18 7 16-3l-9-66-2-44 2-1 7 30c3 9 16 6 14-3l-9-46c-3-11-12-17-25-17z"/>
+  </svg>`;
+}
+
+/* Convierte un valor tipo ".322", "38", "3.12", "14-6" a número comparable */
+function numDe(v) {
+  const s = String(v == null ? '' : v).trim();
+  const m = s.match(/-?\d*\.?\d+/);
+  return m ? parseFloat(m[0]) : null;
+}
+
 export function detalle(p, opciones = {}) {
   if (!p) return `<div class="vacio"><div class="ic">${IC.grafico}</div>${t('det.vacio')}</div>`;
   const L = (x) => esc(Lg(x));
-
-  // Cuenta atrás / hora local + sede
-  let infoJuego = '';
-  {
-    const partes = [];
-    if (p.cuando) {
-      const d = new Date(p.cuando);
-      if (!isNaN(d)) {
-        const hora = d.toLocaleString(undefined, { weekday:'short', hour:'numeric', minute:'2-digit' });
-        partes.push(`<div class="ij"><span class="ij-k">${t('det.horario')}</span><span class="ij-v">${esc(hora)}</span></div>`);
-        if (p.estado === 'proximo') partes.push(`<div class="ij"><span class="ij-k">${t('det.faltan')}</span><span class="ij-v cuenta" data-cuando="${esc(p.cuando)}">—</span></div>`);
-      }
-    }
-    if (p.sede) partes.push(`<div class="ij"><span class="ij-k">${t('det.sede')}</span><span class="ij-v">${L(p.sede)}</span></div>`);
-    if (partes.length) infoJuego = `<div class="det-info">${partes.join('')}</div>`;
-  }
-
-  // Probabilidad (barra) + confianza + explicación
+  const ES = idiomaActual() === 'es';
   const m = p.mercado || {};
-  const tieneEmpate = m.empate != null;
+  const tieneEmpate = m.empate != null && m.empate > 0;
+
+  // ---------- Confianza ----------
   const confMap = {
     'alta':     { en: 'High confidence', es: 'Confianza alta', c: 'alta' },
     'media':    { en: 'Medium confidence', es: 'Confianza media', c: 'media' },
@@ -108,246 +109,204 @@ export function detalle(p, opciones = {}) {
     'muy baja': { en: 'Very low confidence', es: 'Confianza muy baja', c: 'muybaja' },
   };
   const cf = confMap[p.confianza] || null;
-  const badge = cf ? `<span class="conf ${cf.c}">${idiomaActual()==='es'?cf.es:cf.en}</span>` : '';
-  const factoresTxt = p.factores ? `<div class="det-factores">${esc(Lg(p.factores))}</div>` : '';
-  const prob = `
-    <div class="det-sec-t">${t('prob.titulo')} ${badge}</div>
-    <div class="det-prob">
-      <div class="dp-lado"><span class="dp-ab">${esc(p.local.abrev)}</span><span class="dp-num oro">${m.local||0}%</span></div>
-      ${tieneEmpate ? `<div class="dp-mid"><span class="dp-num2">${m.empate}%</span><span class="dp-lb">${t('prob.empate')}</span></div>` : ''}
-      <div class="dp-lado der"><span class="dp-ab">${esc(p.visita.abrev)}</span><span class="dp-num azul">${m.visita||0}%</span></div>
-    </div>
-    <div class="det-barra">
-      <i class="s-local" style="width:${m.local||0}%"></i>
-      ${tieneEmpate ? `<i class="s-empate" style="width:${m.empate}%"></i>` : ''}
-      <i class="s-visita" style="width:${m.visita||0}%"></i>
-    </div>
-    ${factoresTxt}`;
+  const badge = cf ? `<span class="conf ${cf.c}">${ES ? cf.es : cf.en}</span>` : '';
+  const factoresTxt = p.factores ? `<div class="dash-factores">${esc(Lg(p.factores))}</div>` : '';
 
-  // ===== ABRIDORES anunciados (BLOQUE PROTAGONISTA) =====
-  function manoTxt(mn) {
-    if (mn === 'L') return t('det.lhp');
-    if (mn === 'R') return t('det.rhp');
-    return '';
-  }
-  function abridorCard(lado, eq) {
-    const a = eq && eq.abridor;
-    if (!a || !a.nombre) return `<div class="abr-card sin">
-      <div class="abr-eq">${escudoMini(eq)}<span>${esc(eq.abrev)}</span></div>
-      <div class="abr-nd">${t('det.sinabridor')}</div></div>`;
-    const manoCls = a.mano === 'L' ? 'lhp' : (a.mano === 'R' ? 'rhp' : '');
-    const mano = a.mano ? `<span class="abr-mano ${manoCls}">${manoTxt(a.mano)}</span>` : '';
-    const stats = [];
-    if (a.era) stats.push(`<span class="abr-st"><b>${esc(a.era)}</b><small>ERA</small></span>`);
-    if (a.wl) stats.push(`<span class="abr-st"><b>${esc(a.wl)}</b><small>W-L</small></span>`);
-    const ini = (a.nombre||'?').trim().charAt(0).toUpperCase();
-    return `<div class="abr-card ${lado}">
-      <div class="abr-eq">${escudoMini(eq)}<span>${esc(eq.abrev)}</span></div>
-      <div class="abr-avatar">${ini}</div>
-      <div class="abr-nom">${esc(a.nombre)}</div>
-      ${mano}
-      ${stats.length ? `<div class="abr-stats">${stats.join('')}</div>` : ''}
-    </div>`;
-  }
-  const hayAbr = (p.local.abridor && p.local.abridor.nombre) || (p.visita.abridor && p.visita.abridor.nombre);
-  // Gráfica de comparación de abridores (barras enfrentadas reales)
-  function grafAbridores() {
-    const a = p.local.abridor, b = p.visita.abridor;
-    if (!a || !b) return '';
-    const rows = [];
-    const era1 = parseFloat(a.era), era2 = parseFloat(b.era);
-    if (!isNaN(era1) && !isNaN(era2) && (era1 + era2) > 0) {
-      const lp = era2 / (era1 + era2) * 100; // ERA menor es mejor
-      rows.push({ k: 'ERA', l: a.era, r: b.era, lp });
-    }
-    const pw = (r) => { const mm = String(r||'').match(/(\d+)\D+(\d+)/); if (!mm) return null; const w=+mm[1], ll=+mm[2]; return (w+ll) ? w/(w+ll) : null; };
-    const w1 = pw(a.wl), w2 = pw(b.wl);
-    if (w1 != null && w2 != null && (w1 + w2) > 0) {
-      rows.push({ k: idiomaActual()==='es'?'Récord':'Record', l: a.wl, r: b.wl, lp: w1 / (w1 + w2) * 100 });
-    }
-    if (!rows.length) return '';
-    return `<div class="abr-graf">${rows.map(r => `
-      <div class="abr-g-row">
-        <span class="abr-g-val">${esc(r.l)}</span>
-        <div class="abr-g-track"><i class="gl" style="width:${r.lp.toFixed(1)}%"></i><i class="gr" style="width:${(100-r.lp).toFixed(1)}%"></i><span class="abr-g-k">${esc(r.k)}</span></div>
-        <span class="abr-g-val r">${esc(r.r)}</span>
-      </div>`).join('')}</div>`;
-  }
-  const hayZurdo = (p.local.abridor && p.local.abridor.mano === 'L') || (p.visita.abridor && p.visita.abridor.mano === 'L');
-  const notaZurdo = hayZurdo ? `<div class="det-nota">${IC.info || ''} ${t('det.notazurdo')}</div>` : '';
-  const abridores = hayAbr ? `
-    <div class="det-block">
-      <div class="det-sec-t big">${t('det.abridores')}</div>
-      <div class="duelo-abr">
-        ${abridorCard('local', p.local)}
-        <div class="abr-vs">VS</div>
-        ${abridorCard('visita', p.visita)}
-      </div>
-      ${grafAbridores()}
-      ${notaZurdo}
-    </div>` : '';
-
-  // ===== LÍDERES del equipo (top jugadores por categoría) =====
-  function lideres(lado) {
-    const arr = ((p.jugadores && p.jugadores[lado]) || []).slice(0, 4);
-    if (!arr.length) return '';
-    return arr.map(j => `<div class="lid-row">
-      <span class="lid-n">${esc(j.nombre)} ${j.pos ? `<em>${esc(j.pos)}</em>` : ''}</span>
-      <span class="lid-d"><b>${esc(j.dato)}</b> <small>${esc(j.etiqueta)}</small></span>
-    </div>`).join('');
-  }
-  const hayLid = (p.jugadores && (p.jugadores.local.length || p.jugadores.visita.length));
-  const bloqueLideres = hayLid ? `
-    <div class="det-block">
-      <div class="det-sec-t big">${t('det.lideres')}</div>
-      <div class="det-duo">
-        <div class="duo-col"><div class="duo-cab">${escudoMini(p.local)}${esc(p.local.abrev)}</div>${lideres('local') || `<div class="duo-nd">${t('det.nodata')}</div>`}</div>
-        <div class="duo-col"><div class="duo-cab">${escudoMini(p.visita)}${esc(p.visita.abrev)}</div>${lideres('visita') || `<div class="duo-nd">${t('det.nodata')}</div>`}</div>
-      </div>
-    </div>` : '';
-
-  // ===== LESIONADOS (con alerta: por qué no juega) =====
-  function lesiones(lado) {
-    const arr = (p.lesionados && p.lesionados[lado]) || [];
-    if (!arr.length) return `<div class="duo-nd ok">${t('det.sinlesiones')}</div>`;
-    return arr.slice(0, 6).map(x => `<div class="les-row">
-      <span class="les-n">${esc(x.nombre)} ${x.pos ? `<em>${esc(x.pos)}</em>` : ''}</span>
-      <span class="les-est">${esc(x.estado)}</span>
-    </div>`).join('');
-  }
-  const hayLes = p.lesionados && (p.lesionados.local.length || p.lesionados.visita.length);
-  const lesionados = hayLes ? `
-    <div class="det-block">
-      <div class="det-sec-t big alert">${IC.alerta || ''} ${t('det.lesionados')}</div>
-      <div class="det-duo">
-        <div class="duo-col"><div class="duo-cab">${escudoMini(p.local)}${esc(p.local.abrev)}</div>${lesiones('local')}</div>
-        <div class="duo-col"><div class="duo-cab">${escudoMini(p.visita)}${esc(p.visita.abrev)}</div>${lesiones('visita')}</div>
-      </div>
-    </div>` : '';
-
-  // ===== COMPARATIVA visual (barras enfrentadas cuando hay récord) =====
-  function barraRecord() {
-    const pw = (r) => { const m2 = String(r||'').match(/(\d+)\D+(\d+)/); if (!m2) return null; const w=+m2[1], l=+m2[2]; return (w+l) ? w/(w+l) : null; };
-    const a = pw(p.local.record), b = pw(p.visita.record);
-    if (a == null || b == null) return '';
-    const la = Math.round(a*100), lb = Math.round(b*100);
-    return `<div class="cmp-row">
-      <span class="cmp-l">${esc(p.local.record)}</span>
-      <div class="cmp-bar"><i class="cl" style="width:${a/(a+b)*100}%"></i><i class="cr" style="width:${b/(a+b)*100}%"></i></div>
-      <span class="cmp-r">${esc(p.visita.record)}</span>
-      <span class="cmp-k">${t('det.winpct')}</span>
-    </div>`;
-  }
-  const filas = (p.datos || []).map(d => `
-    <div class="drow">
-      <span class="l">${esc(Lg(d.local))}</span>
-      <span class="k">${esc(Lg(d.etiqueta))}</span>
-      <span class="r">${esc(Lg(d.visita))}</span>
-    </div>`).join('');
-  const barRec = barraRecord();
-  const comparativa = (filas || barRec) ? `
-    <div class="det-block">
-      <div class="det-sec-t big">${t('det.comparativa')}</div>
-      ${barRec}
-      ${filas ? `<div class="datos-head"><span class="h-l">${esc(p.local.abrev)}</span><span class="h-k"></span><span class="h-r">${esc(p.visita.abrev)}</span></div>${filas}` : ''}
-    </div>` : '';
-
-  // Analista
-  const a = p.analista;
-  let bloqueAnalista = '';
-  if (a) {
-    const bloqueado = !!opciones.bloquear;
-    bloqueAnalista = `
-      <div class="analista ${bloqueado?'bloqueado':''}">
-        <div class="cab"><span class="tt">${IC.estrella} ${t('analista.titulo')}</span><span class="autor">${esc(Lg(a.autor)||'')}</span></div>
-        <div class="veredicto"><span class="fav">${esc(Lg(a.veredicto))}</span><span class="pct">${a.probabilidad}%</span></div>
-        <div class="medidor"><i style="width:${a.probabilidad}%"></i></div>
-        <div class="texto">${esc(Lg(a.texto))}</div>
-        ${bloqueado ? `<div class="candado">${IC.candado} ${t('analista.candado')}</div>` : ''}
-      </div>`;
-  }
-
-  // Info de franquicia (TheSportsDB): fundación y estadio con capacidad
-  function infoEq(lado, eq) {
-    const info = p.infoEquipos && p.infoEquipos[lado];
-    if (!info) return '';
-    const filas = [];
-    if (info.fundado) filas.push(`<span class="fe-k">${t('det.fundado')}</span><span class="fe-v">${info.fundado}</span>`);
-    if (info.estadio) filas.push(`<span class="fe-k">${t('det.estadio')}</span><span class="fe-v">${esc(info.estadio)}</span>`);
-    if (info.capacidad) filas.push(`<span class="fe-k">${t('det.capacidad')}</span><span class="fe-v">${info.capacidad.toLocaleString()}</span>`);
-    if (!filas.length) return '';
-    return `<div class="fe-col"><div class="fe-cab">${esc(eq.abrev)}</div>${filas.map((f,i)=>`<div class="fe-row">${f}</div>`).join('')}</div>`;
-  }
-  const hayInfo = p.infoEquipos && (p.infoEquipos.local || p.infoEquipos.visita);
-  const franquicia = hayInfo ? `
-    <div class="det-block">
-      <div class="det-sec-t big">${t('det.franquicia')}</div>
-      <div class="det-fe">${infoEq('local', p.local)}${infoEq('visita', p.visita)}</div>
-    </div>` : '';
-
-  // ===== Donut de probabilidad (SVG) — pieza central del panel =====
-  const favLocal = (m.local || 0) >= (m.visita || 0);
-  const favPct = favLocal ? (m.local || 0) : (m.visita || 0);
-  const favEq = favLocal ? p.local : p.visita;
-  function probDonut() {
-    const L = m.local || 0, V = m.visita || 0, E = m.empate || 0;
-    const r = 54, c = 2 * Math.PI * r;
-    const seg = (val, off, id) => `<circle cx="70" cy="70" r="${r}" fill="none" stroke="url(#${id})" stroke-width="15"
-      stroke-dasharray="${(c*val/100).toFixed(2)} ${(c - c*val/100).toFixed(2)}" stroke-dashoffset="${(-c*off/100).toFixed(2)}" transform="rotate(-90 70 70)"/>`;
-    return `<svg class="pd-svg" viewBox="0 0 140 140" width="150" height="150">
-      <defs>
-        <linearGradient id="gL" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe6a0"/><stop offset="1" stop-color="#c79426"/></linearGradient>
-        <linearGradient id="gV" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fdcff"/><stop offset="1" stop-color="#1f78c2"/></linearGradient>
-        <linearGradient id="gE" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#aeb8c3"/><stop offset="1" stop-color="#6b7683"/></linearGradient>
-      </defs>
-      <circle cx="70" cy="70" r="${r}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="15"/>
-      ${seg(L, 0, 'gL')}
-      ${E ? seg(E, L, 'gE') : ''}
-      ${seg(V, L + E, 'gV')}
-      <text x="70" y="62" text-anchor="middle" class="pd-pct">${favPct}%</text>
-      <text x="70" y="82" text-anchor="middle" class="pd-fav">${esc(favEq.abrev)}</text>
+  // ---------- Donut de probabilidad ----------
+  function donut(pct, cls) {
+    const r = 34, c = 2 * Math.PI * r;
+    const dash = (c * (pct || 0) / 100).toFixed(2);
+    return `<svg class="pd ${cls}" viewBox="0 0 84 84">
+      <circle cx="42" cy="42" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="9"/>
+      <circle cx="42" cy="42" r="${r}" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round"
+        stroke-dasharray="${dash} ${(c - dash).toFixed(2)}" transform="rotate(-90 42 42)"/>
+      <text x="42" y="48" text-anchor="middle" class="pd-t">${pct || 0}%</text>
     </svg>`;
   }
 
-  const cuno = ligaCuno(p);
-  const compartirBtn = `<button class="compartir" data-compartir="${esc(p.id)}">${IC.compartir} ${t('compartir')}</button>`;
+  // ---------- Mano del abridor ----------
+  const manoTxt = (mn) => mn === 'L' ? t('det.lhp') : (mn === 'R' ? t('det.rhp') : '');
+
+  // ---------- Ficha de jugador (silueta + barras de sus stats) ----------
+  function jugadorDestacado(lado) {
+    const arr = (p.jugadores && p.jugadores[lado]) || [];
+    if (!arr.length) return null;
+    const nombre = arr[0].nombre, pos = arr[0].pos;
+    const stats = arr.filter(j => j.nombre === nombre).map(j => ({ k: j.etiqueta, v: j.dato }));
+    if (stats.length < 2) arr.slice(0, 4).forEach(j => { if (!stats.find(s => s.k === j.etiqueta)) stats.push({ k: j.etiqueta, v: j.dato }); });
+    return { nombre, pos, stats: stats.slice(0, 5) };
+  }
+  function fichaJugador(lado, eq) {
+    const j = jugadorDestacado(lado);
+    const color = lado === 'local' ? 'local' : 'visita';
+    if (!j) return `<div class="cj-fig ${color}">${silueta(color)}<div class="cj-nd">${t('det.nodata')}</div></div>`;
+    // normaliza barras al máximo de sus propias stats para dar relieve visual
+    const nums = j.stats.map(s => numDe(s.v)).filter(n => n != null);
+    const max = nums.length ? Math.max(...nums) : 1;
+    const barras = j.stats.map(s => {
+      const n = numDe(s.v); const w = n != null && max > 0 ? Math.max(12, Math.round(n / max * 100)) : 40;
+      return `<div class="cjs-row"><span class="cjs-k">${esc(s.k)}</span><div class="cjs-bar"><i style="width:${w}%"></i></div><span class="cjs-v">${esc(s.v)}</span></div>`;
+    }).join('');
+    return `<div class="cj-fig ${color}">
+      <div class="cj-head"><b>${esc(j.nombre)}</b><span>${esc(j.pos || '')}</span></div>
+      <div class="cj-body">${silueta(color)}<div class="cj-stats">${barras}</div></div>
+    </div>`;
+  }
+
+  // ---------- Comparación por categorías comunes (barras enfrentadas reales) ----------
+  function comparativaJugadores() {
+    const cats = {};
+    ((p.jugadores && p.jugadores.local) || []).forEach(j => { (cats[j.etiqueta] = cats[j.etiqueta] || {}).l = j; });
+    ((p.jugadores && p.jugadores.visita) || []).forEach(j => { (cats[j.etiqueta] = cats[j.etiqueta] || {}).r = j; });
+    const filas = Object.keys(cats).map(k => {
+      const c = cats[k]; if (!c.l || !c.r) return '';
+      const a = numDe(c.l.dato), b = numDe(c.r.dato);
+      if (a == null || b == null || (a + b) === 0) return '';
+      const lp = a / (a + b) * 100;
+      return `<div class="cmpj-row">
+        <span class="cmpj-l"><b>${esc(c.l.dato)}</b><small>${esc(c.l.nombre)}</small></span>
+        <div class="cmpj-mid"><div class="cmpj-bar"><i class="bl" style="width:${lp.toFixed(1)}%"></i><i class="br" style="width:${(100-lp).toFixed(1)}%"></i></div><span class="cmpj-k">${esc(k)}</span></div>
+        <span class="cmpj-r"><b>${esc(c.r.dato)}</b><small>${esc(c.r.nombre)}</small></span>
+      </div>`;
+    }).filter(Boolean).join('');
+    return filas;
+  }
+
+  // ---------- Abridores (béisbol) ----------
+  function abridorBloque() {
+    const A = p.local.abridor, B = p.visita.abridor;
+    if (!(A && A.nombre) && !(B && B.nombre)) return '';
+    const card = (lado, a, eq) => {
+      if (!a || !a.nombre) return `<div class="abx ${lado} sin">${escudoMini(eq)}<span class="abx-nd">${t('det.sinabridor')}</span></div>`;
+      const cls = a.mano === 'L' ? 'lhp' : (a.mano === 'R' ? 'rhp' : '');
+      const mano = a.mano ? `<span class="abx-mano ${cls}">${manoTxt(a.mano)}</span>` : '';
+      const st = [a.era ? `<span><b>${esc(a.era)}</b> ERA</span>` : '', a.wl ? `<span><b>${esc(a.wl)}</b> W-L</span>` : ''].filter(Boolean).join('');
+      return `<div class="abx ${lado}">
+        <div class="abx-top">${escudoMini(eq)}<span class="abx-eq">${esc(eq.abrev)}</span>${mano}</div>
+        <div class="abx-nom">${esc(a.nombre)}</div>
+        <div class="abx-st">${st}</div>
+      </div>`;
+    };
+    // gráfica comparativa ERA / récord
+    let graf = '';
+    if (A && B) {
+      const rows = [];
+      const e1 = numDe(A.era), e2 = numDe(B.era);
+      if (e1 != null && e2 != null && e1 + e2 > 0) rows.push({ k: 'ERA', l: A.era, r: B.era, lp: e2 / (e1 + e2) * 100 });
+      const pw = (r) => { const mm = String(r || '').match(/(\d+)\D+(\d+)/); if (!mm) return null; const w = +mm[1], ll = +mm[2]; return (w + ll) ? w / (w + ll) : null; };
+      const w1 = pw(A.wl), w2 = pw(B.wl);
+      if (w1 != null && w2 != null && w1 + w2 > 0) rows.push({ k: ES ? 'Récord' : 'Record', l: A.wl, r: B.wl, lp: w1 / (w1 + w2) * 100 });
+      if (rows.length) graf = `<div class="abx-graf">${rows.map(r => `
+        <div class="abg-row"><span>${esc(r.l)}</span><div class="abg-bar"><i class="bl" style="width:${r.lp.toFixed(1)}%"></i><i class="br" style="width:${(100 - r.lp).toFixed(1)}%"></i><em>${esc(r.k)}</em></div><span class="r">${esc(r.r)}</span></div>`).join('')}</div>`;
+    }
+    return `<div class="dash-card">
+      <div class="dc-t">${t('det.abridores')}</div>
+      <div class="abx-duo">${card('local', A, p.local)}<span class="abx-vs">VS</span>${card('visita', B, p.visita)}</div>
+      ${graf}
+    </div>`;
+  }
+
+  // ---------- Lesionados ----------
+  function lesionadosBloque() {
+    const has = p.lesionados && (p.lesionados.local.length || p.lesionados.visita.length);
+    if (!has) return '';
+    const col = (lado, eq) => {
+      const arr = (p.lesionados && p.lesionados[lado]) || [];
+      const items = arr.length ? arr.slice(0, 6).map(x => `<div class="lx-row"><span>${esc(x.nombre)} ${x.pos ? `<em>${esc(x.pos)}</em>` : ''}</span><b>${esc(x.estado)}</b></div>`).join('') : `<div class="lx-ok">${t('det.sinlesiones')}</div>`;
+      return `<div class="lx-col"><div class="lx-cab">${escudoMini(eq)}${esc(eq.abrev)}</div>${items}</div>`;
+    };
+    return `<div class="dash-card">
+      <div class="dc-t alert">${IC.alerta || ''} ${t('det.lesionados')}</div>
+      <div class="lx-duo">${col('local', p.local)}${col('visita', p.visita)}</div>
+    </div>`;
+  }
+
+  // ---------- Datos del club ----------
+  function clubBloque() {
+    const has = p.infoEquipos && (p.infoEquipos.local || p.infoEquipos.visita);
+    if (!has) return '';
+    const col = (lado, eq) => {
+      const info = p.infoEquipos && p.infoEquipos[lado]; if (!info) return '';
+      const rows = [];
+      if (info.fundado) rows.push(`<div class="fx-row"><span>${t('det.fundado')}</span><b>${info.fundado}</b></div>`);
+      if (info.estadio) rows.push(`<div class="fx-row"><span>${t('det.estadio')}</span><b>${esc(info.estadio)}</b></div>`);
+      if (info.capacidad) rows.push(`<div class="fx-row"><span>${t('det.capacidad')}</span><b>${info.capacidad.toLocaleString()}</b></div>`);
+      if (!rows.length) return '';
+      return `<div class="fx-col"><div class="fx-cab">${esc(eq.abrev)}</div>${rows.join('')}</div>`;
+    };
+    const inner = col('local', p.local) + col('visita', p.visita);
+    if (!inner.trim()) return '';
+    return `<div class="dash-card"><div class="dc-t">${t('det.franquicia')}</div><div class="fx-duo">${inner}</div></div>`;
+  }
+
+  // ---------- Analista ----------
+  let analistaBloque = '';
+  if (p.analista) {
+    const a = p.analista, bloqueado = !!opciones.bloquear;
+    analistaBloque = `<div class="dash-card analista ${bloqueado ? 'bloqueado' : ''}">
+      <div class="dc-t">${IC.estrella} ${t('analista.titulo')} <span class="an-autor">${esc(Lg(a.autor) || '')}</span></div>
+      <div class="an-ver"><span class="fav">${esc(Lg(a.veredicto))}</span><span class="pct">${a.probabilidad}%</span></div>
+      <div class="an-med"><i style="width:${a.probabilidad}%"></i></div>
+      <div class="an-txt">${esc(Lg(a.texto))}</div>
+      ${bloqueado ? `<div class="candado">${IC.candado} ${t('analista.candado')}</div>` : ''}
+    </div>`;
+  }
+
+  // ---------- Chips info (hora, cuenta atrás, sede) ----------
+  let chips = '';
+  {
+    const partes = [];
+    if (p.cuando) {
+      const d = new Date(p.cuando);
+      if (!isNaN(d)) {
+        const hora = d.toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+        partes.push(`<span class="chip"><i>${t('det.horario')}</i>${esc(hora)}</span>`);
+        if (p.estado === 'proximo') partes.push(`<span class="chip"><i>${t('det.faltan')}</i><span class="cuenta" data-cuando="${esc(p.cuando)}">—</span></span>`);
+      }
+    }
+    if (p.sede) partes.push(`<span class="chip"><i>${t('det.sede')}</i>${L(p.sede)}</span>`);
+    if (partes.length) chips = `<div class="dash-chips">${partes.join('')}</div>`;
+  }
+
+  const cmpJug = comparativaJugadores();
+  const compartirBtn = `<button class="dash-share" data-compartir="${esc(p.id)}">${IC.compartir} ${t('compartir')}</button>`;
+  const favLocal = (m.local || 0) >= (m.visita || 0);
 
   return `
-    <div class="det-topbar">${cuno}<span class="det-liga-nom">${esc(p.liga || '')}</span></div>
-
-    <div class="det-hero">
-      <div class="dh-eq">
-        ${escudo(p.local)}
-        <div class="dh-nom">${esc(p.local.nombre)}</div>
-        <div class="dh-rec">${esc(p.local.record || '')}</div>
+  <div class="dash">
+    <div class="dash-top">
+      <div class="dt-team local">${escudoMini(p.local)}<div class="dt-info"><b>${esc(p.local.nombre)}</b><span>${esc(p.local.record || '')}</span></div></div>
+      <div class="dash-prob">
+        <div class="dp-col ${favLocal ? 'fav' : ''}"><span class="dp-c">${donut(m.local || 0, 'oro')}</span><span class="dp-lb">${esc(p.local.abrev)}</span></div>
+        ${tieneEmpate ? `<div class="dp-col draw"><span class="dp-e">${m.empate}%</span><span class="dp-lb">${t('prob.empate')}</span></div>` : `<div class="dp-vs">${badge}</div>`}
+        <div class="dp-col ${!favLocal ? 'fav' : ''}"><span class="dp-c">${donut(m.visita || 0, 'azul')}</span><span class="dp-lb">${esc(p.visita.abrev)}</span></div>
       </div>
-      <div class="dh-centro">
-        ${probDonut()}
-        <div class="dh-vs-lb">${idiomaActual()==='es'?'Prob. de victoria':'Win probability'} ${badge}</div>
-      </div>
-      <div class="dh-eq">
-        ${escudo(p.visita)}
-        <div class="dh-nom">${esc(p.visita.nombre)}</div>
-        <div class="dh-rec">${esc(p.visita.record || '')}</div>
-      </div>
+      <div class="dt-team visita"><div class="dt-info r"><b>${esc(p.visita.nombre)}</b><span>${esc(p.visita.record || '')}</span></div>${escudoMini(p.visita)}</div>
     </div>
 
-    ${infoJuego}
+    ${chips}
     ${factoresTxt}
 
-    <div class="det-cols">
-      <div class="det-col">
-        ${abridores}
-        ${bloqueLideres}
-      </div>
-      <div class="det-col">
-        ${lesionados}
-        ${comparativa}
-        ${franquicia}
+    <div class="dash-mid">
+      <div class="dash-comparador">
+        <div class="dc-t center">${t('det.compjug') || (ES ? 'Comparación de jugadores' : 'Player comparison')}</div>
+        <div class="cj-wrap">
+          ${fichaJugador('local', p.local)}
+          <div class="cj-center">
+            ${cmpJug || `<div class="cj-nd">${ES ? 'Sin estadísticas de jugadores para este partido todavía.' : 'No player stats for this match yet.'}</div>`}
+          </div>
+          ${fichaJugador('visita', p.visita)}
+        </div>
       </div>
     </div>
 
-    ${bloqueAnalista}
-    <div class="det-foot">${compartirBtn}</div>
-  `;
+    <div class="dash-grid">
+      ${abridorBloque()}
+      ${lesionadosBloque()}
+      ${clubBloque()}
+      ${analistaBloque}
+    </div>
+
+    <div class="dash-foot">${compartirBtn}</div>
+  </div>`;
 }
