@@ -116,31 +116,50 @@ function pintarLista() {
   cont.innerHTML = `<div class="seccion-t">${titulo}</div>` + lista.map(tarjetaPartido).join('');
   const tarjetas = [...cont.querySelectorAll('.pmatch')];
   tarjetas.forEach(el => el.onclick = () => abrirDetalle(el.dataset.id, el));
-
-  const panel = $('panel');
-  const enWeb = panel && getComputedStyle(panel).display !== 'none';
-  if (enWeb) {
-    const prox = lista.find(p => p.estado === 'vivo') || lista.find(p => p.estado === 'proximo') || lista[0];
-    if (prox) { const el = tarjetas.find(x => x.dataset.id === prox.id); abrirDetalle(prox.id, el, { soloPanel: true }); }
-  }
 }
 
-/* -------- Detalle -------- */
-async function abrirDetalle(id, el, opts = {}) {
+/* -------- Detalle (modal emergente premium) -------- */
+async function abrirDetalle(id, el) {
   partidoSel = id;
   document.querySelectorAll('.pmatch').forEach(x => x.classList.toggle('sel', x === el));
   const p = await detallePartido(id);
   if (p) await aplicarAnalista(p);
   const html = detalle(p, { bloquear: false });
-  const panel = $('panel'), hoja = $('hoja');
-  if (panel) panel.innerHTML = html;
-  if (hoja && !opts.soloPanel) { hoja.querySelector('.hoja-cuerpo').innerHTML = html; hoja.classList.add('abierta'); }
-  document.querySelectorAll('[data-compartir]').forEach(b => b.onclick = async () => {
+  abrirModalDetalle(html);
+  actualizarCuenta();
+}
+
+function abrirModalDetalle(html) {
+  cerrarModalDetalle();
+  const bg = document.createElement('div');
+  bg.className = 'det-modal-bg';
+  bg.id = 'det-modal-bg';
+  bg.innerHTML = `
+    <div class="det-modal" role="dialog" aria-modal="true">
+      <button class="det-modal-x" id="det-modal-x" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <div class="det-modal-cuerpo panel">${html}</div>
+    </div>`;
+  document.body.appendChild(bg);
+  document.body.classList.add('det-abierto');
+  bg.querySelector('#det-modal-x').onclick = cerrarModalDetalle;
+  bg.onclick = (e) => { if (e.target === bg) cerrarModalDetalle(); };
+  document.addEventListener('keydown', _escDetalle);
+  bg.querySelectorAll('[data-compartir]').forEach(b => b.onclick = async () => {
     const pp = await detallePartido(b.dataset.compartir);
     if (pp) { await aplicarAnalista(pp); compartirPartido(pp); }
   });
-  actualizarCuenta();
 }
+function cerrarModalDetalle() {
+  const bg = $('det-modal-bg');
+  if (bg) bg.remove();
+  document.body.classList.remove('det-abierto');
+  document.removeEventListener('keydown', _escDetalle);
+  partidoSel = null;
+  document.querySelectorAll('.pmatch').forEach(x => x.classList.remove('sel'));
+}
+function _escDetalle(e) { if (e.key === 'Escape') cerrarModalDetalle(); }
 
 /* Trae el veredicto del analista (si existe) y, si él lo marcó,
    ajusta la probabilidad mostrada para respaldar su criterio. */
@@ -284,13 +303,21 @@ async function onSesion(usuario, extra) {
   _esAdmin = false;
   try { const { esAdmin } = await import('./mesa/mesa-datos.js'); _esAdmin = await esAdmin(); } catch (_) {}
   pintarCuenta(usuario);   // repinta para mostrar la opción de panel si es admin
-  // Si alguien puso #mesa en la URL, lo limpiamos: el panel se abre desde el perfil.
   if ((location.hash || '').toLowerCase() === '#mesa') { try { history.replaceState(null, '', location.pathname); } catch (_) {} }
-  // El admin entra a la PÁGINA NORMAL con todo desbloqueado.
-  if (_esAdmin) { marcarVistaPrevia('premium'); entrarPlataforma(); return; }
-  if (tieneAcceso()) entrarPlataforma();
+  if (_esAdmin) marcarVistaPrevia('premium');   // el admin tiene acceso total cuando entre
+  // NO entramos automáticamente al cargar: el usuario llega al lobby y entra por su elección.
+  // Solo entramos directo si el login fue una acción intencional (tocó "Entrar"/"Registrarse").
+  if (extra && extra.intencional) { entrarSegunAcceso(); return; }
+  mostrarPantalla('landing');
+}
+
+/* Decide a dónde va el usuario cuando ELIGE entrar (login intencional o CTA del lobby) */
+function entrarSegunAcceso() {
+  if (_esAdmin || tieneAcceso()) entrarPlataforma();
   else mostrarPantalla('pricing');
 }
+/* El lobby llama a esto cuando el usuario ya tiene sesión y toca "Entrar" */
+if (typeof window !== 'undefined') window.__handiEntrar = () => { if (_sesion) { entrarSegunAcceso(); return true; } return false; };
 
 async function abrirPanelMesa() {
   try { const m = await import('./mesa/mesa.js'); m.abrirMesa(); }
