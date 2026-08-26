@@ -277,6 +277,12 @@
 .pj-mano { display: inline-block; font-size: 9.5px; font-weight: 800; padding: 1px 6px; border-radius: 5px; margin-left: 5px; vertical-align: middle; }
 .pj-mano.zurdo { background: rgba(92,189,240,.18); color: #7fd8ff; }
 .pj-mano.derecho { background: rgba(232,184,75,.18); color: var(--oro); }
+.det-fe { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fe-col { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 11px 12px; }
+.fe-cab { font-family: var(--mono); font-size: 11px; font-weight: 800; color: var(--oro); margin-bottom: 8px; }
+.fe-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; }
+.fe-k { font-size: 10.5px; color: #96a2ae; text-transform: uppercase; letter-spacing: .04em; }
+.fe-v { font-size: 12.5px; color: #eef3f8; font-weight: 700; text-align: right; }
 .pj-est { font-size: 10.5px; color: #e5405a; font-weight: 700; }
 .pj.vacia { color: #8a97a6; font-size: 11.5px; }
 .pj.les .pj-n { color: #dfe6ee; }
