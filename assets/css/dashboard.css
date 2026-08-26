@@ -1,0 +1,180 @@
+/* ============================================================
+   DASHBOARD DE COMPARACIÓN (hd-*)
+   Local (izq) · Comparación (centro) · Visita (der).
+   Figuras doradas sobre fondo rojo/azul · abridor "Anunciado para hoy"
+   · mejores bateadores (AVG) · barras enfrentadas.
+   Escritorio 3 columnas · Móvil apilado.
+   ============================================================ */
+
+.hd { --hd-oro:#E8B84B; --hd-azul:#5cbdf0; color:var(--tinta);
+  font-family:var(--texto, "Inter", system-ui, sans-serif); }
+
+/* ---------- Cabecera ---------- */
+.hd-top { display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
+  gap:16px; padding:4px 4px 14px; border-bottom:1px solid var(--linea); }
+.hd-team { display:flex; align-items:center; gap:12px; min-width:0; }
+.hd-team.visita { justify-content:flex-end; text-align:right; }
+.hd-team .mini-logo { width:44px; height:44px; object-fit:contain; }
+.hd-tinfo { min-width:0; }
+.hd-tinfo b { display:block; font-family:var(--display); font-size:19px; font-weight:800;
+  line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hd-tinfo span { font-size:12px; color:var(--tinta-3); font-weight:700; }
+.hd-top-c { display:flex; flex-direction:column; align-items:center; gap:2px; text-align:center; }
+.hd-liga { font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--hd-oro); font-weight:800; }
+.hd-hora { font-family:var(--display); font-size:14px; font-weight:700; color:var(--tinta); }
+.hd-sede { font-size:11px; color:var(--tinta-3); }
+
+/* ---------- Cuerpo (3 columnas) ---------- */
+.hd-body { display:grid; grid-template-columns:1fr 1.15fr 1fr; gap:16px; margin-top:16px; align-items:start; }
+.hd-side { display:flex; flex-direction:column; gap:12px; }
+
+/* ---------- HERO: figura dorada sobre fondo rojo/azul ---------- */
+.hd-hero { position:relative; height:230px; border-radius:16px; overflow:hidden;
+  border:1px solid var(--linea);
+  background-image:var(--hd-bg); background-size:cover; background-position:center;
+  display:flex; align-items:flex-end; justify-content:center; }
+.hd-hero::after { content:""; position:absolute; inset:0;
+  background:linear-gradient(180deg, rgba(6,9,13,.10) 0%, rgba(6,9,13,.05) 45%, rgba(6,9,13,.72) 100%); }
+.hd-hero-fig { position:relative; z-index:1; height:100%; width:auto; max-width:none;
+  object-fit:contain; object-position:bottom center;
+  filter:drop-shadow(0 8px 22px rgba(0,0,0,.55)); }
+.hd-hero.visita .hd-hero-fig { transform:scaleX(-1); }   /* mira hacia el centro */
+.hd-hero-badge { position:absolute; top:10px; z-index:2; display:flex; align-items:center; gap:6px;
+  padding:5px 10px; border-radius:999px; background:rgba(6,9,13,.6); backdrop-filter:blur(4px);
+  border:1px solid rgba(255,255,255,.14); font-size:12px; font-weight:800; }
+.hd-hero.local .hd-hero-badge { left:10px; }
+.hd-hero.visita .hd-hero-badge { right:10px; flex-direction:row-reverse; }
+.hd-hero-badge .mini-logo { width:18px; height:18px; object-fit:contain; }
+.hd-hero-badge b { color:#fff; }
+.hd-hero-badge span { font-family:var(--display); }
+.hd-hero-badge.oro span { color:var(--hd-oro); }
+.hd-hero-badge.azul span { color:var(--hd-azul); }
+
+/* ---------- Avatares con foto real ---------- */
+.hd-av { position:relative; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:50%; overflow:hidden; flex:0 0 auto; background:var(--fondo-2);
+  border:2px solid var(--linea); }
+.hd-av img { width:100%; height:100%; object-fit:cover; object-position:top center; }
+.hd-av-i { width:100%; height:100%; align-items:center; justify-content:center;
+  font-family:var(--display); font-weight:800; color:var(--tinta-2); }
+.hd-av.big { width:60px; height:60px; }
+.hd-av.big .hd-av-i { font-size:24px; }
+.hd-av.sm { width:34px; height:34px; }
+.hd-av.sm .hd-av-i { font-size:15px; }
+.hd-side.local .hd-av { border-color:rgba(232,184,75,.45); }
+.hd-side.visita .hd-av { border-color:rgba(92,189,240,.45); }
+
+/* ---------- Tarjeta del abridor / jugador destacado ---------- */
+.hd-sc { background:var(--tarjeta); border:1px solid var(--linea); border-radius:14px; padding:14px; }
+.hd-side.local .hd-sc { border-top:2px solid var(--hd-oro); }
+.hd-side.visita .hd-sc { border-top:2px solid var(--hd-azul); }
+.hd-sc-head { margin-bottom:10px; }
+.hd-sc-badge { display:inline-block; font-size:10px; letter-spacing:.09em; text-transform:uppercase;
+  font-weight:800; padding:4px 9px; border-radius:7px; }
+.hd-side.local .hd-sc-badge { color:var(--hd-oro); background:rgba(232,184,75,.12); }
+.hd-side.visita .hd-sc-badge { color:var(--hd-azul); background:rgba(92,189,240,.12); }
+.hd-sc-row { display:flex; align-items:center; gap:12px; }
+.hd-side.visita .hd-sc-row { flex-direction:row-reverse; text-align:right; }
+.hd-sc-id { min-width:0; }
+.hd-sc-sub { display:block; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--tinta-3); font-weight:700; }
+.hd-sc-name { display:block; font-family:var(--display); font-size:18px; font-weight:800; line-height:1.15;
+  color:var(--tinta); }
+.hd-sc-meta { display:flex; gap:6px; align-items:center; margin-top:3px; font-size:12px; color:var(--tinta-2); }
+.hd-side.visita .hd-sc-meta { justify-content:flex-end; }
+.hd-sc-meta em { font-style:normal; font-weight:700; }
+.hd-mano { font-size:10px; font-weight:800; padding:1px 6px; border-radius:5px; }
+.hd-mano.lhp { color:#7fd8ff; background:rgba(92,189,240,.16); }
+.hd-mano.rhp { color:var(--hd-oro); background:rgba(232,184,75,.16); }
+.hd-sc-stats { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.hd-side.visita .hd-sc-stats { justify-content:flex-end; }
+.hd-sc-stats span { display:inline-flex; flex-direction:column; align-items:center; gap:1px;
+  padding:6px 10px; background:var(--fondo-2); border-radius:9px; min-width:52px; }
+.hd-sc-stats b { font-family:var(--display); font-size:15px; font-weight:800; color:var(--tinta); }
+.hd-sc-stats span { font-size:9.5px; color:var(--tinta-3); text-transform:uppercase; letter-spacing:.04em; font-weight:700; }
+
+/* ---------- Bloques (bateadores AVG, forma, lesiones) ---------- */
+.hd-block { background:var(--tarjeta); border:1px solid var(--linea); border-radius:14px; padding:12px 14px; }
+.hd-block-t { font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; font-weight:800;
+  color:var(--tinta-3); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+.hd-block-t.alert { color:var(--rojo); }
+.hd-bt-row { display:flex; align-items:center; gap:9px; padding:5px 0; }
+.hd-bt-n { width:16px; font-family:var(--display); font-weight:800; color:var(--tinta-3); font-size:12px; text-align:center; }
+.hd-bt-name { flex:1; min-width:0; font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hd-bt-name em { font-style:normal; color:var(--tinta-3); font-weight:600; font-size:11px; margin-left:5px; }
+.hd-bt-pos { font-size:10.5px; color:var(--tinta-3); font-weight:700; }
+.hd-bt-avg { font-family:var(--display); font-size:15px; font-weight:800; color:var(--hd-oro); }
+.hd-side.visita .hd-bt-avg { color:var(--hd-azul); }
+.hd-form { display:flex; gap:8px; }
+.hd-form-chip { flex:1; text-align:center; padding:7px; background:var(--fondo-2); border-radius:9px; }
+.hd-form-chip span { display:block; font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--tinta-3); font-weight:700; }
+.hd-form-chip b { font-family:var(--display); font-size:15px; font-weight:800; }
+.hd-inj-row { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 0; font-size:12.5px; }
+.hd-inj-row em { font-style:normal; color:var(--tinta-3); font-size:11px; margin-left:4px; }
+.hd-inj-row b { color:var(--rojo); font-weight:700; font-size:11px; }
+
+/* ---------- Centro: donuts + comparación ---------- */
+.hd-center { background:var(--tarjeta); border:1px solid var(--linea); border-radius:16px; padding:16px; }
+.hd-c-t { text-align:center; font-family:var(--display); font-size:15px; font-weight:800; letter-spacing:.02em;
+  padding-bottom:12px; margin-bottom:14px; border-bottom:1px solid var(--linea); }
+.hd-donuts { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; margin-bottom:16px; }
+.hd-donut { display:flex; flex-direction:column; align-items:center; gap:4px; opacity:.72; transition:opacity .2s; }
+.hd-donut.fav { opacity:1; }
+.hd-donut span { font-family:var(--display); font-size:12px; font-weight:800; color:var(--tinta-2); }
+.hd-donut .pd { width:66px; height:66px; }
+.hd-donut .pd.oro { color:var(--hd-oro); }
+.hd-donut .pd.azul { color:var(--hd-azul); }
+.hd-donut .pd-t { fill:var(--tinta); font-family:var(--display); font-size:16px; font-weight:800; }
+.hd-badge { text-align:center; }
+.hd-draw { text-align:center; }
+.hd-draw b { display:block; font-family:var(--display); font-size:18px; font-weight:800; color:var(--tinta-2); }
+.hd-draw span { font-size:10px; color:var(--tinta-3); text-transform:uppercase; }
+.conf { font-size:10px; font-weight:800; padding:4px 9px; border-radius:7px; white-space:nowrap; }
+.conf.alta { color:#48d17e; background:rgba(72,209,126,.14); }
+.conf.media { color:var(--hd-oro); background:rgba(232,184,75,.14); }
+.conf.baja, .conf.muybaja { color:var(--tinta-3); background:rgba(255,255,255,.06); }
+
+.hd-cmp { display:flex; flex-direction:column; gap:3px; }
+.hd-cmp-row { display:grid; grid-template-columns:52px 1fr 52px; align-items:center; gap:10px; padding:5px 0; }
+.hd-cmp-v { font-family:var(--display); font-size:15px; font-weight:800; }
+.hd-cmp-v.l { text-align:right; color:var(--hd-oro); }
+.hd-cmp-v.r { text-align:left; color:var(--hd-azul); }
+.hd-cmp-mid { display:flex; flex-direction:column; align-items:center; gap:5px; }
+.hd-cmp-k { font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--tinta-3); font-weight:700; }
+.hd-cmp-bar { display:flex; width:100%; height:8px; border-radius:6px; overflow:hidden; background:var(--fondo-2); }
+.hd-cmp-bar i.l { background:linear-gradient(90deg,var(--oro-2),var(--hd-oro)); }
+.hd-cmp-bar i.r { background:linear-gradient(90deg,#2f9fe0,#7fd8ff); }
+.hd-cmp-nd { text-align:center; color:var(--tinta-3); font-size:12.5px; padding:18px 0; }
+
+/* ---------- Señal del analista ---------- */
+.hd-analista { margin-top:16px; border:1px solid rgba(232,184,75,.3); border-radius:12px; padding:13px 14px;
+  background:rgba(232,184,75,.05); position:relative; }
+.hd-an-t { font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; font-weight:800; color:var(--hd-oro);
+  display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+.hd-an-v { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.hd-an-v span { font-weight:700; font-size:13px; }
+.hd-an-v b { font-family:var(--display); font-size:18px; color:var(--hd-oro); }
+.hd-an-txt { font-size:12.5px; color:var(--tinta-2); line-height:1.5; }
+.hd-analista.bloqueado .hd-an-txt { filter:blur(5px); user-select:none; }
+.hd-analista .candado { position:absolute; inset:auto 0 12px 0; text-align:center; font-size:11px; color:var(--tinta-3); }
+
+/* ============================================================
+   MÓVIL — apilado, estética propia
+   ============================================================ */
+@media (max-width:860px) {
+  .hd-body { grid-template-columns:1fr; gap:14px; }
+  .hd-center { order:-1; }                 /* comparación primero en móvil */
+  .hd-hero { height:200px; }
+  .hd-top { grid-template-columns:1fr auto 1fr; gap:8px; }
+  .hd-team .mini-logo { width:36px; height:36px; }
+  .hd-tinfo b { font-size:15px; }
+  .hd-side { flex-direction:column; }
+}
+@media (max-width:520px) {
+  .hd-top-c .hd-sede { display:none; }
+  .hd-tinfo b { font-size:13.5px; }
+  .hd-hero { height:210px; }
+  .hd-donut .pd { width:58px; height:58px; }
+  .hd-cmp-row { grid-template-columns:46px 1fr 46px; gap:7px; }
+  .hd-cmp-v { font-size:13.5px; }
+}

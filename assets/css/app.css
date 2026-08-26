@@ -472,7 +472,7 @@
 .cuenta-chip .av { width: 24px; height: 24px; border-radius: 50%; object-fit: cover;
   background: var(--oro-suave); display: inline-flex; align-items: center; justify-content: center;
   color: var(--oro); font-weight: 800; font-size: 12px; }
-.cuenta-menu { position: absolute; top: 56px; right: 20px; z-index: 60; min-width: 200px;
+.cuenta-menu { position: fixed; top: 56px; right: 20px; z-index: 90; min-width: 200px;
   background: var(--tarjeta); border: 1px solid var(--linea); border-radius: 14px; padding: 8px;
   box-shadow: var(--sombra); display: none; }
 .cuenta-menu.abierto { display: block; }
@@ -553,6 +553,7 @@
 .det-modal-share:hover { color: var(--oro); border-color: var(--oro); }
 .det-modal-share svg { width: 15px; height: 15px; }
 .det-modal-cuerpo.panel { position: static; height: 100%; overflow: hidden; border-left: 0; padding: 0; border-radius: 20px;
+  display: block;
   background: radial-gradient(120% 40% at 50% 0%, rgba(232,184,75,.05), transparent 55%), linear-gradient(180deg, #0e141c, #080b10); }
 
 .dash16 { height: 100%; display: flex; flex-direction: column; color: #eaeff5; }
