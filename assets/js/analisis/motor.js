@@ -122,6 +122,14 @@ export function analizar(match) {
   const muestra = Math.min(Lall.n, Vall.n);
   if (Lall.n || Vall.n) { L += (sL - sV) * W.fuerza; factoresUsados.push('record'); }
 
+  // 3b-bis) Posición/ranking en la tabla: da variación aunque falte el récord.
+  const posL = Number(match.local.posicion), posV = Number(match.visita.posicion);
+  if (isFinite(posL) && isFinite(posV) && posL > 0 && posV > 0 && posL !== posV) {
+    // Menor número = mejor. Diferencia de puestos -> ventaja (con tope).
+    const posEdge = clamp((posV - posL) * 0.05, -0.6, 0.6);
+    L += posEdge; factoresUsados.push('posicion');
+  }
+
   // 3c) Ventaja de localía
   L += hfaLogit(ligaId, futbol);
   factoresUsados.push('local');
@@ -149,7 +157,7 @@ export function analizar(match) {
   let confianza;
   if (muestra >= 20 || nSenales >= 4) confianza = 'alta';
   else if (muestra >= 8 || nSenales >= 3) confianza = 'media';
-  else if (muestra >= 3) confianza = 'baja';
+  else if (muestra >= 3 || factoresUsados.includes('posicion')) confianza = 'baja';
   else confianza = 'muy baja';
 
   // Con muy poca info, acerca (poco) al centro para no fingir certeza.
