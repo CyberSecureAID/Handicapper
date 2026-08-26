@@ -107,11 +107,36 @@ function equiposDe(comp) {
       recordFuera: rec('road') || rec('away'),
       logo: c?.team?.logo || (c?.team?.logos?.[0]?.href) || '',
       score: c?.score,
-      probable: c?.probables?.[0]?.athlete?.displayName || c?.probables?.[0]?.athlete?.fullName || null,
+      abridor: abridorDe(c),
       _c: c,
     };
   };
   return { local: eq(local), visita: eq(visita) };
+}
+
+/* Abridor anunciado (MLB): nombre, mano (LHP/RHP) y stats (ERA, W-L) */
+function abridorDe(c) {
+  const p = c?.probables?.[0];
+  const at = p?.athlete;
+  if (!at) return null;
+  const nombre = at.displayName || at.fullName || at.shortName || '';
+  if (!nombre) return null;
+  // Mano: probamos varias ubicaciones (ESPN varía)
+  const manoRaw = at.hand?.abbreviation || at.hand?.type || at.hand?.displayValue || at.throws || null;
+  let mano = null;
+  if (manoRaw) {
+    const s = String(manoRaw).toUpperCase();
+    if (s.startsWith('L')) mano = 'L';
+    else if (s.startsWith('R')) mano = 'R';
+  }
+  // Stats del abridor si vienen (ERA, W-L)
+  let era = null, wl = null;
+  (p?.statistics || []).forEach(st => {
+    const ab = (st.abbreviation || st.name || '').toUpperCase();
+    if (ab === 'ERA') era = st.displayValue;
+    if (ab === 'W-L' || ab === 'WL' || ab === 'RECORD') wl = st.displayValue;
+  });
+  return { nombre, mano, era, wl, id: at.id || null };
 }
 
 /* Convierte un moneyline (número o texto "+120"/"-150") a número */
@@ -186,8 +211,8 @@ function aMatch(ev, ligaId, ligaNombre) {
     cuando: ev?.date || comp?.date || null,
     sede: comp?.venue?.fullName || null,
     estado,
-    local:  { id: local.id, nombre: local.nombre, abrev: local.abrev, record: local.record, recordCasa: local.recordCasa, recordFuera: local.recordFuera, logo: local.logo, probable: local.probable },
-    visita: { id: visita.id, nombre: visita.nombre, abrev: visita.abrev, record: visita.record, recordCasa: visita.recordCasa, recordFuera: visita.recordFuera, logo: visita.logo, probable: visita.probable },
+    local:  { id: local.id, nombre: local.nombre, abrev: local.abrev, record: local.record, recordCasa: local.recordCasa, recordFuera: local.recordFuera, logo: local.logo, abridor: local.abridor },
+    visita: { id: visita.id, nombre: visita.nombre, abrev: visita.abrev, record: visita.record, recordCasa: visita.recordCasa, recordFuera: visita.recordFuera, logo: visita.logo, abridor: visita.abridor },
     marcador: (estado !== 'proximo' && local.score != null)
       ? { local: Number(local.score), visita: Number(visita.score) } : null,
     mercado: mk.prob,          // cuota real si la hay; si no, null
@@ -231,7 +256,7 @@ function datosDe(comp, futbol, local, visita) {
   return filas;
 }
 
-/* Líderes/jugadores clave por equipo desde el summary */
+/* Líderes reales por equipo desde el summary (nombre + estadística) */
 function lideresDe(summary, localId, visitaId) {
   const out = { local: [], visita: [] };
   const grupos = summary?.leaders || summary?.boxscore?.leaders || [];
@@ -239,14 +264,14 @@ function lideresDe(summary, localId, visitaId) {
     const tid = String(g?.team?.id || '');
     const destino = tid === String(localId) ? out.local : (tid === String(visitaId) ? out.visita : null);
     if (!destino) return;
-    (g?.leaders || []).slice(0, 3).forEach(cat => {
+    (g?.leaders || []).slice(0, 5).forEach(cat => {
       const top = cat?.leaders?.[0];
       const at = top?.athlete;
       if (at) destino.push({
         nombre: at.displayName || at.shortName || at.fullName || '',
         pos: at.position?.abbreviation || at.position?.name || '',
-        etiqueta: cat.displayName || cat.shortDisplayName || cat.name || '',
-        dato: top.displayValue || '',
+        etiqueta: cat.shortDisplayName || cat.displayName || cat.name || '',
+        dato: top.displayValue || top.value || '',
       });
     });
   });
