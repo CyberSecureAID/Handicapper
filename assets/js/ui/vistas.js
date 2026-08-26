@@ -150,6 +150,29 @@ export function detalle(p, opciones = {}) {
     </div>`;
   }
   const hayAbr = (p.local.abridor && p.local.abridor.nombre) || (p.visita.abridor && p.visita.abridor.nombre);
+  // Gráfica de comparación de abridores (barras enfrentadas reales)
+  function grafAbridores() {
+    const a = p.local.abridor, b = p.visita.abridor;
+    if (!a || !b) return '';
+    const rows = [];
+    const era1 = parseFloat(a.era), era2 = parseFloat(b.era);
+    if (!isNaN(era1) && !isNaN(era2) && (era1 + era2) > 0) {
+      const lp = era2 / (era1 + era2) * 100; // ERA menor es mejor
+      rows.push({ k: 'ERA', l: a.era, r: b.era, lp });
+    }
+    const pw = (r) => { const mm = String(r||'').match(/(\d+)\D+(\d+)/); if (!mm) return null; const w=+mm[1], ll=+mm[2]; return (w+ll) ? w/(w+ll) : null; };
+    const w1 = pw(a.wl), w2 = pw(b.wl);
+    if (w1 != null && w2 != null && (w1 + w2) > 0) {
+      rows.push({ k: idiomaActual()==='es'?'Récord':'Record', l: a.wl, r: b.wl, lp: w1 / (w1 + w2) * 100 });
+    }
+    if (!rows.length) return '';
+    return `<div class="abr-graf">${rows.map(r => `
+      <div class="abr-g-row">
+        <span class="abr-g-val">${esc(r.l)}</span>
+        <div class="abr-g-track"><i class="gl" style="width:${r.lp.toFixed(1)}%"></i><i class="gr" style="width:${(100-r.lp).toFixed(1)}%"></i><span class="abr-g-k">${esc(r.k)}</span></div>
+        <span class="abr-g-val r">${esc(r.r)}</span>
+      </div>`).join('')}</div>`;
+  }
   const hayZurdo = (p.local.abridor && p.local.abridor.mano === 'L') || (p.visita.abridor && p.visita.abridor.mano === 'L');
   const notaZurdo = hayZurdo ? `<div class="det-nota">${IC.info || ''} ${t('det.notazurdo')}</div>` : '';
   const abridores = hayAbr ? `
@@ -160,6 +183,7 @@ export function detalle(p, opciones = {}) {
         <div class="abr-vs">VS</div>
         ${abridorCard('visita', p.visita)}
       </div>
+      ${grafAbridores()}
       ${notaZurdo}
     </div>` : '';
 
