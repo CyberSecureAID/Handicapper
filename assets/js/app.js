@@ -130,16 +130,24 @@ function _toggleFav(id) {
   const f = _favs(); const i = f.indexOf(id);
   if (i >= 0) f.splice(i, 1); else f.push(id);
   try { localStorage.setItem('hc_favs', JSON.stringify(f)); } catch (_) {}
+}
 
 /* -------- Detalle (modal emergente premium) -------- */
 async function abrirDetalle(id, el) {
   partidoSel = id;
   document.querySelectorAll('.pmatch').forEach(x => x.classList.toggle('sel', x === el));
-  const p = await detallePartido(id);
-  if (p) await aplicarAnalista(p);
-  const html = detalle(p, { bloquear: false });
-  abrirModalDetalle(html, id);
+  // 1) Mostrar YA el modal con los datos que la lista ya tiene (instantáneo).
+  const base = _partidos.find(x => x.id === id) || null;
+  abrirModalDetalle(detalle(base, { bloquear: false, cargando: true }), id);
   actualizarCuenta();
+  // 2) Enriquecer en segundo plano y actualizar el contenido cuando llegue.
+  try {
+    const p = await detallePartido(id);
+    if (!p || partidoSel !== id) return;        // el usuario ya cerró/cambió
+    await aplicarAnalista(p);
+    const cuerpo = document.querySelector('#det-modal-bg .det-modal-cuerpo');
+    if (cuerpo) { cuerpo.innerHTML = detalle(p, { bloquear: false }); _reengancharModal(); }
+  } catch (_) {}
 }
 
 function abrirModalDetalle(html, id) {
@@ -153,9 +161,16 @@ function abrirModalDetalle(html, id) {
     </div>`;
   document.body.appendChild(bg);
   document.body.classList.add('det-abierto');
-  bg.querySelector('[data-cerrar]')?.addEventListener('click', cerrarModalDetalle);
   bg.onclick = (e) => { if (e.target === bg) cerrarModalDetalle(); };
   document.addEventListener('keydown', _escDetalle);
+  _reengancharModal();
+}
+
+/* (Re)engancha los eventos del modal — se llama al abrir y tras enriquecer. */
+function _reengancharModal() {
+  const bg = $('det-modal-bg');
+  if (!bg) return;
+  bg.querySelector('[data-cerrar]')?.addEventListener('click', cerrarModalDetalle);
   // Pestañas del panel (cambian el centro)
   bg.querySelectorAll('.hd-tab[data-tab]').forEach(tab => tab.addEventListener('click', () => {
     const id = tab.dataset.tab;
