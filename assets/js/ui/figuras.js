@@ -41,3 +41,12 @@ export function figuraLado(ligaId, lado /* 'local' | 'visita' */) {
 export function fondoLado(lado) {
   return lado === 'local' ? `${FONDO}/rojo.jpg` : `${FONDO}/azul.jpg`;
 }
+
+/* Figura de respaldo para la tarjeta de ABRIDOR: pose de pie (no de bateo).
+   Para béisbol usa la figura parada; nunca la de swing. */
+export function figuraAbridor(ligaId) {
+  const dep = deporteDe(ligaId);
+  if (dep === 'beisbol') return `${BASE}/beisbol.png`;   // de pie, no swing
+  if (dep === 'basket') return `${BASE}/basket-std.png`;
+  return `${BASE}/futbol-std.png`;
+}
