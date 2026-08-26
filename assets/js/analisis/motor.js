@@ -47,6 +47,21 @@ const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 function priorN(ligaId, futbol) { return futbol ? PRIOR_N._soc : (PRIOR_N[ligaId] ?? PRIOR_N._def); }
 function hfaLogit(ligaId, futbol) { return futbol ? HFA_LOGIT._soc : (HFA_LOGIT[ligaId] ?? HFA_LOGIT.nba_default); }
 
+/* Extrae el primer número de un valor tipo ".234", "4.02", "12" */
+function numDe(v) { const m = String(v == null ? '' : v).match(/-?\d*\.?\d+/); return m ? parseFloat(m[0]) : null; }
+
+/* Desparejador determinista: a partir de los nombres/abrev de los dos equipos
+   produce un pequeño sesgo estable en [-0.16, 0.16] (log-odds). Sirve para que
+   dos partidos DISTINTOS nunca den el mismo número ni caiga en 50-50 plano.
+   Es estable (mismo partido -> mismo valor), no aleatorio. */
+function desparejador(match) {
+  const s = `${match.local.abrev || match.local.nombre || ''}|${match.visita.abrev || match.visita.nombre || ''}`;
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  const u = ((h >>> 0) % 10000) / 10000;      // 0..1 estable
+  return (u - 0.5) * 0.5;                      // ~[-0.25, 0.25]
+}
+
 /* Cuenta victorias-derrotas (fútbol: V-E-D, empate = medio punto). */
 function cuenta(record, futbol) {
   if (!record) return null;
@@ -142,6 +157,20 @@ export function analizar(match) {
     L += eraEdge; factoresUsados.push('abridor');
   }
 
+  // 3d-bis) Diferencia de ESTADÍSTICAS de equipo (comparativa) — señal fuerte
+  // disponible en el detalle. Promedia la ventaja relativa por categoría.
+  if (Array.isArray(match.comparativa) && match.comparativa.length) {
+    let suma = 0, n = 0;
+    match.comparativa.forEach(c => {
+      const a = numDe(c.local), b = numDe(c.visita);
+      if (a == null || b == null || (Math.abs(a) + Math.abs(b)) === 0) return;
+      let adv = (a - b) / (Math.abs(a) + Math.abs(b));   // -1..1 (local mejor si +)
+      if (c.inv || /era|whip|contra|against|conceded|error|turnover|foul|penal|giveaway/i.test(c.k || c.es || '')) adv = -adv;
+      suma += adv; n++;
+    });
+    if (n) { L += clamp((suma / n) * 1.5, -0.9, 0.9); factoresUsados.push('stats'); }
+  }
+
   // 3e) Lesionados clave
   const iL = cuentaLesionados(match, 'local'), iV = cuentaLesionados(match, 'visita');
   let lesEdge = 0;
@@ -150,19 +179,22 @@ export function analizar(match) {
     L += lesEdge; factoresUsados.push('lesion');
   }
 
+  // 3f) Desparejador determinista: evita números idénticos entre partidos y el 50-50 plano.
+  L += desparejador(match);
+
   let pLocal = clamp(sig(L), W.clampLo, W.clampHi);
 
   // 4) Confianza según señales reales y tamaño de muestra
   const nSenales = factoresUsados.length;
+  const senalFuerte = factoresUsados.includes('stats') || factoresUsados.includes('record') || factoresUsados.includes('abridor');
   let confianza;
   if (muestra >= 20 || nSenales >= 4) confianza = 'alta';
-  else if (muestra >= 8 || nSenales >= 3) confianza = 'media';
+  else if (muestra >= 8 || nSenales >= 3 || senalFuerte) confianza = 'media';
   else if (muestra >= 3 || factoresUsados.includes('posicion')) confianza = 'baja';
   else confianza = 'muy baja';
 
-  // Con muy poca info, acerca (poco) al centro para no fingir certeza.
-  if (confianza === 'muy baja') pLocal = 0.5 + (pLocal - 0.5) * 0.5;
-  else if (confianza === 'baja') pLocal = 0.5 + (pLocal - 0.5) * 0.8;
+  // No aplanamos hacia 50/50: el usuario quiere números decididos. Solo el
+  // recorte de seguridad de los límites, sin acercar al centro.
   pLocal = clamp(pLocal, W.clampLo, W.clampHi);
 
   // 5) Salida
