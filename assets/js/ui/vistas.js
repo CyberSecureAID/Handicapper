@@ -280,27 +280,74 @@ export function detalle(p, opciones = {}) {
   }
   const hayInfo = p.infoEquipos && (p.infoEquipos.local || p.infoEquipos.visita);
   const franquicia = hayInfo ? `
-    <div class="det-sec-t">${t('det.franquicia')}</div>
-    <div class="det-fe">${infoEq('local', p.local)}${infoEq('visita', p.visita)}</div>` : '';
+    <div class="det-block">
+      <div class="det-sec-t big">${t('det.franquicia')}</div>
+      <div class="det-fe">${infoEq('local', p.local)}${infoEq('visita', p.visita)}</div>
+    </div>` : '';
+
+  // ===== Donut de probabilidad (SVG) — pieza central del panel =====
+  const favLocal = (m.local || 0) >= (m.visita || 0);
+  const favPct = favLocal ? (m.local || 0) : (m.visita || 0);
+  const favEq = favLocal ? p.local : p.visita;
+  function probDonut() {
+    const L = m.local || 0, V = m.visita || 0, E = m.empate || 0;
+    const r = 54, c = 2 * Math.PI * r;
+    const seg = (val, off, id) => `<circle cx="70" cy="70" r="${r}" fill="none" stroke="url(#${id})" stroke-width="15"
+      stroke-dasharray="${(c*val/100).toFixed(2)} ${(c - c*val/100).toFixed(2)}" stroke-dashoffset="${(-c*off/100).toFixed(2)}" transform="rotate(-90 70 70)"/>`;
+    return `<svg class="pd-svg" viewBox="0 0 140 140" width="150" height="150">
+      <defs>
+        <linearGradient id="gL" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe6a0"/><stop offset="1" stop-color="#c79426"/></linearGradient>
+        <linearGradient id="gV" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fdcff"/><stop offset="1" stop-color="#1f78c2"/></linearGradient>
+        <linearGradient id="gE" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#aeb8c3"/><stop offset="1" stop-color="#6b7683"/></linearGradient>
+      </defs>
+      <circle cx="70" cy="70" r="${r}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="15"/>
+      ${seg(L, 0, 'gL')}
+      ${E ? seg(E, L, 'gE') : ''}
+      ${seg(V, L + E, 'gV')}
+      <text x="70" y="62" text-anchor="middle" class="pd-pct">${favPct}%</text>
+      <text x="70" y="82" text-anchor="middle" class="pd-fav">${esc(favEq.abrev)}</text>
+    </svg>`;
+  }
 
   const cuno = ligaCuno(p);
+  const compartirBtn = `<button class="compartir" data-compartir="${esc(p.id)}">${IC.compartir} ${t('compartir')}</button>`;
+
   return `
-    <div class="det-cab">
-      ${cuno}
-      <button class="compartir" data-compartir="${esc(p.id)}">${IC.compartir} ${t('compartir')}</button>
+    <div class="det-topbar">${cuno}<span class="det-liga-nom">${esc(p.liga || '')}</span></div>
+
+    <div class="det-hero">
+      <div class="dh-eq">
+        ${escudo(p.local)}
+        <div class="dh-nom">${esc(p.local.nombre)}</div>
+        <div class="dh-rec">${esc(p.local.record || '')}</div>
+      </div>
+      <div class="dh-centro">
+        ${probDonut()}
+        <div class="dh-vs-lb">${idiomaActual()==='es'?'Prob. de victoria':'Win probability'} ${badge}</div>
+      </div>
+      <div class="dh-eq">
+        ${escudo(p.visita)}
+        <div class="dh-nom">${esc(p.visita.nombre)}</div>
+        <div class="dh-rec">${esc(p.visita.record || '')}</div>
+      </div>
     </div>
-    <div class="det-vs">
-      <div class="col">${escudo(p.local)}<div class="nom">${esc(p.local.nombre)}</div><div class="rec">${esc(p.local.record||'')}</div></div>
-      <div class="mid"><img class="vs-img" src="assets/imagenes/vs.png" alt="VS" onerror="this.replaceWith(document.createTextNode('VS'))"></div>
-      <div class="col">${escudo(p.visita)}<div class="nom">${esc(p.visita.nombre)}</div><div class="rec">${esc(p.visita.record||'')}</div></div>
-    </div>
+
     ${infoJuego}
-    ${prob}
-    ${abridores}
-    ${bloqueLideres}
-    ${lesionados}
-    ${comparativa}
-    ${franquicia}
+    ${factoresTxt}
+
+    <div class="det-cols">
+      <div class="det-col">
+        ${abridores}
+        ${bloqueLideres}
+      </div>
+      <div class="det-col">
+        ${lesionados}
+        ${comparativa}
+        ${franquicia}
+      </div>
+    </div>
+
     ${bloqueAnalista}
+    <div class="det-foot">${compartirBtn}</div>
   `;
 }
