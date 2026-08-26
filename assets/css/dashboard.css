@@ -124,7 +124,7 @@
 .hd-fm-s { display:block; font-size:8.5px; color:var(--tinta-3); font-weight:600; }
 
 /* ---------- CENTRO ---------- */
-.hd-center { padding:16px 18px; display:flex; flex-direction:column; overflow-y:auto; }
+.hd-center { padding:16px 18px; display:flex; flex-direction:column; }
 .hd-c-head { display:flex; align-items:center; justify-content:center; gap:12px; padding-bottom:10px; margin-bottom:12px;
   border-bottom:2px solid var(--linea); }
 .hd-c-head img { width:24px; height:24px; object-fit:contain; }
@@ -204,3 +204,21 @@
 /* Paneles de pestaña dentro del centro */
 .hd-pane-c { display:none; }
 .hd-pane-c.on { display:block; }
+
+/* Tabla de Estadísticas (distinta a Comparación) */
+.hd-tb { display:flex; flex-direction:column; }
+.hd-tb-head { display:grid; grid-template-columns:1fr auto 1fr; padding:0 4px 8px; border-bottom:1px solid var(--linea); margin-bottom:4px; }
+.hd-tb-head span:first-child { text-align:left; color:var(--c-loc); }
+.hd-tb-head span:last-child { text-align:right; color:var(--c-vis); }
+.hd-tb-head span { font-family:"Chakra Petch",sans-serif; font-weight:800; font-size:13px; }
+.hd-tb-row { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:8px 4px; border-bottom:1px solid rgba(255,255,255,.05); }
+.hd-tb-l { text-align:left; font-family:"Chakra Petch",sans-serif; font-weight:800; font-size:15px; color:var(--c-loc); }
+.hd-tb-r { text-align:right; font-family:"Chakra Petch",sans-serif; font-weight:800; font-size:15px; color:var(--c-vis); }
+.hd-tb-k { text-align:center; font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--tinta-2); font-weight:700; padding:0 12px; }
+.hd-tb-sep { text-align:center; font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--tinta-3); font-weight:800; margin:10px 0 4px; }
+
+/* Roster: fila seleccionable */
+.hd-rp { border-radius:8px; cursor:pointer; transition:background .12s; padding-left:4px; padding-right:4px; }
+.hd-rp:hover { background:rgba(255,255,255,.04); }
+.hd-rp.sel { background:rgba(29,155,240,.12); }
+.hd-roster-col:last-child .hd-rp.sel { background:rgba(226,59,63,.12); }
