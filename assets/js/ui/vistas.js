@@ -132,14 +132,10 @@ export function detalle(p, opciones = {}) {
     const parts = String(eq.nombre || '').trim().split(/\s+/);
     const ciudad = parts.length > 1 ? parts.slice(0, -1).join(' ') : '';
     const nombre = parts.length > 1 ? parts.slice(-1)[0] : eq.nombre;
-    const rec = eq.record ? `${esc(eq.record)}${eq.division ? ` <em>· ${esc(eq.division)}</em>` : ''}` : '';
-    return `<div class="hd-hd-team ${lado}">
-      <img class="hd-hd-logo" src="${esc(eq.logo || '')}" alt="" onerror="this.style.visibility='hidden'">
-      <div class="hd-hd-tx">
-        ${ciudad ? `<span class="hd-hd-city">${esc(ciudad)}</span>` : ''}
-        <span class="hd-hd-name">${esc(nombre)}</span>
-        ${rec ? `<span class="hd-hd-rec">${rec}</span>` : ''}
-      </div></div>`;
+    const rec = eq.record ? `${esc(eq.record)}${eq.division ? ` <em>| ${esc(eq.division)}</em>` : ''}` : '';
+    const logo = `<img class="hd-hd-logo" src="${esc(eq.logo || '')}" alt="" onerror="this.style.visibility='hidden'">`;
+    const txt = `<div class="hd-hd-tx">${ciudad ? `<span class="hd-hd-city">${esc(ciudad)}</span>` : ''}<span class="hd-hd-name">${esc(nombre)}</span>${rec ? `<span class="hd-hd-rec">${rec}</span>` : ''}</div>`;
+    return `<div class="hd-hd-team ${lado}">${lado === 'l' ? logo + txt : txt + logo}</div>`;
   }
 
   /* Tarjeta de abridor / jugador destacado con foto grande */
@@ -188,14 +184,19 @@ export function detalle(p, opciones = {}) {
            onerror="this.onerror=null;this.src='${esc(fig)}';this.classList.add('is-figura')">`
       : `<img class="hd-pit-photo is-figura" src="${esc(fig)}" alt="">`;
     const sideC = lado === 'local' ? 'l' : 'r';
-    return `<div class="hd-pit ${sideC}">${photo}
-      <div class="hd-pit-info">
-        <span class="hd-pit-badge">${IC.estrella || ''} ${badgeT}</span>
-        <div class="hd-pit-sub">${a && a.nombre ? (ES ? 'Anunciado para hoy' : 'Announced for today') : (ES ? 'Líder del equipo' : 'Team leader')}</div>
-        ${fn ? `<span class="hd-pit-fn">${esc(fn)}</span>` : ''}
-        <span class="hd-pit-ln">${esc(ln)} ${num}</span>
-        ${meta.length ? `<div class="hd-pit-meta">${meta.join(' · ')}</div>` : ''}
-        ${stats.length ? `<div class="hd-pit-temp">${ES ? 'Temporada' : 'Season'} ${anio}</div><div class="hd-pit-st">${stats.map(s => `<div><b>${esc(s.v)}</b><span>${esc(s.k)}</span></div>`).join('')}</div>` : ''}
+    const pitIco = `<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><circle cx="12" cy="5" r="2.4"/><path d="M11 8c-1 2-3 3-5 3l.4 1.9c1.7-.1 3.3-.7 4.6-1.8l1 2.1-2.4 4.6 1.7.9 2.7-5.1c.3-.6.1-1.3-.4-1.7l-1.2-1 1.1-2.2c1.2 1.3 2.9 2 4.6 2.1l.2-1.9c-1.9 0-3.6-1.1-4.5-2.8z"/></svg>`;
+    const badge = `<div class="hd-pit-badge">${pitIco} ${esc(badgeT)}</div>`;
+    return `<div class="hd-pit ${sideC}">
+      ${badge}
+      <div class="hd-pit-inner">
+        ${photo}
+        <div class="hd-pit-info">
+          <div class="hd-pit-sub">${a && a.nombre ? (ES ? 'Anunciado para hoy' : 'Announced for today') : (ES ? 'Líder del equipo' : 'Team leader')}</div>
+          ${fn ? `<span class="hd-pit-fn">${esc(fn)}</span>` : ''}
+          <span class="hd-pit-ln">${esc(ln)} ${num}</span>
+          ${meta.length ? `<div class="hd-pit-meta">${meta.join(' · ')}</div>` : ''}
+          ${stats.length ? `<div class="hd-pit-temp">${ES ? 'Temporada' : 'Season'} ${anio}</div><div class="hd-pit-st">${stats.map(s => `<div><b>${esc(s.v)}</b><span>${esc(s.k)}</span></div>`).join('')}</div>` : ''}
+        </div>
       </div></div>`;
   }
 
@@ -319,17 +320,20 @@ export function detalle(p, opciones = {}) {
   const cmp = filasComparacion();
   const cmpHTML = cmp.length ? `<div class="hd-cmp">${cmp.join('')}</div>` : `<div class="hd-cmp-nd">${ES ? 'Sin estadísticas comparables todavía.' : 'No comparable stats yet.'}</div>`;
 
-  /* --- Pestañas NO redundantes: cada una muestra algo distinto --- */
+  /* --- Pestañas como la referencia: Resumen · Comparación · Equipos · Estadísticas · Enfrentamientos --- */
+  const tieneSerie = p.serie && (p.serie.local != null || p.serie.visita != null);
   const panes = [];
-  // Resumen: probabilidad + veredicto del analista + factores del modelo (sin barras).
+  // Resumen: probabilidad + veredicto + factores.
   panes.push({ id: 'resumen', txt: ES ? 'Resumen' : 'Overview',
     html: `${donutsHTML()}${analistaHTML()}${factoresHTML() || `<div class="hd-an-txt" style="text-align:center;color:var(--tinta-3);padding:8px 0">${ES ? 'Probabilidad del modelo Handicapper con las señales del partido.' : 'Handicapper model probability from the match signals.'}</div>`}` });
-  // Comparación: donuts + barras (sin h2h, para no repetir).
-  panes.push({ id: 'comparacion', txt: ES ? 'Comparación' : 'Comparison', on: true, html: `${donutsHTML()}${cmpHTML}` });
+  // Comparación (por defecto): barras + enfrentamientos (idéntico a la referencia, sin donuts).
+  panes.push({ id: 'comparacion', txt: ES ? 'Comparación' : 'Comparison', on: true, html: `${cmpHTML}${tieneSerie ? h2hHTML() : ''}` });
   // Equipos: roster COMPLETO de ambos.
   panes.push({ id: 'equipos', txt: ES ? 'Equipos' : 'Teams', html: equiposHTML() });
+  // Estadísticas: barras a pantalla completa.
+  if (cmp.length) panes.push({ id: 'estadisticas', txt: ES ? 'Estadísticas' : 'Stats', html: cmpHTML });
   // Enfrentamientos: solo si hay serie real.
-  if (p.serie && (p.serie.local != null || p.serie.visita != null)) panes.push({ id: 'enfrentamientos', txt: ES ? 'Enfrentamientos' : 'Head to head', html: h2hHTML() });
+  if (tieneSerie) panes.push({ id: 'enfrentamientos', txt: ES ? 'Enfrentamientos' : 'Head to head', html: h2hHTML() });
 
   const tabsHTML = panes.map(pane => `<button class="hd-tab ${pane.on ? 'on' : ''}" data-tab="${pane.id}">${esc(pane.txt)}</button>`).join('');
   const panesHTML = panes.map(pane => `<div class="hd-pane-c ${pane.on ? 'on' : ''}" data-pane="${pane.id}" ${pane.on ? '' : 'style="display:none"'}>${pane.html}</div>`).join('');
@@ -352,7 +356,7 @@ export function detalle(p, opciones = {}) {
     <div class="hd-bar">
       <div class="hd-tabs">${tabsHTML}</div>
       <div class="hd-acc">
-        <button class="hd-share" data-compartir="${esc(p.id || '')}">${shareSVG}<span>${ES ? 'Compartir' : 'Share'}</span></button>
+        <button class="hd-share" data-compartir="${esc(p.id || '')}">${shareSVG}<span>${ES ? 'Comparar' : 'Compare'}</span></button>
         <button class="hd-close x" data-cerrar>${xSVG}</button>
       </div>
     </div>
