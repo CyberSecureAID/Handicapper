@@ -55,7 +55,7 @@
 .hd-pane.on { display:contents; }
 
 /* ---------- TARJETA DE ABRIDOR (fondo real azul/rojo) ---------- */
-.hd-pit { position:relative; border-radius:14px; overflow:hidden; min-height:196px; border:1px solid var(--linea);
+.hd-pit { position:relative; border-radius:14px; overflow:hidden; height:206px; border:1px solid var(--linea);
   background-size:cover; background-position:center; display:flex; flex-direction:column; }
 .hd-pit.l { background-image:linear-gradient(100deg, rgba(6,12,22,.15) 20%, rgba(6,12,22,.55) 60%, rgba(6,12,22,.88) 92%), url('../imagenes/fondos/azul.jpg'); }
 .hd-pit.r { background-image:linear-gradient(260deg, rgba(6,12,22,.15) 20%, rgba(6,12,22,.55) 60%, rgba(6,12,22,.88) 92%), url('../imagenes/fondos/rojo.jpg'); }
