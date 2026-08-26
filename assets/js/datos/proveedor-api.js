@@ -438,18 +438,16 @@ export async function detallePartido(id) {
       } else {
         // Resto de ligas: comparación desde las estadísticas de equipo del summary.
         m.comparativa = comparativaSummary(s, m.local.id, m.visita.id, ligaId);
-        // Si no hay jugadores (frecuente en próximos de NBA/NHL), trae el roster.
-        if ((!m.jugadores?.local?.length && !m.plantilla?.local?.length) ||
-            (!m.jugadores?.visita?.length && !m.plantilla?.visita?.length)) {
-          try {
-            const [rl, rv] = await Promise.all([
-              rosterEquipo(ruta, m.local.id), rosterEquipo(ruta, m.visita.id),
-            ]);
-            if (rl?.length) m.plantilla.local = rl;
-            if (rv?.length) m.plantilla.visita = rv;
-          } catch (_) {}
-        }
       }
+
+      // Roster COMPLETO de ambos equipos (todos los jugadores) para la pestaña Equipos.
+      try {
+        const [rl, rv] = await Promise.all([
+          rosterEquipo(ruta, m.local.id), rosterEquipo(ruta, m.visita.id),
+        ]);
+        if (rl?.length) m.plantilla.local = fusionRoster(m.plantilla.local, rl);
+        if (rv?.length) m.plantilla.visita = fusionRoster(m.plantilla.visita, rv);
+      } catch (_) {}
 
       // Si no hubo cuota ni proyección, re-ejecuta el motor con los datos
       // enriquecidos (ERA del abridor, lesionados) para afinar la probabilidad.
@@ -462,6 +460,14 @@ export async function detallePartido(id) {
   } catch (_) {}
 
   return m;
+}
+
+/* Une dos listas de jugadores sin duplicar por nombre (prioriza los que traen stats). */
+function fusionRoster(base, extra) {
+  const out = Array.isArray(base) ? base.slice() : [];
+  const nombres = new Set(out.map(x => x.nombre));
+  (extra || []).forEach(j => { if (j?.nombre && !nombres.has(j.nombre)) { out.push(j); nombres.add(j.nombre); } });
+  return out;
 }
 
 /* Comparación de equipos desde el boxscore del summary (no-MLB): usa las
