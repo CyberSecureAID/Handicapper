@@ -72,11 +72,10 @@ function render() {
   _cont.querySelector('#mesa-salir').onclick = async () => { await salir(); location.hash = ''; location.reload(); };
   _cont.querySelector('#mesa-ver-sitio').onclick = () => verSitio();
 
-  // Delegación de clicks (inmune a re-renders): liga, partido, borrar, bloquear
-  const main = _cont.querySelector('#mesa-main');
-  if (main && !main._delegado) {
-    main._delegado = true;
-    main.addEventListener('click', (e) => {
+  // Delegación de clicks sobre _cont (que persiste): liga, partido, borrar, bloquear.
+  if (!_cont._delegado) {
+    _cont._delegado = true;
+    _cont.addEventListener('click', (e) => {
       const liga = e.target.closest('[data-liga]');
       if (liga) { seleccionarLiga(liga.dataset.liga); return; }
       const match = e.target.closest('[data-match]');
@@ -250,11 +249,10 @@ function vistaAnalisis() {
 function tarjetaPartidoAdmin(p) {
   const ya = _analisis.find(a => a.matchId === p.id);
   const eq = (e, pct, cls) => `<div class="anc-eq">
-      <img class="anc-logo" src="${esc(e.logo || '')}" alt="" onerror="this.style.visibility='hidden'">
-      <span class="anc-nom">${esc(nombreCortoEquipo(e.nombre))}</span>
+      <img class="anc-logo" src="${esc(e.logo || '')}" alt="${esc(e.abrev || '')}" onerror="this.style.visibility='hidden'">
       <span class="anc-pct ${cls}">${pct ?? '—'}%</span>
     </div>`;
-  return `<button class="an-card ${ya ? 'tiene' : ''}" data-match="${esc(p.id)}">
+  return `<button class="an-card ${ya ? 'tiene' : ''}" data-match="${esc(p.id)}" title="${esc(p.local.nombre)} vs ${esc(p.visita.nombre)}">
     ${eq(p.local, p.mercado?.local, 'oro')}
     <div class="anc-vs">VS</div>
     ${eq(p.visita, p.mercado?.visita, 'azul')}
