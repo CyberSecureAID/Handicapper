@@ -534,39 +534,89 @@
   cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
 .auth-enviar:disabled { opacity: .6; cursor: default; }
 
-/* ==================== MODAL DE DETALLE (ventana emergente premium) ==================== */
+/* ==================== MODAL DE DETALLE — panel de estadísticas premium ==================== */
 .det-modal-bg { position: fixed; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center;
-  padding: 24px; background: rgba(4,7,11,.7); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  padding: 24px; background: rgba(3,6,10,.74); backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
   animation: dmb-in .18s ease; overflow-y: auto; }
 @keyframes dmb-in { from { opacity: 0; } to { opacity: 1; } }
-.det-modal { position: relative; width: 100%; max-width: 560px; max-height: 90vh; display: flex; flex-direction: column;
-  border-radius: 22px; overflow: hidden; border: 1px solid rgba(232,184,75,.22);
-  box-shadow: 0 40px 120px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.03) inset;
-  animation: dm-in .22s cubic-bezier(.2,.8,.2,1); }
-@keyframes dm-in { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
-.det-modal-x { position: absolute; top: 14px; right: 14px; z-index: 3; width: 34px; height: 34px; border-radius: 11px;
-  display: grid; place-items: center; cursor: pointer; color: #cfd8e2;
-  background: rgba(18,24,32,.7); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(4px); transition: all .15s; }
-.det-modal-x:hover { color: #fff; background: rgba(229,64,90,.9); border-color: transparent; transform: rotate(90deg); }
-.det-modal-cuerpo.panel { position: static; height: auto; max-height: 90vh; overflow-y: auto; border-left: 0;
-  padding: 24px; border-radius: 22px; }
+.det-modal { position: relative; width: 100%; max-width: 860px; max-height: 92vh; display: flex; flex-direction: column;
+  border-radius: 24px; overflow: hidden; border: 1px solid rgba(232,184,75,.22);
+  background: #0c1117;
+  box-shadow: 0 50px 140px rgba(0,0,0,.66);
+  animation: dm-in .24s cubic-bezier(.2,.8,.2,1); }
+@keyframes dm-in { from { opacity: 0; transform: translateY(16px) scale(.985); } to { opacity: 1; transform: none; } }
+.det-modal-x { position: absolute; top: 16px; right: 16px; z-index: 6; width: 38px; height: 38px; border-radius: 12px;
+  display: grid; place-items: center; cursor: pointer; color: #e7edf3;
+  background: rgba(10,14,20,.6); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(6px); transition: all .16s; }
+.det-modal-x:hover { color: #fff; background: rgba(229,64,90,.92); border-color: transparent; transform: rotate(90deg); }
+.det-modal-cuerpo.panel { position: static; height: auto; max-height: 92vh; overflow-y: auto; border-left: 0;
+  padding: 0; border-radius: 24px;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(232,184,75,.06), transparent 60%),
+    linear-gradient(180deg, #10161e, #0a0e13); }
 
-@media (max-width: 620px) {
-  .det-modal-bg { padding: 0; align-items: flex-end; }
-  .det-modal { max-width: 100%; max-height: 94vh; border-radius: 22px 22px 0 0; }
-  .det-modal-cuerpo.panel { border-radius: 22px 22px 0 0; padding: 20px 18px 30px; }
-  .det-modal { animation: dm-up .24s cubic-bezier(.2,.8,.2,1); }
-  @keyframes dm-up { from { transform: translateY(100%); } to { transform: none; } }
-}
+/* Barra superior: cuño de liga */
+.det-topbar { display: flex; align-items: center; gap: 9px; padding: 20px 22px 0; }
+.det-topbar .liga-cuno { height: 24px; width: auto; max-width: 44px; object-fit: contain; }
+.det-liga-nom { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #96a2ae; }
 
-/* Gráfica de comparación de abridores (barras enfrentadas reales) */
+/* Hero: equipos + donut de probabilidad */
+.det-hero { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; padding: 12px 22px 20px; }
+.dh-eq { text-align: center; min-width: 0; }
+.dh-eq .escudo { width: 74px; height: 74px; margin: 0 auto 10px; border-radius: 18px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); display: grid; place-items: center; }
+.dh-eq .escudo img { width: 58px; height: 58px; object-fit: contain; }
+.dh-eq .escudo .fallback { font-family: var(--mono); font-weight: 800; color: #96a2ae; font-size: 18px; }
+.dh-nom { font-weight: 800; font-size: 15.5px; color: #f2f6fb; line-height: 1.25; }
+.dh-rec { font-family: var(--mono); font-size: 12.5px; color: var(--oro); font-weight: 800; margin-top: 5px; }
+.dh-centro { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pd-svg { display: block; }
+.pd-pct { font-family: var(--display); font-weight: 800; font-size: 30px; fill: #f4f7fb; }
+.pd-fav { font-family: var(--mono); font-weight: 800; font-size: 12px; fill: #96a2ae; letter-spacing: .06em; }
+.dh-vs-lb { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: #96a2ae; text-align: center; }
+
+.det-modal-cuerpo .det-info { margin: 0 22px 14px; }
+.det-modal-cuerpo .det-factores { margin: 0 22px 16px; }
+
+/* Dos columnas de secciones */
+.det-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 4px 22px 8px; align-items: start; }
+.det-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.det-modal-cuerpo .det-block { margin-top: 0; }
+.det-modal-cuerpo .analista { margin: 6px 22px 0; }
+.det-foot { padding: 16px 22px 26px; display: flex; justify-content: center; }
+.det-foot .compartir { border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.04); color: #cfd8e2;
+  border-radius: 11px; padding: 10px 20px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.det-foot .compartir:hover { border-color: var(--oro); color: var(--oro); }
+.det-foot .compartir svg { width: 15px; height: 15px; }
+
+/* Gráfica de comparación de abridores (barras enfrentadas) */
 .abr-graf { margin-top: 14px; display: flex; flex-direction: column; gap: 11px; }
-.abr-g-row { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; }
+.abr-g-row { display: grid; grid-template-columns: 46px 1fr 46px; align-items: center; gap: 8px; }
 .abr-g-val { font-family: var(--mono); font-size: 12px; font-weight: 800; color: #eef3f8; }
 .abr-g-val.r { text-align: right; }
 .abr-g-track { position: relative; height: 22px; border-radius: 7px; background: #0b0f14; overflow: hidden; display: flex; }
-.abr-g-track .gl { background: linear-gradient(90deg,#c79426,#ffe08a); align-self: stretch; }
-.abr-g-track .gr { background: linear-gradient(90deg,#1f78c2,#7fd8ff); align-self: stretch; margin-left: auto; }
+.abr-g-track .gl { background: linear-gradient(90deg,#c79426,#ffe08a); }
+.abr-g-track .gr { background: linear-gradient(90deg,#1f78c2,#7fd8ff); margin-left: auto; }
 .abr-g-k { position: absolute; inset: 0; display: grid; place-items: center; font-size: 8.5px; letter-spacing: .1em;
   text-transform: uppercase; color: #fff; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,.6); pointer-events: none; }
+
+/* ---- Responsive: móvil = hoja a pantalla completa, una columna ---- */
+@media (max-width: 720px) {
+  .det-cols { grid-template-columns: 1fr; gap: 16px; }
+}
+@media (max-width: 620px) {
+  .det-modal-bg { padding: 0; align-items: stretch; }
+  .det-modal { max-width: 100%; max-height: 100%; height: 100%; border-radius: 0; border: 0; animation: dm-up .26s cubic-bezier(.2,.8,.2,1); }
+  @keyframes dm-up { from { transform: translateY(100%); } to { transform: none; } }
+  .det-modal-cuerpo.panel { max-height: 100%; height: 100%; border-radius: 0; padding-bottom: 20px; }
+  .det-topbar { padding: 18px 18px 0; }
+  .det-hero { padding: 10px 16px 18px; gap: 8px; }
+  .dh-eq .escudo { width: 58px; height: 58px; }
+  .dh-eq .escudo img { width: 44px; height: 44px; }
+  .dh-nom { font-size: 13px; }
+  .pd-svg { width: 128px; height: 128px; }
+  .det-modal-cuerpo .det-info, .det-modal-cuerpo .det-factores { margin-left: 16px; margin-right: 16px; }
+  .det-cols { padding: 4px 16px 8px; }
+  .det-foot { padding: 14px 16px 30px; }
+}
 

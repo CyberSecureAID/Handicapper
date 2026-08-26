@@ -87,10 +87,9 @@ body.en-mesa { overflow: hidden; }
   background: #0e141b; border: 1px solid var(--m-linea); border-radius: 13px; padding: 14px 12px; cursor: pointer; transition: all .15s; }
 .an-card:hover { border-color: var(--m-oro); transform: translateY(-2px); }
 .an-card.tiene { border-color: rgba(72,209,126,.5); }
-.anc-eq { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; min-width: 0; }
-.anc-logo { width: 34px; height: 34px; object-fit: contain; }
-.anc-nom { font-size: 11.5px; color: #dfe6ee; font-weight: 600; text-align: center; line-height: 1.2; max-width: 100%; }
-.anc-pct { font-family: 'Chakra Petch', sans-serif; font-size: 16px; font-weight: 800; }
+.anc-eq { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.anc-logo { width: 44px; height: 44px; object-fit: contain; }
+.anc-pct { font-family: 'Chakra Petch', sans-serif; font-size: 20px; font-weight: 800; }
 .anc-pct.oro { color: var(--m-oro); } .anc-pct.azul { color: #5cbdf0; }
 .anc-vs { font-size: 10px; color: var(--m-tinta2); font-weight: 700; flex: 0 0 auto; }
 .anc-flag { position: absolute; top: -8px; right: 8px; font-size: 9px; font-weight: 800; color: #48d17e;
