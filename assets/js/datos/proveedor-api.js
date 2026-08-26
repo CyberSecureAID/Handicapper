@@ -376,10 +376,55 @@ export async function detallePartido(id) {
     if (m) {
       m.jugadores = lideresDe(s, m.local.id, m.visita.id);
       m.lesionados = lesionadosDe(s, m.local.id, m.visita.id);
+      m.plantilla = rosterDe(s, m.local.id, m.visita.id);
       if (!m.sede) m.sede = s?.gameInfo?.venue?.fullName || null;
     }
   } catch (_) {}
 
   return m;
+}
+
+/* Roster / plantilla con estadísticas por jugador (desde boxscore o rosters).
+   Devoto: intenta varias formas del summary de ESPN y falla en silencio. */
+function rosterDe(summary, localId, visitaId) {
+  const out = { local: [], visita: [] };
+  const meter = (lado, at, stats, pos) => {
+    if (!at) return;
+    const nombre = at.displayName || at.shortName || at.fullName;
+    if (!nombre) return;
+    out[lado].push({
+      nombre,
+      pos: pos || at.position?.abbreviation || at.position?.name || '',
+      foto: at.headshot?.href || at.headshot || null,
+      stats: stats || {},
+    });
+  };
+  try {
+    // 1) boxscore.players[].statistics[].athletes[] (juegos en vivo/finalizados)
+    const bx = summary?.boxscore?.players || [];
+    bx.forEach(teamBlock => {
+      const tid = String(teamBlock?.team?.id || '');
+      const lado = tid === String(localId) ? 'local' : (tid === String(visitaId) ? 'visita' : null);
+      if (!lado) return;
+      (teamBlock?.statistics || []).forEach(grp => {
+        const labels = grp?.labels || grp?.names || [];
+        (grp?.athletes || []).slice(0, 12).forEach(a => {
+          const st = {};
+          (a?.stats || []).forEach((val, i) => { if (labels[i]) st[labels[i]] = val; });
+          if (!out[lado].find(x => x.nombre === (a?.athlete?.displayName))) meter(lado, a?.athlete, st, a?.athlete?.position?.abbreviation);
+        });
+      });
+    });
+    // 2) rosters[].roster[] (partidos próximos)
+    if (!out.local.length && !out.visita.length) {
+      (summary?.rosters || []).forEach(teamBlock => {
+        const tid = String(teamBlock?.team?.id || '');
+        const lado = tid === String(localId) ? 'local' : (tid === String(visitaId) ? 'visita' : null);
+        if (!lado) return;
+        (teamBlock?.roster || []).slice(0, 16).forEach(r => meter(lado, r?.athlete || r, null, r?.position?.abbreviation));
+      });
+    }
+  } catch (_) {}
+  return out;
 }
 
