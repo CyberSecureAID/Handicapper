@@ -136,7 +136,9 @@ function abridorDe(c) {
     if (ab === 'ERA') era = st.displayValue;
     if (ab === 'W-L' || ab === 'WL' || ab === 'RECORD') wl = st.displayValue;
   });
-  return { nombre, mano, era, wl, id: at.id || null };
+  const foto = at.headshot?.href || at.headshot || null;
+  const pos = at.position?.abbreviation || at.position?.name || '';
+  return { nombre, mano, era, wl, id: at.id || null, foto, pos };
 }
 
 /* Convierte un moneyline (número o texto "+120"/"-150") a número */
@@ -272,6 +274,38 @@ function lideresDe(summary, localId, visitaId) {
         pos: at.position?.abbreviation || at.position?.name || '',
         etiqueta: cat.shortDisplayName || cat.displayName || cat.name || '',
         dato: top.displayValue || top.value || '',
+        id: at.id || null,
+        foto: at.headshot?.href || at.headshot || null,
+      });
+    });
+  });
+  return out;
+}
+
+/* Mejores bateadores por AVG (top 3 por equipo).
+   Busca la categoría de promedio de bateo dentro de los líderes de ESPN
+   (que trae varios por categoría) y toma los 3 primeros. */
+function bateadoresDe(summary, localId, visitaId) {
+  const out = { local: [], visita: [] };
+  const grupos = summary?.leaders || summary?.boxscore?.leaders || [];
+  const esAvg = (cat) => {
+    const k = (cat?.abbreviation || cat?.shortDisplayName || cat?.name || '').toLowerCase();
+    return k === 'avg' || k.includes('batting') || k === 'ba';
+  };
+  grupos.forEach(g => {
+    const tid = String(g?.team?.id || '');
+    const destino = tid === String(localId) ? out.local : (tid === String(visitaId) ? out.visita : null);
+    if (!destino) return;
+    const cat = (g?.leaders || []).find(esAvg);
+    if (!cat) return;
+    (cat.leaders || []).slice(0, 3).forEach(top => {
+      const at = top?.athlete; if (!at) return;
+      destino.push({
+        nombre: at.displayName || at.shortName || at.fullName || '',
+        pos: at.position?.abbreviation || at.position?.name || '',
+        avg: top.displayValue || top.value || '',
+        id: at.id || null,
+        foto: at.headshot?.href || at.headshot || null,
       });
     });
   });
@@ -377,6 +411,7 @@ export async function detallePartido(id) {
       m.jugadores = lideresDe(s, m.local.id, m.visita.id);
       m.lesionados = lesionadosDe(s, m.local.id, m.visita.id);
       m.plantilla = rosterDe(s, m.local.id, m.visita.id);
+      m.bateadores = bateadoresDe(s, m.local.id, m.visita.id);
       if (!m.sede) m.sede = s?.gameInfo?.venue?.fullName || null;
     }
   } catch (_) {}
