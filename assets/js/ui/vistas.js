@@ -295,6 +295,52 @@ export function detalle(p, opciones = {}) {
       <span class="hd-cmp-v r">${esc(vr)}</span></div>`;
   }
 
+  /* Reloj tipo "miedo/codicia": semicírculo con aguja que apunta al equipo
+     con mayor probabilidad. SVG nítido, sin librerías. */
+  function gaugeHTML() {
+    const L = m.local || 0, V = m.visita || 0;
+    const total = L + V || 1;
+    const tV = V / total;                 // 0 = todo local, 1 = todo visita
+    const ang = 180 * (1 - tV);           // 180°=izq(local) · 0°=der(visita)
+    const rad = ang * Math.PI / 180;
+    const cx = 150, cy = 150, r = 118;
+    // Arco de fondo dividido en tramos de color
+    const pt = (a, rr) => [cx + rr * Math.cos(a * Math.PI / 180), cy - rr * Math.sin(a * Math.PI / 180)];
+    const arco = (a0, a1, rr) => { const [x0, y0] = pt(a0, rr), [x1, y1] = pt(a1, rr); const large = (a0 - a1) > 180 ? 1 : 0; return `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${rr} ${rr} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; };
+    const favLocal = L >= V;
+    const favAb = favLocal ? p.local.abrev : p.visita.abrev;
+    const favPct = Math.max(L, V);
+    const favColor = favLocal ? 'var(--c-loc)' : 'var(--c-vis)';
+    // Aguja
+    const nx = cx + (r - 18) * Math.cos(rad), ny = cy - (r - 18) * Math.sin(rad);
+    const bx1 = cx + 10 * Math.cos(rad + Math.PI / 2), by1 = cy - 10 * Math.sin(rad + Math.PI / 2);
+    const bx2 = cx + 10 * Math.cos(rad - Math.PI / 2), by2 = cy - 10 * Math.sin(rad - Math.PI / 2);
+    // Ticks
+    let ticks = '';
+    for (let i = 0; i <= 10; i++) { const a = 180 - i * 18; const [x0, y0] = pt(a, r + 4), [x1, y1] = pt(a, r + (i % 5 === 0 ? 14 : 9)); ticks += `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="rgba(255,255,255,.28)" stroke-width="${i % 5 === 0 ? 2.4 : 1.4}"/>`; }
+    return `<div class="hd-gauge">
+      <div class="hd-gauge-t">${ES ? 'Índice de probabilidad' : 'Probability index'}</div>
+      <svg viewBox="0 0 300 176" class="hd-gauge-svg">
+        <defs>
+          <linearGradient id="gg" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#1d9bf0"/><stop offset="0.5" stop-color="#8a93a0"/><stop offset="1" stop-color="#e23b3f"/>
+          </linearGradient>
+          <filter id="ns" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.55"/></filter>
+        </defs>
+        <path d="${arco(180, 0, r)}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="20" stroke-linecap="round"/>
+        <path d="${arco(180, 0, r)}" fill="none" stroke="url(#gg)" stroke-width="12" stroke-linecap="round"/>
+        ${ticks}
+        <text x="26" y="168" class="hd-gauge-side" fill="var(--c-loc)">${esc(p.local.abrev)}</text>
+        <text x="274" y="168" class="hd-gauge-side" fill="var(--c-vis)" text-anchor="end">${esc(p.visita.abrev)}</text>
+        <g filter="url(#ns)">
+          <polygon points="${nx.toFixed(1)},${ny.toFixed(1)} ${bx1.toFixed(1)},${by1.toFixed(1)} ${bx2.toFixed(1)},${by2.toFixed(1)}" fill="#f4f7fb"/>
+          <circle cx="${cx}" cy="${cy}" r="13" fill="#0b0f17" stroke="#f4f7fb" stroke-width="3"/>
+        </g>
+      </svg>
+      <div class="hd-gauge-cap"><b style="color:${favColor}">${favPct}%</b><span>${esc(favAb)} ${ES ? 'favorito' : 'favored'}</span></div>
+    </div>`;
+  }
+
   function donutsHTML() {
     return `<div class="hd-donuts">
       <div class="hd-donut l">${donut(m.local || 0)}<span>${esc(p.local.abrev)}</span></div>
@@ -367,7 +413,7 @@ export function detalle(p, opciones = {}) {
   const panes = [];
   // Resumen: probabilidad + veredicto + factores.
   panes.push({ id: 'resumen', txt: ES ? 'Resumen' : 'Overview',
-    html: `${donutsHTML()}${analistaHTML()}${factoresHTML() || `<div class="hd-an-txt" style="text-align:center;color:var(--tinta-3);padding:8px 0">${ES ? 'Probabilidad del modelo Handicapper con las señales del partido.' : 'Handicapper model probability from the match signals.'}</div>`}` });
+    html: `${donutsHTML()}${analistaHTML()}${factoresHTML() || `<div class="hd-an-txt" style="text-align:center;color:var(--tinta-3);padding:8px 0">${ES ? 'Probabilidad del modelo Handicapper con las señales del partido.' : 'Handicapper model probability from the match signals.'}</div>`}${gaugeHTML()}` });
   // Comparación (por defecto): barras + enfrentamientos (idéntico a la referencia, sin donuts).
   panes.push({ id: 'comparacion', txt: ES ? 'Comparación' : 'Comparison', on: true, html: `${cmpHTML}${tieneSerie ? h2hHTML() : ''}` });
   // Equipos: roster COMPLETO de ambos.
