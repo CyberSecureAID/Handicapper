@@ -130,16 +130,38 @@ async function abrirDetalle(id, el, opts = {}) {
   partidoSel = id;
   document.querySelectorAll('.pmatch').forEach(x => x.classList.toggle('sel', x === el));
   const p = await detallePartido(id);
+  if (p) await aplicarAnalista(p);
   const html = detalle(p, { bloquear: false });
   const panel = $('panel'), hoja = $('hoja');
   if (panel) panel.innerHTML = html;
-  // En móvil abre la hoja a pantalla completa, salvo que sea selección por defecto.
   if (hoja && !opts.soloPanel) { hoja.querySelector('.hoja-cuerpo').innerHTML = html; hoja.classList.add('abierta'); }
   document.querySelectorAll('[data-compartir]').forEach(b => b.onclick = async () => {
     const pp = await detallePartido(b.dataset.compartir);
-    if (pp) compartirPartido(pp);
+    if (pp) { await aplicarAnalista(pp); compartirPartido(pp); }
   });
   actualizarCuenta();
+}
+
+/* Trae el veredicto del analista (si existe) y, si él lo marcó,
+   ajusta la probabilidad mostrada para respaldar su criterio. */
+async function aplicarAnalista(p) {
+  try {
+    const { leerAnalisis } = await import('./mesa/mesa-datos.js');
+    const a = await leerAnalisis(p.id);
+    if (!a) return;
+    p.analista = { autor: a.autor, veredicto: a.veredicto, texto: a.texto, probabilidad: a.prob ?? (p.mercado?.local || null) };
+    if (a.ajustar && a.prob != null && p.mercado) {
+      const L = Math.max(1, Math.min(99, Number(a.prob)));
+      if (p.mercado.empate != null) {
+        const resto = 100 - L, e = p.mercado.empate || 26;
+        p.mercado = { local: L, empate: Math.min(resto, e), visita: Math.max(0, resto - Math.min(resto, e)) };
+      } else {
+        p.mercado = { local: L, empate: null, visita: 100 - L };
+      }
+      p.confianza = 'alta';
+      p.factores = { en: 'Adjusted by our analyst.', es: 'Ajustado por nuestro analista.' };
+    }
+  } catch (_) {}
 }
 
 /* Cuenta atrás "empieza en Xh Ym", se refresca cada 30s */
@@ -251,12 +273,25 @@ function init() {
 let _appArrancada = false;
 
 /* Decide la pantalla según sesión + acceso */
-function onSesion(usuario) {
+function onSesion(usuario, extra) {
   pintarCuenta(usuario);
   fijarSuscripcion(usuario?.suscripcion || null);
+  if (extra && extra.bloqueado) { mostrarPantalla('landing'); avisarBloqueo(); return; }
   if (!usuario) { mostrarPantalla('landing'); return; }
+  // Ruta secreta del panel de administración: #mesa (la seguridad real
+  // está en Firestore; si no eres admin, no verás datos).
+  if ((location.hash || '').toLowerCase() === '#mesa') { abrirPanelMesa(); return; }
   if (tieneAcceso()) entrarPlataforma();
   else mostrarPantalla('pricing');
+}
+
+async function abrirPanelMesa() {
+  try { const m = await import('./mesa/mesa.js'); m.abrirMesa(); }
+  catch (_) { mostrarPantalla('landing'); }
+}
+
+function avisarBloqueo() {
+  alert('This account has been suspended.');
 }
 
 /* Entra a la plataforma (y arranca la app la primera vez) */
