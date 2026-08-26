@@ -16,6 +16,7 @@
 
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports';
 import { analizar } from '../analisis/motor.js';
+import { enriquecerMLB } from './mlb-oficial.js';
 
 /* Mapa de nuestras ligas -> ruta ESPN {deporte}/{liga} */
 const RUTA = {
@@ -44,6 +45,13 @@ export const LIGAS = [
 ];
 
 const esFutbol = (ligaId) => (RUTA[ligaId] || '').startsWith('soccer');
+
+/* Quita claves con valor null/undefined (para no pisar datos de ESPN con nulos) */
+function limpio(o) {
+  const out = {};
+  Object.keys(o || {}).forEach(k => { if (o[k] != null && o[k] !== '') out[k] = o[k]; });
+  return out;
+}
 
 /* Caché simple en memoria para no repetir peticiones seguidas */
 const _cache = new Map();          // clave -> { t, data }
@@ -413,6 +421,21 @@ export async function detallePartido(id) {
       m.plantilla = rosterDe(s, m.local.id, m.visita.id);
       m.bateadores = bateadoresDe(s, m.local.id, m.visita.id);
       if (!m.sede) m.sede = s?.gameInfo?.venue?.fullName || null;
+
+      // MLB: datos OFICIALES (MLB Stats API) para abridores y bateadores,
+      // con foto oficial y stats completas (G-P, ERA, SO, WHIP). Respaldo: ESPN.
+      if (ligaId === 'mlb') {
+        try {
+          const of = await enriquecerMLB(m.cuando, m.local, m.visita);
+          if (of) {
+            if (of.abridor?.local) m.local.abridor = { ...(m.local.abridor || {}), ...limpio(of.abridor.local) };
+            if (of.abridor?.visita) m.visita.abridor = { ...(m.visita.abridor || {}), ...limpio(of.abridor.visita) };
+            if (of.bateadores?.local?.length) m.bateadores.local = of.bateadores.local;
+            if (of.bateadores?.visita?.length) m.bateadores.visita = of.bateadores.visita;
+          }
+        } catch (_) {}
+      }
+
       // Si no hubo cuota ni proyección, re-ejecuta el motor con los datos
       // enriquecidos (ERA del abridor, lesionados) para afinar la probabilidad.
       if (!m._fuenteProb) {

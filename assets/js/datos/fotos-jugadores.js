@@ -1,56 +1,67 @@
 /* ============================================================
-   FOTOS-JUGADORES — resolución dinámica de la foto de un jugador
-   en PNG transparente (recorte), 100% gratis y sin backend.
+   FOTOS-JUGADORES — foto oficial del jugador ACTUAL, gratis, por ID.
 
-   ESTRATEGIA DE FUENTES (todas gratuitas, reutilizables):
-   1) headshot que ya viene en los datos de ESPN (summary/roster):
-      `athlete.headshot.href` -> PNG recortado sobre fondo transparente.
-   2) Si no viene, se CONSTRUYE la URL del CDN público de ESPN por
-      ID de atleta y deporte:
-        https://a.espncdn.com/i/headshots/{bucket}/players/full/{id}.png
-      Son recortes oficiales con transparencia, servidos por CDN.
-   3) Fallback final: la figura dorada del deporte (figuras.js) — así
-      la tarjeta NUNCA queda vacía aunque un jugador no tenga foto.
+   RUTAS OFICIALES GRATUITAS (todas por ID, sin clave ni backend):
+   - MLB : https://img.mlbstatic.com/mlb-photos/image/upload/
+           d_people:generic:headshot:67:current.png/w_360,q_auto:best/
+           v1/people/{mlbId}/headshot/67/current
+           (ID vía MLB Stats API: https://statsapi.mlb.com/api/v1/…)
+   - NBA : https://cdn.nba.com/headshots/nba/latest/1040x760/{nbaId}.png
+   - NHL : https://assets.nhle.com/mugs/nhl/{temporada}/{EQ}/{nhlId}.png
+   - NFL / fútbol / genérico:
+           https://a.espncdn.com/i/headshots/{deporte}/players/full/{espnId}.png
 
-   No usa APIs de pago ni claves. Funciona por ID (preferido) o por
-   headshot ya presente en el dato del jugador.
+   Como la app ya trae de ESPN el `headshot` y el `id` de cada atleta
+   ACTUAL del partido, ese es el respaldo universal para todas las ligas.
+   Para MLB usamos además la ruta oficial (mejor calidad) cuando hay mlbId.
    ============================================================ */
 
-/* liga interna -> bucket de headshots de ESPN */
-const BUCKET = {
+const ESPN_BUCKET = {
   mlb: 'mlb', nba: 'nba', nfl: 'nfl', nhl: 'nhl',
   epl: 'soccer', laliga: 'soccer', ucl: 'soccer', seriea: 'soccer', bundes: 'soccer',
 };
 
-/* Normaliza distintas formas del headshot que devuelve ESPN */
-function hrefDeHeadshot(h) {
+function href(h) {
   if (!h) return null;
   if (typeof h === 'string') return h;
   return h.href || h.url || null;
 }
 
-/**
- * Devuelve la mejor URL de foto transparente disponible para un jugador.
- * @param {Object} jug   objeto jugador { id, foto|headshot, ... }
- * @param {String} ligaId  'mlb' | 'nba' | ... (para construir la URL del CDN)
- * @returns {String|null}
- */
-export function fotoJugador(jug, ligaId) {
-  if (!jug) return null;
-  const directa = hrefDeHeadshot(jug.foto || jug.headshot);
-  if (directa) return directa;
-  const id = jug.id || jug.playerId || jug.athleteId;
-  if (!id) return null;
-  const bucket = BUCKET[ligaId] || 'soccer';
-  return `https://a.espncdn.com/i/headshots/${bucket}/players/full/${id}.png`;
+/* URL oficial de MLB por ID de MLB Stats API */
+export function fotoMLB(mlbId, w = 360) {
+  if (!mlbId) return null;
+  return `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_${w},q_auto:best/v1/people/${mlbId}/headshot/67/current`;
+}
+/* URL oficial de NBA por ID de stats.nba.com */
+export function fotoNBA(nbaId) {
+  return nbaId ? `https://cdn.nba.com/headshots/nba/latest/1040x760/${nbaId}.png` : null;
+}
+/* URL de ESPN por deporte + ID de ESPN (respaldo universal) */
+export function fotoESPN(ligaId, espnId) {
+  if (!espnId) return null;
+  const b = ESPN_BUCKET[ligaId] || 'soccer';
+  return `https://a.espncdn.com/i/headshots/${b}/players/full/${espnId}.png`;
 }
 
-/* Onerror inline para <img>: si la foto falla, muestra la figura dorada
-   de respaldo (data-fallback) y se oculta la foto. */
-export function imgFotoJugador(jug, ligaId, clase = '') {
-  const url = fotoJugador(jug, ligaId);
-  if (!url) return '';
-  const safe = String(url).replace(/"/g, '&quot;');
-  return `<img class="fj-foto ${clase}" src="${safe}" alt="" loading="lazy"
-    onerror="this.closest('.fj-wrap')?.classList.add('sin-foto');this.remove();">`;
+/* Mejor foto disponible para un jugador (prioriza lo oficial). */
+export function fotoJugador(jug, ligaId) {
+  if (!jug) return null;
+  if (jug.fotoOficial) return jug.fotoOficial;           // ya resuelta (p.ej. MLB oficial)
+  if (ligaId === 'mlb' && jug.mlbId) return fotoMLB(jug.mlbId);
+  if (ligaId === 'nba' && jug.nbaId) return fotoNBA(jug.nbaId);
+  const directa = href(jug.foto || jug.headshot);        // headshot que trae ESPN
+  if (directa) return directa;
+  return fotoESPN(ligaId, jug.id || jug.playerId || jug.athleteId);
+}
+
+/* Lista de URLs de respaldo (para onerror en cadena) */
+export function cadenaFotos(jug, ligaId) {
+  const urls = [];
+  const push = (u) => { if (u && !urls.includes(u)) urls.push(u); };
+  push(jug.fotoOficial);
+  if (ligaId === 'mlb') push(fotoMLB(jug.mlbId));
+  if (ligaId === 'nba') push(fotoNBA(jug.nbaId));
+  push(href(jug.foto || jug.headshot));
+  push(fotoESPN(ligaId, jug.id));
+  return urls;
 }
