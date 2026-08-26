@@ -194,6 +194,22 @@ export function detalle(p, opciones = {}) {
       </div>`;
   }
 
+  // Info de franquicia (TheSportsDB): fundación y estadio con capacidad
+  function infoEq(lado, eq) {
+    const info = p.infoEquipos && p.infoEquipos[lado];
+    if (!info) return '';
+    const filas = [];
+    if (info.fundado) filas.push(`<span class="fe-k">${t('det.fundado')}</span><span class="fe-v">${info.fundado}</span>`);
+    if (info.estadio) filas.push(`<span class="fe-k">${t('det.estadio')}</span><span class="fe-v">${esc(info.estadio)}</span>`);
+    if (info.capacidad) filas.push(`<span class="fe-k">${t('det.capacidad')}</span><span class="fe-v">${info.capacidad.toLocaleString()}</span>`);
+    if (!filas.length) return '';
+    return `<div class="fe-col"><div class="fe-cab">${esc(eq.abrev)}</div>${filas.map((f,i)=>`<div class="fe-row">${f}</div>`).join('')}</div>`;
+  }
+  const hayInfo = p.infoEquipos && (p.infoEquipos.local || p.infoEquipos.visita);
+  const franquicia = hayInfo ? `
+    <div class="det-sec-t">${t('det.franquicia')}</div>
+    <div class="det-fe">${infoEq('local', p.local)}${infoEq('visita', p.visita)}</div>` : '';
+
   const cuno = ligaCuno(p);
   return `
     <div class="det-cab">
@@ -210,6 +226,7 @@ export function detalle(p, opciones = {}) {
     ${jugadores}
     ${lesionados}
     ${comparativa}
+    ${franquicia}
     ${bloqueAnalista}
   `;
 }
