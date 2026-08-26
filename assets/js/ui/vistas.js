@@ -5,7 +5,7 @@
 import { IC } from './iconos.js';
 import { t, Lg, idiomaActual } from './idioma.js';
 import { figuraLado, fondoLado, figuraAbridor } from './figuras.js';
-import { fotoJugador } from '../datos/fotos-jugadores.js';
+import { fotoJugador, cadenaFotoStr } from '../datos/fotos-jugadores.js';
 
 /* Icono (cuño) de cada liga para la esquina de la tarjeta */
 const LIGA_ICONO = {
@@ -69,15 +69,12 @@ export function tarjetaPartido(p) {
     <b>${val == null ? '--' : val + '%'}</b><span>${etq}</span>
     <i class="pm-bar"><u style="width:${val == null ? 0 : val}%"></u></i></div>`;
 
-  // Color por MAGNITUD: el % más alto = azul, el más bajo = rojo, el resto = gris.
-  const vals = [m.local, hayEmpate ? m.empate : null, m.visita].filter(v => v != null);
-  const maxV = vals.length ? Math.max(...vals) : null;
-  const minV = vals.length ? Math.min(...vals) : null;
-  const claseDe = (v) => {
-    if (v == null) return 'nula';
-    if (v === maxV && maxV !== minV) return 'alta';   // azul (más alto)
-    if (v === minV && maxV !== minV) return 'baja';   // rojo (más bajo)
-    return 'media';                                   // gris (intermedio/empate)
+  // Color: entre LOCAL y VISITA, el menor = rojo, el mayor = azul.
+  // El EMPATE siempre es gris.
+  const claseLV = (mio, otro) => {
+    if (mio == null || otro == null) return 'media';
+    if (mio === otro) return 'media';
+    return mio > otro ? 'alta' : 'baja';   // alta=azul, baja=rojo
   };
 
   return `
@@ -93,9 +90,9 @@ export function tarjetaPartido(p) {
     <div class="pm-prob">
       <div class="pm-prob-t">${ES ? 'Probabilidad estimada' : 'Estimated probability'} <span class="pm-info">${icoInfo}</span></div>
       <div class="pm-prob-cols">
-        ${col(m.local, ES ? 'Local' : 'Home', claseDe(m.local))}
-        ${col(hayEmpate ? m.empate : null, ES ? 'Empate' : 'Draw', hayEmpate ? claseDe(m.empate) : 'nula')}
-        ${col(m.visita, ES ? 'Visitante' : 'Away', claseDe(m.visita))}
+        ${col(m.local, ES ? 'Local' : 'Home', claseLV(m.local, m.visita))}
+        ${col(hayEmpate ? m.empate : null, ES ? 'Empate' : 'Draw', 'media')}
+        ${col(m.visita, ES ? 'Visitante' : 'Away', claseLV(m.visita, m.local))}
       </div>
     </div>
 
@@ -130,6 +127,11 @@ function avatar(jug, ligaId) {
 }
 const INV_STAT = /era|whip|error|contra|against|goles en contra|ponches recibidos/i;
 
+/* onerror que prueba la siguiente URL de data-fb; si se acaban, muestra el respaldo. */
+const FB_IMG = `(function(im){var l=(im.getAttribute('data-fb')||'').split('~~').filter(Boolean);if(l.length){im.setAttribute('data-fb',l.slice(1).join('~~'));im.src=l[0];}else{im.onerror=null;im.style.display='none';if(im.nextElementSibling)im.nextElementSibling.style.display='flex';}})(this)`;
+/* Igual, pero para la foto grande del abridor: la última URL es la figura (siempre carga). */
+const FB_PIT = `(function(im){var l=(im.getAttribute('data-fb')||'').split('~~').filter(Boolean);if(l.length){var n=l[0];im.setAttribute('data-fb',l.slice(1).join('~~'));if(n.indexOf('/imagenes/jugadores/')>-1)im.classList.add('is-figura');im.src=n;}else{im.onerror=null;}})(this)`;
+
 export function detalle(p, opciones = {}) {
   if (!p) return `<div class="vacio"><div class="ic">${IC.grafico}</div>${t('det.vacio')}</div>`;
   const ES = idiomaActual() === 'es';
@@ -155,12 +157,14 @@ export function detalle(p, opciones = {}) {
   };
   const avatarR = (jug, lado) => {
     if (!jug) return '';
-    const url = fotoConRoster(jug, lado);
     const ini = esc((jug.nombre || '?').trim().charAt(0).toUpperCase());
-    if (url) return `<span class="hd-av"><img src="${esc(url)}" alt="" loading="lazy"
-      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    const chain = [];
+    const rm = jug.nombre ? fotoRoster[lado][normNom(jug.nombre)] : null;
+    if (rm) chain.push(rm);
+    cadenaFotoStr(jug, p.ligaId).forEach(u => { if (u && !chain.includes(u)) chain.push(u); });
+    if (!chain.length) return `<span class="hd-av"><span class="hd-av-i" style="display:flex">${ini}</span></span>`;
+    return `<span class="hd-av"><img src="${esc(chain[0])}" alt="" loading="lazy" data-fb="${esc(chain.slice(1).join('~~'))}" onerror="${FB_IMG}">
       <span class="hd-av-i" style="display:none">${ini}</span></span>`;
-    return `<span class="hd-av"><span class="hd-av-i" style="display:flex">${ini}</span></span>`;
   };
   const favLocal = (m.local || 0) >= (m.visita || 0);
   const manoTxt = (mn) => mn === 'L' ? 'LHP' : (mn === 'R' ? 'RHP' : '');
@@ -236,10 +240,13 @@ export function detalle(p, opciones = {}) {
     const foto = jug ? fotoConRoster(jug, lado) : null;
     // Figura de respaldo: béisbol usa la de pie; el resto usa la distinta por lado.
     const fig = p.ligaId === 'mlb' ? figuraAbridor(p.ligaId) : figuraLado(p.ligaId, lado);
-    const photo = foto
-      ? `<img class="hd-pit-photo" src="${esc(foto)}" alt="" loading="lazy"
-           onerror="this.onerror=null;this.src='${esc(fig)}';this.classList.add('is-figura')">`
-      : `<img class="hd-pit-photo is-figura" src="${esc(fig)}" alt="">`;
+    // Cadena: match del roster -> fuentes de foto -> figura (siempre carga).
+    const chain = [];
+    if (jug) { const rm = jug.nombre ? fotoRoster[lado][normNom(jug.nombre)] : null; if (rm) chain.push(rm); cadenaFotoStr(jug, p.ligaId).forEach(u => { if (u && !chain.includes(u)) chain.push(u); }); }
+    chain.push(fig);
+    const esFig0 = chain[0] === fig;
+    const photo = `<img class="hd-pit-photo${esFig0 ? ' is-figura' : ''}" src="${esc(chain[0])}" alt="" loading="lazy"
+      data-fb="${esc(chain.slice(1).join('~~'))}" onerror="${FB_PIT}">`;
     const sideC = lado === 'local' ? 'l' : 'r';
     const pitIco = `<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><circle cx="12" cy="5" r="2.4"/><path d="M11 8c-1 2-3 3-5 3l.4 1.9c1.7-.1 3.3-.7 4.6-1.8l1 2.1-2.4 4.6 1.7.9 2.7-5.1c.3-.6.1-1.3-.4-1.7l-1.2-1 1.1-2.2c1.2 1.3 2.9 2 4.6 2.1l.2-1.9c-1.9 0-3.6-1.1-4.5-2.8z"/></svg>`;
     const badge = `<div class="hd-pit-badge">${pitIco} ${esc(badgeT)}</div>`;
@@ -381,7 +388,11 @@ export function detalle(p, opciones = {}) {
           <circle cx="${cx}" cy="${cy}" r="5" fill="${favColor}"/>
         </g>
       </svg>
-      <div class="hd-gauge-cap"><b style="color:${favColor}">${favPct}%</b><span>${esc(favAb)} ${ES ? 'favorito' : 'favored'}</span></div>
+      <div class="hd-gauge-chip" style="--fav:${favColor}">
+        <div class="hd-gauge-chip-l"><span class="hd-gauge-chip-eq">${esc(favAb)}</span><span class="hd-gauge-chip-lb">${ES ? 'Favorito' : 'Favored'}</span></div>
+        <div class="hd-gauge-chip-div"></div>
+        <div class="hd-gauge-chip-pct">${favPct}%</div>
+      </div>
     </div>`;
   }
 
@@ -424,7 +435,7 @@ export function detalle(p, opciones = {}) {
     const lista = arr.filter(j => { const n = j.nombre; if (!n || vistos.has(n)) return false; vistos.add(n); return true; });
     const rows = lista.map(j => {
       const foto = fotoJugador(j, p.ligaId) || '';
-      return `<div class="hd-rp" role="button" tabindex="0" data-side="${sideC}" data-nm="${esc(j.nombre)}" data-pos="${esc(j.pos || '')}" data-foto="${esc(foto)}">${avatar(j, p.ligaId)}
+      return `<div class="hd-rp" role="button" tabindex="0" data-side="${sideC}" data-nm="${esc(j.nombre)}" data-pos="${esc(j.pos || '')}" data-foto="${esc(foto)}">${avatarR(j, lado)}
       <span class="hd-rp-nm">${esc(j.nombre)}</span>${j.pos ? `<span class="hd-rp-pos">${esc(j.pos)}</span>` : ''}</div>`;
     }).join('');
     return `<div class="hd-roster-col"><b>${esc(eq.abrev || eq.nombre)}</b>${rows || `<div class="hd-empty">${cargando ? cargTxt : (ES ? 'Roster no disponible.' : 'Roster unavailable.')}</div>`}</div>`;

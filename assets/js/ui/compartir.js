@@ -103,7 +103,7 @@ export async function compartirPartido(p) {
     } else {
       datos = (p.datos || []).slice(0, 11);
     }
-    const y0=632, y1=858, n=datos.length, dy = n>1 ? (y1-y0)/(n-1) : 0;
+    const y0=630, y1=1000, n=datos.length, dy = n>1 ? (y1-y0)/(n-1) : 0;
     datos.forEach((dd, i) => {
       const y = Math.round(y0 + dy*i);
       if (i > 0) { g.strokeStyle = 'rgba(255,255,255,.11)'; g.lineWidth = 1;
