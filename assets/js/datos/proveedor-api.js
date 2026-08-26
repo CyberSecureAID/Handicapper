@@ -413,6 +413,13 @@ export async function detallePartido(id) {
       m.plantilla = rosterDe(s, m.local.id, m.visita.id);
       m.bateadores = bateadoresDe(s, m.local.id, m.visita.id);
       if (!m.sede) m.sede = s?.gameInfo?.venue?.fullName || null;
+      // Si no hubo cuota ni proyección, re-ejecuta el motor con los datos
+      // enriquecidos (ERA del abridor, lesionados) para afinar la probabilidad.
+      if (!m._fuenteProb) {
+        const r = analizar(m);
+        m.mercado = { local: r.local, empate: r.empate, visita: r.visita };
+        m.confianza = r.confianza; m.sinDatos = r.sinDatos; m.factores = r.factores;
+      }
     }
   } catch (_) {}
 
