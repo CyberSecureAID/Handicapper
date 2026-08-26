@@ -80,11 +80,7 @@ export function tarjetaPartido(p) {
 }
 
 /* ============================================================
-   DASHBOARD 16:9 (local | comparación | visita)
-   - Figuras doradas por deporte a cada lado, sobre fondo rojo/azul.
-   - Tarjeta de abridor "Anunciado para hoy" con foto real (ESPN CDN).
-   - Mejores bateadores (AVG) por equipo.
-   - Comparación central con barras enfrentadas (estilo referencia).
+   PANEL DE COMPARACIÓN — réplica del panel deportivo de referencia.
    ============================================================ */
 
 function numDe(v) {
@@ -93,27 +89,30 @@ function numDe(v) {
   return m ? parseFloat(m[0]) : null;
 }
 
-/* Avatar circular con foto real (headshot gratis) y respaldo por inicial */
-function avatar(jug, ligaId, cls) {
+/* Avatar circular con foto oficial y respaldo por inicial */
+function avatar(jug, ligaId) {
   if (!jug) return '';
   const url = fotoJugador(jug, ligaId);
   const ini = esc((jug.nombre || '?').trim().charAt(0).toUpperCase());
   if (url) {
-    return `<span class="hd-av ${cls}"><img src="${esc(url)}" alt="" loading="lazy"
+    return `<span class="hd-av"><img src="${esc(url)}" alt="" loading="lazy"
       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
       <span class="hd-av-i" style="display:none">${ini}</span></span>`;
   }
-  return `<span class="hd-av ${cls}"><span class="hd-av-i" style="display:flex">${ini}</span></span>`;
+  return `<span class="hd-av"><span class="hd-av-i" style="display:flex">${ini}</span></span>`;
 }
+
+/* Categorías donde MENOR es mejor (invierte la barra) */
+const INV = /era|whip|error|contra|against|goals against|ponches recibidos/i;
 
 export function detalle(p, opciones = {}) {
   if (!p) return `<div class="vacio"><div class="ic">${IC.grafico}</div>${t('det.vacio')}</div>`;
-  const L = (x) => esc(Lg(x));
   const ES = idiomaActual() === 'es';
   const m = p.mercado || {};
   const tieneEmpate = m.empate != null && m.empate > 0;
   const favLocal = (m.local || 0) >= (m.visita || 0);
-  const manoTxt = (mn) => mn === 'L' ? t('det.lhp') : (mn === 'R' ? t('det.rhp') : '');
+  const manoTxt = (mn) => mn === 'L' ? (ES ? 'LHP' : 'LHP') : (mn === 'R' ? 'RHP' : '');
+  const anio = new Date().getFullYear();
 
   const confMap = {
     'alta': { es: 'Confianza alta', en: 'High confidence', c: 'alta' },
@@ -124,127 +123,127 @@ export function detalle(p, opciones = {}) {
   const cf = confMap[p.confianza] || null;
   const badge = cf ? `<span class="conf ${cf.c}">${ES ? cf.es : cf.en}</span>` : '';
 
-  function donut(pct, cls) {
-    const r = 26, c = 2 * Math.PI * r, dash = (c * (pct || 0) / 100).toFixed(2);
-    return `<svg class="pd ${cls}" viewBox="0 0 68 68">
-      <circle cx="34" cy="34" r="${r}" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="7"/>
-      <circle cx="34" cy="34" r="${r}" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"
-        stroke-dasharray="${dash} ${(c - dash).toFixed(2)}" transform="rotate(-90 34 34)"/>
-      <text x="34" y="40" text-anchor="middle" class="pd-t">${pct || 0}%</text>
+  function donut(pct, lado) {
+    const r = 24, c = 2 * Math.PI * r, dash = (c * (pct || 0) / 100).toFixed(2);
+    return `<svg class="pd" viewBox="0 0 62 62">
+      <circle cx="31" cy="31" r="${r}" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="6"/>
+      <circle cx="31" cy="31" r="${r}" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"
+        stroke-dasharray="${dash} ${(c - dash).toFixed(2)}" transform="rotate(-90 31 31)"/>
+      <text x="31" y="37" text-anchor="middle" class="pd-t">${pct || 0}%</text>
     </svg>`;
   }
 
-  /* HERO: figura dorada del deporte sobre el fondo rojo/azul del lado */
-  function hero(lado) {
-    const eq = p[lado];
-    const fig = figuraLado(p.ligaId, lado);
-    const fondo = fondoLado(lado);
-    const pct = lado === 'local' ? (m.local || 0) : (m.visita || 0);
-    const cls = lado === 'local' ? 'oro' : 'azul';
-    return `<div class="hd-hero ${lado}" style="--hd-bg:url('${fondo}')">
-      <div class="hd-hero-badge ${cls}">${escudoMini(eq)}<b>${esc(eq.abrev)}</b><span>${pct}%</span></div>
-      <img class="hd-hero-fig" src="${esc(fig)}" alt="" onerror="this.style.display='none'">
+  const divTxt = (eq) => eq.division || '';
+
+  /* Cabecera de un equipo */
+  function headTeam(eq, lado) {
+    const parts = String(eq.nombre || '').trim().split(/\s+/);
+    const ciudad = parts.length > 1 ? parts.slice(0, -1).join(' ') : '';
+    const nombre = parts.length > 1 ? parts.slice(-1)[0] : eq.nombre;
+    const rec = eq.record ? `${esc(eq.record)}${divTxt(eq) ? ` <em>· ${esc(divTxt(eq))}</em>` : ''}` : '';
+    return `<div class="hd-hd-team ${lado}">
+      <img class="hd-hd-logo" src="${esc(eq.logo || '')}" alt="" onerror="this.style.visibility='hidden'">
+      <div class="hd-hd-tx">
+        ${ciudad ? `<span class="hd-hd-city">${esc(ciudad)}</span>` : ''}
+        <span class="hd-hd-name">${esc(nombre)}</span>
+        ${rec ? `<span class="hd-hd-rec">${rec}</span>` : ''}
+      </div>
     </div>`;
   }
 
-  /* Jugador estrella (cuando no hay abridor, p. ej. NBA/fútbol) */
-  function estrella(lado) {
-    const plant = (p.plantilla && p.plantilla[lado]) || [];
-    const conStats = plant.filter(j => j.stats && Object.keys(j.stats).length >= 2);
-    if (conStats.length) {
-      const j = conStats[0];
-      const stats = Object.keys(j.stats).slice(0, 4).map(k => ({ k, v: j.stats[k] }));
-      return { nombre: j.nombre, pos: j.pos, id: j.id, foto: j.foto, stats };
-    }
-    const lid = (p.jugadores && p.jugadores[lado]) || [];
-    if (!lid.length) return null;
-    const nombre = lid[0].nombre;
-    let stats = lid.filter(j => j.nombre === nombre).map(j => ({ k: j.etiqueta, v: j.dato }));
-    if (stats.length < 2) stats = lid.slice(0, 4).map(j => ({ k: j.etiqueta, v: j.dato }));
-    return { nombre, pos: lid[0].pos, id: lid[0].id, foto: lid[0].foto, stats: stats.slice(0, 4) };
-  }
-
-  /* Tarjeta del jugador destacado: abridor "Anunciado para hoy" o estrella */
-  function starterCard(lado) {
-    const a = p[lado].abridor;
-    let jug, badge2, sub, mano = '', statsArr = [];
+  /* Tarjeta del abridor (o jugador destacado) con foto grande */
+  function pitcher(lado) {
+    const eq = p[lado];
+    const a = eq.abridor;
+    const esMLB = p.ligaId === 'mlb';
+    let jug, badgeT, fn = '', ln, meta = [], stats = [];
     if (a && a.nombre) {
       jug = a;
-      badge2 = ES ? 'Pitcher abridor' : 'Starting pitcher';
-      sub = ES ? 'Anunciado para hoy' : 'Announced for today';
-      if (a.mano) mano = `<span class="hd-mano ${a.mano === 'L' ? 'lhp' : 'rhp'}">${manoTxt(a.mano)}</span>`;
-      if (a.wl) statsArr.push({ v: a.wl, k: 'W-L' });
-      if (a.era) statsArr.push({ v: a.era, k: 'ERA' });
+      badgeT = ES ? 'Pitcher abridor' : 'Starting pitcher';
+      const parts = String(a.nombre).trim().split(/\s+/);
+      fn = parts.length > 1 ? parts.slice(0, -1).join(' ') : '';
+      ln = parts.length > 1 ? parts.slice(-1)[0] : a.nombre;
+      if (a.mano) meta.push(manoTxt(a.mano));
+      if (a.edad) meta.push(`${a.edad} ${ES ? 'AÑOS' : 'YRS'}`);
+      if (a.altura) meta.push(esc(a.altura));
+      if (a.peso) meta.push(`${a.peso} LBS`);
+      if (a.wl) stats.push({ v: a.wl, k: ES ? 'G-P' : 'W-L' });
+      if (a.era) stats.push({ v: a.era, k: 'ERA' });
+      if (a.so != null) stats.push({ v: a.so, k: 'SO' });
+      if (a.whip != null) stats.push({ v: a.whip, k: 'WHIP' });
     } else {
-      const st = estrella(lado);
-      if (!st) return '';
-      jug = st;
-      badge2 = ES ? 'Jugador destacado' : 'Featured player';
-      sub = ES ? 'Anunciado para hoy' : 'Announced for today';
-      statsArr = st.stats.slice(0, 4);
+      const lid = (p.jugadores && p.jugadores[lado]) || [];
+      if (!lid.length) { jug = null; badgeT = ES ? 'Jugador destacado' : 'Featured player'; ln = ES ? 'Por confirmar' : 'TBD'; }
+      else {
+        const j0 = lid[0];
+        jug = j0; badgeT = ES ? 'Jugador destacado' : 'Featured player';
+        const parts = String(j0.nombre).trim().split(/\s+/);
+        fn = parts.length > 1 ? parts.slice(0, -1).join(' ') : '';
+        ln = parts.length > 1 ? parts.slice(-1)[0] : j0.nombre;
+        if (j0.pos) meta.push(esc(j0.pos));
+        stats = lid.filter(x => x.nombre === j0.nombre).slice(0, 4).map(x => ({ v: x.dato, k: x.etiqueta }));
+        if (stats.length < 2) stats = lid.slice(0, 4).map(x => ({ v: x.dato, k: x.etiqueta }));
+      }
     }
-    const stats = statsArr.map(s => `<span><b>${esc(s.v)}</b>${esc(s.k)}</span>`).join('');
-    return `<div class="hd-sc ${lado}">
-      <div class="hd-sc-head"><span class="hd-sc-badge">${badge2}</span></div>
-      <div class="hd-sc-row">
-        ${avatar(jug, p.ligaId, 'big')}
-        <div class="hd-sc-id">
-          <span class="hd-sc-sub">${sub}</span>
-          <b class="hd-sc-name">${esc(jug.nombre)}</b>
-          <span class="hd-sc-meta">${jug.pos ? `<em>${esc(jug.pos)}</em>` : ''}${mano}</span>
-        </div>
+    const foto = jug ? fotoJugador(jug, p.ligaId) : null;
+    const figFallback = figuraLado(p.ligaId, lado);
+    const num = (a && a.num) ? `<em>#${esc(a.num)}</em>` : '';
+    const photoTag = foto
+      ? `<img class="hd-pit-photo" src="${esc(foto)}" alt="" loading="lazy"
+           onerror="this.onerror=null;this.src='${esc(figFallback)}';this.classList.add('fallback')">`
+      : `<img class="hd-pit-photo fallback" src="${esc(figFallback)}" alt="">`;
+    const statsHTML = stats.length ? `<div class="hd-pit-st">${stats.map(s => `<div><b>${esc(s.v)}</b><span>${esc(s.k)}</span></div>`).join('')}</div>` : '';
+    return `<div class="hd-pit ${lado}">
+      ${photoTag}
+      <div class="hd-pit-info">
+        <span class="hd-pit-badge">${IC.estrella || ''} ${badgeT}</span>
+        <div class="hd-pit-sub">${ES ? 'Anunciado para hoy' : 'Announced for today'}</div>
+        ${fn ? `<span class="hd-pit-fn">${esc(fn)}</span>` : ''}
+        <span class="hd-pit-ln">${esc(ln)} ${num}</span>
+        ${meta.length ? `<div class="hd-pit-meta">${meta.join(' · ')}</div>` : ''}
+        ${stats.length ? `<div class="hd-pit-temp">${ES ? 'Temporada' : 'Season'} ${anio}</div>` : ''}
+        ${statsHTML}
       </div>
-      ${stats ? `<div class="hd-sc-stats">${stats}</div>` : ''}
     </div>`;
   }
 
-  /* Mejores bateadores (AVG) o líderes del equipo */
-  function topBlock(lado) {
+  /* Mejores bateadores (AVG) */
+  function batters(lado) {
     let arr = (p.bateadores && p.bateadores[lado]) || [];
     let titulo = ES ? 'Mejores bateadores (AVG)' : 'Top batters (AVG)';
     if (!arr.length) {
       const lid = (p.jugadores && p.jugadores[lado]) || [];
       const vistos = new Set();
-      arr = lid.filter(j => { if (vistos.has(j.nombre)) return false; vistos.add(j.nombre); return true; })
-        .slice(0, 3).map(j => ({ nombre: j.nombre, pos: j.pos, avg: j.dato, id: j.id, foto: j.foto, et: j.etiqueta }));
+      arr = lid.filter(x => { if (vistos.has(x.nombre)) return false; vistos.add(x.nombre); return true; })
+        .slice(0, 3).map(x => ({ nombre: x.nombre, pos: x.pos, avg: x.dato, id: x.id, foto: x.foto, et: x.etiqueta }));
       titulo = ES ? 'Líderes del equipo' : 'Team leaders';
     }
     if (!arr.length) return '';
-    const rows = arr.slice(0, 3).map((j, i) => `<div class="hd-bt-row">
-      <span class="hd-bt-n">${i + 1}</span>
-      ${avatar(j, p.ligaId, 'sm')}
-      <span class="hd-bt-name">${esc(j.nombre)}${j.et ? `<em>${esc(j.et)}</em>` : ''}</span>
-      ${j.pos ? `<span class="hd-bt-pos">${esc(j.pos)}</span>` : ''}
-      <b class="hd-bt-avg">${esc(j.avg || '')}</b>
+    const rows = arr.slice(0, 3).map((j, i) => `<div class="hd-bat">
+      <span class="hd-bat-n">${i + 1}</span>${avatar(j, p.ligaId)}
+      <span class="hd-bat-nm">${esc(j.nombre)}</span>
+      ${j.pos ? `<span class="hd-bat-pos">${esc(j.pos)}</span>` : ''}
+      <b class="hd-bat-avg">${esc(j.avg || j.et || '')}</b>
     </div>`).join('');
-    return `<div class="hd-block"><div class="hd-block-t">${titulo}</div>${rows}</div>`;
+    return `<div class="hd-blk"><div class="hd-blk-t">${titulo}</div>${rows}</div>`;
   }
 
-  /* Récord casa/fuera como "rendimiento" */
-  function formBlock(lado) {
+  /* Rendimiento reciente: chips de últimos resultados o récord casa/fuera */
+  function form(lado) {
     const eq = p[lado];
+    const ult = eq.ultimos || [];
+    if (ult.length) {
+      const chips = ult.slice(0, 5).map(u => `<div class="hd-fm ${u.w ? 'w' : 'l'}">
+        <span class="hd-fm-b">${u.w ? 'W' : 'L'}</span>
+        <span class="hd-fm-x">${esc(u.rival || '')}</span>
+        <span class="hd-fm-s">${esc(u.marcador || '')}</span></div>`).join('');
+      return `<div class="hd-blk"><div class="hd-blk-t">${ES ? 'Rendimiento reciente' : 'Recent form'}</div><div class="hd-form">${chips}</div></div>`;
+    }
     const casa = eq.recordCasa, fuera = eq.recordFuera;
     if (!casa && !fuera) return '';
-    const chip = (etq, val) => val ? `<div class="hd-form-chip"><span>${etq}</span><b>${esc(val)}</b></div>` : '';
-    return `<div class="hd-block"><div class="hd-block-t">${ES ? 'Rendimiento' : 'Form'}</div>
-      <div class="hd-form">${chip(ES ? 'Casa' : 'Home', casa)}${chip(ES ? 'Fuera' : 'Away', fuera)}</div></div>`;
-  }
-
-  function lesion(lado) {
-    const arr = (p.lesionados && p.lesionados[lado]) || [];
-    if (!arr.length) return '';
-    const items = arr.slice(0, 3).map(x => `<div class="hd-inj-row"><span>${esc(x.nombre)} ${x.pos ? `<em>${esc(x.pos)}</em>` : ''}</span><b>${esc(x.estado)}</b></div>`).join('');
-    return `<div class="hd-block"><div class="hd-block-t alert">${IC.alerta || ''} ${t('det.lesionados')}</div>${items}</div>`;
-  }
-
-  function ladoPanel(lado) {
-    return `<aside class="hd-side ${lado}">
-      ${hero(lado)}
-      ${starterCard(lado)}
-      ${topBlock(lado)}
-      ${formBlock(lado)}
-      ${lesion(lado)}
-    </aside>`;
+    const chip = (etq, val) => val ? `<div class="hd-fm"><span class="hd-fm-b" style="background:var(--tinta-3)">${etq.charAt(0)}</span><span class="hd-fm-x">${etq}</span><span class="hd-fm-s">${esc(val)}</span></div>` : '';
+    return `<div class="hd-blk"><div class="hd-blk-t">${ES ? 'Rendimiento' : 'Form'}</div>
+      <div class="hd-form" style="grid-template-columns:1fr 1fr">${chip(ES ? 'Casa' : 'Home', casa)}${chip(ES ? 'Fuera' : 'Away', fuera)}</div></div>`;
   }
 
   /* Comparación central: barras enfrentadas por categoría */
@@ -255,9 +254,7 @@ export function detalle(p, opciones = {}) {
       const mm = String(r || '').match(/(\d+)\D+(\d+)/); if (!mm) return null; const w = +mm[1], l = +mm[2]; return (w + l) ? w / (w + l) : null;
     };
     const rl = pw(p.local.record, p.futbol), rv = pw(p.visita.record, p.futbol);
-    if (rl != null && rv != null && rl + rv > 0) {
-      filas.push(fila(p.local.record, p.visita.record, t('det.winpct'), rl / (rl + rv) * 100));
-    }
+    if (rl != null && rv != null && rl + rv > 0) filas.push(fila(p.local.record, p.visita.record, ES ? '% Victorias' : 'Win %', rl / (rl + rv) * 100));
     const cats = {};
     ((p.jugadores && p.jugadores.local) || []).forEach(j => { (cats[j.etiqueta] = cats[j.etiqueta] || {}).l = j; });
     ((p.jugadores && p.jugadores.visita) || []).forEach(j => { (cats[j.etiqueta] = cats[j.etiqueta] || {}).r = j; });
@@ -265,18 +262,33 @@ export function detalle(p, opciones = {}) {
       const c = cats[k]; if (!c.l || !c.r) return;
       const a = numDe(c.l.dato), b = numDe(c.r.dato);
       if (a == null || b == null || (a + b) === 0) return;
-      filas.push(fila(c.l.dato, c.r.dato, k, a / (a + b) * 100));
+      let lp = a / (a + b) * 100;
+      if (INV.test(k)) lp = 100 - lp;               // menor es mejor -> barra invertida
+      filas.push(fila(c.l.dato, c.r.dato, k, lp));
     });
     return filas.length ? filas.join('') : `<div class="hd-cmp-nd">${ES ? 'Sin estadísticas comparables todavía.' : 'No comparable stats yet.'}</div>`;
   }
   function fila(vl, vr, k, lp) {
-    const l = Math.max(2, Math.min(98, lp));
+    const l = Math.max(3, Math.min(97, lp));
     return `<div class="hd-cmp-row">
       <span class="hd-cmp-v l">${esc(vl)}</span>
       <div class="hd-cmp-mid"><span class="hd-cmp-k">${esc(k)}</span>
         <div class="hd-cmp-bar"><i class="l" style="width:${l.toFixed(1)}%"></i><i class="r" style="width:${(100 - l).toFixed(1)}%"></i></div></div>
       <span class="hd-cmp-v r">${esc(vr)}</span>
     </div>`;
+  }
+
+  /* Enfrentamientos directos (si hay datos) */
+  function h2h() {
+    const s = p.serie; if (!s || (s.local == null && s.visita == null)) return '';
+    const jug = (s.local || 0) + (s.visita || 0) + (s.empates || 0);
+    return `<div class="hd-h2h"><div class="hd-h2h-t">${ES ? 'Enfrentamientos' : 'Head to head'} ${s.temporada || ''}</div>
+      <div class="hd-h2h-row">
+        <div class="hd-h2h-side l"><img src="${esc(p.local.logo || '')}" onerror="this.style.visibility='hidden'"><span class="hd-h2h-n">${s.local || 0}</span><span class="hd-h2h-lbl">${ES ? 'Ganados' : 'Won'}</span></div>
+        <div class="hd-h2h-side m"><span class="hd-h2h-n">${jug}</span><span class="hd-h2h-lbl">${ES ? 'Jugados' : 'Played'}</span></div>
+        <div class="hd-h2h-side r"><img src="${esc(p.visita.logo || '')}" onerror="this.style.visibility='hidden'"><span class="hd-h2h-n">${s.visita || 0}</span><span class="hd-h2h-lbl">${ES ? 'Ganados' : 'Won'}</span></div>
+      </div>
+      ${s.ultimo ? `<div class="hd-h2h-last">${ES ? 'Último' : 'Last'}: ${esc(s.ultimo)}</div>` : ''}</div>`;
   }
 
   let analista = '';
@@ -286,37 +298,41 @@ export function detalle(p, opciones = {}) {
       <div class="hd-an-t">${IC.estrella} ${t('analista.titulo')}</div>
       <div class="hd-an-v"><span>${esc(Lg(a.veredicto))}</span><b>${a.probabilidad}%</b></div>
       <div class="hd-an-txt">${esc(Lg(a.texto))}</div>
-      ${bl ? `<div class="candado">${IC.candado} ${t('analista.candado')}</div>` : ''}
-    </div>`;
+      ${bl ? `<div class="candado">${IC.candado} ${t('analista.candado')}</div>` : ''}</div>`;
   }
 
-  let cuenta = '';
-  if (p.cuando) {
-    const d = new Date(p.cuando);
-    if (!isNaN(d) && p.estado === 'proximo') cuenta = `<span class="hd-when-live cuenta" data-cuando="${esc(p.cuando)}">—</span>`;
-  }
+  const tabs = (ES
+    ? ['Resumen', 'Comparación', 'Equipos', 'Estadísticas', 'Enfrentamientos', 'Noticias']
+    : ['Overview', 'Comparison', 'Teams', 'Stats', 'Head to head', 'News'])
+    .map((tb, i) => `<div class="hd-tab ${i === 1 ? 'on' : ''}">${esc(tb)}</div>`).join('');
+
+  const venueSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>`;
 
   return `
   <div class="hd" data-liga="${esc(p.ligaId)}">
-    <div class="hd-top">
-      <div class="hd-team local">${escudoMini(p.local)}<div class="hd-tinfo"><b>${esc(p.local.nombre)}</b><span>${esc(p.local.record || '')}</span></div></div>
-      <div class="hd-top-c"><span class="hd-liga">${esc(p.liga)}</span><span class="hd-hora">${esc(Lg(p.inicio))} ${cuenta}</span>${p.sede ? `<span class="hd-sede">${L(p.sede)}</span>` : ''}</div>
-      <div class="hd-team visita"><div class="hd-tinfo r"><b>${esc(p.visita.nombre)}</b><span>${esc(p.visita.record || '')}</span></div>${escudoMini(p.visita)}</div>
+    <div class="hd-hd">
+      ${headTeam(p.local, 'l')}
+      <div class="hd-hd-c">
+        <div class="hd-hd-day">${esc(Lg(p.inicio))}</div>
+        ${p.sede ? `<div class="hd-hd-venue">${venueSVG} ${esc(Lg(p.sede))}</div>` : ''}
+      </div>
+      ${headTeam(p.visita, 'r')}
     </div>
-
+    <div class="hd-tabs">${tabs}</div>
     <div class="hd-body">
-      ${ladoPanel('local')}
+      <aside class="hd-col l">${pitcher('local')}${batters('local')}${form('local')}</aside>
       <section class="hd-center">
-        <div class="hd-c-t">${ES ? 'Comparación de equipos' : 'Team comparison'}</div>
+        <div class="hd-c-head"><img src="${esc(p.local.logo || '')}" onerror="this.style.visibility='hidden'"><span class="hd-c-title">${ES ? 'Comparación de equipos' : 'Team comparison'}</span><img src="${esc(p.visita.logo || '')}" onerror="this.style.visibility='hidden'"></div>
         <div class="hd-donuts">
-          <div class="hd-donut ${favLocal ? 'fav' : ''}">${donut(m.local || 0, 'oro')}<span>${esc(p.local.abrev)}</span></div>
-          ${tieneEmpate ? `<div class="hd-draw"><b>${m.empate}%</b><span>${t('prob.empate')}</span></div>` : `<div class="hd-badge">${badge}</div>`}
-          <div class="hd-donut ${!favLocal ? 'fav' : ''}">${donut(m.visita || 0, 'azul')}<span>${esc(p.visita.abrev)}</span></div>
+          <div class="hd-donut l">${donut(m.local || 0, 'l')}<span>${esc(p.local.abrev)}</span></div>
+          ${tieneEmpate ? `<div class="hd-conf"><div class="hd-h2h-n" style="color:#fff;font-size:16px">${m.empate}%</div><span class="hd-h2h-lbl">${t('prob.empate')}</span></div>` : `<div class="hd-conf">${badge}</div>`}
+          <div class="hd-donut r">${donut(m.visita || 0, 'r')}<span>${esc(p.visita.abrev)}</span></div>
         </div>
         <div class="hd-cmp">${comparacion()}</div>
+        ${h2h()}
         ${analista}
       </section>
-      ${ladoPanel('visita')}
+      <aside class="hd-col r">${pitcher('visita')}${batters('visita')}${form('visita')}</aside>
     </div>
   </div>`;
 }
