@@ -126,6 +126,31 @@ export function detalle(p, opciones = {}) {
   const cargTxt = ES ? 'Cargando…' : 'Loading…';
   const m = p.mercado || {};
   const tieneEmpate = m.empate != null && m.empate > 0;
+
+  // Mapa nombre->foto TRANSPARENTE (recorte de ESPN, el del roster). Se reusa en
+  // la tarjeta destacada y en los bateadores, para que el MISMO jugador se vea
+  // sin fondo en todas las secciones (no la versión con fondo de otras fuentes).
+  const normNom = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+  const fotoRoster = { local: {}, visita: {} };
+  ['local', 'visita'].forEach(lado => {
+    ((p.plantilla && p.plantilla[lado]) || []).forEach(j => {
+      const f = fotoJugador(j, p.ligaId);
+      if (f && j.nombre) fotoRoster[lado][normNom(j.nombre)] = f;
+    });
+  });
+  const fotoConRoster = (jug, lado) => {
+    if (!jug || !jug.nombre) return jug ? fotoJugador(jug, p.ligaId) : null;
+    return fotoRoster[lado][normNom(jug.nombre)] || fotoJugador(jug, p.ligaId);
+  };
+  const avatarR = (jug, lado) => {
+    if (!jug) return '';
+    const url = fotoConRoster(jug, lado);
+    const ini = esc((jug.nombre || '?').trim().charAt(0).toUpperCase());
+    if (url) return `<span class="hd-av"><img src="${esc(url)}" alt="" loading="lazy"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <span class="hd-av-i" style="display:none">${ini}</span></span>`;
+    return `<span class="hd-av"><span class="hd-av-i" style="display:flex">${ini}</span></span>`;
+  };
   const favLocal = (m.local || 0) >= (m.visita || 0);
   const manoTxt = (mn) => mn === 'L' ? 'LHP' : (mn === 'R' ? 'RHP' : '');
   const anio = new Date().getFullYear();
@@ -197,7 +222,7 @@ export function detalle(p, opciones = {}) {
           .slice(0, 4).map(x => ({ v: x.dato, k: corta(x.etiqueta) }));
       }
     }
-    const foto = jug ? fotoJugador(jug, p.ligaId) : null;
+    const foto = jug ? fotoConRoster(jug, lado) : null;
     // Figura de respaldo: béisbol usa la de pie; el resto usa la distinta por lado.
     const fig = p.ligaId === 'mlb' ? figuraAbridor(p.ligaId) : figuraLado(p.ligaId, lado);
     const photo = foto
@@ -234,7 +259,7 @@ export function detalle(p, opciones = {}) {
     }
     if (!arr.length) return `<div><div class="hd-blk-t">${titulo}</div><div class="hd-empty">${cargando ? cargTxt : (ES ? 'Datos no disponibles todavía.' : 'No data yet.')}</div></div>`;
     const rows = arr.slice(0, 3).map((j, i) => `<div class="hd-bat">
-      <span class="hd-bat-n">${i + 1}</span>${avatar(j, p.ligaId)}
+      <span class="hd-bat-n">${i + 1}</span>${avatarR(j, lado)}
       <span class="hd-bat-nm">${esc(j.nombre)}</span>
       ${j.pos ? `<span class="hd-bat-pos">${esc(j.pos)}</span>` : ''}
       <b class="hd-bat-avg">${esc(j.avg || j.et || '')}</b></div>`).join('');
