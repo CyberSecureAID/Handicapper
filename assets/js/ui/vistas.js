@@ -69,6 +69,17 @@ export function tarjetaPartido(p) {
     <b>${val == null ? '--' : val + '%'}</b><span>${etq}</span>
     <i class="pm-bar"><u style="width:${val == null ? 0 : val}%"></u></i></div>`;
 
+  // Color por MAGNITUD: el % más alto = azul, el más bajo = rojo, el resto = gris.
+  const vals = [m.local, hayEmpate ? m.empate : null, m.visita].filter(v => v != null);
+  const maxV = vals.length ? Math.max(...vals) : null;
+  const minV = vals.length ? Math.min(...vals) : null;
+  const claseDe = (v) => {
+    if (v == null) return 'nula';
+    if (v === maxV && maxV !== minV) return 'alta';   // azul (más alto)
+    if (v === minV && maxV !== minV) return 'baja';   // rojo (más bajo)
+    return 'media';                                   // gris (intermedio/empate)
+  };
+
   return `
   <div class="pmatch" data-id="${esc(p.id)}">
     <div class="pm-liga">
@@ -82,9 +93,9 @@ export function tarjetaPartido(p) {
     <div class="pm-prob">
       <div class="pm-prob-t">${ES ? 'Probabilidad estimada' : 'Estimated probability'} <span class="pm-info">${icoInfo}</span></div>
       <div class="pm-prob-cols">
-        ${col(m.local, ES ? 'Local' : 'Home', 'local')}
-        ${col(hayEmpate ? m.empate : null, ES ? 'Empate' : 'Draw', 'empate')}
-        ${col(m.visita, ES ? 'Visitante' : 'Away', 'visita')}
+        ${col(m.local, ES ? 'Local' : 'Home', claseDe(m.local))}
+        ${col(hayEmpate ? m.empate : null, ES ? 'Empate' : 'Draw', hayEmpate ? claseDe(m.empate) : 'nula')}
+        ${col(m.visita, ES ? 'Visitante' : 'Away', claseDe(m.visita))}
       </div>
     </div>
 
@@ -325,41 +336,49 @@ export function detalle(p, opciones = {}) {
   function gaugeHTML() {
     const L = m.local || 0, V = m.visita || 0;
     const total = L + V || 1;
-    const tV = V / total;                 // 0 = todo local, 1 = todo visita
-    const ang = 180 * (1 - tV);           // 180°=izq(local) · 0°=der(visita)
+    const tV = V / total;
+    const ang = 180 * (1 - tV);
     const rad = ang * Math.PI / 180;
-    const cx = 150, cy = 150, r = 118;
-    // Arco de fondo dividido en tramos de color
+    const cx = 150, cy = 150, r = 116;
     const pt = (a, rr) => [cx + rr * Math.cos(a * Math.PI / 180), cy - rr * Math.sin(a * Math.PI / 180)];
-    const arco = (a0, a1, rr) => { const [x0, y0] = pt(a0, rr), [x1, y1] = pt(a1, rr); const large = (a0 - a1) > 180 ? 1 : 0; return `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${rr} ${rr} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; };
+    const arco = (a0, a1, rr) => { const [x0, y0] = pt(a0, rr), [x1, y1] = pt(a1, rr); const large = Math.abs(a0 - a1) > 180 ? 1 : 0; return `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${rr} ${rr} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; };
     const favLocal = L >= V;
     const favAb = favLocal ? p.local.abrev : p.visita.abrev;
     const favPct = Math.max(L, V);
-    const favColor = favLocal ? 'var(--c-loc)' : 'var(--c-vis)';
-    // Aguja
-    const nx = cx + (r - 18) * Math.cos(rad), ny = cy - (r - 18) * Math.sin(rad);
-    const bx1 = cx + 10 * Math.cos(rad + Math.PI / 2), by1 = cy - 10 * Math.sin(rad + Math.PI / 2);
-    const bx2 = cx + 10 * Math.cos(rad - Math.PI / 2), by2 = cy - 10 * Math.sin(rad - Math.PI / 2);
-    // Ticks
+    const favColor = favLocal ? '#38a9f0' : '#f0353a';
+    // Aguja (gruesa->fina) con degradado
+    const nx = cx + (r - 14) * Math.cos(rad), ny = cy - (r - 14) * Math.sin(rad);
+    const bx1 = cx + 9 * Math.cos(rad + Math.PI / 2), by1 = cy - 9 * Math.sin(rad + Math.PI / 2);
+    const bx2 = cx + 9 * Math.cos(rad - Math.PI / 2), by2 = cy - 9 * Math.sin(rad - Math.PI / 2);
     let ticks = '';
-    for (let i = 0; i <= 10; i++) { const a = 180 - i * 18; const [x0, y0] = pt(a, r + 4), [x1, y1] = pt(a, r + (i % 5 === 0 ? 14 : 9)); ticks += `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="rgba(255,255,255,.28)" stroke-width="${i % 5 === 0 ? 2.4 : 1.4}"/>`; }
+    for (let i = 0; i <= 20; i++) { const a = 180 - i * 9; const mayor = i % 5 === 0; const [x0, y0] = pt(a, r + 5), [x1, y1] = pt(a, r + (mayor ? 15 : 9)); ticks += `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="rgba(255,255,255,${mayor ? .38 : .18})" stroke-width="${mayor ? 2.2 : 1.2}" stroke-linecap="round"/>`; }
     return `<div class="hd-gauge">
       <div class="hd-gauge-t">${ES ? 'Índice de probabilidad' : 'Probability index'}</div>
-      <svg viewBox="0 0 300 176" class="hd-gauge-svg">
+      <svg viewBox="0 0 300 180" class="hd-gauge-svg">
         <defs>
-          <linearGradient id="gg" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#1d9bf0"/><stop offset="0.5" stop-color="#8a93a0"/><stop offset="1" stop-color="#e23b3f"/>
+          <linearGradient id="ggArc" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#38a9f0"/><stop offset="0.42" stop-color="#4a7fb5"/>
+            <stop offset="0.58" stop-color="#b5556a"/><stop offset="1" stop-color="#f0353a"/>
           </linearGradient>
-          <filter id="ns" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.55"/></filter>
+          <linearGradient id="ggNeedle" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c7d2de"/>
+          </linearGradient>
+          <radialGradient id="ggGlow" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stop-color="${favColor}" stop-opacity="0.35"/><stop offset="1" stop-color="${favColor}" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="ggShadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="2.5" stdDeviation="3.5" flood-color="#000" flood-opacity="0.6"/></filter>
         </defs>
-        <path d="${arco(180, 0, r)}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="20" stroke-linecap="round"/>
-        <path d="${arco(180, 0, r)}" fill="none" stroke="url(#gg)" stroke-width="12" stroke-linecap="round"/>
+        <ellipse cx="${cx}" cy="${cy}" rx="120" ry="86" fill="url(#ggGlow)"/>
+        <path d="${arco(180, 0, r)}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="22" stroke-linecap="round"/>
+        <path d="${arco(180, 0, r)}" fill="none" stroke="url(#ggArc)" stroke-width="13" stroke-linecap="round"/>
+        <path d="${arco(180, 0, r - 13)}" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="1"/>
         ${ticks}
-        <text x="26" y="168" class="hd-gauge-side" fill="var(--c-loc)">${esc(p.local.abrev)}</text>
-        <text x="274" y="168" class="hd-gauge-side" fill="var(--c-vis)" text-anchor="end">${esc(p.visita.abrev)}</text>
-        <g filter="url(#ns)">
-          <polygon points="${nx.toFixed(1)},${ny.toFixed(1)} ${bx1.toFixed(1)},${by1.toFixed(1)} ${bx2.toFixed(1)},${by2.toFixed(1)}" fill="#f4f7fb"/>
-          <circle cx="${cx}" cy="${cy}" r="13" fill="#0b0f17" stroke="#f4f7fb" stroke-width="3"/>
+        <text x="20" y="170" class="hd-gauge-side" fill="#38a9f0">${esc(p.local.abrev)}</text>
+        <text x="280" y="170" class="hd-gauge-side" fill="#f0353a" text-anchor="end">${esc(p.visita.abrev)}</text>
+        <g filter="url(#ggShadow)">
+          <polygon points="${nx.toFixed(1)},${ny.toFixed(1)} ${bx1.toFixed(1)},${by1.toFixed(1)} ${bx2.toFixed(1)},${by2.toFixed(1)}" fill="url(#ggNeedle)"/>
+          <circle cx="${cx}" cy="${cy}" r="15" fill="#10151d" stroke="url(#ggNeedle)" stroke-width="3.5"/>
+          <circle cx="${cx}" cy="${cy}" r="5" fill="${favColor}"/>
         </g>
       </svg>
       <div class="hd-gauge-cap"><b style="color:${favColor}">${favPct}%</b><span>${esc(favAb)} ${ES ? 'favorito' : 'favored'}</span></div>
