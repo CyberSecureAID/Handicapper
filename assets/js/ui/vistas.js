@@ -122,6 +122,8 @@ const INV_STAT = /era|whip|error|contra|against|goles en contra|ponches recibido
 export function detalle(p, opciones = {}) {
   if (!p) return `<div class="vacio"><div class="ic">${IC.grafico}</div>${t('det.vacio')}</div>`;
   const ES = idiomaActual() === 'es';
+  const cargando = !!opciones.cargando;
+  const cargTxt = ES ? 'Cargando…' : 'Loading…';
   const m = p.mercado || {};
   const tieneEmpate = m.empate != null && m.empate > 0;
   const favLocal = (m.local || 0) >= (m.visita || 0);
@@ -230,7 +232,7 @@ export function detalle(p, opciones = {}) {
         .slice(0, 3).map(x => ({ nombre: x.nombre, pos: x.pos, avg: x.dato, id: x.id, foto: x.foto, et: x.etiqueta }));
       titulo = ES ? 'Líderes del equipo' : 'Team leaders';
     }
-    if (!arr.length) return `<div><div class="hd-blk-t">${titulo}</div><div class="hd-empty">${ES ? 'Datos no disponibles todavía.' : 'No data yet.'}</div></div>`;
+    if (!arr.length) return `<div><div class="hd-blk-t">${titulo}</div><div class="hd-empty">${cargando ? cargTxt : (ES ? 'Datos no disponibles todavía.' : 'No data yet.')}</div></div>`;
     const rows = arr.slice(0, 3).map((j, i) => `<div class="hd-bat">
       <span class="hd-bat-n">${i + 1}</span>${avatar(j, p.ligaId)}
       <span class="hd-bat-nm">${esc(j.nombre)}</span>
@@ -335,7 +337,7 @@ export function detalle(p, opciones = {}) {
       return `<div class="hd-rp" role="button" tabindex="0" data-side="${sideC}" data-nm="${esc(j.nombre)}" data-pos="${esc(j.pos || '')}" data-foto="${esc(foto)}">${avatar(j, p.ligaId)}
       <span class="hd-rp-nm">${esc(j.nombre)}</span>${j.pos ? `<span class="hd-rp-pos">${esc(j.pos)}</span>` : ''}</div>`;
     }).join('');
-    return `<div class="hd-roster-col"><b>${esc(eq.abrev || eq.nombre)}</b>${rows || `<div class="hd-empty">${ES ? 'Roster no disponible.' : 'Roster unavailable.'}</div>`}</div>`;
+    return `<div class="hd-roster-col"><b>${esc(eq.abrev || eq.nombre)}</b>${rows || `<div class="hd-empty">${cargando ? cargTxt : (ES ? 'Roster no disponible.' : 'Roster unavailable.')}</div>`}</div>`;
   }
   function equiposHTML() {
     return `<div class="hd-roster">${rosterCol('local')}${rosterCol('visita')}</div>`;
@@ -358,7 +360,7 @@ export function detalle(p, opciones = {}) {
   }
 
   const cmp = filasComparacion();
-  const cmpHTML = cmp.length ? `<div class="hd-cmp">${cmp.join('')}</div>` : `<div class="hd-cmp-nd">${ES ? 'Sin estadísticas comparables todavía.' : 'No comparable stats yet.'}</div>`;
+  const cmpHTML = cmp.length ? `<div class="hd-cmp">${cmp.join('')}</div>` : `<div class="hd-cmp-nd">${cargando ? cargTxt : (ES ? 'Sin estadísticas comparables todavía.' : 'No comparable stats yet.')}</div>`;
 
   /* --- Pestañas como la referencia: Resumen · Comparación · Equipos · Estadísticas · Enfrentamientos --- */
   const tieneSerie = p.serie && (p.serie.local != null || p.serie.visita != null);
