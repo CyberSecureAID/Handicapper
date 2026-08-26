@@ -519,7 +519,7 @@ async function rosterEquipo(ruta, teamId) {
       });
     };
     items.forEach(grp => { if (Array.isArray(grp?.items)) grp.items.forEach(empujar); else empujar(grp); });
-    return planos.slice(0, 12);
+    return planos.slice(0, 60);
   } catch (_) { return []; }
 }
 function rosterDe(summary, localId, visitaId) {
