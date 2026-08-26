@@ -77,11 +77,10 @@ function render() {
 /* Entrar a la plataforma como admin, con todo desbloqueado */
 function verSitio() {
   marcarVistaPrevia('premium');            // acceso total para el admin
-  _cont.style.display = 'none';
   document.body.classList.remove('en-mesa');
-  location.hash = '';
-  // arranca la plataforma sin recargar
-  import('../app.js').then(m => m.entrarComoAdmin?.()).catch(() => location.reload());
+  try { history.replaceState(null, '', location.pathname); } catch (_) {}
+  if (window.__handiVerSitio) window.__handiVerSitio();
+  else location.reload();
 }
 
 async function cargarDatos() {
@@ -184,7 +183,7 @@ function enlazarUsuarios() {
 /* ================= ANALYSIS ================= */
 function vistaAnalisis() {
   const ligas = LIGAS.map(l => `<button class="an-liga ${_ligaSel === l.id ? 'on' : ''}" data-liga="${l.id}">
-    <img src="${l.logo}" alt="${esc(l.nombre)}" onerror="this.style.display='none'"><span>${esc(l.corto || l.nombre)}</span></button>`).join('');
+    <img src="${l.logo}" alt="${esc(l.nombre)}" height="26" style="height:26px;width:auto" onerror="this.style.display='none'"><span>${esc(l.corto || l.nombre)}</span></button>`).join('');
 
   let partidosHTML;
   if (!_ligaSel) partidosHTML = `<div class="an-hint">${IC.arrow} Pick a league to load its matches.</div>`;
