@@ -4,6 +4,8 @@
    ============================================================ */
 import { IC } from './iconos.js';
 import { t, Lg, idiomaActual } from './idioma.js';
+import { figuraLado, fondoLado } from './figuras.js';
+import { fotoJugador } from '../datos/fotos-jugadores.js';
 
 /* Icono (cuño) de cada liga para la esquina de la tarjeta */
 const LIGA_ICONO = {
@@ -77,25 +79,31 @@ export function tarjetaPartido(p) {
   </div>`;
 }
 
-/* ---- Detalle de un partido: DASHBOARD 16:9 (local | comparación | visita) ---- */
-
-function silueta(cls) {
-  return `<svg class="fig ${cls}" viewBox="0 0 160 380" aria-hidden="true">
-    <ellipse cx="80" cy="28" rx="18" ry="22"/>
-    <path d="M73 47 h14 v10 h-14 z"/>
-    <path d="M80 55 C66 55 57 60 52 69 C48 77 47 88 45 99 C36 106 29 124 24 150 C22 162 21 174 23 182 C25 189 33 189 35 181 C39 165 45 149 52 138 C51 156 51 176 54 193 L60 206 C62 250 64 295 66 336 C67 349 78 349 78 336 C78 300 77 258 75 218 C76 214 78 213 80 213 C82 213 84 214 85 218 C83 258 82 300 82 336 C82 349 94 349 94 336 C96 295 98 250 100 206 L106 193 C109 176 109 156 108 138 C115 149 121 165 125 181 C127 189 135 189 137 182 C139 174 138 162 136 150 C131 124 124 106 115 99 C113 88 112 77 108 69 C103 60 94 55 80 55 Z"/>
-    <path class="def" d="M80 62 V150"/>
-    <path class="def" d="M63 84 C70 92 90 92 97 84"/>
-    <path class="def" d="M66 108 h28 M67 126 h26 M69 144 h22"/>
-    <path class="def" d="M60 206 C70 201 90 201 100 206"/>
-    <path class="def" d="M69 262 h8 M83 262 h8"/>
-  </svg>`;
-}
+/* ============================================================
+   DASHBOARD 16:9 (local | comparación | visita)
+   - Figuras doradas por deporte a cada lado, sobre fondo rojo/azul.
+   - Tarjeta de abridor "Anunciado para hoy" con foto real (ESPN CDN).
+   - Mejores bateadores (AVG) por equipo.
+   - Comparación central con barras enfrentadas (estilo referencia).
+   ============================================================ */
 
 function numDe(v) {
   const s = String(v == null ? '' : v).trim();
   const m = s.match(/-?\d*\.?\d+/);
   return m ? parseFloat(m[0]) : null;
+}
+
+/* Avatar circular con foto real (headshot gratis) y respaldo por inicial */
+function avatar(jug, ligaId, cls) {
+  if (!jug) return '';
+  const url = fotoJugador(jug, ligaId);
+  const ini = esc((jug.nombre || '?').trim().charAt(0).toUpperCase());
+  if (url) {
+    return `<span class="hd-av ${cls}"><img src="${esc(url)}" alt="" loading="lazy"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <span class="hd-av-i" style="display:none">${ini}</span></span>`;
+  }
+  return `<span class="hd-av ${cls}"><span class="hd-av-i" style="display:flex">${ini}</span></span>`;
 }
 
 export function detalle(p, opciones = {}) {
@@ -104,6 +112,8 @@ export function detalle(p, opciones = {}) {
   const ES = idiomaActual() === 'es';
   const m = p.mercado || {};
   const tieneEmpate = m.empate != null && m.empate > 0;
+  const favLocal = (m.local || 0) >= (m.visita || 0);
+  const manoTxt = (mn) => mn === 'L' ? t('det.lhp') : (mn === 'R' ? t('det.rhp') : '');
 
   const confMap = {
     'alta': { es: 'Confianza alta', en: 'High confidence', c: 'alta' },
@@ -115,112 +125,167 @@ export function detalle(p, opciones = {}) {
   const badge = cf ? `<span class="conf ${cf.c}">${ES ? cf.es : cf.en}</span>` : '';
 
   function donut(pct, cls) {
-    const r = 30, c = 2 * Math.PI * r, dash = (c * (pct || 0) / 100).toFixed(2);
-    return `<svg class="pd ${cls}" viewBox="0 0 76 76">
-      <circle cx="38" cy="38" r="${r}" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="8"/>
-      <circle cx="38" cy="38" r="${r}" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"
-        stroke-dasharray="${dash} ${(c - dash).toFixed(2)}" transform="rotate(-90 38 38)"/>
-      <text x="38" y="44" text-anchor="middle" class="pd-t">${pct || 0}%</text>
+    const r = 26, c = 2 * Math.PI * r, dash = (c * (pct || 0) / 100).toFixed(2);
+    return `<svg class="pd ${cls}" viewBox="0 0 68 68">
+      <circle cx="34" cy="34" r="${r}" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="7"/>
+      <circle cx="34" cy="34" r="${r}" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"
+        stroke-dasharray="${dash} ${(c - dash).toFixed(2)}" transform="rotate(-90 34 34)"/>
+      <text x="34" y="40" text-anchor="middle" class="pd-t">${pct || 0}%</text>
     </svg>`;
   }
-  const manoTxt = (mn) => mn === 'L' ? t('det.lhp') : (mn === 'R' ? t('det.rhp') : '');
 
+  /* HERO: figura dorada del deporte sobre el fondo rojo/azul del lado */
+  function hero(lado) {
+    const eq = p[lado];
+    const fig = figuraLado(p.ligaId, lado);
+    const fondo = fondoLado(lado);
+    const pct = lado === 'local' ? (m.local || 0) : (m.visita || 0);
+    const cls = lado === 'local' ? 'oro' : 'azul';
+    return `<div class="hd-hero ${lado}" style="--hd-bg:url('${fondo}')">
+      <div class="hd-hero-badge ${cls}">${escudoMini(eq)}<b>${esc(eq.abrev)}</b><span>${pct}%</span></div>
+      <img class="hd-hero-fig" src="${esc(fig)}" alt="" onerror="this.style.display='none'">
+    </div>`;
+  }
+
+  /* Jugador estrella (cuando no hay abridor, p. ej. NBA/fútbol) */
   function estrella(lado) {
     const plant = (p.plantilla && p.plantilla[lado]) || [];
     const conStats = plant.filter(j => j.stats && Object.keys(j.stats).length >= 2);
     if (conStats.length) {
       const j = conStats[0];
-      const stats = Object.keys(j.stats).slice(0, 5).map(k => ({ k, v: j.stats[k] }));
-      return { nombre: j.nombre, pos: j.pos, stats };
+      const stats = Object.keys(j.stats).slice(0, 4).map(k => ({ k, v: j.stats[k] }));
+      return { nombre: j.nombre, pos: j.pos, id: j.id, foto: j.foto, stats };
     }
     const lid = (p.jugadores && p.jugadores[lado]) || [];
     if (!lid.length) return null;
     const nombre = lid[0].nombre;
     let stats = lid.filter(j => j.nombre === nombre).map(j => ({ k: j.etiqueta, v: j.dato }));
     if (stats.length < 2) stats = lid.slice(0, 4).map(j => ({ k: j.etiqueta, v: j.dato }));
-    return { nombre, pos: lid[0].pos, stats: stats.slice(0, 5) };
+    return { nombre, pos: lid[0].pos, id: lid[0].id, foto: lid[0].foto, stats: stats.slice(0, 4) };
   }
-  function fichaEstrella(lado) {
-    const j = estrella(lado);
-    if (!j) return `<div class="ds-star"><div class="ds-fig">${silueta(lado)}</div><div class="ds-nd">${t('det.nodata')}</div></div>`;
-    const nums = j.stats.map(s => numDe(s.v)).filter(n => n != null);
-    const max = nums.length ? Math.max(...nums) : 1;
-    const barras = j.stats.map(s => {
-      const n = numDe(s.v), w = n != null && max > 0 ? Math.max(14, Math.round(n / max * 100)) : 45;
-      return `<div class="dss-row"><span class="dss-k">${esc(s.k)}</span><span class="dss-v">${esc(s.v)}</span><div class="dss-bar"><i style="width:${w}%"></i></div></div>`;
-    }).join('');
-    return `<div class="ds-star">
-      <div class="ds-name"><b>${esc(j.nombre)}</b><span>${esc(j.pos || '')}</span></div>
-      <div class="ds-fig">${silueta(lado)}</div>
-      <div class="ds-stats">${barras}</div>
+
+  /* Tarjeta del jugador destacado: abridor "Anunciado para hoy" o estrella */
+  function starterCard(lado) {
+    const a = p[lado].abridor;
+    let jug, badge2, sub, mano = '', statsArr = [];
+    if (a && a.nombre) {
+      jug = a;
+      badge2 = ES ? 'Pitcher abridor' : 'Starting pitcher';
+      sub = ES ? 'Anunciado para hoy' : 'Announced for today';
+      if (a.mano) mano = `<span class="hd-mano ${a.mano === 'L' ? 'lhp' : 'rhp'}">${manoTxt(a.mano)}</span>`;
+      if (a.wl) statsArr.push({ v: a.wl, k: 'W-L' });
+      if (a.era) statsArr.push({ v: a.era, k: 'ERA' });
+    } else {
+      const st = estrella(lado);
+      if (!st) return '';
+      jug = st;
+      badge2 = ES ? 'Jugador destacado' : 'Featured player';
+      sub = ES ? 'Anunciado para hoy' : 'Announced for today';
+      statsArr = st.stats.slice(0, 4);
+    }
+    const stats = statsArr.map(s => `<span><b>${esc(s.v)}</b>${esc(s.k)}</span>`).join('');
+    return `<div class="hd-sc ${lado}">
+      <div class="hd-sc-head"><span class="hd-sc-badge">${badge2}</span></div>
+      <div class="hd-sc-row">
+        ${avatar(jug, p.ligaId, 'big')}
+        <div class="hd-sc-id">
+          <span class="hd-sc-sub">${sub}</span>
+          <b class="hd-sc-name">${esc(jug.nombre)}</b>
+          <span class="hd-sc-meta">${jug.pos ? `<em>${esc(jug.pos)}</em>` : ''}${mano}</span>
+        </div>
+      </div>
+      ${stats ? `<div class="hd-sc-stats">${stats}</div>` : ''}
     </div>`;
   }
 
-  function abridor(lado) {
-    const a = p[lado].abridor;
-    if (!a || !a.nombre) return '';
-    const cls = a.mano === 'L' ? 'lhp' : (a.mano === 'R' ? 'rhp' : '');
-    const mano = a.mano ? `<span class="ds-mano ${cls}">${manoTxt(a.mano)}</span>` : '';
-    const st = [a.era ? `<span><b>${esc(a.era)}</b> ERA</span>` : '', a.wl ? `<span><b>${esc(a.wl)}</b> W-L</span>` : ''].filter(Boolean).join('');
-    return `<div class="ds-sec"><div class="ds-sec-t">${t('det.abridor')}</div>
-      <div class="ds-abr"><b>${esc(a.nombre)}</b> ${mano}<div class="ds-abr-st">${st}</div></div></div>`;
+  /* Mejores bateadores (AVG) o líderes del equipo */
+  function topBlock(lado) {
+    let arr = (p.bateadores && p.bateadores[lado]) || [];
+    let titulo = ES ? 'Mejores bateadores (AVG)' : 'Top batters (AVG)';
+    if (!arr.length) {
+      const lid = (p.jugadores && p.jugadores[lado]) || [];
+      const vistos = new Set();
+      arr = lid.filter(j => { if (vistos.has(j.nombre)) return false; vistos.add(j.nombre); return true; })
+        .slice(0, 3).map(j => ({ nombre: j.nombre, pos: j.pos, avg: j.dato, id: j.id, foto: j.foto, et: j.etiqueta }));
+      titulo = ES ? 'Líderes del equipo' : 'Team leaders';
+    }
+    if (!arr.length) return '';
+    const rows = arr.slice(0, 3).map((j, i) => `<div class="hd-bt-row">
+      <span class="hd-bt-n">${i + 1}</span>
+      ${avatar(j, p.ligaId, 'sm')}
+      <span class="hd-bt-name">${esc(j.nombre)}${j.et ? `<em>${esc(j.et)}</em>` : ''}</span>
+      ${j.pos ? `<span class="hd-bt-pos">${esc(j.pos)}</span>` : ''}
+      <b class="hd-bt-avg">${esc(j.avg || '')}</b>
+    </div>`).join('');
+    return `<div class="hd-block"><div class="hd-block-t">${titulo}</div>${rows}</div>`;
   }
 
-  function listaJug(lado) {
-    const plant = (p.plantilla && p.plantilla[lado]) || [];
-    let items = '';
-    if (plant.length) {
-      items = plant.slice(0, 7).map(j => {
-        const sk = j.stats && Object.keys(j.stats)[0];
-        const dato = sk ? `${esc(String(j.stats[sk]))} <small>${esc(sk)}</small>` : '';
-        return `<div class="dj-row"><span>${esc(j.nombre)} ${j.pos ? `<em>${esc(j.pos)}</em>` : ''}</span><b>${dato}</b></div>`;
-      }).join('');
-    } else {
-      const lid = (p.jugadores && p.jugadores[lado]) || [];
-      items = lid.slice(0, 7).map(j => `<div class="dj-row"><span>${esc(j.nombre)} ${j.pos ? `<em>${esc(j.pos)}</em>` : ''}</span><b>${esc(j.dato)} <small>${esc(j.etiqueta)}</small></b></div>`).join('');
-    }
-    if (!items) return '';
-    return `<div class="ds-sec"><div class="ds-sec-t">${ES ? 'Jugadores' : 'Players'}</div><div class="dj-list">${items}</div></div>`;
+  /* Récord casa/fuera como "rendimiento" */
+  function formBlock(lado) {
+    const eq = p[lado];
+    const casa = eq.recordCasa, fuera = eq.recordFuera;
+    if (!casa && !fuera) return '';
+    const chip = (etq, val) => val ? `<div class="hd-form-chip"><span>${etq}</span><b>${esc(val)}</b></div>` : '';
+    return `<div class="hd-block"><div class="hd-block-t">${ES ? 'Rendimiento' : 'Form'}</div>
+      <div class="hd-form">${chip(ES ? 'Casa' : 'Home', casa)}${chip(ES ? 'Fuera' : 'Away', fuera)}</div></div>`;
   }
 
   function lesion(lado) {
     const arr = (p.lesionados && p.lesionados[lado]) || [];
     if (!arr.length) return '';
-    const items = arr.slice(0, 4).map(x => `<div class="dj-row les"><span>${esc(x.nombre)} ${x.pos ? `<em>${esc(x.pos)}</em>` : ''}</span><b class="out">${esc(x.estado)}</b></div>`).join('');
-    return `<div class="ds-sec"><div class="ds-sec-t alert">${IC.alerta || ''} ${t('det.lesionados')}</div><div class="dj-list">${items}</div></div>`;
+    const items = arr.slice(0, 3).map(x => `<div class="hd-inj-row"><span>${esc(x.nombre)} ${x.pos ? `<em>${esc(x.pos)}</em>` : ''}</span><b>${esc(x.estado)}</b></div>`).join('');
+    return `<div class="hd-block"><div class="hd-block-t alert">${IC.alerta || ''} ${t('det.lesionados')}</div>${items}</div>`;
   }
 
-  function lado(l) { return `${fichaEstrella(l)}${abridor(l)}${listaJug(l)}${lesion(l)}`; }
+  function ladoPanel(lado) {
+    return `<aside class="hd-side ${lado}">
+      ${hero(lado)}
+      ${starterCard(lado)}
+      ${topBlock(lado)}
+      ${formBlock(lado)}
+      ${lesion(lado)}
+    </aside>`;
+  }
 
+  /* Comparación central: barras enfrentadas por categoría */
   function comparacion() {
+    const filas = [];
+    const pw = (r, fut) => {
+      if (fut) { const mm = String(r || '').match(/(\d+)\D+(\d+)\D+(\d+)/); if (!mm) return null; const w = +mm[1], d = +mm[2], l = +mm[3], t2 = w + d + l; return t2 ? (w + d * 0.5) / t2 : null; }
+      const mm = String(r || '').match(/(\d+)\D+(\d+)/); if (!mm) return null; const w = +mm[1], l = +mm[2]; return (w + l) ? w / (w + l) : null;
+    };
+    const rl = pw(p.local.record, p.futbol), rv = pw(p.visita.record, p.futbol);
+    if (rl != null && rv != null && rl + rv > 0) {
+      filas.push(fila(p.local.record, p.visita.record, t('det.winpct'), rl / (rl + rv) * 100));
+    }
     const cats = {};
     ((p.jugadores && p.jugadores.local) || []).forEach(j => { (cats[j.etiqueta] = cats[j.etiqueta] || {}).l = j; });
     ((p.jugadores && p.jugadores.visita) || []).forEach(j => { (cats[j.etiqueta] = cats[j.etiqueta] || {}).r = j; });
-    const filas = Object.keys(cats).map(k => {
-      const c = cats[k]; if (!c.l || !c.r) return '';
+    Object.keys(cats).forEach(k => {
+      const c = cats[k]; if (!c.l || !c.r) return;
       const a = numDe(c.l.dato), b = numDe(c.r.dato);
-      if (a == null || b == null || (a + b) === 0) return '';
-      const lp = a / (a + b) * 100;
-      return `<div class="cc-row"><span class="cc-l">${esc(c.l.dato)}</span><div class="cc-mid"><div class="cc-bar"><i class="bl" style="width:${lp.toFixed(1)}%"></i><i class="br" style="width:${(100 - lp).toFixed(1)}%"></i></div><span class="cc-k">${esc(k)}</span></div><span class="cc-r">${esc(c.r.dato)}</span></div>`;
-    }).filter(Boolean).join('');
-    const pw = (r) => { const mm = String(r || '').match(/(\d+)\D+(\d+)/); if (!mm) return null; const w = +mm[1], ll = +mm[2]; return (w + ll) ? w / (w + ll) : null; };
-    const rl = pw(p.local.record), rv = pw(p.visita.record);
-    let rec = '';
-    if (rl != null && rv != null && rl + rv > 0) {
-      const lp = rl / (rl + rv) * 100;
-      rec = `<div class="cc-row"><span class="cc-l">${esc(p.local.record)}</span><div class="cc-mid"><div class="cc-bar"><i class="bl" style="width:${lp.toFixed(1)}%"></i><i class="br" style="width:${(100 - lp).toFixed(1)}%"></i></div><span class="cc-k">${t('det.winpct')}</span></div><span class="cc-r">${esc(p.visita.record)}</span></div>`;
-    }
-    const cuerpo = rec + filas;
-    return cuerpo || `<div class="cc-nd">${ES ? 'Sin estadísticas comparables todavía.' : 'No comparable stats yet.'}</div>`;
+      if (a == null || b == null || (a + b) === 0) return;
+      filas.push(fila(c.l.dato, c.r.dato, k, a / (a + b) * 100));
+    });
+    return filas.length ? filas.join('') : `<div class="hd-cmp-nd">${ES ? 'Sin estadísticas comparables todavía.' : 'No comparable stats yet.'}</div>`;
+  }
+  function fila(vl, vr, k, lp) {
+    const l = Math.max(2, Math.min(98, lp));
+    return `<div class="hd-cmp-row">
+      <span class="hd-cmp-v l">${esc(vl)}</span>
+      <div class="hd-cmp-mid"><span class="hd-cmp-k">${esc(k)}</span>
+        <div class="hd-cmp-bar"><i class="l" style="width:${l.toFixed(1)}%"></i><i class="r" style="width:${(100 - l).toFixed(1)}%"></i></div></div>
+      <span class="hd-cmp-v r">${esc(vr)}</span>
+    </div>`;
   }
 
   let analista = '';
   if (p.analista) {
     const a = p.analista, bl = !!opciones.bloquear;
-    analista = `<div class="cc-analista ${bl ? 'bloqueado' : ''}">
-      <div class="cc-an-t">${IC.estrella} ${t('analista.titulo')}</div>
-      <div class="cc-an-v"><span>${esc(Lg(a.veredicto))}</span><b>${a.probabilidad}%</b></div>
-      <div class="cc-an-txt">${esc(Lg(a.texto))}</div>
+    analista = `<div class="hd-analista ${bl ? 'bloqueado' : ''}">
+      <div class="hd-an-t">${IC.estrella} ${t('analista.titulo')}</div>
+      <div class="hd-an-v"><span>${esc(Lg(a.veredicto))}</span><b>${a.probabilidad}%</b></div>
+      <div class="hd-an-txt">${esc(Lg(a.texto))}</div>
       ${bl ? `<div class="candado">${IC.candado} ${t('analista.candado')}</div>` : ''}
     </div>`;
   }
@@ -228,31 +293,30 @@ export function detalle(p, opciones = {}) {
   let cuenta = '';
   if (p.cuando) {
     const d = new Date(p.cuando);
-    if (!isNaN(d) && p.estado === 'proximo') cuenta = `<span class="cc-when cuenta" data-cuando="${esc(p.cuando)}">—</span>`;
+    if (!isNaN(d) && p.estado === 'proximo') cuenta = `<span class="hd-when-live cuenta" data-cuando="${esc(p.cuando)}">—</span>`;
   }
-  const favLocal = (m.local || 0) >= (m.visita || 0);
 
   return `
-  <div class="dash16">
-    <div class="d16-top">
-      <div class="d16-team local">${escudoMini(p.local)}<div class="d16-tinfo"><b>${esc(p.local.nombre)}</b><span>${esc(p.local.record || '')}</span></div></div>
-      <div class="d16-prob">
-        <div class="d16-donut ${favLocal ? 'fav' : ''}">${donut(m.local || 0, 'oro')}<span>${esc(p.local.abrev)}</span></div>
-        ${tieneEmpate ? `<div class="d16-draw"><b>${m.empate}%</b><span>${t('prob.empate')}</span></div>` : `<div class="d16-badge">${badge}</div>`}
-        <div class="d16-donut ${!favLocal ? 'fav' : ''}">${donut(m.visita || 0, 'azul')}<span>${esc(p.visita.abrev)}</span></div>
-      </div>
-      <div class="d16-team visita"><div class="d16-tinfo r"><b>${esc(p.visita.nombre)}</b><span>${esc(p.visita.record || '')}</span></div>${escudoMini(p.visita)}</div>
+  <div class="hd" data-liga="${esc(p.ligaId)}">
+    <div class="hd-top">
+      <div class="hd-team local">${escudoMini(p.local)}<div class="hd-tinfo"><b>${esc(p.local.nombre)}</b><span>${esc(p.local.record || '')}</span></div></div>
+      <div class="hd-top-c"><span class="hd-liga">${esc(p.liga)}</span><span class="hd-hora">${esc(Lg(p.inicio))} ${cuenta}</span>${p.sede ? `<span class="hd-sede">${L(p.sede)}</span>` : ''}</div>
+      <div class="hd-team visita"><div class="hd-tinfo r"><b>${esc(p.visita.nombre)}</b><span>${esc(p.visita.record || '')}</span></div>${escudoMini(p.visita)}</div>
     </div>
 
-    <div class="d16-body">
-      <div class="d16-side local">${lado('local')}</div>
-      <div class="d16-center">
-        <div class="cc-t">${t('det.compjug') || (ES ? 'Comparación' : 'Comparison')} ${cuenta}</div>
-        <div class="cc-list">${comparacion()}</div>
-        ${p.sede ? `<div class="cc-venue">${IC.info || ''} ${L(p.sede)}</div>` : ''}
+    <div class="hd-body">
+      ${ladoPanel('local')}
+      <section class="hd-center">
+        <div class="hd-c-t">${ES ? 'Comparación de equipos' : 'Team comparison'}</div>
+        <div class="hd-donuts">
+          <div class="hd-donut ${favLocal ? 'fav' : ''}">${donut(m.local || 0, 'oro')}<span>${esc(p.local.abrev)}</span></div>
+          ${tieneEmpate ? `<div class="hd-draw"><b>${m.empate}%</b><span>${t('prob.empate')}</span></div>` : `<div class="hd-badge">${badge}</div>`}
+          <div class="hd-donut ${!favLocal ? 'fav' : ''}">${donut(m.visita || 0, 'azul')}<span>${esc(p.visita.abrev)}</span></div>
+        </div>
+        <div class="hd-cmp">${comparacion()}</div>
         ${analista}
-      </div>
-      <div class="d16-side visita">${lado('visita')}</div>
+      </section>
+      ${ladoPanel('visita')}
     </div>
   </div>`;
 }
