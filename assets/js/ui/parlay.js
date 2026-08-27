@@ -6,30 +6,42 @@
    Estética rojo/azul de la plataforma, banner con imágenes de fondo.
    ============================================================ */
 import { topParlayHits } from '../analisis/mlb-parlay.js';
+import { idiomaActual } from './idioma.js';
+
+const ES = () => idiomaActual() === 'es';
+const L = (en, es) => (ES() ? es : en);
+
+/* Configuración por deporte (título, métrica, estado). */
+const DEPORTES = {
+  mlb:    { titulo: () => L('Hit Projection', 'Proyección de Hits'),   metrica: 'P(≥1 hit)',  activo: true },
+  soccer: { titulo: () => L('Goal Projection', 'Proyección de Goles'), metrica: 'P(≥1 gol)',  activo: false },
+  nba:    { titulo: () => L('Points Projection', 'Proyección de Puntos'), metrica: L('Pts line', 'Línea de pts'), activo: false },
+};
 
 const hoyISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+const confLabel = (c) => ES() ? c : ({ alta: 'High', media: 'Medium', baja: 'Low' }[c] || c);
 
 /* --- Datos de demostración (mientras no haya lineups/datos en vivo) --- */
 const DEMO = [
   { rank:1, nombre:'CJ Abrams', equipoAbrev:'WSH', rivalAbrev:'COL', pitcher:'Gabriel Hughes', pitcherMano:'R', pitcherEra:6.54, slot:1, prob:79, confianza:'media',
-    factores:['Rival con 6.54 ERA, muy bateable','Tope del orden: más apariciones','Zurdo frente a derecho'], riesgos:['Lineup no confirmado'] },
+    factores:['Opponent with 6.54 ERA, very hittable','Top of the order: more plate appearances','LHB vs RHP'], riesgos:['Lineup not confirmed'] },
   { rank:2, nombre:'Bobby Witt Jr.', equipoAbrev:'KC', rivalAbrev:'TOR', pitcher:'Spencer Arrighetti', pitcherMano:'R', pitcherEra:4.73, slot:2, prob:78, confianza:'media',
-    factores:['Contacto élite y velocidad','Abridor rival con 4.73 ERA','Tope del orden'], riesgos:['Juego nocturno: lineup por confirmar'] },
+    factores:['Elite contact and speed','Opposing starter with 4.73 ERA','Top of the order'], riesgos:['Night game: lineup to be confirmed'] },
   { rank:3, nombre:'Gabriel Moreno', equipoAbrev:'ARI', rivalAbrev:'SF', pitcher:'Landen Roupp', pitcherMano:'R', pitcherEra:4.34, slot:5, prob:77, confianza:'media',
-    factores:['.303 AVG (7º de MLB)','Baja tasa de ponche','El rival permite contacto'], riesgos:['Suele batear 5º–6º','Oracle deprime la ofensiva'] },
+    factores:['.303 AVG (7th in MLB)','Low strikeout rate','Opponent allows contact'], riesgos:['Usually bats 5th–6th','Oracle suppresses offense'] },
   { rank:4, nombre:'Ernie Clement', equipoAbrev:'TOR', rivalAbrev:'KC', pitcher:'Noah Cameron', pitcherMano:'L', pitcherEra:4.02, slot:6, prob:76, confianza:'media',
-    factores:['Contacto extremo (9.9 turnos por K)','Derecho frente a zurdo','Muchas bolas en juego'], riesgos:['Parte baja del orden'] },
+    factores:['Extreme contact (9.9 AB per K)','RHB vs LHP','Lots of balls in play'], riesgos:['Bottom of the order'] },
   { rank:5, nombre:'Rafael Devers', equipoAbrev:'SF', rivalAbrev:'ARI', pitcher:'Jose Cabrera', pitcherMano:'R', pitcherEra:5.60, slot:3, prob:75, confianza:'media',
-    factores:['Rival novato con 5.60 ERA','Puesto 3–4 del orden','Zurdo frente a derecho'], riesgos:['Oracle castiga a los zurdos'] },
+    factores:['Rookie opponent with 5.60 ERA','Bats 3rd–4th','LHB vs RHP'], riesgos:['Oracle penalizes lefties'] },
   { rank:6, nombre:'Jake McCarthy', equipoAbrev:'COL', rivalAbrev:'WSH', pitcher:'Jake Irvin', pitcherMano:'R', pitcherEra:5.82, slot:1, prob:74, confianza:'media',
-    factores:['Rival con 5.82 ERA','Velocidad para infield hits','Zurdo frente a derecho'], riesgos:['Ofensiva floja de visita'] },
+    factores:['Opponent with 5.82 ERA','Speed for infield hits','LHB vs RHP'], riesgos:['Weak road offense'] },
   { rank:7, nombre:'James Wood', equipoAbrev:'WSH', rivalAbrev:'COL', pitcher:'Gabriel Hughes', pitcherMano:'R', pitcherEra:6.54, slot:3, prob:73, confianza:'media',
-    factores:['Rival con 6.54 ERA','OBP de .393','Puesto 3–4 del orden'], riesgos:['Ponche alto (153 en la campaña)'] },
+    factores:['Opponent with 6.54 ERA','.393 OBP','Bats 3rd–4th'], riesgos:['High strikeout total (153)'] },
   { rank:8, nombre:'William Contreras', equipoAbrev:'MIL', rivalAbrev:'NYM', pitcher:'Sean Manaea', pitcherMano:'L', pitcherEra:4.31, slot:3, prob:72, confianza:'baja',
-    factores:['Derecho frente a zurdo','Ofensiva potente (82-51)','Puesto 3–4 del orden'], riesgos:['Manaea puede dominar'] },
+    factores:['RHB vs LHP','Potent offense (82-51)','Bats 3rd–4th'], riesgos:['Manaea can dominate'] },
   { rank:9, nombre:'Masyn Winn', equipoAbrev:'STL', rivalAbrev:'BAL', pitcher:'Trevor Rogers', pitcherMano:'L', pitcherEra:4.14, slot:2, prob:71, confianza:'baja',
-    factores:['Derecho frente a zurdo','Tope del orden'], riesgos:['Rogers es el más sólido del grupo'] },
+    factores:['RHB vs LHP','Top of the order'], riesgos:['Rogers is the toughest of the group'] },
 ];
 
 /* --------- CSS (inyectado una vez) --------- */
@@ -144,20 +156,34 @@ function inyectarCSS() {
 /* --------- Render --------- */
 function heroHTML(meta, demo, cargando) {
   const chips = [
-    `<span>Fecha · <b>${esc(meta.fecha)}</b></span>`,
-    `<span>Fuente · <b>MLB Stats API</b></span>`,
-    `<span>Métrica · <b>P(≥1 hit)</b></span>`,
-    demo ? `<span>Modo · <b>Demostración</b></span>` : `<span>Candidatos · <b>${meta.candidatosEvaluados || '—'}</b></span>`,
+    `<span>${L('Date', 'Fecha')} · <b>${esc(meta.fecha)}</b></span>`,
+    `<span>${L('Source', 'Fuente')} · <b>MLB Stats API</b></span>`,
+    `<span>${L('Metric', 'Métrica')} · <b>P(≥1 hit)</b></span>`,
+    demo ? `<span>${L('Mode', 'Modo')} · <b>${L('Demo', 'Demostración')}</b></span>` : `<span>${L('Candidates', 'Candidatos')} · <b>${meta.candidatosEvaluados || '—'}</b></span>`,
   ].join('');
   return `<div class="ply-hero">
     <div class="ply-hero-bg"></div><div class="ply-hero-veil"></div>
     <div class="ply-hero-in">
-      <span class="ply-eyebrow"><i></i>${cargando ? 'Cargando análisis…' : 'Servicio Premium · Proyección'}</span>
-      <div class="ply-title">Top 9 · Probabilidad de <em>≥1 Hit</em></div>
-      <div class="ply-lead">Los nueve bateadores con mayor probabilidad estimada de conectar al menos un imparable hoy. Modelo propio sobre datos oficiales: pitcher confirmado, splits por mano, forma reciente y orden de bateo.</div>
+      <span class="ply-eyebrow"><i></i>${cargando ? L('Loading analysis…', 'Cargando análisis…') : L('Premium · Hit Projection', 'Premium · Proyección de Hits')}</span>
+      <div class="ply-title">${L('Top 9 · Probability of', 'Top 9 · Probabilidad de')} <em>≥1 Hit</em></div>
+      <div class="ply-lead">${L('The nine batters with the highest estimated probability of getting at least one hit today. In-house model on official data: confirmed pitcher, handedness splits, recent form and batting order.', 'Los nueve bateadores con mayor probabilidad estimada de conectar al menos un imparable hoy. Modelo propio sobre datos oficiales: pitcher confirmado, splits por mano, forma reciente y orden de bateo.')}</div>
       <div class="ply-meta">${chips}</div>
     </div>
   </div>`;
+}
+
+/* Panel "en preparación" para deportes cuyo motor llega en la próxima parte. */
+function comingSoonHTML(sport) {
+  const d = DEPORTES[sport] || {};
+  const t = d.titulo ? d.titulo() : '';
+  return `<div class="ply"><div class="ply-lock">
+    <div class="ply-hero-bg"></div><div class="ply-hero-veil"></div>
+    <div class="ply-lock-in">
+      <span class="ply-eyebrow"><i></i>${L('Premium', 'Premium')} · ${esc(t)}</span>
+      <h3>${esc(t)}</h3>
+      <p>${L('This projection is on the way. The engine for this sport lands in the next update.', 'Esta proyección está en camino. El motor de este deporte llega en la próxima actualización.')}</p>
+    </div>
+  </div></div>`;
 }
 
 function cardHTML(p) {
@@ -174,17 +200,17 @@ function cardHTML(p) {
     <div class="ply-tags">
       <span class="ply-tag h">${esc(p.pitcherMano || 'R')}HP</span>
       <span class="ply-tag"><b>${esc(p.pitcher || '')}</b>${p.pitcherEra != null ? ' · ' + (+p.pitcherEra).toFixed(2) : ''}</span>
-      <span class="ply-tag">Turno ${esc(p.slot || '—')}</span>
+      <span class="ply-tag">${L('Slot', 'Turno')} ${esc(p.slot || '—')}</span>
     </div>
     <div class="ply-meter">
       <div class="ply-pct">${p.prob}%</div>
-      <div class="ply-plab">Probabilidad<br>de ≥1 hit</div>
+      <div class="ply-plab">${L('Probability<br>of ≥1 hit', 'Probabilidad<br>de ≥1 hit')}</div>
     </div>
     <div class="ply-track"><div class="ply-fill" data-w="${p.prob}"></div></div>
-    <span class="ply-conf ${p.confianza}"><i></i>Confianza ${esc(p.confianza)}</span>
+    <span class="ply-conf ${p.confianza}"><i></i>${L('Confidence', 'Confianza')} ${esc(confLabel(p.confianza))}</span>
     <div class="ply-split">
-      ${fav ? `<div class="ply-blk f"><div class="ply-blk-t">Factores favorables</div><ul>${fav}</ul></div>` : ''}
-      ${rsk ? `<div class="ply-blk r"><div class="ply-blk-t">Riesgos</div><ul>${rsk}</ul></div>` : ''}
+      ${fav ? `<div class="ply-blk f"><div class="ply-blk-t">${L('Key factors', 'Factores favorables')}</div><ul>${fav}</ul></div>` : ''}
+      ${rsk ? `<div class="ply-blk r"><div class="ply-blk-t">${L('Risks', 'Riesgos')}</div><ul>${rsk}</ul></div>` : ''}
     </div>
   </article>`;
 }
@@ -195,22 +221,28 @@ function animar(cont) {
 }
 
 /* API pública */
-export async function pintarParlay(cont, { esPremium = false, abrirPlanes } = {}) {
+export async function pintarParlay(cont, { sport = 'mlb', esPremium = false, abrirPlanes } = {}) {
   inyectarCSS();
+  const d = DEPORTES[sport] || DEPORTES.mlb;
+  const titulo = d.titulo();
 
+  // Candado premium (para cualquier deporte)
   if (!esPremium) {
     cont.innerHTML = `<div class="ply"><div class="ply-lock">
       <div class="ply-hero-bg"></div><div class="ply-hero-veil"></div>
       <div class="ply-lock-in">
-        <span class="ply-eyebrow"><i></i>Servicio Premium</span>
-        <h3>Proyección de Hits</h3>
-        <p>Cada día, los 9 bateadores con mayor probabilidad de conectar al menos un hit. Modelo propio sobre datos oficiales de MLB. Exclusivo del plan Premium.</p>
-        <button class="ply-cta" id="ply-cta">Ver plan Premium</button>
+        <span class="ply-eyebrow"><i></i>${L('Premium', 'Premium')}</span>
+        <h3>${esc(titulo)}</h3>
+        <p>${L('Every day, the players with the highest probability of the key play. In-house model on official data. Premium plan only.', 'Cada día, los jugadores con mayor probabilidad de la jugada clave. Modelo propio sobre datos oficiales. Exclusivo del plan Premium.')}</p>
+        <button class="ply-cta" id="ply-cta">${L('See Premium plan', 'Ver plan Premium')}</button>
       </div>
     </div></div>`;
     const b = cont.querySelector('#ply-cta'); if (b && abrirPlanes) b.onclick = abrirPlanes;
     return;
   }
+
+  // Deportes cuyo motor aún no está (fútbol / NBA): panel honesto "en preparación"
+  if (!d.activo) { cont.innerHTML = comingSoonHTML(sport); return; }
 
   cont.innerHTML = `<div class="ply">${heroHTML({ fecha: hoyISO() }, false, true)}</div>`;
 
@@ -218,17 +250,17 @@ export async function pintarParlay(cont, { esPremium = false, abrirPlanes } = {}
   try {
     const r = await topParlayHits({ fecha: hoyISO(), n: 9 });   // directo, sin proxy
     if (r?.jugadores?.length) { jugadores = r.jugadores; meta = r.meta; }
-    else { demo = true; nota = 'Los lineups de hoy aún no están publicados. Se muestra una demostración; el ranking en vivo aparece cuando MLB confirma las alineaciones, normalmente por la mañana del juego.'; }
+    else { demo = true; nota = L('Today\u2019s lineups are not posted yet. Showing a demo; the live ranking appears once MLB confirms the lineups, usually on the morning of the game.', 'Los lineups de hoy aún no están publicados. Se muestra una demostración; el ranking en vivo aparece cuando MLB confirma las alineaciones, normalmente por la mañana del juego.'); }
   } catch (_) {
-    demo = true; nota = 'No se pudo consultar la fuente en este momento. Se muestra una demostración.';
+    demo = true; nota = L('Could not reach the source right now. Showing a demo.', 'No se pudo consultar la fuente en este momento. Se muestra una demostración.');
   }
   if (demo) { jugadores = DEMO; meta = { fecha: hoyISO(), candidatosEvaluados: DEMO.length }; }
 
   cont.innerHTML = `<div class="ply">
     ${heroHTML(meta, demo, false)}
-    ${nota ? `<div class="ply-note"><b>Nota</b><span>${esc(nota)}</span></div>` : ''}
+    ${nota ? `<div class="ply-note"><b>${L('Note', 'Nota')}</b><span>${esc(nota)}</span></div>` : ''}
     <div class="ply-grid">${jugadores.map(cardHTML).join('')}</div>
-    <div class="ply-foot">Estimaciones probabilísticas del modelo, no datos oficiales ni asesoría de apuestas. El béisbol es de alta varianza: una probabilidad alta no es certeza.</div>
+    <div class="ply-foot">${L('Model probability estimates, not official data or betting advice. Baseball is high-variance: a high probability is not a certainty.', 'Estimaciones probabilísticas del modelo, no datos oficiales ni asesoría de apuestas. El béisbol es de alta varianza: una probabilidad alta no es certeza.')}</div>
   </div>`;
   animar(cont);
 }
