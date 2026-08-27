@@ -26,12 +26,7 @@ function aplicar(tema) {
 export function alternarTema() { aplicar(temaActual() === 'oscuro' ? 'claro' : 'oscuro'); }
 
 export function initTema() {
-  let guardado = 'oscuro';
-  try { guardado = localStorage.getItem(CLAVE) || 'oscuro'; } catch (_) {}
-  aplicar(guardado === 'claro' ? 'claro' : 'oscuro');   // oscuro por defecto
-
-  ['tema-btn', 'tema-btn-l', 'tema-btn-p'].forEach(id => {
-    const btn = document.getElementById(id);
-    if (btn) btn.onclick = () => aplicar(temaActual() === 'oscuro' ? 'claro' : 'oscuro');
-  });
+  // Tema oscuro FIJO (sin alternador). Se ignora cualquier preferencia guardada.
+  document.documentElement.setAttribute('data-tema', 'oscuro');
+  try { localStorage.setItem(CLAVE, 'oscuro'); } catch (_) {}
 }
