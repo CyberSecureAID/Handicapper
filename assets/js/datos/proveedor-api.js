@@ -18,6 +18,7 @@ const BASE = 'https://site.api.espn.com/apis/site/v2/sports';
 import { analizar } from '../analisis/motor.js';
 import { enriquecerMLB } from './mlb-oficial.js';
 import { comparativaEquiposESPN } from './equipos-stats.js';
+import { fotosWikipedia } from './fotos-wiki.js';
 
 /* Mapa de nuestras ligas -> ruta ESPN {deporte}/{liga} */
 const RUTA = {
@@ -217,6 +218,16 @@ function aMatch(ev, ligaId, ligaNombre) {
   const comp = ev?.competitions?.[0] || {};
   const futbol = esFutbol(ligaId);
   const { local, visita } = equiposDe(comp);
+  // Completa con la tabla REAL (récord + posición); reemplaza el rank basura (99).
+  const aplicarTabla = (eq) => {
+    const s = standingDe(ligaId, eq.id);
+    if (!s) { eq.posicion = null; return; }
+    if (s.record) eq.record = s.record;
+    eq.posicion = s.rank || null;
+    eq.winPct = (s.winPct != null ? s.winPct : null);
+    if (s.div && !eq.division) eq.division = s.div;
+  };
+  aplicarTabla(local); aplicarTabla(visita);
   const estado = estadoDe(ev);
   const mk = mercadoDe(comp, futbol, local, visita, ligaId);
   const m = {
@@ -226,8 +237,8 @@ function aMatch(ev, ligaId, ligaNombre) {
     cuando: ev?.date || comp?.date || null,
     sede: comp?.venue?.fullName || null,
     estado,
-    local:  { id: local.id, nombre: local.nombre, abrev: local.abrev, record: local.record, recordCasa: local.recordCasa, recordFuera: local.recordFuera, posicion: local.posicion, division: local.division, logo: local.logo, abridor: local.abridor },
-    visita: { id: visita.id, nombre: visita.nombre, abrev: visita.abrev, record: visita.record, recordCasa: visita.recordCasa, recordFuera: visita.recordFuera, posicion: visita.posicion, division: visita.division, logo: visita.logo, abridor: visita.abridor },
+    local:  { id: local.id, nombre: local.nombre, abrev: local.abrev, record: local.record, recordCasa: local.recordCasa, recordFuera: local.recordFuera, posicion: local.posicion, division: local.division, winPct: local.winPct, logo: local.logo, abridor: local.abridor },
+    visita: { id: visita.id, nombre: visita.nombre, abrev: visita.abrev, record: visita.record, recordCasa: visita.recordCasa, recordFuera: visita.recordFuera, posicion: visita.posicion, division: visita.division, winPct: visita.winPct, logo: visita.logo, abridor: visita.abridor },
     marcador: (estado !== 'proximo' && local.score != null)
       ? { local: Number(local.score), visita: Number(visita.score) } : null,
     mercado: mk.prob,          // cuota real si la hay; si no, null
@@ -353,6 +364,7 @@ export async function listarPartidos(ligaId = null) {
   const listas = await Promise.all(ids.map(async id => {
     const ruta = RUTA[id]; if (!ruta) return [];
     try {
+      await cargarStandings(id, ruta);   // tabla real (récord+posición), cacheada
       const data = await pedir(`${BASE}/${ruta}/scoreboard`);
       const eventos = data?.events || [];
       return eventos.slice(0, ligaId ? 40 : 6).map(ev => aMatch(ev, id, nombre(id)));
@@ -362,6 +374,44 @@ export async function listarPartidos(ligaId = null) {
   return listas.flat().sort((a, b) => (orden[a.estado] - orden[b.estado]));
 }
 
+/* ---- Tabla de posiciones REAL (récord, % victorias, puesto) ---- */
+const STANDINGS = new Map();   // ligaId -> Map(teamId -> {record, winPct, rank, div})
+async function cargarStandings(ligaId, ruta) {
+  if (STANDINGS.has(ligaId)) return STANDINGS.get(ligaId);
+  const mapa = new Map();
+  STANDINGS.set(ligaId, mapa);   // marca como intentado (evita reintentos en la misma sesión)
+  try {
+    const d = await pedir(`https://site.api.espn.com/apis/v2/sports/${ruta}/standings`);
+    const entries = [];
+    const juntar = (node) => {
+      if (!node) return;
+      if (Array.isArray(node.entries)) entries.push(...node.entries);
+      if (node.standings) juntar(node.standings);
+      if (Array.isArray(node.children)) node.children.forEach(juntar);
+      if (Array.isArray(node.groups)) node.groups.forEach(juntar);
+    };
+    juntar(d);
+    const futbol = String(ruta).startsWith('soccer');
+    entries.forEach(e => {
+      const id = e?.team?.id; if (!id) return;
+      const st = {}; (e.stats || []).forEach(s => { const k = (s.name || s.type || '').toLowerCase(); if (k) st[k] = (s.value != null ? s.value : s.displayValue); });
+      const num = (v) => { const n = Number(v); return isFinite(n) ? n : null; };
+      const w = num(st.wins), l = num(st.losses), t = num(st.ties), otl = num(st.otlosses);
+      let record = st.overall && /\d+-\d+/.test(String(st.overall)) ? String(st.overall) : null;
+      if (!record && w != null && l != null) record = futbol ? `${w}-${t ?? 0}-${l}` : (otl != null ? `${w}-${l}-${otl}` : `${w}-${l}`);
+      let winPct = num(st.winpercent);
+      if (winPct == null && w != null && l != null) { const tot = w + l + (t || 0) + (otl || 0); winPct = tot ? (w + (t || 0) * 0.5) / tot : null; }
+      const rank = num(st.rank) ?? num(st.playoffseed) ?? num(st.leaguestanding) ?? num(st.divisionrank) ?? null;
+      const div = (typeof st.group === 'string' ? st.group : null);
+      mapa.set(String(id), { record, winPct, rank: (rank && rank > 0 && rank < 99 ? rank : null), div });
+    });
+  } catch (_) { /* si falla, el mapa queda vacío y se usa el scoreboard */ }
+  return mapa;
+}
+function standingDe(ligaId, teamId) {
+  const m = STANDINGS.get(ligaId); return m ? m.get(String(teamId)) : null;
+}
+
 export async function detallePartido(id) {
   const [ligaId, evId] = String(id).split(':');
   const ruta = RUTA[ligaId]; if (!ruta) return null;
@@ -369,6 +419,8 @@ export async function detallePartido(id) {
   const futbol = esFutbol(ligaId);
 
   let m = null;
+  // 0) tabla real (récord + posición) cacheada
+  try { await cargarStandings(ligaId, ruta); } catch (_) {}
   // 1) scoreboard (normalmente ya cacheado)
   try {
     const data = await pedir(`${BASE}/${ruta}/scoreboard`);
@@ -456,6 +508,19 @@ export async function detallePartido(id) {
         ]);
         if (rl?.length) m.plantilla.local = fusionRoster(m.plantilla.local, rl);
         if (rv?.length) m.plantilla.visita = fusionRoster(m.plantilla.visita, rv);
+      } catch (_) {}
+
+      // Segundo proveedor de fotos (Wikipedia): rellena SOLO a quienes no tienen
+      // foto de ESPN. Gratis, sin clave, una llamada por equipo.
+      try {
+        await Promise.all(['local', 'visita'].map(async lado => {
+          const arr = (m.plantilla && m.plantilla[lado]) || [];
+          const sinFoto = arr.filter(j => j && j.nombre && !j.foto);
+          if (!sinFoto.length) return;
+          const mapa = await fotosWikipedia(sinFoto.map(j => j.nombre));
+          const key = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+          sinFoto.forEach(j => { const u = mapa[key(j.nombre)]; if (u) j.foto = u; });
+        }));
       } catch (_) {}
 
       // Si no hubo cuota ni proyección, re-ejecuta el motor con los datos
