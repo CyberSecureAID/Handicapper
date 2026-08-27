@@ -174,7 +174,7 @@ export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 3
         const bat = await statsBateador(pid, season, proxy); if (!bat) continue;
         const est = estimarHit({ bateador: bat, pitcher: L.pit, slot: i + 1, venue, lineupConfirmado: L.conf });
         candidatos.push({
-          nombre: bat.nombre, equipo: L.equipo?.name, equipoAbrev: L.equipo?.abbreviation,
+          id: bat.id, nombre: bat.nombre, equipo: L.equipo?.name, equipoAbrev: L.equipo?.abbreviation,
           rival: L.rival?.name, rivalAbrev: L.rival?.abbreviation, venue,
           pitcher: L.pit.nombre, pitcherMano: L.pit.mano, pitcherEra: L.pit.era,
           slot: i + 1, mano: bat.mano, ...est,

@@ -170,7 +170,7 @@ export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 3 } = {
         if ((jug.ppg || 0) < 8) continue;   // solo anotadores relevantes
         const est = estimarPuntos({ jugador: { ...jug, titular: true }, oponente, local: lado.local, lineupConfirmado: false });
         candidatos.push({
-          nombre: jug.nombre, equipoAbrev: lado.equipo.abbreviation, rivalAbrev: lado.rival.abbreviation,
+          id: jug.id, nombre: jug.nombre, equipoAbrev: lado.equipo.abbreviation, rivalAbrev: lado.rival.abbreviation,
           ppg: jug.ppg, mpg: jug.mpg, local: lado.local, ptsPermRival: oponente.ptsPermitidos, ...est,
         });
         count++;

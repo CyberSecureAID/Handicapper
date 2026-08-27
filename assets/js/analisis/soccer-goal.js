@@ -179,7 +179,7 @@ export async function topGoalProjection({ fecha, n = 9, maxPorEquipo = 3, ligas 
           if (perfil.peso < 0.4 && (jug.goles || 0) < 3) continue;   // descarta defensas/porteros sin gol
           const est = estimarGol({ jugador: { ...jug, titular: true }, oponente, local: lado.local, lineupConfirmado: false });
           candidatos.push({
-            nombre: jug.nombre, equipoAbrev: lado.equipo.abbreviation, rivalAbrev: lado.rival.abbreviation,
+            id: jug.id, nombre: jug.nombre, equipoAbrev: lado.equipo.abbreviation, rivalAbrev: lado.rival.abbreviation,
             pos: jug.pos, goles: jug.goles, local: lado.local,
             gaRival: oponente.gaPorPartido, ...est,
           });
