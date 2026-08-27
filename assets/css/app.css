@@ -680,3 +680,13 @@
   .d16-side.visita { border-left: 0; border-top: 1px solid rgba(255,255,255,.07); }
 }
 
+
+/* --- Entrada premium "Parlay" en la barra de ligas --- */
+.liga.proj{position:relative;color:#eaf4ff;font-weight:700;
+  background:linear-gradient(135deg,rgba(56,169,240,.14),rgba(240,53,58,.10));
+  border:1px solid rgba(56,169,240,.30)}
+.liga.proj:hover{border-color:rgba(56,169,240,.55)}
+.liga.proj.on{border-color:rgba(56,169,240,.7);box-shadow:inset 0 0 0 1px rgba(56,169,240,.25)}
+.liga-pro{margin-left:auto;font-family:"Chakra Petch",sans-serif;font-size:9px;font-weight:800;letter-spacing:.1em;
+  color:#06121f;background:linear-gradient(90deg,#39a7f0,#7cc7f7);border-radius:5px;padding:2px 6px}
+.pestana.proj{color:#7cc7f7;border-color:rgba(56,169,240,.4);font-weight:700}
