@@ -11,7 +11,8 @@ import { compartirPartido } from './ui/compartir.js';
 import { iniciarAuth, registrarCorreo, entrarCorreo, entrarGoogle, salir, mensajeError, estaConfigurado } from './auth/auth.js';
 import { initAuthUI, abrirAuth } from './auth/auth-ui.js';
 import { initNavegacion, mostrarPantalla, aplicarI18n } from './ui/navegacion.js';
-import { fijarSuscripcion, tieneAcceso, limpiarVistaPrevia, marcarVistaPrevia } from './auth/estado-pago.js';
+import { fijarSuscripcion, tieneAcceso, limpiarVistaPrevia, marcarVistaPrevia, planActual } from './auth/estado-pago.js';
+import { pintarParlay } from './ui/parlay.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -40,7 +41,9 @@ function pintarDrawer() {
   const cont = $('drawer-ligas');
   if (!cont) return;
   const items = [{ id: null, nombre: t('liga.todos'), corto: t('liga.todos'), logo: 'assets/imagenes/dep-todos.png' }, ...LIGAS];
-  cont.innerHTML = items.map(l => `
+  const parlayBtn = `<button class="liga proj ${ligaActiva === '__proj__' ? 'on' : ''}" data-liga="__proj__">
+      <span class="ic">${IC.diana || ''}</span>Proyección<span class="liga-pro">PRO</span></button>`;
+  cont.innerHTML = parlayBtn + items.map(l => `
     <button class="liga ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">
       <span class="ic">${ligaIcono(l)}</span>${l.corto || l.nombre}
     </button>`).join('');
@@ -64,7 +67,9 @@ function pintarLigas() {
   const cont = $('lista-ligas');
   if (!cont) return;
   const items = [{ id: null, nombre: t('liga.todos'), logo: 'assets/imagenes/dep-todos.png' }, ...LIGAS];
-  cont.innerHTML = items.map(l => `
+  const parlayBtn = `<button class="liga proj ${ligaActiva === '__proj__' ? 'on' : ''}" data-liga="__proj__">
+      <span class="ic">${IC.diana || ''}</span>Proyección<span class="liga-pro">PRO</span></button>`;
+  cont.innerHTML = parlayBtn + items.map(l => `
     <button class="liga ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">
       <span class="ic">${ligaIcono(l)}</span>${l.nombre}
     </button>`).join('');
@@ -78,7 +83,8 @@ function pintarPestanas() {
   const cont = $('pestanas');
   if (!cont) return;
   const items = [{ id: null, nombre: t('liga.todos') }, ...LIGAS.map(l => ({ id: l.id, nombre: l.nombre }))];
-  cont.innerHTML = items.map(l => `
+  cont.innerHTML = `<button class="pestana proj ${ligaActiva === '__proj__' ? 'on' : ''}" data-liga="__proj__">Proyección</button>` +
+    items.map(l => `
     <button class="pestana ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">${l.nombre}</button>`).join('');
   cont.querySelectorAll('.pestana').forEach(b => b.onclick = () => {
     ligaActiva = b.dataset.liga || null; pintarLigas(); pintarPestanas(); cargarLista();
@@ -92,6 +98,14 @@ let _busqueda = '';
 async function cargarLista() {
   const cont = $('lista');
   if (!cont) return;
+  // Sección premium Parlay (Top 9 P(≥1 hit))
+  if (ligaActiva === '__proj__') {
+    await pintarParlay(cont, {
+      esPremium: planActual() === 'premium',
+      abrirPlanes: () => mostrarPantalla('pricing'),
+    });
+    return;
+  }
   cont.innerHTML = `<div class="seccion-t">${t('cargando')}</div>`;
   _partidos = await listarPartidos(ligaActiva);
   pintarLista();
