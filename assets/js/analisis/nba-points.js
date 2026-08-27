@@ -3,7 +3,7 @@
    anotar 20+ puntos hoy (mercado de puntos over/under).
    Fuente: ESPN (site.api.espn.com), CORS abierto.
    Modelo PROPIO: los puntos son ~Normales -> se proyecta μ (puntos
-   esperados) y P(20+) = Φ((μ − 20) / σ), con σ ligada a μ.
+   esperados) y P(20+) = Φ((μ − 20) / σ), con σ ligada a μ
    μ se ajusta por defensa rival, ritmo, local/visita, minutos y forma.
    ============================================================ */
 
