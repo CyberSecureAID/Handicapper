@@ -9,6 +9,7 @@
 import { topParlayHits } from '../analisis/mlb-parlay.js';
 import { topGoalProjection } from '../analisis/soccer-goal.js';
 import { topPointsProjection } from '../analisis/nba-points.js';
+import { abrirTracker } from './tracker.js';
 import { idiomaActual } from './idioma.js';
 
 const ES = () => idiomaActual() === 'es';
@@ -139,6 +140,11 @@ function inyectarCSS() {
   .ply-nm{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:19px;color:var(--tx);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ply-mt{font-size:12px;color:var(--tx2);font-weight:600;margin-top:2px}
   .ply-mt b{color:var(--tx)}
+  .ply-c{cursor:pointer;transition:transform .16s ease,border-color .16s ease}
+  .ply-c:hover{transform:translateY(-2px);border-color:rgba(77,180,247,.42)}
+  .ply-c:focus-visible{outline:2px solid var(--az);outline-offset:2px}
+  .ply-trk{margin-left:auto;flex:0 0 auto;align-self:flex-start;font-family:"Chakra Petch",sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--az);opacity:.7}
+  .ply-c:hover .ply-trk{opacity:1}
   .ply-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:15px}
   .ply-tag{font-size:11px;font-weight:600;color:var(--tx2);border:1px solid var(--line);border-radius:7px;padding:4px 8px;background:rgba(255,255,255,.02);white-space:nowrap}
   .ply-tag.h{color:var(--az);border-color:rgba(77,180,247,.3)}
@@ -206,10 +212,11 @@ function cardHTML(p, cfg) {
   const tags = (cfg.toCard(p).tags || []).map((t, i) => `<span class="ply-tag${i === 0 ? ' h' : ''}">${esc(tagTxt(t))}</span>`).join('');
   const fav = (p.factores || []).map(f => `<li>${esc(f)}</li>`).join('');
   const rsk = (p.riesgos || []).map(f => `<li>${esc(f)}</li>`).join('');
-  return `<article class="ply-c r${p.rank}">
+  return `<article class="ply-c r${p.rank}" role="button" tabindex="0" data-idx="${p.rank}" title="${L('View last 10 games', 'Ver últimos 10 partidos')}">
     <div class="ply-c-top"><div class="ply-rank">${p.rank}</div>
       <div class="ply-idn"><div class="ply-nm">${esc(p.nombre)}</div>
-        <div class="ply-mt"><b>${esc(p.equipoAbrev || '')}</b> ${L('vs', 'vs')} ${esc(p.rivalAbrev || '')}</div></div></div>
+        <div class="ply-mt"><b>${esc(p.equipoAbrev || '')}</b> ${L('vs', 'vs')} ${esc(p.rivalAbrev || '')}</div></div>
+      <span class="ply-trk">${L('Last 10', 'Últ. 10')} ›</span></div>
     <div class="ply-tags">${tags}</div>
     <div class="ply-meter"><div class="ply-pct">${p.prob}%</div><div class="ply-plab">${cfg.metricLabel}</div></div>
     <div class="ply-track"><div class="ply-fill" data-w="${p.prob}"></div></div>
@@ -261,4 +268,12 @@ export async function pintarParlay(cont, { sport = 'mlb', esPremium = false, abr
     <div class="ply-foot">${esc(cfg.foot)}</div>
   </div>`;
   animar(cont);
+
+  // Seguimiento individual: al tocar una tarjeta, abre los últimos 10 partidos
+  cont.querySelectorAll('.ply-c[data-idx]').forEach(el => {
+    const j = jugadores[+el.dataset.idx - 1]; if (!j) return;
+    const abrir = () => abrirTracker(j, sport);
+    el.addEventListener('click', abrir);
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } });
+  });
 }
