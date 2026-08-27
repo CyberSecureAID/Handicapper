@@ -1,6 +1,6 @@
 /* ============================================================
    GOAL PROJECTION ENGINE — Top N jugadores con mayor
-   P(anotar ≥1 gol) hoy (mercado "anytime goalscorer").
+   P(anotar ≥1 gol) hoy (mercado "anytime goalscorer")
    Fuente: ESPN (site.api.espn.com), CORS abierto (ya usado por la app).
    Modelo PROPIO tipo Poisson: P(≥1 gol) = 1 − e^(−λ), con λ = goles
    esperados del jugador en el partido, ajustado por defensa rival,
