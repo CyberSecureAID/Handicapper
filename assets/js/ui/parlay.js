@@ -152,7 +152,7 @@ function heroHTML(meta, demo, cargando) {
   return `<div class="ply-hero">
     <div class="ply-hero-bg"></div><div class="ply-hero-veil"></div>
     <div class="ply-hero-in">
-      <span class="ply-eyebrow"><i></i>${cargando ? 'Cargando análisis…' : 'Servicio Premium · Parlay'}</span>
+      <span class="ply-eyebrow"><i></i>${cargando ? 'Cargando análisis…' : 'Servicio Premium · Proyección'}</span>
       <div class="ply-title">Top 9 · Probabilidad de <em>≥1 Hit</em></div>
       <div class="ply-lead">Los nueve bateadores con mayor probabilidad estimada de conectar al menos un imparable hoy. Modelo propio sobre datos oficiales: pitcher confirmado, splits por mano, forma reciente y orden de bateo.</div>
       <div class="ply-meta">${chips}</div>
@@ -203,7 +203,7 @@ export async function pintarParlay(cont, { esPremium = false, abrirPlanes } = {}
       <div class="ply-hero-bg"></div><div class="ply-hero-veil"></div>
       <div class="ply-lock-in">
         <span class="ply-eyebrow"><i></i>Servicio Premium</span>
-        <h3>Parlay de Hits</h3>
+        <h3>Proyección de Hits</h3>
         <p>Cada día, los 9 bateadores con mayor probabilidad de conectar al menos un hit. Modelo propio sobre datos oficiales de MLB. Exclusivo del plan Premium.</p>
         <button class="ply-cta" id="ply-cta">Ver plan Premium</button>
       </div>
