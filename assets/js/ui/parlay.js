@@ -8,6 +8,7 @@
    ============================================================ */
 import { topParlayHits } from '../analisis/mlb-parlay.js';
 import { topGoalProjection } from '../analisis/soccer-goal.js';
+import { topPointsProjection } from '../analisis/nba-points.js';
 import { idiomaActual } from './idioma.js';
 
 const ES = () => idiomaActual() === 'es';
@@ -40,6 +41,18 @@ const DEMO_SOCCER = [
     factores:[L('Takes penalties','Cobra penales'), L('Plays at home','Juega en casa')], riesgos:[L('Solid opposing defense','Defensa rival sólida')] },
 ];
 
+const DEMO_NBA = [
+  { rank:1, nombre:'Elite Scorer', equipoAbrev:'HOME', rivalAbrev:'AWY', prob:84, confianza:'media',
+    tags:[() => L('31.2 proj','31.2 proy'), () => L('vs AWY · 119 allowed','vs AWY · 119 permitidos'), '29.5 PPG'],
+    factores:[L('Opponent allows 119 pts/game','El rival permite 119 pts/partido'), L('High-pace game','Partido de ritmo alto'), L('Plenty of minutes','Muchos minutos')], riesgos:[L('Lineup not confirmed','Alineación no confirmada')] },
+  { rank:2, nombre:'Primary Option', equipoAbrev:'CLB', rivalAbrev:'OPP', prob:69, confianza:'media',
+    tags:[() => L('25.8 proj','25.8 proy'), () => L('vs OPP · 114 allowed','vs OPP · 114 permitidos'), '25.0 PPG'],
+    factores:[L('Scorer averaging 25.0','Anotador de 25.0 de promedio'), L('Heavy minutes','Muchos minutos')], riesgos:[L('Away from home','Juega de visita')] },
+  { rank:3, nombre:'Secondary Scorer', equipoAbrev:'TMX', rivalAbrev:'RVL', prob:55, confianza:'baja',
+    tags:[() => L('21.4 proj','21.4 proy'), () => L('vs RVL · 116 allowed','vs RVL · 116 permitidos'), '20.1 PPG'],
+    factores:[L('Usage up with a starter out','Más protagonismo por una baja')], riesgos:[L('Rotation/minutes risk','Riesgo de minutos')] },
+];
+
 /* ---------- Configuración de vista por deporte ---------- */
 function VISTA(sport) {
   const base = {
@@ -70,8 +83,17 @@ function VISTA(sport) {
       toCard: (p) => ({ ...p, tags: p.tags || [ p.pos || 'FW', (p.gaRival != null ? `${L('vs', 'vs')} ${p.rivalAbrev} · ${(+p.gaRival).toFixed(2)} ${L('GA', 'GC')}` : `${L('vs', 'vs')} ${p.rivalAbrev || ''}`), (p.goles != null ? `${p.goles} G` : '') ].filter(Boolean) }),
     },
     nba: {
-      activo: false, eyebrow: L('Premium · Points Projection', 'Premium · Proyección de Puntos'),
-      titulo: L('Points Projection', 'Proyección de Puntos'),
+      activo: true, source: 'ESPN', run: () => topPointsProjection({ fecha: hoyISO(), n: 9 }), demo: DEMO_NBA,
+      eyebrow: L('Premium · Points Projection', 'Premium · Proyección de Puntos'),
+      titulo: `${L('Top 9 · Probability of', 'Top 9 · Probabilidad de')} <em>20+ ${L('Points', 'Puntos')}</em>`,
+      metric: 'P(20+ pts)', metricLabel: L('Probability<br>of 20+ pts', 'Probabilidad<br>de 20+ pts'),
+      lead: L('The nine players with the highest estimated probability of scoring 20 or more points today. In-house model: projected points from opponent defense, pace, home/away, minutes and recent form.',
+              'Los nueve jugadores con mayor probabilidad estimada de anotar 20 o más puntos hoy. Modelo propio: puntos proyectados a partir de defensa rival, ritmo, local/visita, minutos y forma reciente.'),
+      nota: L('NBA lineups and minutes finalize close to tip-off. Until then, minutes are projected. Showing a demo if no live data is available.',
+              'Las alineaciones y minutos de la NBA se definen cerca del salto inicial. Hasta entonces, los minutos son proyectados. Se muestra una demostración si no hay datos en vivo.'),
+      foot: L('Model probability estimates, not official data or betting advice. Basketball is high-variance: a high probability is not a certainty.',
+              'Estimaciones probabilísticas del modelo, no datos oficiales ni asesoría de apuestas. El baloncesto es de alta varianza: una probabilidad alta no es certeza.'),
+      toCard: (p) => ({ ...p, tags: p.tags || [ `${p.proj} ${L('proj', 'proy')}`, (p.ptsPermRival != null ? `${L('vs', 'vs')} ${p.rivalAbrev} · ${(+p.ptsPermRival).toFixed(0)} ${L('allowed', 'perm.')}` : `${L('vs', 'vs')} ${p.rivalAbrev || ''}`), (p.ppg != null ? `${(+p.ppg).toFixed(1)} PPG` : '') ].filter(Boolean) }),
     },
   };
   return base[sport] || base.mlb;
