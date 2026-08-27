@@ -123,9 +123,17 @@ export function analizar(match) {
   // 3) MODELO propio (aditivo en log-odds)
   const factoresUsados = [];   // para explicar y medir confianza
 
-  // 3a) Fuerza por récord total
-  const Lall = fuerzaLogit(match.local.record, futbol, ligaId);
-  const Vall = fuerzaLogit(match.visita.record, futbol, ligaId);
+  // 3a) Fuerza por récord/% de victorias real (de la tabla de posiciones)
+  const fuerzaDe = (eq) => {
+    const wp = numDe(eq && eq.winPct);
+    if (wp != null && wp > 0 && wp < 1) {
+      const k = 0.12; const p = clamp((wp * (1 - k) + 0.5 * k), 0.05, 0.95);
+      return { logit: logit(p), n: 20 };   // dato real de tabla -> muestra sólida
+    }
+    return fuerzaLogit(eq && eq.record, futbol, ligaId);
+  };
+  const Lall = fuerzaDe(match.local);
+  const Vall = fuerzaDe(match.visita);
   // 3b) Forma situacional: local en casa, visita fuera
   const Lhome = fuerzaLogit(match.local.recordCasa, futbol, ligaId);
   const Vaway = fuerzaLogit(match.visita.recordFuera, futbol, ligaId);
@@ -183,6 +191,15 @@ export function analizar(match) {
   L += desparejador(match);
 
   let pLocal = clamp(sig(L), W.clampLo, W.clampHi);
+
+  // Inclinación mínima: la página debe DECIDIR. Nunca 50-50; si quedó muy
+  // pegado al centro, se separa un poco manteniendo la dirección (o la del
+  // desparejador si estaba exactamente en 0.5).
+  const MIN_LEAN = 0.045;   // ~4.5 puntos de separación mínima del centro
+  if (Math.abs(pLocal - 0.5) < MIN_LEAN) {
+    const dir = (pLocal === 0.5) ? (desparejador(match) >= 0 ? 1 : -1) : Math.sign(pLocal - 0.5);
+    pLocal = 0.5 + dir * MIN_LEAN;
+  }
 
   // 4) Confianza según señales reales y tamaño de muestra
   const nSenales = factoresUsados.length;
