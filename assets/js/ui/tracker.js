@@ -72,7 +72,7 @@ function inyectarCSS() {
   .trk-bg{position:fixed;inset:0;z-index:120;background:rgba(3,6,11,.74);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;transition:opacity .18s}
   .trk-bg.on{opacity:1}
   .trk{width:100%;max-width:580px;max-height:92vh;overflow:auto;border:1px solid rgba(232,196,106,.22);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .18s;
-    background:linear-gradient(180deg,rgba(18,26,38,.96),rgba(11,17,25,.98)),url('assets/imagenes/textura-tarjeta.jpg') center/cover}
+    background:linear-gradient(180deg,rgba(12,18,26,.90),rgba(9,14,20,.94)),url('assets/imagenes/fondos/tracker.jpg') center/cover,#0d131d}
   .trk-bg.on .trk{transform:none}
   .trk-hd{position:relative;padding:20px 22px;border-bottom:1px solid rgba(255,255,255,.08);background:linear-gradient(135deg,rgba(232,196,106,.14),rgba(240,53,58,.08))}
   .trk-eq{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#cdb98a}
