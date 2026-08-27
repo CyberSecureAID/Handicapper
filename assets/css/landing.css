@@ -29,7 +29,7 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .lnav-acc { display: flex; align-items: center; gap: 10px; }
 .lbtn { height: 40px; padding: 0 18px; border-radius: 11px; font-weight: 800; font-size: 13.5px;
   cursor: pointer; border: 1px solid transparent; transition: all var(--trans); white-space: nowrap; }
-.lbtn.ghost { background: transparent; border-color: var(--linea); color: var(--tinta); }
+.lbtn.ghost { background: linear-gradient(180deg, rgba(32,38,48,.92), rgba(18,22,30,.96)), url('../imagenes/textura-tarjeta.jpg'); background-size: cover; background-position: center; border-color: rgba(255,255,255,.16); color: var(--tinta); }
 .lbtn.ghost:hover { border-color: var(--oro); color: var(--oro); }
 .lbtn.oro { background: linear-gradient(180deg, var(--oro), var(--oro-2)); color: #3a2800;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 2px 8px rgba(0,0,0,.2); }
