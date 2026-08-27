@@ -127,14 +127,21 @@ function nombreCortoEquipo(nombre) {
 function pintarTab() {
   const m = document.getElementById('mesa-main');
   if (!m) return;
-  if (_tab === 'resumen') m.innerHTML = vistaResumen();
+  if (_tab === 'resumen') { m.innerHTML = vistaResumen(); enlazarResumen(); }
   else if (_tab === 'usuarios') { m.innerHTML = vistaUsuarios(); enlazarUsuarios(); }
   else if (_tab === 'analisis') { m.innerHTML = vistaAnalisis(); enlazarAnalisis(); }
 }
 
 /* ================= OVERVIEW ================= */
-function activo(u) { return !!(u.suscripcion && u.suscripcion.activo); }
-function precioMensual(planId) { const p = planPorId(planId); return p ? p.mensual : 0; }
+function activo(u) { return !!(u.suscripcion && u.suscripcion.activo); }function precioMensual(planId) { const p = planPorId(planId); return p ? p.mensual : 0; }
+
+function enlazarResumen() {
+  _cont.querySelectorAll('[data-goto]').forEach(b => b.onclick = () => {
+    _tab = b.dataset.goto;
+    _cont.querySelectorAll('.mesa-nav button[data-tab]').forEach(x => x.classList.toggle('on', x.dataset.tab === _tab));
+    pintarTab();
+  });
+}
 
 function vistaResumen() {
   const total = _usuarios.length;
@@ -142,26 +149,50 @@ function vistaResumen() {
   const inactivos = total - conPlan.length;
   const mrr = conPlan.reduce((s, u) => s + precioMensual(u.suscripcion.plan), 0);
   const bloqueados = _usuarios.filter(u => u.bloqueado).length;
-  const porPlan = PLANES.map(p => ({ nombre: p.nombre, n: conPlan.filter(u => u.suscripcion.plan === p.id).length }));
+  const act = conPlan.length;
+  const conv = total ? Math.round(act / total * 100) : 0;
+  const COL = { basic: '#38a9f0', pro: '#e8b84b', premium: '#f0353a' };
+  const porPlan = PLANES.map(p => ({ id: p.id, nombre: p.nombre, n: conPlan.filter(u => u.suscripcion.plan === p.id).length }));
 
-  const kpi = (etq, val, sub) => `<div class="mesa-kpi"><span class="k-etq">${etq}</span><span class="k-val">${val}</span>${sub ? `<span class="k-sub">${sub}</span>` : ''}</div>`;
-  const max = Math.max(1, ...porPlan.map(x => x.n));
-  const barras = porPlan.map(p => `<div class="mp-row"><span class="mp-n">${p.nombre}</span><div class="mp-bar"><i style="width:${(p.n / max) * 100}%"></i></div><span class="mp-v">${p.n}</span></div>`).join('');
+  const C = 2 * Math.PI * 58; let off = 0;
+  const segs = porPlan.map(p => { const len = act ? p.n / act * C : 0; const s = `<circle cx="75" cy="75" r="58" fill="none" stroke="${COL[p.id] || '#38a9f0'}" stroke-width="15" stroke-dasharray="${len.toFixed(2)} ${(C - len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 75 75)"/>`; off += len; return s; }).join('');
+  const barras = porPlan.map(p => { const pct = act ? Math.round(p.n / act * 100) : 0; return `<div class="ov-plan ${p.id}"><div class="ov-plan-n"><i></i>${p.nombre}</div><div class="ov-plan-track"><i style="width:${pct}%"></i></div><div class="ov-plan-v">${p.n}</div><div class="ov-plan-pct">${pct}%</div></div>`; }).join('');
+
+  const spark = (color, fill) => `<svg class="ov-spark" viewBox="0 0 300 64" preserveAspectRatio="none">${fill ? `<defs><linearGradient id="sg${color.slice(1)}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".28"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs><path d="M0 48 C40 46 60 40 90 42 S150 30 190 34 240 22 300 26 L300 64 L0 64Z" fill="url(#sg${color.slice(1)})"/>` : ''}<path d="M0 48 C40 46 60 40 90 42 S150 30 190 34 240 22 300 26" fill="none" stroke="${color}" stroke-width="2.5"/></svg>`;
+
+  const ICp = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0111 0"/><path d="M16 5.5a3 3 0 010 5.6M17 20a5.5 5.5 0 00-3-4.9"/></svg>`;
+  const ICu = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20a6.5 6.5 0 0113 0"/></svg>`;
+  const ICx = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0110-3.2"/><path d="M16 9l5 5M21 9l-5 5" stroke-linecap="round"/></svg>`;
+  const ICd = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M16 7.5c0-2-1.8-3-4-3s-4 .9-4 2.8c0 3.7 8 2 8 5.7 0 2-1.9 3-4 3s-4-1-4-3"/></svg>`;
+  const kpi = (cls, ic, lab, dot, val, cap, color, fill) => `<div class="ov-kpi">
+      <div class="ov-kpi-lab ${cls}">${lab}${dot}</div>
+      <div class="ov-kpi-row"><div class="ov-kpi-ic ${cls}">${ic}</div><div><div class="ov-kpi-num">${val}</div><div class="ov-kpi-cap">${cap}</div></div></div>
+      ${spark(color, fill)}</div>`;
 
   return `
-    <div class="mesa-head"><h1>Overview</h1><p>Live snapshot of the platform.</p></div>
-    <div class="mesa-kpis">
-      ${kpi('Registered users', total)}
-      ${kpi('Active', conPlan.length, 'paying members')}
-      ${kpi('Inactive', inactivos, 'free / lapsed')}
-      ${kpi('Monthly revenue', '$' + mrr.toFixed(2), 'MRR estimate')}
+    <div class="ov-head"><h1>Overview</h1><p>Live snapshot of the platform.</p></div>
+    <div class="ov-kpis">
+      ${kpi('blue', ICp, 'Registered users', '', total, 'Total registered', '#38a9f0', true)}
+      ${kpi('blue', ICu, 'Active', '<span class="ov-dot on"></span>', act, 'Paying members', '#38a9f0', false)}
+      ${kpi('muted', ICx, 'Inactive', '<span class="ov-dot off"></span>', inactivos, 'Free / lapsed', '#7b8494', false)}
+      ${kpi('gold', ICd, 'Monthly revenue', '', '$' + mrr.toFixed(2), 'MRR estimate', '#e8b84b', true)}
     </div>
-    <div class="mesa-grid2">
-      <div class="mesa-card"><div class="mc-t">Active by plan</div><div class="mp-lista">${barras}</div></div>
-      <div class="mesa-card"><div class="mc-t">Health</div>
-        <div class="mesa-mini"><span>Blocked accounts</span><b>${bloqueados}</b></div>
-        <div class="mesa-mini"><span>Published signals</span><b>${_analisis.length}</b></div>
-        <div class="mesa-mini"><span>Conversion</span><b>${total ? Math.round(conPlan.length / total * 100) : 0}%</b></div>
+    <div class="ov-grid2">
+      <div class="ov-card"><div class="ov-card-t">Active by plan</div>
+        <div class="ov-plan-wrap">
+          <div class="ov-donut"><svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="58" fill="none" stroke="#1b2433" stroke-width="15"/>${segs}</svg><div class="ov-donut-mid"><div class="c">${act}</div><div class="t">Total</div></div></div>
+          <div class="ov-plans">${barras}</div>
+        </div></div>
+      <div class="ov-card"><div class="ov-card-t heart">Health</div>
+        <div class="ov-mini"><span>Blocked accounts</span><b>${bloqueados}</b></div>
+        <div class="ov-mini"><span>Published signals</span><b>${_analisis.length}</b></div>
+        <div class="ov-mini hl"><span>Conversion</span><b>${conv}%</b></div>
+      </div>
+    </div>
+    <div class="ov-band"><div class="ov-band-t">Admin only</div>
+      <div class="ov-band-grid">
+        <button class="ov-adm" data-goto="usuarios"><span class="ov-adm-ic">${ICu}</span><span class="ov-adm-tx"><b>Manage users</b><em>Users, plans and blocks.</em></span><span class="ov-adm-go">›</span></button>
+        <button class="ov-adm" data-goto="analisis"><span class="ov-adm-ic gear">${ICp}</span><span class="ov-adm-tx"><b>Analysis</b><em>Published analysis &amp; signals.</em></span><span class="ov-adm-go">›</span></button>
       </div>
     </div>`;
 }
