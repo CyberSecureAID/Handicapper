@@ -205,3 +205,65 @@ body.en-mesa { overflow: hidden; }
   .u-select { flex: 1; max-width: 160px; }
   .an-liga { width: calc(33.333% - 7px); }
 }
+
+/* ===== Overview (rediseño estilo panel) ===== */
+.ov-head h1 { font-family:'Chakra Petch',sans-serif; font-size:30px; font-weight:800; margin:0; color:#fff; }
+.ov-head p { color:var(--m-tinta2); margin:6px 0 24px; font-size:14px; }
+.ov-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:18px; }
+.ov-kpi { position:relative; background:var(--m-tarjeta); border:1px solid var(--m-linea); border-radius:16px; padding:18px 20px 0; overflow:hidden; min-height:190px; }
+.ov-kpi-lab { display:flex; align-items:center; gap:8px; font-size:11.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:#5ab0ef; }
+.ov-kpi-lab.gold { color:var(--m-oro); }
+.ov-kpi-lab.muted { color:#93a0ae; }
+.ov-dot { width:8px; height:8px; border-radius:50%; }
+.ov-dot.on { background:#26c281; box-shadow:0 0 8px rgba(38,194,129,.8); }
+.ov-dot.off { background:#3a4353; }
+.ov-kpi-row { display:flex; align-items:center; gap:15px; margin-top:16px; }
+.ov-kpi-ic { width:54px; height:54px; border-radius:13px; display:grid; place-items:center; flex:0 0 auto; background:linear-gradient(135deg,rgba(56,169,240,.18),rgba(56,169,240,.05)); color:#7cc7f7; border:1px solid rgba(56,169,240,.18); }
+.ov-kpi-ic svg { width:25px; height:25px; }
+.ov-kpi-ic.gold { background:linear-gradient(135deg,rgba(232,184,75,.2),rgba(232,184,75,.05)); color:var(--m-oro); border-color:rgba(232,184,75,.22); }
+.ov-kpi-ic.muted { background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02)); color:#9aa4b4; border-color:var(--m-linea); }
+.ov-kpi-num { font-family:'Chakra Petch',sans-serif; font-size:36px; font-weight:800; color:#fff; line-height:1; }
+.ov-kpi-cap { color:var(--m-tinta2); font-size:13px; margin-top:7px; }
+.ov-spark { position:absolute; left:0; right:0; bottom:0; width:100%; height:60px; display:block; }
+
+.ov-grid2 { display:grid; grid-template-columns:1.3fr 1fr; gap:18px; margin-bottom:18px; }
+.ov-card { background:var(--m-tarjeta); border:1px solid var(--m-linea); border-radius:16px; padding:22px 24px; }
+.ov-card-t { display:flex; align-items:center; gap:9px; font-family:'Chakra Petch',sans-serif; font-size:12.5px; font-weight:700; letter-spacing:.09em; color:#cfd6e2; text-transform:uppercase; margin-bottom:6px; }
+.ov-card-t.heart::before { content:""; width:14px; height:14px; border-radius:50%; background:#f0353a; box-shadow:0 0 8px rgba(240,53,58,.5); }
+.ov-plan-wrap { display:flex; align-items:center; gap:28px; margin-top:16px; }
+.ov-donut { position:relative; width:150px; height:150px; flex:0 0 auto; }
+.ov-donut .c { font-family:'Chakra Petch',sans-serif; font-size:33px; font-weight:800; color:#fff; }
+.ov-donut .t { font-size:12px; color:var(--m-tinta2); }
+.ov-donut-mid { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.ov-plans { flex:1; display:flex; flex-direction:column; gap:20px; }
+.ov-plan { display:grid; grid-template-columns:74px 1fr auto auto; align-items:center; gap:14px; }
+.ov-plan-n { display:flex; align-items:center; gap:9px; font-weight:600; color:#dfe6ee; }
+.ov-plan-n i { width:9px; height:9px; border-radius:50%; }
+.ov-plan.basic .ov-plan-n i { background:#38a9f0; } .ov-plan.pro .ov-plan-n i { background:var(--m-oro); } .ov-plan.premium .ov-plan-n i { background:#f0353a; }
+.ov-plan-track { height:7px; border-radius:5px; background:rgba(255,255,255,.06); overflow:hidden; }
+.ov-plan-track i { display:block; height:100%; width:0; transition:width .8s cubic-bezier(.2,.7,.2,1); }
+.ov-plan.basic .ov-plan-track i { background:linear-gradient(90deg,#1f7fd0,#38a9f0); }
+.ov-plan.pro .ov-plan-track i { background:linear-gradient(90deg,#c79426,#e8b84b); }
+.ov-plan.premium .ov-plan-track i { background:linear-gradient(90deg,#b3272b,#f0353a); }
+.ov-plan-v { font-family:'Chakra Petch',sans-serif; font-weight:700; color:#fff; min-width:18px; text-align:right; }
+.ov-plan-pct { color:var(--m-tinta2); min-width:38px; text-align:right; font-size:13px; }
+
+.ov-mini { display:flex; align-items:center; justify-content:space-between; padding:16px 4px; border-top:1px solid rgba(255,255,255,.05); }
+.ov-mini:first-of-type { border-top:0; }
+.ov-mini span { color:#dfe6ee; font-size:14px; }
+.ov-mini b { font-family:'Chakra Petch',sans-serif; color:#fff; font-size:16px; }
+.ov-mini.hl { margin:6px -14px 0; padding:16px 18px; background:linear-gradient(90deg,rgba(232,184,75,.12),rgba(232,184,75,.02)); border:1px solid rgba(232,184,75,.22); border-radius:12px; }
+.ov-mini.hl span, .ov-mini.hl b { color:var(--m-oro); }
+
+.ov-band { border:1px dashed rgba(56,169,240,.4); border-radius:16px; padding:18px; background:linear-gradient(180deg,rgba(56,169,240,.04),transparent); }
+.ov-band-t { font-family:'Chakra Petch',sans-serif; font-size:11.5px; font-weight:700; letter-spacing:.14em; color:#5ab0ef; text-transform:uppercase; margin:2px 4px 14px; }
+.ov-band-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.ov-adm { display:flex; align-items:center; gap:16px; background:var(--m-tarjeta); border:1px solid var(--m-linea); border-radius:13px; padding:16px 18px; cursor:pointer; text-align:left; width:100%; }
+.ov-adm:hover { border-color:rgba(56,169,240,.35); }
+.ov-adm-ic { width:46px; height:46px; border-radius:12px; flex:0 0 auto; display:grid; place-items:center; background:linear-gradient(135deg,rgba(56,169,240,.18),rgba(56,169,240,.05)); color:#7cc7f7; border:1px solid rgba(56,169,240,.18); }
+.ov-adm-ic.gear { background:rgba(255,255,255,.04); color:#aab4c4; border-color:var(--m-linea); }
+.ov-adm-ic svg { width:22px; height:22px; }
+.ov-adm-tx b { display:block; color:#fff; font-size:14px; }
+.ov-adm-tx em { color:var(--m-tinta2); font-size:12.5px; font-style:normal; }
+.ov-adm-go { margin-left:auto; color:#59616f; font-size:22px; }
+@media(max-width:900px){ .ov-kpis{grid-template-columns:1fr 1fr} .ov-grid2{grid-template-columns:1fr} .ov-band-grid{grid-template-columns:1fr} }
