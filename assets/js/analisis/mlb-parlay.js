@@ -1,7 +1,7 @@
 /* ============================================================
    MLB PARLAY ENGINE — Top N bateadores con mayor P(≥1 hit) hoy.
    Fuente: MLB Stats API oficial (statsapi.mlb.com), gratis y sin clave.
-   El MODELO de probabilidad es propio (criterio nuestro), no copiado.
+   El MODELO de probabilidad es propio (criterio nuestro), no copiado
 
    Uso:
      import { topParlayHits } from './mlb-parlay.js';
