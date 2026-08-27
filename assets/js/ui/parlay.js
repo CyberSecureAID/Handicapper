@@ -3,7 +3,7 @@
    · MLB  → Hit Projection   (P ≥1 hit)   motor mlb-parlay.js
    · Soccer → Goal Projection (P ≥1 gol)  motor soccer-goal.js
    · NBA  → Points Projection (en preparación)
-   Datos directos del navegador (CORS abierto). Sin proxy ni worker.
+   Datos directos del navegador (CORS abierto) Sin proxy ni worker.
    Estética rojo/azul, banner con imágenes de fondo, bilingüe (inglés por defecto).
    ============================================================ */
 import { topParlayHits } from '../analisis/mlb-parlay.js';
