@@ -2,7 +2,7 @@
    PLAYER TRACKER — seguimiento individual: cómo le ha ido al
    jugador en sus ÚLTIMOS 10 PARTIDOS respecto a la jugada clave.
    · MLB    -> hits por partido (umbral ≥1)     fuente: MLB Stats API
-   · Soccer -> goles por partido (umbral ≥1)    fuente: ESPN gamelog
+   · Soccer -> goles por partido (umbral ≥1) fuente: ESPN gamelog
    · NBA    -> puntos por partido (umbral 20)    fuente: ESPN gamelog
    Si no hay id o falla la red, sintetiza una trayectoria de
    DEMOSTRACIÓN a partir de la probabilidad/proyección del jugador.
