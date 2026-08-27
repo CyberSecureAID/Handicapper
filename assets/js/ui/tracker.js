@@ -19,6 +19,7 @@ const CFG = {
   mlb:    { stat: () => L('Hits', 'Hits'),   umbral: 1,  hit: (v) => v >= 1,  linea: () => L('Hit line (1+)', 'Línea de hit (1+)'),   logro: () => L('games with a hit', 'partidos con hit') },
   soccer: { stat: () => L('Goals', 'Goles'), umbral: 1,  hit: (v) => v >= 1,  linea: () => L('Goal line (1+)', 'Línea de gol (1+)'),  logro: () => L('games scoring', 'partidos con gol') },
   nba:    { stat: () => L('Points', 'Puntos'), umbral: 20, hit: (v) => v >= 20, linea: () => L('20-point line', 'Línea de 20 pts'),    logro: () => L('games with 20+', 'partidos con 20+') },
+  nhl:    { stat: () => L('Shots', 'Tiros'), umbral: 2, hit: (v) => v >= 2, linea: () => L('Shots line (2+)', 'Línea de tiros (2+)'), logro: () => L('games with 2+ shots', 'partidos con 2+ tiros') },
 };
 
 async function pedir(url) {
@@ -43,6 +44,11 @@ async function logESPN(sport, id, campo) {
   filas.slice(0, 10).forEach(ev => { const st = ev.stats || []; const v = idx >= 0 ? num(st[idx]) : null; out.push(v == null ? 0 : v); });
   return out;
 }
+async function logNHL(id, sid) {
+  const d = await pedir(`https://api-web.nhle.com/v1/player/${id}/game-log/${sid}/2`);
+  const juegos = d?.gameLog || [];
+  return juegos.slice(0, 10).reverse().map(g => num(g.shots) || 0);
+}
 
 /* ---- Trayectoria sintética (demo) a partir de la prob/proyección ---- */
 function sintetizar(sport, jugador) {
@@ -51,6 +57,9 @@ function sintetizar(sport, jugador) {
   if (sport === 'nba') {
     const mu = num(jugador.proj) || 22, sg = Math.max(4, 0.38 * mu);
     for (let i = 0; i < 10; i++) out.push(Math.max(2, Math.round(mu + (rng() * 2 - 1) * sg * 1.1)));
+  } else if (sport === 'nhl') {
+    const lam = num(jugador.proj) || 2.4;
+    for (let i = 0; i < 10; i++) out.push(poisson(lam, rng));
   } else {
     const p = clamp((num(jugador.prob) || 40) / 100, 0.05, 0.95);
     const lam = -Math.log(1 - p);
@@ -150,6 +159,7 @@ export async function abrirTracker(jugador, sport) {
     if (jugador.id && sport === 'mlb') vals = await logMLB(jugador.id, season);
     else if (jugador.id && sport === 'nba') vals = await logESPN('basketball/nba', jugador.id, 'points|pts');
     else if (jugador.id && sport === 'soccer') vals = await logESPN('soccer', jugador.id, 'goals|goal');
+    else if (jugador.id && sport === 'nhl') { const d = new Date(); const sid = d.getMonth() >= 8 ? `${d.getFullYear()}${d.getFullYear() + 1}` : `${d.getFullYear() - 1}${d.getFullYear()}`; vals = await logNHL(jugador.id, sid); }
   } catch (_) { vals = null; }
   if (!vals || !vals.length || (sport !== 'mlb' && vals.every(v => v === 0))) { vals = sintetizar(sport, jugador); demo = true; }
   vals = vals.slice(-10);

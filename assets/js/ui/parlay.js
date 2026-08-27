@@ -10,6 +10,7 @@
 import { topParlayHits } from '../analisis/mlb-parlay.js';
 import { topGoalProjection } from '../analisis/soccer-goal.js';
 import { topPointsProjection } from '../analisis/nba-points.js';
+import { topShotsProjection } from '../analisis/nhl-shots.js';
 import { abrirTracker } from './tracker.js';
 import { idiomaActual } from './idioma.js';
 
@@ -57,6 +58,17 @@ const DEMO_NBA = [
     tags:[() => L('21.4 proj','21.4 proy'), () => L('vs RVL · 116 allowed','vs RVL · 116 perm.'), '20.1 PPG'],
     factores:[L('Usage up with a starter out','Más protagonismo por una baja')], riesgos:[L('Rotation/minutes risk','Riesgo de minutos')] },
 ];
+const DEMO_NHL = [
+  { rank:1, nombre:'Elite Shooter', equipoAbrev:'HOME', rivalAbrev:'AWY', prob:92, confianza:'media',
+    tags:[() => L('4.5 proj','4.5 proy'), () => L('vs AWY · 33 SA','vs AWY · 33 TC'), '4.0 S/G'],
+    factores:[L('Opponent allows 33 shots/game','El rival permite 33 tiros/partido'), L('Plays at home','Juega en casa'), L('High shot volume','Alto volumen de tiro')], riesgos:[L('Lineup not confirmed','Alineación no confirmada')] },
+  { rank:2, nombre:'Top Winger', equipoAbrev:'CLB', rivalAbrev:'OPP', prob:71, confianza:'media',
+    tags:[() => L('2.6 proj','2.6 proy'), () => L('vs OPP · 30 SA','vs OPP · 30 TC'), '2.6 S/G'],
+    factores:[L('Steady shot volume','Volumen de tiro constante'), L('Power-play time','Minutos en power play')], riesgos:[L('Away from home','Juega de visita')] },
+  { rank:3, nombre:'Two-way Center', equipoAbrev:'TMX', rivalAbrev:'RVL', prob:58, confianza:'baja',
+    tags:[() => L('2.1 proj','2.1 proy'), () => L('vs RVL · 29 SA','vs RVL · 29 TC'), '2.1 S/G'],
+    factores:[L('Plays at home','Juega en casa')], riesgos:[L('Opponent limits shots','El rival limita los tiros')] },
+];
 
 /* ---------- Config por deporte ---------- */
 function VISTA(sport) {
@@ -93,6 +105,17 @@ function VISTA(sport) {
       foot: L('Model probability estimates, not betting advice. Basketball is high-variance: a high probability is not a certainty.',
               'Estimaciones probabilísticas del modelo, no asesoría de apuestas. El baloncesto es de alta varianza: una probabilidad alta no es certeza.'),
       toCard: (p) => ({ ...p, tags: p.tags || [ `${p.proj} ${L('proj', 'proy')}`, (p.ptsPermRival != null ? `${L('vs', 'vs')} ${p.rivalAbrev} · ${(+p.ptsPermRival).toFixed(0)} ${L('allowed', 'perm.')}` : `${L('vs', 'vs')} ${p.rivalAbrev || ''}`), (p.ppg != null ? `${(+p.ppg).toFixed(1)} PPG` : '') ].filter(Boolean) }),
+    },
+    nhl: {
+      activo: true, img: 'fondo-shots.jpg', run: () => topShotsProjection({ fecha: hoyISO(), n: 9 }), demo: DEMO_NHL,
+      eyebrow: L('Premium · Shots Projection', 'Premium · Proyección de Tiros'),
+      titulo: `${L('Top 9 · Probability of', 'Top 9 · Probabilidad de')} <em>2+ ${L('Shots', 'Tiros')}</em>`,
+      metric: 'P(2+ SOG)', metricLabel: L('Probability<br>of 2+ shots', 'Probabilidad<br>de 2+ tiros'),
+      lead: L('The nine players with the highest estimated probability of registering 2 or more shots on goal today. In-house Poisson model: opponent shots allowed, home/away and recent form.',
+              'Los nueve jugadores con mayor probabilidad estimada de registrar 2 o más tiros a puerta hoy. Modelo propio de Poisson: tiros que permite el rival, local/visita y forma reciente.'),
+      foot: L('Model probability estimates, not betting advice. Hockey is high-variance: a high probability is not a certainty.',
+              'Estimaciones probabilísticas del modelo, no asesoría de apuestas. El hockey es de alta varianza: una probabilidad alta no es certeza.'),
+      toCard: (p) => ({ ...p, tags: p.tags || [ `${p.proj} ${L('proj', 'proy')}`, (p.saRival != null ? `${L('vs', 'vs')} ${p.rivalAbrev} · ${(+p.saRival).toFixed(0)} ${L('SA', 'TC')}` : `${L('vs', 'vs')} ${p.rivalAbrev || ''}`), (p.spg != null ? `${(+p.spg).toFixed(1)} S/G` : '') ].filter(Boolean) }),
     },
   };
   return base[sport] || base.mlb;
