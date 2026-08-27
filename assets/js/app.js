@@ -17,6 +17,7 @@ import { pintarParlay } from './ui/parlay.js';
 const $ = (id) => document.getElementById(id);
 
 let ligaActiva = null;
+let proyActiva = null;   // 'mlb' | 'soccer' | 'nba' | null (proyecciones premium)
 let partidoSel = null;
 
 /* -------- Logo con respaldo -------- */
@@ -41,14 +42,12 @@ function pintarDrawer() {
   const cont = $('drawer-ligas');
   if (!cont) return;
   const items = [{ id: null, nombre: t('liga.todos'), corto: t('liga.todos'), logo: 'assets/imagenes/dep-todos.png' }, ...LIGAS];
-  const parlayBtn = `<button class="liga proj ${ligaActiva === '__proj__' ? 'on' : ''}" data-liga="__proj__">
-      <span class="ic">${IC.diana || ''}</span>Proyección<span class="liga-pro">PRO</span></button>`;
-  cont.innerHTML = parlayBtn + items.map(l => `
+  cont.innerHTML = items.map(l => `
     <button class="liga ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">
       <span class="ic">${ligaIcono(l)}</span>${l.corto || l.nombre}
     </button>`).join('');
   cont.querySelectorAll('.liga').forEach(b => b.onclick = () => {
-    ligaActiva = b.dataset.liga || null;
+    ligaActiva = b.dataset.liga || null; proyActiva = null; marcarProyeccion();
     pintarLigas(); pintarDrawer(); cargarLista(); cerrarDrawer();
   });
   const dt = $('drawer-t'); if (dt) dt.textContent = t('nav.deportes');
@@ -67,14 +66,12 @@ function pintarLigas() {
   const cont = $('lista-ligas');
   if (!cont) return;
   const items = [{ id: null, nombre: t('liga.todos'), logo: 'assets/imagenes/dep-todos.png' }, ...LIGAS];
-  const parlayBtn = `<button class="liga proj ${ligaActiva === '__proj__' ? 'on' : ''}" data-liga="__proj__">
-      <span class="ic">${IC.diana || ''}</span>Proyección<span class="liga-pro">PRO</span></button>`;
-  cont.innerHTML = parlayBtn + items.map(l => `
+  cont.innerHTML = items.map(l => `
     <button class="liga ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">
       <span class="ic">${ligaIcono(l)}</span>${l.nombre}
     </button>`).join('');
   cont.querySelectorAll('.liga').forEach(b => b.onclick = () => {
-    ligaActiva = b.dataset.liga || null; pintarLigas(); pintarPestanas(); cargarLista();
+    ligaActiva = b.dataset.liga || null; proyActiva = null; marcarProyeccion(); pintarLigas(); pintarPestanas(); cargarLista();
   });
 }
 
@@ -83,11 +80,10 @@ function pintarPestanas() {
   const cont = $('pestanas');
   if (!cont) return;
   const items = [{ id: null, nombre: t('liga.todos') }, ...LIGAS.map(l => ({ id: l.id, nombre: l.nombre }))];
-  cont.innerHTML = `<button class="pestana proj ${ligaActiva === '__proj__' ? 'on' : ''}" data-liga="__proj__">Proyección</button>` +
-    items.map(l => `
+  cont.innerHTML = items.map(l => `
     <button class="pestana ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">${l.nombre}</button>`).join('');
   cont.querySelectorAll('.pestana').forEach(b => b.onclick = () => {
-    ligaActiva = b.dataset.liga || null; pintarLigas(); pintarPestanas(); cargarLista();
+    ligaActiva = b.dataset.liga || null; proyActiva = null; marcarProyeccion(); pintarLigas(); pintarPestanas(); cargarLista();
   });
 }
 
@@ -99,8 +95,9 @@ async function cargarLista() {
   const cont = $('lista');
   if (!cont) return;
   // Sección premium Parlay (Top 9 P(≥1 hit))
-  if (ligaActiva === '__proj__') {
+  if (proyActiva) {
     await pintarParlay(cont, {
+      sport: proyActiva,
       esPremium: planActual() === 'premium',
       abrirPlanes: () => mostrarPantalla('pricing'),
     });
@@ -319,6 +316,19 @@ function repintarTodo() {
   if (panel && !partidoSel) panel.innerHTML = `<div class="vacio"><div class="ic">${IC.grafico}</div>${t('det.vacio')}</div>`;
 }
 
+/* -------- Proyecciones premium (barra superior) -------- */
+function marcarProyeccion() {
+  document.querySelectorAll('.proj-b').forEach(b => b.classList.toggle('on', proyActiva === b.dataset.proj));
+}
+function initProyeccion() {
+  document.querySelectorAll('.proj-b').forEach(b => b.addEventListener('click', () => {
+    proyActiva = b.dataset.proj;
+    ligaActiva = null;
+    marcarProyeccion(); pintarLigas(); pintarPestanas();
+    cargarLista();
+  }));
+}
+
 /* -------- Arranque -------- */
 function init() {
   initTema();
@@ -326,6 +336,7 @@ function init() {
   aplicarTextos();
   initTabbar();
   initBotonIdioma();
+  initProyeccion();
 
   // Hamburguesa / drawer (móvil)
   $('hamb')?.addEventListener('click', abrirDrawer);
@@ -340,9 +351,6 @@ function init() {
   const cerrar = document.querySelector('#hoja .cerrar');
   if (cerrar) cerrar.addEventListener('click', cerrarHoja);
 
-  // Reaccionar a cambios de tema/tamaño para el logo
-  const btnTema = $('tema-btn');
-  if (btnTema) btnTema.addEventListener('click', () => setTimeout(actualizarLogo, 0));
   window.addEventListener('resize', actualizarLogo);
   document.addEventListener('idioma-cambio', repintarTodo);
 
