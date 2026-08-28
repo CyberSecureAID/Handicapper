@@ -3,9 +3,10 @@
    Secciones: Overview · Users · Analysis.
    Solo visible si esAdmin() (verificado en Firestore).
    ============================================================ */
-import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista } from './mesa-datos.js';
+import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion } from './mesa-datos.js';
 import { prepararEstilosSenal, tarjetaMuestra } from '../ui/senales.js';
 import { PALETA, INTENSIDADES, EMBLEMAS, EMBLEMA_NOMBRE, estiloSeguro } from '../ui/estilo-senal.js';
+import { PALABRAS_DEFECTO, terminoProhibido, limpiarLista } from '../datos/moderacion.js';
 import { LIGAS, listarPartidos, detallePartido } from '../datos/proveedor.js';
 import { PLANES, planPorId } from '../datos/planes.js';
 import { salir, usuarioActual } from '../auth/auth.js';
@@ -20,6 +21,7 @@ let _mesaLang = 'es';
 let _uBusqueda = '', _uFiltro = 'todos', _uPagina = 1;
 let _anBusqueda = '', _anFiltro = 'todos';
 let _monFiltro = 'todos';
+let _moderacion = [];
 const U_POR_PAGINA = 8;
 const ML = (en, es) => _mesaLang === 'es' ? es : en;
 const DEPORTES = {
@@ -71,7 +73,8 @@ function render() {
        <button data-tab="usuarios" class="${_tab==='usuarios'?'on':''}">${IC.users} ${ML('Users','Usuarios')}</button>
        <button data-tab="analisis" class="${_tab==='analisis'?'on':''}">${IC.pen} ${ML('Analysis','Análisis')}</button>
        <button data-tab="analistas" class="${_tab==='analistas'?'on':''}">${IC.contrato} ${ML('Staff','Personal')}</button>
-       <button data-tab="monitoreo" class="${_tab==='monitoreo'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg> ${ML('Monitoring','Monitoreo')}</button>`;
+       <button data-tab="monitoreo" class="${_tab==='monitoreo'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg> ${ML('Monitoring','Monitoreo')}</button>
+       <button data-tab="moderacion" class="${_tab==='moderacion'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M12 3l7 3v5c0 4.4-3 7.4-7 9-4-1.6-7-4.6-7-9V6l7-3z"/></svg> ${ML('Moderation','Moderación')}</button>`;
   _cont.innerHTML = `
     <div class="mesa">
       <aside class="mesa-side" id="mesa-side">
@@ -133,6 +136,7 @@ function verSitio() {
 async function cargarDatos() {
   try { _usuarios = await listarUsuarios(); } catch (_) { _usuarios = []; }
   try { _analisis = await listarAnalisis(); } catch (_) { _analisis = []; }
+  try { _moderacion = await leerModeracion(); } catch (_) { _moderacion = []; }
   try { _admins = await listarAdmins(); } catch (_) { _admins = []; }
   if (_rol === 'admin') { try { _analistas = await listarAnalistas(); } catch (_) { _analistas = []; } }
   pintarTab();
@@ -164,6 +168,7 @@ function pintarTab() {
   else if (_tab === 'analisis') { m.innerHTML = (_rol === 'analista' ? editorEstilo() : '') + vistaAnalisis(); if (_rol === 'analista') enlazarEditorEstilo(); enlazarAnalisis(); }
   else if (_tab === 'analistas') { m.innerHTML = vistaAnalistas(); enlazarAnalistas(); }
   else if (_tab === 'monitoreo') { m.innerHTML = vistaMonitoreo(); enlazarMonitoreo(); }
+  else if (_tab === 'moderacion') { m.innerHTML = vistaModeracion(); enlazarModeracion(); }
 }
 
 /* ================= OVERVIEW ================= */
@@ -435,6 +440,58 @@ function enlazarEditorEstilo() {
   _cont.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { _miEstilo.color = b.dataset.color; _miEstilo = estiloSeguro(_miEstilo); setSel('[data-color]', _miEstilo.color, 'color'); _renderPreview(); _guardarEstilo(); });
   _cont.querySelectorAll('[data-inten]').forEach(b => b.onclick = () => { _miEstilo.intensidad = b.dataset.inten; _miEstilo = estiloSeguro(_miEstilo); setSel('[data-inten]', _miEstilo.intensidad, 'inten'); _renderPreview(); _guardarEstilo(); });
   _cont.querySelectorAll('[data-emb]').forEach(b => b.onclick = () => { _miEstilo.emblema = b.dataset.emb; _miEstilo = estiloSeguro(_miEstilo); setSel('[data-emb]', _miEstilo.emblema, 'emb'); _renderPreview(); _guardarEstilo(); });
+}
+
+/* ============================================================
+   FASE 6 — MODERACIÓN (panel admin): lista administrable de palabras
+   prohibidas. Agregar/quitar términos sin tocar código. Auto-guarda.
+   ============================================================ */
+let _modGuardar = null;
+function _listaModEfectiva() { return _moderacion.length ? _moderacion : PALABRAS_DEFECTO.slice(); }
+function vistaModeracion() {
+  const IShield = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M12 3l7 3v5c0 4.4-3 7.4-7 9-4-1.6-7-4.6-7-9V6l7-3z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg>`;
+  const Iplus = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`;
+  const lista = _listaModEfectiva();
+  const chips = lista.map(w => `<span class="mod-chip">${esc(w)}<button class="mod-x" data-modx="${esc(w)}" aria-label="remove">&times;</button></span>`).join('');
+  return `
+    <div class="mesa-head"><h1>${ML('Moderation', 'Moderación')}</h1>
+      <p>${ML('Blocked words for analyst signals (Spanish + English). A signal with any of these can\u2019t be published.', 'Palabras bloqueadas en las señales de analistas (español + inglés). Una señal con alguna de estas no se puede publicar.')}</p></div>
+    <div class="mesa-card">
+      <div class="mc-t">${IShield} ${ML('Prohibited words', 'Palabras prohibidas')}</div>
+      <div class="mod-add">
+        <input id="mod-input" type="text" maxlength="40" placeholder="${ML('Add a word or phrase\u2026', 'Agrega una palabra o frase\u2026')}">
+        <button class="mesa-btn oro" id="mod-add-btn">${Iplus} ${ML('Add', 'Agregar')}</button>
+      </div>
+      <div class="mod-chips" id="mod-chips">${chips || `<span class="mod-empty">${ML('No words yet.', 'Aún no hay palabras.')}</span>`}</div>
+      <p class="mod-note">${ML('Matches whole words (accents respected) and simple plurals. Changes save automatically.', 'Coincide por palabra completa (respeta acentos) y plurales simples. Los cambios se guardan solos.')}</p>
+    </div>`;
+}
+function _pintarChipsMod() {
+  const cont = _cont.querySelector('#mod-chips'); if (!cont) return;
+  const lista = _listaModEfectiva();
+  cont.innerHTML = lista.length
+    ? lista.map(w => `<span class="mod-chip">${esc(w)}<button class="mod-x" data-modx="${esc(w)}" aria-label="remove">&times;</button></span>`).join('')
+    : `<span class="mod-empty">${ML('No words yet.', 'Aún no hay palabras.')}</span>`;
+  cont.querySelectorAll('[data-modx]').forEach(b => b.onclick = () => {
+    const w = b.dataset.modx;
+    _moderacion = limpiarLista(_listaModEfectiva().filter(x => x !== w));
+    _pintarChipsMod(); _guardarMod();
+  });
+}
+function _guardarMod() {
+  clearTimeout(_modGuardar);
+  _modGuardar = setTimeout(async () => { try { await guardarModeracion(_moderacion); } catch (_) {} }, 500);
+}
+function enlazarModeracion() {
+  _pintarChipsMod();
+  const inp = _cont.querySelector('#mod-input'), btn = _cont.querySelector('#mod-add-btn');
+  const agregar = () => {
+    const val = (inp.value || '').trim(); if (!val) return;
+    _moderacion = limpiarLista([..._listaModEfectiva(), val]);
+    inp.value = ''; inp.focus(); _pintarChipsMod(); _guardarMod();
+  };
+  if (btn) btn.onclick = agregar;
+  if (inp) inp.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); agregar(); } };
 }
 
 /* ============================================================
@@ -959,6 +1016,14 @@ async function abrirModalSenal(matchId) {
       const hint = bg.querySelector('#anm-hint'); hint.classList.add('err');
       hint.textContent = L('Please select the team you think will win.', 'Por favor selecciona el equipo que crees que va a ganar.');
       bg.querySelector('.anm2-pick').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    // Fase 6 — moderación: no se publica si el análisis tiene lenguaje prohibido
+    const mal = terminoProhibido(ta.value, _moderacion.length ? _moderacion : PALABRAS_DEFECTO);
+    if (mal) {
+      const hint = bg.querySelector('#anm-hint'); hint.classList.add('err');
+      hint.textContent = L(`Your analysis contains language that isn't allowed ("${mal}"). Please edit it before publishing.`, `Tu análisis contiene lenguaje no permitido ("${mal}"). Edítalo antes de publicar.`);
+      ta.scrollIntoView({ behavior: 'smooth', block: 'center' }); ta.focus();
       return;
     }
     const probLocal = Number(slL.value);
