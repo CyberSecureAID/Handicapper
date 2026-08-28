@@ -228,47 +228,68 @@ function comingSoonHTML(cfg) {
 
 /* Veredicto humanizado: una frase clara que dice qué significa el número y qué
    hacer con él. El % sigue siendo EL dato; esto lo interpreta en palabras. */
-const METRICA_TXT = {
-  'P(≥1 hit)':  { es: 'pegar al menos un hit', en: 'get at least one hit' },
-  'P(≥1 goal)': { es: 'marcar al menos un gol', en: 'score at least one goal' },
-  'P(20+ pts)': { es: 'anotar 20 o más puntos', en: 'score 20+ points' },
-  'P(2+ SOG)':  { es: 'hacer 2 o más tiros a puerta', en: 'take 2+ shots on goal' },
+/* Frases y umbrales POR DEPORTE. Los rangos de probabilidad no son iguales:
+   un 50% de gol en fútbol es élite, pero un 50% de hit es flojo. Por eso cada
+   mercado tiene sus propios cortes (hi/mid) y su vocabulario natural. */
+const FRASES = {
+  'P(≥1 hit)': { hi: 68, mid: 55,
+    alta:   { es: (pr) => `Fuerte candidato a pegar hit hoy (${pr}%).`,           en: (pr) => `Strong candidate to get a hit today (${pr}%).` },
+    mod:    { es: (pr) => `Tiene con qué conectar (${pr}%), sin garantías.`,       en: (pr) => `A real shot to connect (${pr}%), no guarantees.` },
+    parejo: { es: (pr) => `Duelo parejo al bate (${pr}%): el abridor rival complica.`, en: (pr) => `Even at the plate (${pr}%): the opposing starter makes it tough.` },
+    flojo:  { es: (pr) => `Pocos turnos para medirlo: este ${pr}% es poco fiable.`, en: (pr) => `Too few at-bats to judge: this ${pr}% isn't reliable.` },
+    solido: { es: ' Selección sólida.', en: ' Solid pick.' } },
+  'P(≥1 goal)': { hi: 42, mid: 26,
+    alta:   { es: (pr) => `Amenaza real de gol hoy (${pr}%).`,                     en: (pr) => `Real goal threat today (${pr}%).` },
+    mod:    { es: (pr) => `Puede ver puerta (${pr}%), dependerá del partido.`,     en: (pr) => `Could find the net (${pr}%), depends on the game.` },
+    parejo: { es: (pr) => `Difícil que marque (${pr}%): la defensa rival aprieta.`, en: (pr) => `Unlikely to score (${pr}%): tough rival defense.` },
+    flojo:  { es: (pr) => `Pocos partidos para fiarse de este ${pr}%.`,            en: (pr) => `Too few games to trust this ${pr}%.` },
+    solido: { es: ' Nombre a seguir para anotar.', en: ' One to watch for a goal.' } },
+  'P(20+ pts)': { hi: 65, mid: 45,
+    alta:   { es: (pr) => `Firme candidato a pasar de 20 puntos (${pr}%).`,        en: (pr) => `Firm candidate to clear 20 points (${pr}%).` },
+    mod:    { es: (pr) => `Puede rondar los 20 (${pr}%), sin asegurarlo.`,          en: (pr) => `Could flirt with 20 (${pr}%), not a lock.` },
+    parejo: { es: (pr) => `Le costará llegar a 20 hoy (${pr}%).`,                   en: (pr) => `Reaching 20 looks hard today (${pr}%).` },
+    flojo:  { es: (pr) => `Rol o minutos poco claros: este ${pr}% es poco fiable.`, en: (pr) => `Unclear role or minutes: this ${pr}% isn't reliable.` },
+    solido: { es: ' Anotador de fiar esta noche.', en: ' Reliable scorer tonight.' } },
+  'P(2+ SOG)': { hi: 72, mid: 50,
+    alta:   { es: (pr) => `Volumen de tiro alto: apunta a 2+ disparos (${pr}%).`,  en: (pr) => `High shot volume: on track for 2+ shots (${pr}%).` },
+    mod:    { es: (pr) => `Puede llegar a 2 tiros (${pr}%), sin garantía.`,         en: (pr) => `Could reach 2 shots (${pr}%), no guarantee.` },
+    parejo: { es: (pr) => `Poco probable que llegue a 2 tiros (${pr}%).`,           en: (pr) => `Unlikely to reach 2 shots (${pr}%).` },
+    flojo:  { es: (pr) => `Pocos partidos para fiarse de este ${pr}%.`,            en: (pr) => `Too few games to trust this ${pr}%.` },
+    solido: { es: ' Tirador constante.', en: ' Consistent shooter.' } },
 };
+FRASES._def = FRASES['P(≥1 hit)'];
+
 function veredicto(p, cfg) {
   const es = ES();
   const pr = p.prob, conf = p.confianza;
-  const met = (METRICA_TXT[cfg.metric] || { es: 'cumplir la línea', en: 'hit the line' });
-  const metTxt = es ? met.es : met.en;
   const fav = (p.factores || [])[0];
   const rsk = (p.riesgos || [])[0];
   const baja = (conf === 'baja' || conf === 'muy baja');
+  const muyBaja = conf === 'muy baja';
+  const S = FRASES[cfg.metric] || FRASES._def;
+  const line = (o) => (es ? o.es(pr) : o.en(pr));
+  const F = fav ? (es ? ` A favor: ${fav.toLowerCase()}.` : ` In favor: ${fav.toLowerCase()}.`) : '';
+  const R = rsk ? (es ? ` Cuidado: ${rsk.toLowerCase()}.` : ` Watch out: ${rsk.toLowerCase()}.`) : '';
   let tono, txt;
 
-  if (conf === 'muy baja') {
+  if (muyBaja) {
     tono = 'malo';
-    txt = es
-      ? `Dato poco fiable hoy: faltan partidos para confiar en este ${pr}%.${rsk ? ' ' + rsk + '.' : ''} Mejor no apoyarse solo en esto.`
-      : `Low-trust today: not enough games to rely on this ${pr}%.${rsk ? ' ' + rsk + '.' : ''} Don't lean on it alone.`;
-  } else if (pr >= 68) {
+    txt = line(S.flojo) + (rsk ? (es ? ` ${rsk}.` : ` ${rsk}.`) : '') + (es ? ' No te apoyes solo en esto.' : " Don't lean on it alone.");
+  } else if (pr >= S.hi) {
     tono = baja ? 'medio' : 'bueno';
-    txt = es
-      ? `Alta probabilidad de ${metTxt} (${pr}%).${fav ? ' A favor: ' + fav.toLowerCase() + '.' : ''}${baja ? ' Confianza limitada por ahora.' : ' Selección sólida.'}`
-      : `High chance to ${metTxt} (${pr}%).${fav ? ' In favor: ' + fav.toLowerCase() + '.' : ''}${baja ? ' Confidence still limited.' : ' Solid pick.'}`;
-  } else if (pr >= 56) {
+    txt = line(S.alta) + F + (baja ? (es ? ' Aún con reservas.' : ' Still with reservations.') : (es ? S.solido.es : S.solido.en));
+  } else if (pr >= S.mid) {
     tono = 'medio';
-    txt = es
-      ? `Probabilidad moderada de ${metTxt} (${pr}%).${fav ? ' A favor: ' + fav.toLowerCase() + '.' : ''} Ventaja ligera, no garantía.`
-      : `Moderate chance to ${metTxt} (${pr}%).${fav ? ' In favor: ' + fav.toLowerCase() + '.' : ''} Slight edge, not a lock.`;
+    txt = line(S.mod) + F;
   } else {
     tono = 'medio';
-    txt = es
-      ? `Escenario parejo (${pr}%): sin ventaja clara para ${metTxt}.${rsk ? ' Cuidado: ' + rsk.toLowerCase() + '.' : ''}`
-      : `Coin-flip (${pr}%): no clear edge to ${metTxt}.${rsk ? ' Watch out: ' + rsk.toLowerCase() + '.' : ''}`;
+    txt = line(S.parejo) + R;
   }
   return { texto: txt, tono };
 }
 
 function cardHTML(p, cfg) {
+
   const tags = (cfg.toCard(p).tags || []).map((t, i) => `<span class="ply-tag${i === 0 ? ' h' : ''}">${esc(tagTxt(t))}</span>`).join('');
   const fav = (p.factores || []).map(f => `<li>${esc(f)}</li>`).join('');
   const rsk = (p.riesgos || []).map(f => `<li>${esc(f)}</li>`).join('');
