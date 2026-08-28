@@ -658,3 +658,12 @@ body.en-mesa { overflow: hidden; }
 @media (max-width: 720px) {
   .mon-kpis { grid-template-columns: 1fr 1fr; }
 }
+
+/* ===== FASE 2 — identidad del analista (Staff) ===== */
+.an-mng-id { display: flex; gap: 8px; flex: 1 1 260px; min-width: 200px; }
+.an-mng-inp { flex: 1; min-width: 0; background: rgba(255,255,255,.04); border: 1px solid var(--m-linea); border-radius: 9px; padding: 8px 11px; color: #eaf1f9; font-family: inherit; font-size: 13px; transition: border-color .14s, background .14s; }
+.an-mng-inp::placeholder { color: #5d6b7d; }
+.an-mng-inp:focus { outline: none; border-color: rgba(232,184,75,.55); background: rgba(232,184,75,.06); }
+.an-mng-inp.firma { font-family: 'Chakra Petch', sans-serif; font-weight: 700; color: var(--m-oro); }
+.an-mng-inp.err { border-color: #f0525a; background: rgba(240,82,90,.1); }
+@media (max-width: 760px) { .an-mng-id { flex-basis: 100%; order: 3; } }
