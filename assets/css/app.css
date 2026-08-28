@@ -736,3 +736,19 @@
   .premium-menu { display: inline-block; }
 }
 @media (max-width: 380px) { .premium-btn span { display: none; } .premium-btn { padding: 0 11px; } }
+
+/* ===== Entrada "Analyst signals" (barra lateral, escritorio) + punto verde ===== */
+.side-analisis { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+  background: linear-gradient(180deg, rgba(232,184,75,.1), rgba(232,184,75,.02)); border: 1px solid rgba(232,184,75,.3);
+  color: #efe3c6; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; font-weight: 700; font-size: 13.5px;
+  font-family: "Chakra Petch",sans-serif; letter-spacing: .01em; transition: border-color .15s, background .15s; }
+.side-analisis:hover { border-color: var(--oro); background: rgba(232,184,75,.16); }
+.side-analisis-ic { color: var(--oro); display: inline-flex; flex: 0 0 auto; }
+.side-analisis > span:nth-child(2) { flex: 1; }
+.side-dot, .t-dot { display: none; }
+.side-dot.on { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #29d17e;
+  box-shadow: 0 0 0 3px rgba(41,209,126,.2), 0 0 10px rgba(41,209,126,.8); flex: 0 0 auto; }
+/* Punto en la pestaña "Análisis" del bottom-nav (móvil) */
+.tabbar .t { position: relative; }
+.t-dot.on { display: block; position: absolute; top: 7px; left: 50%; margin-left: 7px; width: 8px; height: 8px;
+  border-radius: 50%; background: #29d17e; box-shadow: 0 0 0 2px rgba(9,12,18,.9), 0 0 8px rgba(41,209,126,.9); }
