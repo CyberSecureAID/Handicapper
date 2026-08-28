@@ -196,6 +196,21 @@ function _reengancharModal() {
     const pp = await detallePartido(b.dataset.compartir);
     if (pp) { await aplicarAnalista(pp); compartirPartido(pp); }
   });
+  // Menú móvil de secciones (junto a Compartir): reusa el cambio de pestaña
+  const menuBtn = bg.querySelector('#hd-menu-btn');
+  const menuPop = bg.querySelector('#hd-menu-pop');
+  const menuLbl = bg.querySelector('#hd-menu-lbl');
+  if (menuBtn && menuPop) {
+    menuBtn.addEventListener('click', (e) => { e.stopPropagation(); menuPop.classList.toggle('open'); });
+    bg.querySelectorAll('.hd-menu-item[data-goto]').forEach(it => it.addEventListener('click', () => {
+      const tab = bg.querySelector(`.hd-tab[data-tab="${it.dataset.goto}"]`);
+      if (tab) tab.click();
+      bg.querySelectorAll('.hd-menu-item').forEach(x => x.classList.toggle('on', x === it));
+      if (menuLbl) menuLbl.textContent = it.textContent;
+      menuPop.classList.remove('open');
+    }));
+    bg.addEventListener('click', (e) => { if (!e.target.closest('.hd-menu')) menuPop.classList.remove('open'); });
+  }
   // Seleccionar un jugador en Equipos: su foto/nombre aparece en la tarjeta de su lado.
   const seleccionarJugador = (row) => {
     const side = row.dataset.side; // 'l' | 'r'
