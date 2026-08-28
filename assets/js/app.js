@@ -13,6 +13,7 @@ import { initAuthUI, abrirAuth } from './auth/auth-ui.js';
 import { initNavegacion, mostrarPantalla, aplicarI18n } from './ui/navegacion.js';
 import { fijarSuscripcion, tieneAcceso, limpiarVistaPrevia, marcarVistaPrevia, planActual } from './auth/estado-pago.js';
 import { pintarParlay } from './ui/parlay.js';
+import { pintarSenales, cargarSenales, contarSenales } from './ui/senales.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -292,15 +293,36 @@ function initTabbar() {
   const bar = $('tabbar');
   if (!bar) return;
   const tabs = [
-    { ic: 'diana', k: 'tab.partidos' }, { ic: 'vivo', k: 'tab.vivo' },
-    { ic: 'estrella', k: 'tab.analisis' }, { ic: 'perfil', k: 'tab.perfil' },
+    { ic: 'diana', k: 'tab.partidos', v: 'partidos' }, { ic: 'vivo', k: 'tab.vivo', v: 'vivo' },
+    { ic: 'estrella', k: 'tab.analisis', v: 'analisis' }, { ic: 'perfil', k: 'tab.perfil', v: 'perfil' },
   ];
   bar.innerHTML = tabs.map((tb, i) => `
-    <button class="t ${i===0?'on':''}"><span class="ic">${IC[tb.ic]}</span>${t(tb.k)}</button>`).join('');
+    <button class="t ${i===0?'on':''}" data-vista="${tb.v}"><span class="ic">${IC[tb.ic]}</span>${t(tb.k)}${tb.v === 'analisis' ? '<span class="t-dot" id="tab-dot"></span>' : ''}</button>`).join('');
   bar.querySelectorAll('.t').forEach(b => b.onclick = () => {
     bar.querySelectorAll('.t').forEach(x => x.classList.toggle('on', x === b));
     cerrarHoja(); window.scrollTo({ top: 0, behavior: 'smooth' });
+    mostrarVista(b.dataset.vista);
   });
+  actualizarPuntoSenales();
+}
+
+/* Cambia la vista del contenedor principal (#lista). */
+function mostrarVista(v) {
+  const cont = $('lista');
+  if (!cont) return;
+  if (v === 'analisis') {
+    pintarSenales(cont, { esPremium: planActual() === 'premium', abrirPlanes: () => mostrarPantalla('pricing') });
+  } else if (v === 'partidos' || v === 'vivo') {
+    proyActiva = null; cargarLista();
+  }
+  // 'perfil': se maneja aparte; no cambia el contenido aquí.
+}
+
+/* Punto verde en "Análisis" (móvil y escritorio) cuando hay señales publicadas. */
+function actualizarPuntoSenales() {
+  const has = contarSenales() > 0;
+  $('tab-dot')?.classList.toggle('on', has);
+  $('side-dot')?.classList.toggle('on', has);
 }
 
 /* -------- Botón de idioma -------- */
@@ -382,6 +404,15 @@ function init() {
 
   window.addEventListener('resize', actualizarLogo);
   document.addEventListener('idioma-cambio', repintarTodo);
+
+  // Entrada de "Analyst signals" en la barra lateral (escritorio)
+  $('side-analisis')?.addEventListener('click', () => {
+    document.querySelectorAll('#tabbar .t').forEach(x => x.classList.toggle('on', x.dataset.vista === 'analisis'));
+    mostrarVista('analisis');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  // Cargar señales una vez para el punto indicador (verde) en móvil y escritorio
+  cargarSenales().then(actualizarPuntoSenales).catch(() => {});
 
   // Autenticación (Firebase). Si no está configurado, queda en modo invitado.
   initAuthUI({ registrar: registrarCorreo, entrar: entrarCorreo, google: entrarGoogle, salir, mensajeError });
