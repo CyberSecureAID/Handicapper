@@ -15,6 +15,7 @@ let _ligaSel = null, _partidos = [], _cargandoPart = false;
 let _rol = 'admin', _deporteAnalista = null, _analistas = [];
 let _mesaLang = 'es';
 let _uBusqueda = '', _uFiltro = 'todos', _uPagina = 1;
+let _anBusqueda = '', _anFiltro = 'todos';
 const U_POR_PAGINA = 8;
 const ML = (en, es) => _mesaLang === 'es' ? es : en;
 const DEPORTES = {
@@ -337,45 +338,89 @@ async function toggleBloqueo(uid, btn) {
 }
 
 /* ================= ANALYSTS (contratación) ================= */
+function candidatosAnalista() {
+  const q = _anBusqueda.trim().toLowerCase();
+  return _usuarios.filter(u => {
+    if (rolAdmin(u)) return false;
+    if (_analistas.some(a => a.uid === u.uid)) return false;
+    const sub = u.suscripcion || {};
+    if (_anFiltro === 'con' && !sub.activo) return false;
+    if (_anFiltro === 'sin' && sub.activo) return false;
+    if (_anFiltro === 'bloq' && !u.bloqueado) return false;
+    if (q) { const nom = (u.nombre || '').toLowerCase(), mail = (u.email || '').toLowerCase(); if (nom.indexOf(q) === -1 && mail.indexOf(q) === -1) return false; }
+    return true;
+  });
+}
+function pintarCandidatos() {
+  const cont = _cont.querySelector('#an-cands'); if (!cont) return;
+  const lista = candidatosAnalista(); const MAX = 6; const shown = lista.slice(0, MAX);
+  const deps = Object.keys(DEPORTES);
+  cont.innerHTML = shown.length ? (shown.map(u => {
+    const sub = u.suscripcion || {};
+    const st = u.bloqueado ? `<span class="pill red">${ML('Blocked', 'Bloqueado')}</span>`
+      : (sub.activo ? `<span class="pill on">${planPorId(sub.plan)?.nombre || ML('Active', 'Activo')}</span>` : `<span class="pill">${ML('No plan', 'Sin plan')}</span>`);
+    return `<div class="an-cand">
+      <div class="an-cand-who"><b>${esc(u.nombre || (u.email || '').split('@')[0] || '—')}</b><span>${esc(correoCorto(u.email || ''))}</span></div>
+      <div class="an-cand-st">${st}</div>
+      <select class="u-select" data-cand-dep="${esc(u.uid)}">${deps.map(k => `<option value="${k}">${esc(depNombre(k))}</option>`).join('')}</select>
+      <button class="mesa-btn oro sm" data-cand-add="${esc(u.uid)}" data-mail="${esc(u.email || '')}">${ML('Add', 'Agregar')}</button>
+    </div>`;
+  }).join('') + (lista.length > MAX ? `<div class="an-cand-more">${ML('Showing', 'Mostrando')} ${MAX} ${ML('of', 'de')} ${lista.length} — ${ML('refine your search.', 'afina la búsqueda.')}</div>` : ''))
+    : `<div class="an-mng-empty">${ML('No matching users.', 'Sin usuarios que coincidan.')}</div>`;
+  cont.querySelectorAll('[data-cand-add]').forEach(b => b.onclick = async () => {
+    const uid = b.dataset.candAdd, mail = b.dataset.mail || '';
+    const sel = cont.querySelector(`[data-cand-dep="${uid}"]`), dep = sel ? sel.value : deps[0];
+    b.disabled = true;
+    try { await guardarAnalista(uid, { email: mail, deporte: dep, activo: true }); _analistas = await listarAnalistas(); pintarTab(); }
+    catch (_) { b.disabled = false; }
+  });
+}
 function vistaAnalistas() {
+  const Ilupa = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`;
+  const filtros = [['todos', ML('All', 'Todos')], ['con', ML('With plan', 'Con plan')], ['sin', ML('No plan', 'Sin plan')], ['bloq', ML('Blocked', 'Bloqueados')]];
+  const chips = filtros.map(([k, l]) => `<button data-anf="${k}" class="u-chip ${_anFiltro === k ? 'on' : ''}">${esc(l)}</button>`).join('');
+  const lista = _analistas.length ? _analistas.map(a => {
+    const uu = _usuarios.find(x => x.uid === a.uid); const mail = a.email || (uu && uu.email) || a.uid;
+    return `<div class="an-mng-row ${a.activo === false ? 'off' : ''}">
+      <div class="an-mng-who"><b>${esc(mail)}</b><span class="an-mng-dep">${esc(depNombre(a.deporte))}</span></div>
+      <select data-an-dep="${esc(a.uid)}" class="u-select an-mng-sel">${Object.keys(DEPORTES).map(k => `<option value="${k}" ${a.deporte === k ? 'selected' : ''}>${esc(depNombre(k))}</option>`).join('')}</select>
+      <button class="an-mng-toggle ${a.activo === false ? '' : 'on'}" data-an-toggle="${esc(a.uid)}">${a.activo === false ? ML('Blocked', 'Bloqueado') : ML('Active', 'Activo')}</button>
+      <button class="an-mng-del" data-an-del="${esc(a.uid)}">${ML('Remove', 'Quitar')}</button>
+    </div>`;
+  }).join('') : `<div class="an-mng-empty">${ML('No analysts yet.', 'Aún no hay analistas.')}</div>`;
   return `
-    <div class="mesa-head"><h1>${ML('Staff','Personal')}</h1><p>${ML('Hire analysts and assign each one a sport.','Contrata analistas y asigna a cada uno un deporte.')} ${ML('They only access the Analysis Hub for their sport.','Solo acceden al Analysis Hub de su deporte.')}</p></div>
+    <div class="mesa-head an-head">
+      <div><h1>${ML('Staff', 'Personal')}</h1><p>${ML('Hire analysts and assign each one a sport. They only access the Analysis Hub for their sport.', 'Contrata analistas y asigna a cada uno un deporte. Solo acceden al Analysis Hub de su deporte.')}</p></div>
+      <button class="mesa-btn ghost" id="an-go-users">${IC.users} ${ML('Go to Users', 'Ir a Usuarios')}</button>
+    </div>
     <div class="mesa-card an-mng">
-      <div class="mc-t">${IC.pen} ${ML('Analysts','Analistas')}</div>
-      <p class="an-mng-sub">${ML('An analyst can only open the Analysis Hub and publish signals for their assigned sport. You can block them anytime.','Un analista solo puede abrir el Analysis Hub y publicar señales de su deporte asignado. Puedes bloquearlo cuando quieras.')}</p>
-      <div class="an-mng-add">
-        <select id="an-add-user" class="u-select">
-          <option value="">${ML('Select a registered user…','Selecciona un usuario registrado…')}</option>
-          ${_usuarios.filter(u => !_analistas.some(a => a.uid === u.uid) && !rolAdmin(u)).map(u => `<option value="${esc(u.uid)}" data-mail="${esc(u.email || '')}">${esc(u.email || u.nombre || u.uid)}</option>`).join('')}
-        </select>
-        <select id="an-add-dep" class="u-select">${Object.keys(DEPORTES).map(k => `<option value="${k}">${esc(depNombre(k))}</option>`).join('')}</select>
-        <button class="mesa-btn oro" id="an-add-btn">${ML('Add analyst','Agregar analista')}</button>
+      <div class="mc-t">${IC.contrato} ${ML('Add analyst', 'Agregar analista')}</div>
+      <p class="an-mng-sub">${ML('Search a registered user and assign a sport. You only see who matches — so you won\u2019t add the wrong person by mistake.', 'Busca un usuario registrado y asígnale un deporte. Solo ves a quién coincide, para no agregar a la persona equivocada.')}</p>
+      <div class="an-add-tools">
+        <div class="u-search">${Ilupa}<input id="an-buscar" type="text" placeholder="${ML('Search by name or email…', 'Buscar por nombre o correo…')}" value="${esc(_anBusqueda)}"></div>
+        <div class="u-chips" id="an-chips">${chips}</div>
       </div>
-      <div class="an-mng-list">
-        ${_analistas.length ? _analistas.map(a => {
-          const uu = _usuarios.find(x => x.uid === a.uid);
-          const mail = a.email || (uu && uu.email) || a.uid;
-          return `<div class="an-mng-row ${a.activo === false ? 'off' : ''}">
-            <div class="an-mng-who"><b>${esc(mail)}</b><span class="an-mng-dep">${esc(depNombre(a.deporte))}</span></div>
-            <select data-an-dep="${esc(a.uid)}" class="u-select an-mng-sel">${Object.keys(DEPORTES).map(k => `<option value="${k}" ${a.deporte === k ? 'selected' : ''}>${esc(depNombre(k))}</option>`).join('')}</select>
-            <button class="an-mng-toggle ${a.activo === false ? '' : 'on'}" data-an-toggle="${esc(a.uid)}">${a.activo === false ? ML('Blocked','Bloqueado') : ML('Active','Activo')}</button>
-            <button class="an-mng-del" data-an-del="${esc(a.uid)}">${ML('Remove','Quitar')}</button>
-          </div>`;
-        }).join('') : `<div class="an-mng-empty">${ML('No analysts yet. Add one from your registered users.','Aún no hay analistas. Agrega uno desde tus usuarios registrados.')}</div>`}
-      </div>
+      <div class="an-cands" id="an-cands"></div>
+    </div>
+    <div class="mesa-card an-mng">
+      <div class="mc-t">${IC.pen} ${ML('Current analysts', 'Analistas actuales')}</div>
+      <div class="an-mng-list">${lista}</div>
     </div>`;
 }
 function enlazarAnalistas() {
-  // ---- Analistas ----
-  const addBtn = _cont.querySelector('#an-add-btn');
-  if (addBtn) addBtn.onclick = async () => {
-    const sel = _cont.querySelector('#an-add-user'), dep = _cont.querySelector('#an-add-dep');
-    const uid = sel && sel.value; if (!uid) { sel && sel.focus(); return; }
-    const opt = sel.options[sel.selectedIndex], mail = (opt && opt.dataset.mail) || '';
-    addBtn.disabled = true;
-    try { await guardarAnalista(uid, { email: mail, deporte: dep.value, activo: true }); _analistas = await listarAnalistas(); pintarTab(); }
-    catch (_) { addBtn.disabled = false; }
-  };
+  _cont.querySelector('#an-go-users') && (_cont.querySelector('#an-go-users').onclick = () => {
+    _tab = 'usuarios';
+    _cont.querySelectorAll('.mesa-nav button[data-tab]').forEach(x => x.classList.toggle('on', x.dataset.tab === 'usuarios'));
+    pintarTab();
+  });
+  const buscar = _cont.querySelector('#an-buscar');
+  if (buscar) buscar.oninput = () => { _anBusqueda = buscar.value; pintarCandidatos(); };
+  _cont.querySelectorAll('#an-chips [data-anf]').forEach(b => b.onclick = () => {
+    _anFiltro = b.dataset.anf;
+    _cont.querySelectorAll('#an-chips [data-anf]').forEach(x => x.classList.toggle('on', x === b));
+    pintarCandidatos();
+  });
+  pintarCandidatos();
   _cont.querySelectorAll('[data-an-toggle]').forEach(b => b.onclick = async () => {
     const uid = b.dataset.anToggle, a = _analistas.find(x => x.uid === uid); if (!a) return;
     b.disabled = true;
@@ -386,7 +431,9 @@ function enlazarAnalistas() {
     try { await fijarAnalista(uid, { deporte: sel.value }); const a = _analistas.find(x => x.uid === uid); if (a) a.deporte = sel.value; } catch (_) {}
   });
   _cont.querySelectorAll('[data-an-del]').forEach(b => b.onclick = async () => {
-    const uid = b.dataset.anDel; b.disabled = true;
+    const uid = b.dataset.anDel, a = _analistas.find(x => x.uid === uid), mail = (a && a.email) || uid;
+    if (!confirm(ML('Remove ' + mail + ' as analyst? This is permanent — they lose the role and access.', '¿Quitar a ' + mail + ' como analista? Es permanente: pierde el rol y el acceso.'))) return;
+    b.disabled = true;
     try { await eliminarAnalista(uid); _analistas = await listarAnalistas(); pintarTab(); } catch (_) { b.disabled = false; }
   });
 }
@@ -533,6 +580,7 @@ async function abrirModalSenal(matchId) {
   const ya = _analisis.find(a => a.matchId === matchId);
   const ES = _mesaLang === 'es';
   const L = (en, es) => ES ? es : en;
+  const ini = (p.inicio && typeof p.inicio === 'object') ? (ES ? p.inicio.es : p.inicio.en) : p.inicio;
 
   const ciudadNombre = (nom) => {
     const parts = String(nom || '').trim().split(/\s+/);
@@ -571,7 +619,7 @@ async function abrirModalSenal(matchId) {
       <div class="anm2-team l">${logo(p.local)}
         <div class="anm2-team-tx">${cl.ciudad ? `<span class="anm2-city">${esc(cl.ciudad)}</span>` : ''}<span class="anm2-name">${esc(cl.nombre)}</span><span class="anm2-side red">${L('Home', 'Casa')} ${IHome}</span></div>
       </div>
-      <div class="anm2-mid"><span class="anm2-league">${esc(p.liga)}</span><span class="anm2-vs">VS</span><span class="anm2-date">${ICal}${esc(p.inicio || L('Date TBD', 'Fecha por definir'))}</span></div>
+      <div class="anm2-mid"><span class="anm2-league">${esc(p.liga)}</span><span class="anm2-vs">VS</span><span class="anm2-date">${ICal}${esc(ini || L('Date TBD', 'Fecha por definir'))}</span></div>
       <div class="anm2-team r">
         <div class="anm2-team-tx">${cv.ciudad ? `<span class="anm2-city">${esc(cv.ciudad)}</span>` : ''}<span class="anm2-name">${esc(cv.nombre)}</span><span class="anm2-side blue">${L('Away', 'Visita')} ${IAway}</span></div>${logo(p.visita)}
       </div>
@@ -596,18 +644,10 @@ async function abrirModalSenal(matchId) {
             <div class="anm2-total-l"><span>${L('TOTAL', 'TOTAL')}</span><b id="tot">100%</b></div>
             <div class="anm2-bal" id="bal"><span class="anm2-bal-ic">${ICheck}</span><div><b>${L('Probabilities are balanced', 'Las probabilidades están balanceadas')}</b><em>${L('The probabilities sum to 100%', 'La suma de las probabilidades es 100%')}</em></div></div>
           </div>
-        </div>
-        <div class="anm2-card">
-          <div class="anm2-card-t">${L('Match information', 'Información del partido')}</div>
-          <div class="anm2-info">
-            <div class="anm2-info-c">${ICal}<div><span>${L('Date', 'Fecha')}</span><b>${esc(p.fecha || L('TBD', 'Por definir'))}</b></div></div>
-            <div class="anm2-info-c">${IClock}<div><span>${L('Time', 'Hora')}</span><b>${esc(p.inicio || L('TBD', 'Por definir'))}</b></div></div>
-            <div class="anm2-info-c">${IPin}<div><span>${L('Stadium', 'Estadio')}</span><b>${esc(p.sede || L('TBD', 'Por definir'))}</b></div></div>
-            <div class="anm2-info-c">${ITrophy}<div><span>${L('League', 'Liga')}</span><b>${esc(p.liga || '—')}</b></div></div>
-            ${p.local.record ? `<div class="anm2-info-c">${ITrophy}<div><span>${esc(p.local.abrev)} ${L('record','récord')}</span><b>${esc(p.local.record)}${p.local.posicion ? ` · ${p.local.posicion}º` : ''}</b></div></div>` : ''}
-            ${p.visita.record ? `<div class="anm2-info-c">${ITrophy}<div><span>${esc(p.visita.abrev)} ${L('record','récord')}</span><b>${esc(p.visita.record)}${p.visita.posicion ? ` · ${p.visita.posicion}º` : ''}</b></div></div>` : ''}
-            ${(p.local.division || p.visita.division) ? `<div class="anm2-info-c">${IPin}<div><span>${L('Division','División')}</span><b>${esc(p.local.division || p.visita.division)}</b></div></div>` : ''}
-          </div>
+          <button type="button" class="anm2-info-btn" id="anm-info-btn">
+            <span class="anm2-info-btn-l">${IInfo}${L('Match information', 'Información del partido')}</span>
+            <span class="anm2-info-btn-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
+          </button>
         </div>
       </div>
 
@@ -621,7 +661,7 @@ async function abrirModalSenal(matchId) {
           </div>
           <div class="anm2-hint" id="anm-hint">${L('Select the team you consider the winner', 'Selecciona el equipo que consideras ganador del partido')}</div>
           <label class="anm2-lbl">${L('Detailed analysis', 'Análisis detallado')}</label>
-          <div class="anm2-ta"><textarea id="anm-txt" maxlength="1000" rows="5" placeholder="${L('Write your detailed analysis here…', 'Escribe tu análisis detallado aquí…')}">${esc(ya?.texto || '')}</textarea><span class="anm2-ta-c" id="cnt">0/1000</span></div>
+          <div class="anm2-ta"><textarea id="anm-txt" maxlength="1000" rows="4" placeholder="${L('Write your detailed analysis here…', 'Escribe tu análisis detallado aquí…')}">${esc(ya?.texto || '')}</textarea><span class="anm2-ta-c" id="cnt">0/1000</span></div>
           <label class="anm2-lbl">${L('Main market', 'Mercado principal')}</label>
           <div class="anm2-select"><select id="anm-mkt">
             <option value="ml">${L('Match winner (regulation)', 'Ganador del partido (Tiempo reglamentario)')}</option>
@@ -635,6 +675,21 @@ async function abrirModalSenal(matchId) {
             <button data-c="media" class="on">${L('Medium', 'Media')}</button>
             <button data-c="alta">${L('High', 'Alta')}</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="anm2-infopop" id="anm-infopop" hidden>
+      <div class="anm2-infopop-card">
+        <div class="anm2-infopop-h"><span>${IInfo}${L('Match information', 'Información del partido')}</span><button class="anm2-infopop-x" id="anm-info-x" aria-label="Close">${IClose}</button></div>
+        <div class="anm2-info">
+          <div class="anm2-info-c">${ICal}<div><span>${L('Date', 'Fecha')}</span><b>${esc(p.fecha || L('TBD', 'Por definir'))}</b></div></div>
+          <div class="anm2-info-c">${IClock}<div><span>${L('Time', 'Hora')}</span><b>${esc(ini || L('TBD', 'Por definir'))}</b></div></div>
+          <div class="anm2-info-c">${IPin}<div><span>${L('Stadium', 'Estadio')}</span><b>${esc(p.sede || L('TBD', 'Por definir'))}</b></div></div>
+          <div class="anm2-info-c">${ITrophy}<div><span>${L('League', 'Liga')}</span><b>${esc(p.liga || '—')}</b></div></div>
+          ${p.local.record ? `<div class="anm2-info-c">${ITrophy}<div><span>${esc(p.local.abrev)} ${L('record','récord')}</span><b>${esc(p.local.record)}${p.local.posicion ? ` · ${p.local.posicion}º` : ''}</b></div></div>` : ''}
+          ${p.visita.record ? `<div class="anm2-info-c">${ITrophy}<div><span>${esc(p.visita.abrev)} ${L('record','récord')}</span><b>${esc(p.visita.record)}${p.visita.posicion ? ` · ${p.visita.posicion}º` : ''}</b></div></div>` : ''}
+          ${(p.local.division || p.visita.division) ? `<div class="anm2-info-c">${IPin}<div><span>${L('Division','División')}</span><b>${esc(p.local.division || p.visita.division)}</b></div></div>` : ''}
         </div>
       </div>
     </div>
@@ -664,6 +719,14 @@ async function abrirModalSenal(matchId) {
   slL.oninput = () => refrescar(Number(slL.value));
   slV.oninput = () => refrescar(100 - Number(slV.value));
   refrescar(pL0);
+
+  // Ventanita de información del partido
+  const infoBtn = bg.querySelector('#anm-info-btn'), infoPop = bg.querySelector('#anm-infopop'), infoX = bg.querySelector('#anm-info-x');
+  if (infoBtn && infoPop) {
+    infoBtn.onclick = () => { infoPop.hidden = false; };
+    if (infoX) infoX.onclick = () => { infoPop.hidden = true; };
+    infoPop.onclick = (e) => { if (e.target === infoPop) infoPop.hidden = true; };
+  }
 
   // ---- Selección de equipo ganador (empieza sin selección) ----
   let fav = null;
