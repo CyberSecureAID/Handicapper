@@ -171,6 +171,33 @@ export function estimarHit({ bateador, pitcher, slot, venue, lineupConfirmado })
 }
 
 /* ---------- 5) ORQUESTADOR: arma el Top N del día ---------- */
+/* Mejores bateadores del roster por AVG (respaldo cuando NO hay lineup confirmado).
+   Una sola llamada por equipo: hidrata las stats de temporada en el propio roster.
+   Devuelve [{id, nombre, avg, pa}] ordenados por AVG (con muestra mínima). */
+async function rosterTopBateadores(teamId, season, proxy, max = 6) {
+  if (!teamId) return [];
+  try {
+    const url = `${API}/teams/${teamId}/roster?rosterType=active&hydrate=person(stats(type=[season],group=[hitting],season=${season}))`;
+    const d = await pedir(url, proxy);
+    const roster = d?.roster || [];
+    const bats = [];
+    for (const r of roster) {
+      const posT = r?.position?.type || '';
+      const posA = r?.position?.abbreviation || '';
+      if (/pitcher/i.test(posT) || posA === 'P') continue;   // solo bateadores
+      const person = r?.person || {};
+      const st = person?.stats?.[0]?.splits?.[0]?.stat || {};
+      const avg = parseFloat(st.avg);
+      const pa = parseInt(st.plateAppearances || st.atBats || 0, 10) || 0;
+      if (!person.id) continue;
+      bats.push({ id: person.id, nombre: person.fullName, avg: isFinite(avg) ? avg : 0, pa });
+    }
+    // ordena por AVG, exigiendo algo de muestra para evitar cameos con .500 en 4 turnos
+    bats.sort((a, b) => (b.pa >= 30 ? b.avg : b.avg - 1) - (a.pa >= 30 ? a.avg : a.avg - 1));
+    return bats.slice(0, max);
+  } catch (_) { return []; }
+}
+
 export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 3 } = {}) {
   const avisos = [];
   const season = new Date(fecha + 'T12:00:00').getFullYear();
@@ -197,15 +224,23 @@ export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 3
     ];
 
     for (const L of lados) {
-      if (!L.pit) { avisos.push(`Sin abridor rival confirmado para ${L.equipo?.name || '—'}: equipo omitido`); continue; }
-      const arr = Array.isArray(L.bateadores) ? L.bateadores.slice(0, 9) : [];
-      if (!arr.length) { avisos.push(`Lineup de ${L.equipo?.name || '—'} aún no publicado`); continue; }
+      // Sin abridor rival confirmado -> pitcher neutral (liga media), NO se omite el equipo
+      if (!L.pit) L.pit = { nombre: 'TBD', mano: null, era: null, avgVL: 0.245, avgVR: 0.245, _neutral: true };
+      let arr = Array.isArray(L.bateadores) ? L.bateadores.slice(0, 9) : [];
+      let confLineup = L.conf;
+      if (!arr.length) {
+        // Sin lineup confirmado -> mejores bateadores del roster por AVG (siempre hay candidatos)
+        const top = await rosterTopBateadores(L.equipo?.id, season, proxy, 6);
+        arr = top.map(b => b.id);
+        confLineup = false;
+        if (!arr.length) { avisos.push(`Sin datos de bateadores para ${L.equipo?.name || '—'}`); continue; }
+      }
       let count = 0;
       for (let i = 0; i < arr.length; i++) {
         if (count >= maxPorEquipo) break;
         const pid = arr[i]?.id || arr[i]; if (!pid) continue;
         const bat = await statsBateador(pid, season, proxy); if (!bat) continue;
-        const est = estimarHit({ bateador: bat, pitcher: L.pit, slot: i + 1, venue, lineupConfirmado: L.conf });
+        const est = estimarHit({ bateador: bat, pitcher: L.pit, slot: i + 1, venue, lineupConfirmado: confLineup });
         candidatos.push({
           id: bat.id, nombre: bat.nombre, equipo: L.equipo?.name, equipoAbrev: L.equipo?.abbreviation,
           rival: L.rival?.name, rivalAbrev: L.rival?.abbreviation, venue,
