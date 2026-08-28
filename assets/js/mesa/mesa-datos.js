@@ -143,3 +143,58 @@ export async function eliminarAnalista(uid) {
   const S = _obtenerStore(), db = _obtenerDB();
   await S.deleteDoc(S.doc(db, 'analistas', uid));
 }
+
+/* ============================================================
+   FASE 3 — SEGUIDORES (colección 'seguimientos')
+   Doc id = `${seguidorUid}__${analistaUid}` = { seguidorUid, analistaUid, firma, fecha }
+   Premium sigue a analistas. El conteo se hace por agregación (getCountFromServer).
+   ============================================================ */
+const _idSeg = (a, b) => `${a}__${b}`.replace(/[^\w:-]/g, '_');
+
+export async function seguirAnalista(analistaUid, firma) {
+  if (!await _asegurarListo()) return false;
+  const u = usuarioActual(); if (!u || !analistaUid) return false;
+  const S = _obtenerStore(), db = _obtenerDB();
+  await S.setDoc(S.doc(db, 'seguimientos', _idSeg(u.uid, analistaUid)), {
+    seguidorUid: u.uid, analistaUid, firma: firma || null, fecha: S.serverTimestamp(),
+  });
+  return true;
+}
+export async function dejarDeSeguir(analistaUid) {
+  if (!await _asegurarListo()) return false;
+  const u = usuarioActual(); if (!u || !analistaUid) return false;
+  const S = _obtenerStore(), db = _obtenerDB();
+  await S.deleteDoc(S.doc(db, 'seguimientos', _idSeg(u.uid, analistaUid)));
+  return true;
+}
+export async function sigueA(analistaUid) {
+  if (!analistaUid || !await _asegurarListo()) return false;
+  const u = usuarioActual(); if (!u) return false;
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const snap = await S.getDoc(S.doc(db, 'seguimientos', _idSeg(u.uid, analistaUid)));
+    return snap.exists();
+  } catch (_) { return false; }
+}
+/* UIDs de los analistas que sigue el usuario actual. */
+export async function misSeguidos() {
+  if (!await _asegurarListo()) return [];
+  const u = usuarioActual(); if (!u) return [];
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const q = S.query(S.collection(db, 'seguimientos'), S.where('seguidorUid', '==', u.uid));
+    const snap = await S.getDocs(q);
+    const out = []; snap.forEach(d => out.push(d.data().analistaUid));
+    return out;
+  } catch (_) { return []; }
+}
+/* Nº de seguidores de un analista (agregación en servidor; respaldo por conteo). */
+export async function contarSeguidores(analistaUid) {
+  if (!analistaUid || !await _asegurarListo()) return 0;
+  const S = _obtenerStore(), db = _obtenerDB();
+  const q = S.query(S.collection(db, 'seguimientos'), S.where('analistaUid', '==', analistaUid));
+  try {
+    if (S.getCountFromServer) { const c = await S.getCountFromServer(q); return (c.data().count) || 0; }
+  } catch (_) {}
+  try { const snap = await S.getDocs(q); return snap.size || 0; } catch (_) { return 0; }
+}
