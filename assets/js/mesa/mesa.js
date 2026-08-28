@@ -68,7 +68,7 @@ function render() {
     <div class="mesa">
       <aside class="mesa-side" id="mesa-side">
         <div class="mesa-side-top">
-          <div class="mesa-marca">HANDICAPPER<span>${_rol === 'analista' ? ML('Analyst','Analista') : 'Mesa'}</span></div>
+          <div class="mesa-marca">HANDICAPPER${_rol === 'analista' ? `<span>${ML('Analyst','Analista')}</span>` : ''}</div>
           <button class="mesa-burger" id="mesa-burger" aria-label="Menu">${IC.menu}</button>
         </div>
         <nav class="mesa-nav" id="mesa-nav">
@@ -169,13 +169,17 @@ function enlazarResumen() {
 }
 
 function vistaResumen() {
-  const total = _usuarios.length;
-  const conPlan = _usuarios.filter(activo);
+  const esStaff = (u) => _analistas.some(a => a.uid === u.uid);
+  const clientes = _usuarios.filter(u => !rolAdmin(u) && !esStaff(u));
+  const total = clientes.length;
+  const conPlan = clientes.filter(activo);
   const inactivos = total - conPlan.length;
   const mrr = conPlan.reduce((s, u) => s + precioMensual(u.suscripcion.plan), 0);
-  const bloqueados = _usuarios.filter(u => u.bloqueado).length;
+  const bloqueados = clientes.filter(u => u.bloqueado).length;
   const act = conPlan.length;
   const conv = total ? Math.round(act / total * 100) : 0;
+  const nStaff = _analistas.length;
+  const nAdmins = _admins.length;
   const COL = { basic: '#38a9f0', pro: '#e8b84b', premium: '#f0353a' };
   const porPlan = PLANES.map(p => ({ id: p.id, nombre: p.nombre, n: conPlan.filter(u => u.suscripcion.plan === p.id).length }));
 
@@ -189,18 +193,17 @@ function vistaResumen() {
   const ICu = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20a6.5 6.5 0 0113 0"/></svg>`;
   const ICx = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="8" r="3.2"/><path d="M3.5 20a6 6 0 0110-3.2"/><path d="M16 9l5 5M21 9l-5 5" stroke-linecap="round"/></svg>`;
   const ICd = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M16 7.5c0-2-1.8-3-4-3s-4 .9-4 2.8c0 3.7 8 2 8 5.7 0 2-1.9 3-4 3s-4-1-4-3"/></svg>`;
-  const kpi = (cls, ic, lab, dot, val, cap, color, fill) => `<div class="ov-kpi">
-      <div class="ov-kpi-lab ${cls}">${lab}${dot}</div>
-      <div class="ov-kpi-row"><div class="ov-kpi-ic ${cls}">${ic}</div><div><div class="ov-kpi-num">${val}</div><div class="ov-kpi-cap">${cap}</div></div></div>
-      ${spark(color, fill)}</div>`;
+  const kpi = (cls, lab, val, cap) => `<div class="ov-kpi ${cls}">
+      <div class="ov-kpi-lab">${lab}</div><div class="ov-kpi-num">${val}</div><div class="ov-kpi-cap">${cap}</div></div>`;
 
   return `
-    <div class="ov-head"><h1>${ML('Overview','Resumen')}</h1><p>${ML('Live snapshot of the platform.','Vista en vivo de la plataforma.')}</p></div>
     <div class="ov-kpis">
-      ${kpi('blue', ICp, ML('Registered users','Usuarios registrados'), '', total, ML('Total registered','Total registrados'), '#38a9f0', true)}
-      ${kpi('blue', ICu, ML('Active','Activos'), '<span class="ov-dot on"></span>', act, ML('Paying members','Miembros de pago'), '#38a9f0', false)}
-      ${kpi('muted', ICx, ML('Inactive','Inactivos'), '<span class="ov-dot off"></span>', inactivos, ML('Free / lapsed','Gratis / vencidos'), '#7b8494', false)}
-      ${kpi('gold', ICd, ML('Monthly revenue','Ingresos mensuales'), '', '$' + mrr.toFixed(2), ML('MRR estimate','MRR estimado'), '#e8b84b', true)}
+      ${kpi('blue', ML('Registered','Registrados'), total, ML('Paying customers only','Solo clientes'))}
+      ${kpi('green', ML('Active','Activos'), act, ML('With paid plan','Con plan de pago'))}
+      ${kpi('muted', ML('Inactive','Inactivos'), inactivos, ML('No active plan','Sin plan activo'))}
+      ${kpi('gold', ML('Monthly revenue','Ingresos mensuales'), '$' + mrr.toFixed(2), ML('MRR estimate','MRR estimado'))}
+      ${kpi('staff', ML('Staff','Personal'), nStaff, ML('Hired analysts','Analistas contratados'))}
+      ${kpi('blue', ML('Admins','Admins'), nAdmins, ML('Owners','Dueños'))}
     </div>
     <div class="ov-grid2">
       <div class="ov-card"><div class="ov-card-t">${ML('Active by plan','Activos por plan')}</div>
@@ -211,13 +214,14 @@ function vistaResumen() {
       <div class="ov-card"><div class="ov-card-t heart">${ML('Health','Salud')}</div>
         <div class="ov-mini"><span>${ML('Blocked accounts','Cuentas bloqueadas')}</span><b>${bloqueados}</b></div>
         <div class="ov-mini"><span>${ML('Published signals','Señales publicadas')}</span><b>${_analisis.length}</b></div>
-        <div class="ov-mini hl"><span>${ML('Conversion','Conversión')}</span><b>${conv}%</b></div>
+        <div class="ov-mini hl"><span>${ML('Paying rate','% que paga')}</span><b>${conv}%</b></div>
       </div>
     </div>
     <div class="ov-band"><div class="ov-band-t">${ML('Admin only','Solo admin')}</div>
       <div class="ov-band-grid">
         <button class="ov-adm" data-goto="usuarios"><span class="ov-adm-ic">${ICu}</span><span class="ov-adm-tx"><b>${ML('Manage users','Gestionar usuarios')}</b><em>${ML('Users, plans and blocks.','Usuarios, planes y bloqueos.')}</em></span><span class="ov-adm-go">›</span></button>
         <button class="ov-adm" data-goto="analisis"><span class="ov-adm-ic gear">${ICp}</span><span class="ov-adm-tx"><b>${ML('Analysis','Análisis')}</b><em>${ML('Published analysis &amp; signals.','Análisis y señales publicados.')}</em></span><span class="ov-adm-go">›</span></button>
+        <button class="ov-adm" data-goto="analistas"><span class="ov-adm-ic">${IC.contrato}</span><span class="ov-adm-tx"><b>${ML('Staff','Personal')}</b><em>${ML('Hire &amp; manage analysts.','Contrata y gestiona analistas.')}</em></span><span class="ov-adm-go">›</span></button>
       </div>
     </div>`;
 }
