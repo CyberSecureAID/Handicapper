@@ -1,7 +1,7 @@
 /* ============================================================
    MLB PARLAY ENGINE — Top N bateadores con mayor P(≥1 hit) hoy.
    Fuente: MLB Stats API oficial (statsapi.mlb.com), gratis y sin clave.
-   El MODELO de probabilidad es propio (criterio nuestro), no copiado
+   El MODELO de probabilidad es propio (criterio nuestro), no copiado.
 
    Uso:
      import { topParlayHits } from './mlb-parlay.js';
@@ -12,6 +12,8 @@
      topParlayHits({ proxy:'https://tu-worker.workers.dev/?url=' })
    El proxy antepone y reenvía la URL (ver worker de ejemplo en el README).
    ============================================================ */
+
+import * as N from './nucleo.js';
 
 const API = 'https://statsapi.mlb.com/api/v1';
 
@@ -119,8 +121,33 @@ export function estimarHit({ bateador, pitcher, slot, venue, lineupConfirmado })
   // PA esperadas por puesto
   const pa = PA_SLOT[clamp((slot || 5) - 1, 0, 8)];
 
-  // P(≥1 hit) = 1 - (1 - pHit)^PA
-  const prob = clamp(1 - Math.pow(1 - pHit, pa), 0.30, 0.95);
+  // P(≥1 hit) = 1 - (1 - pHit)^PA   (cálculo clásico; sirve de respaldo)
+  let prob = clamp(1 - Math.pow(1 - pHit, pa), 0.30, 0.95);
+
+  // ---- NÚCLEO: shrinkage (Bayes empírico) + log5 (matchup) + Monte Carlo ----
+  // Encoge los AVG hacia la liga según la muestra (mata el ruido), combina
+  // bateador×pitcher×liga con log5, y simula 4.000 partidos variando pHit y las
+  // PA reales -> P(≥1 hit) como media + intervalo. Si algo falla, queda el clásico.
+  let ic = null;
+  try {
+    const LIGA_AVG = 0.245;
+    const nSeason = clamp(bateador.pa || bateador.ab || 130, 20, 700);
+    const baseSh = N.regresarTasa(base, nSeason, LIGA_AVG, 200);                 // AVG del bateador, regresado
+    const permitSh = permit != null ? N.regresarTasa(permit, 220, LIGA_AVG, 180) : LIGA_AVG; // AVG permitido, regresado
+    const avgMatch = N.log5(baseSh, permitSh, LIGA_AVG);                          // matchup canónico (log5)
+    const lat = (pitcher && ((manoBat === 'L' && pitcher.mano === 'R') || (manoBat === 'R' && pitcher.mano === 'L'))) ? 1.03 : 1;
+    const pHitN = N.clamp(avgMatch * 0.88 * fpark * lat, 0.08, 0.44);            // AB -> PA, parque, lateralidad
+    const sdLogit = N.clamp(0.50 - (nSeason / 700) * 0.28 - (usadoSplit ? 0.05 : 0) - (permit != null ? 0.05 : 0), 0.14, 0.50);
+    const seed = (bateador.id || bateador.nombre || '') + '|' + (pitcher.id || pitcher.nombre || '') + '|' + slot;
+    const mc = N.montecarlo(seed, 4000, (r) => {
+      const ph = N.clamp(N.sig(N.logit(pHitN) + N.gauss(r) * sdLogit), 0.03, 0.60);
+      const paR = Math.max(3, Math.round(pa + N.gauss(r) * 0.6));                 // PA reales varían por partido
+      return N.pBinomGe1(ph, paR);
+    });
+    pHit = pHitN;
+    prob = N.clamp(mc.media, 0.30, 0.97);
+    ic = [Math.round(mc.ic80[0] * 100), Math.round(mc.ic80[1] * 100)];
+  } catch (e) { /* respaldo: pHit/prob clásicos */ }
 
   // Confianza
   let señales = 0;
@@ -133,8 +160,14 @@ export function estimarHit({ bateador, pitcher, slot, venue, lineupConfirmado })
   if ((slot || 9) <= 3) factores.push('Tope del orden: más apariciones');
   else if ((slot || 9) >= 7) riesgos.push('Parte baja del orden: menos apariciones');
 
-  const confianza = señales >= 3 ? 'alta' : señales === 2 ? 'media' : 'baja';
-  return { prob: Math.round(prob * 100), pHit: +pHit.toFixed(3), pa, confianza, factores: factores.slice(0, 4), riesgos: riesgos.slice(0, 3) };
+  let confianza = señales >= 3 ? 'alta' : señales === 2 ? 'media' : 'baja';
+  try {
+    const nEff = (usadoSplit ? 30 : 0) + (permit != null ? 30 : 0) + (lineupConfirmado ? 20 : 0) + N.clamp((bateador.pa || 0) / 8, 0, 40);
+    const cNuc = N.confianza({ n: nEff, anchoIC: ic ? (ic[1] - ic[0]) / 100 : null });
+    if (cNuc) confianza = cNuc;
+  } catch (e) {}
+  const intervalo = ic ? { lo: Math.min(ic[0], ic[1]), hi: Math.max(ic[0], ic[1]) } : null;
+  return { prob: Math.round(prob * 100), pHit: +pHit.toFixed(3), pa, confianza, intervalo, factores: factores.slice(0, 4), riesgos: riesgos.slice(0, 3) };
 }
 
 /* ---------- 5) ORQUESTADOR: arma el Top N del día ---------- */
@@ -190,7 +223,7 @@ export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 3
     jugadores: top,
     meta: {
       fecha, generado: new Date().toISOString(), fuente: 'MLB Stats API (statsapi.mlb.com)',
-      modelo: 'P(≥1 hit) = 1 − (1 − p_hit)^PA · estimación propia del modelo',
+      modelo: 'log5 (bateador×pitcher×liga) + shrinkage bayesiano + Monte Carlo · estimación del modelo',
       candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)],
     },
   };

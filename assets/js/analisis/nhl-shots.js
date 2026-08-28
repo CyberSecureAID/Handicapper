@@ -8,6 +8,8 @@
    ajustado por defensa rival (tiros permitidos), local/visita y forma.
    ============================================================ */
 
+import * as N from './nucleo.js';
+
 const WEB = 'https://api-web.nhle.com/v1';
 const STATS = 'https://api.nhle.com/stats/rest/en';
 const UMBRAL = 2;              // línea de referencia (tiros a puerta)
@@ -61,7 +63,19 @@ export function estimarTiros({ jugador, oponente, local, lineupConfirmado }) {
 
   lambda = clamp(lambda, 0.2, 6);
   const eL = Math.exp(-lambda);
-  const prob = Math.round((1 - eL - lambda * eL) * 100);   // P(≥2) Poisson
+  let prob = Math.round((1 - eL - lambda * eL) * 100);   // P(≥2) Poisson (respaldo)
+
+  // ---- NÚCLEO: shrinkage de λ (Bayes) + Monte Carlo -> prob + intervalo ----
+  let ic = null;
+  try {
+    const gp = num(jugador.gp) || 20;
+    const lamSh = (lambda * gp + 1.8 * 8) / (gp + 8);      // pocos partidos -> λ hacia ~1.8 (prior tirador)
+    const sdLam = N.clamp(0.9 - gp * 0.02, 0.25, 0.9);
+    const seed = (jugador.nombre || '') + '|sog|' + Math.round(lambda * 100);
+    const mc = N.montecarlo(seed, 4000, (r) => N.pPoissonGe(UMBRAL, Math.max(0.05, lamSh + N.gauss(r) * sdLam)));
+    prob = Math.round(N.clamp(mc.media, 0, 1) * 100);
+    ic = [Math.round(mc.ic80[0] * 100), Math.round(mc.ic80[1] * 100)];
+  } catch (e) {}
 
   // Señales / confianza
   if (spg >= 3) factores.push(`Volumen alto: ${spg.toFixed(1)} tiros/partido`);
@@ -74,10 +88,12 @@ export function estimarTiros({ jugador, oponente, local, lineupConfirmado }) {
   if (u5 != null) señales++;
   if ((jugador.gp || 0) >= 15) señales++;
   if (lineupConfirmado) señales++;
-  const confianza = señales >= 3 ? 'alta' : señales === 2 ? 'media' : 'baja';
+  let confianza = señales >= 3 ? 'alta' : señales === 2 ? 'media' : 'baja';
+  try { const c = N.confianza({ n: (num(jugador.gp) || 0) * 1.5 + señales * 8, anchoIC: ic ? (ic[1] - ic[0]) / 100 : null }); if (c) confianza = c; } catch (e) {}
+  const intervalo = ic ? { lo: Math.min(ic[0], ic[1]), hi: Math.max(ic[0], ic[1]) } : null;
 
   return {
-    prob, proj: +lambda.toFixed(1), umbral: UMBRAL, confianza,
+    prob, proj: +lambda.toFixed(1), umbral: UMBRAL, confianza, intervalo,
     factores: factores.slice(0, 4), riesgos: riesgos.slice(0, 3),
   };
 }

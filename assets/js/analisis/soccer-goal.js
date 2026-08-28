@@ -1,11 +1,13 @@
 /* ============================================================
    GOAL PROJECTION ENGINE — Top N jugadores con mayor
-   P(anotar ≥1 gol) hoy (mercado "anytime goalscorer")
+   P(anotar ≥1 gol) hoy (mercado "anytime goalscorer").
    Fuente: ESPN (site.api.espn.com), CORS abierto (ya usado por la app).
    Modelo PROPIO tipo Poisson: P(≥1 gol) = 1 − e^(−λ), con λ = goles
    esperados del jugador en el partido, ajustado por defensa rival,
    local/visita, forma reciente y minutos previstos.
    ============================================================ */
+
+import * as N from './nucleo.js';
 
 const API = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 const LIGAS = { epl: 'eng.1', laliga: 'esp.1', seriea: 'ita.1', bundes: 'ger.1', ucl: 'uefa.champions', ligue1: 'fra.1' };
@@ -77,7 +79,20 @@ export function estimarGol({ jugador, oponente, local, lineupConfirmado }) {
   }
 
   lambda = clamp(lambda, 0.02, 1.7);
-  const prob = Math.round((1 - Math.exp(-lambda)) * 100);
+  let prob = Math.round((1 - Math.exp(-lambda)) * 100);   // P(≥1 gol) Poisson (respaldo)
+
+  // ---- NÚCLEO: shrinkage de λ (Bayes, prior por perfil) + Monte Carlo ----
+  let ic = null;
+  try {
+    const np = num(partidos) || 5;
+    const priorL = perfil.peso * 0.35;                    // prior según perfil de ataque
+    const lamSh = (lambda * np + priorL * 4) / (np + 4);  // pocos partidos -> λ hacia el prior
+    const sdLam = N.clamp(0.5 - np * 0.02, 0.12, 0.5);
+    const seed = (jugador.nombre || '') + '|gol|' + Math.round(lambda * 1000);
+    const mc = N.montecarlo(seed, 4000, (r) => 1 - Math.exp(-Math.max(0.01, lamSh + N.gauss(r) * sdLam)));
+    prob = Math.round(N.clamp(mc.media, 0, 1) * 100);
+    ic = [Math.round(mc.ic80[0] * 100), Math.round(mc.ic80[1] * 100)];
+  } catch (e) {}
 
   // Señales / confianza
   if (perfil.ataque) factores.push('Posición de ataque');
@@ -91,10 +106,12 @@ export function estimarGol({ jugador, oponente, local, lineupConfirmado }) {
   if (gu5 != null) señales++;
   if (lineupConfirmado) señales++;
   if ((partidos || 0) >= 8) señales++;
-  const confianza = señales >= 3 ? 'alta' : señales === 2 ? 'media' : 'baja';
+  let confianza = señales >= 3 ? 'alta' : señales === 2 ? 'media' : 'baja';
+  try { const c = N.confianza({ n: (num(partidos) || 0) * 2.5 + señales * 8, anchoIC: ic ? (ic[1] - ic[0]) / 100 : null }); if (c) confianza = c; } catch (e) {}
+  const intervalo = ic ? { lo: Math.min(ic[0], ic[1]), hi: Math.max(ic[0], ic[1]) } : null;
 
   return {
-    prob, lambda: +lambda.toFixed(3), confianza,
+    prob, lambda: +lambda.toFixed(3), confianza, intervalo,
     factores: factores.slice(0, 4), riesgos: riesgos.slice(0, 3),
   };
 }

@@ -3,9 +3,11 @@
    anotar 20+ puntos hoy (mercado de puntos over/under).
    Fuente: ESPN (site.api.espn.com), CORS abierto.
    Modelo PROPIO: los puntos son ~Normales -> se proyecta μ (puntos
-   esperados) y P(20+) = Φ((μ − 20) / σ), con σ ligada a μ
+   esperados) y P(20+) = Φ((μ − 20) / σ), con σ ligada a μ.
    μ se ajusta por defensa rival, ritmo, local/visita, minutos y forma.
    ============================================================ */
+
+import * as N from './nucleo.js';
 
 const API = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
 const UMBRAL = 20;               // línea de referencia (puntos)
@@ -72,7 +74,20 @@ export function estimarPuntos({ jugador, oponente, local, lineupConfirmado }) {
   mu = clamp(mu, 2, 45);
   // Desviación típica de puntos por partido (empírica): crece con μ
   const sigma = Math.max(4, 0.38 * mu);
-  const prob = Math.round(Phi((mu - UMBRAL) / sigma) * 100);
+  let prob = Math.round(Phi((mu - UMBRAL) / sigma) * 100);
+
+  // ---- NÚCLEO: shrinkage de μ (Bayes) + Monte Carlo -> prob + intervalo ----
+  let ic = null;
+  try {
+    const gp = num(jugador.gp) || 30;
+    const priorMu = 0.5 * minPrev;                        // ritmo de anotación ~liga por minuto
+    const muSh = (mu * gp + priorMu * 12) / (gp + 12);    // pocos partidos -> μ hacia el prior
+    const sdMu = N.clamp(6 - gp * 0.06, 1.8, 6);
+    const seed = (jugador.nombre || '') + '|pts|' + Math.round(mu * 10);
+    const mc = N.montecarlo(seed, 4000, (r) => N.pNormalGe(muSh + N.gauss(r) * sdMu, sigma, UMBRAL));
+    prob = Math.round(N.clamp(mc.media, 0, 1) * 100);
+    ic = [Math.round(mc.ic80[0] * 100), Math.round(mc.ic80[1] * 100)];
+  } catch (e) {}
 
   // Señales / confianza
   if (ppg >= 22) factores.push(`Anotador de ${ppg.toFixed(1)} pts de promedio`);
@@ -86,10 +101,12 @@ export function estimarPuntos({ jugador, oponente, local, lineupConfirmado }) {
   if (pace != null) señales++;
   if (u5 != null) señales++;
   if (lineupConfirmado) señales++;
-  const confianza = señales >= 3 ? 'alta' : señales === 2 ? 'media' : 'baja';
+  let confianza = señales >= 3 ? 'alta' : señales === 2 ? 'media' : 'baja';
+  try { const c = N.confianza({ n: (num(jugador.gp) || 0) * 1.2 + señales * 8, anchoIC: ic ? (ic[1] - ic[0]) / 100 : null }); if (c) confianza = c; } catch (e) {}
+  const intervalo = ic ? { lo: Math.min(ic[0], ic[1]), hi: Math.max(ic[0], ic[1]) } : null;
 
   return {
-    prob, proj: +mu.toFixed(1), umbral: UMBRAL, confianza,
+    prob, proj: +mu.toFixed(1), umbral: UMBRAL, confianza, intervalo,
     factores: factores.slice(0, 4), riesgos: riesgos.slice(0, 3),
   };
 }
