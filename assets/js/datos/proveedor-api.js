@@ -18,7 +18,7 @@ const BASE = 'https://site.api.espn.com/apis/site/v2/sports';
 import { analizar } from '../analisis/motor.js';
 import { enriquecerMLB } from './mlb-oficial.js';
 import { comparativaEquiposESPN } from './equipos-stats.js';
-import { fotosWikipedia } from './fotos-wiki.js';
+import { fotosSportsDB } from './proveedor-sportsdb.js';
 
 /* Mapa de nuestras ligas -> ruta ESPN {deporte}/{liga} */
 const RUTA = {
@@ -510,14 +510,14 @@ export async function detallePartido(id) {
         if (rv?.length) m.plantilla.visita = fusionRoster(m.plantilla.visita, rv);
       } catch (_) {}
 
-      // Segundo proveedor de fotos (Wikipedia): rellena SOLO a quienes no tienen
-      // foto de ESPN. Gratis, sin clave, una llamada por equipo.
+      // Segundo proveedor de fotos (TheSportsDB): rellena SOLO a quienes no tienen
+      // foto de ESPN. Filtra por DEPORTE y EQUIPO -> nunca la persona equivocada.
       try {
         await Promise.all(['local', 'visita'].map(async lado => {
           const arr = (m.plantilla && m.plantilla[lado]) || [];
           const sinFoto = arr.filter(j => j && j.nombre && !j.foto);
           if (!sinFoto.length) return;
-          const mapa = await fotosWikipedia(sinFoto.map(j => j.nombre));
+          const mapa = await fotosSportsDB(sinFoto.map(j => j.nombre), { equipo: m[lado] && m[lado].nombre, ligaId });
           const key = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
           sinFoto.forEach(j => { const u = mapa[key(j.nombre)]; if (u) j.foto = u; });
         }));
