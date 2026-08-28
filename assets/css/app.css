@@ -704,3 +704,35 @@
   color:#06121f;background:linear-gradient(90deg,#39a7f0,#7cc7f7);border-radius:4px;padding:1px 4px}
 @media(max-width:820px){ .proj-b .proj-tx{display:none} .proj-b{padding:0 9px} }
 @media(max-width:560px){ .proj-b .proj-pro{display:none} .proj-nav{gap:4px} }
+
+/* ===== Botón Premium + desplegable (móvil) — sustituye la barra de proyecciones ===== */
+.premium-menu { position: relative; display: none; }
+.premium-btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 12px;
+  border: 1px solid rgba(232,184,75,.45); background: linear-gradient(180deg, rgba(232,184,75,.16), rgba(232,184,75,.04));
+  color: var(--oro); font-family: "Chakra Petch",sans-serif; font-weight: 800; font-size: 13px; letter-spacing: .04em; cursor: pointer;
+  transition: border-color .15s, background .15s; white-space: nowrap; }
+.premium-btn:hover { border-color: var(--oro); }
+.premium-btn.open, .premium-btn.activo { background: rgba(232,184,75,.22); border-color: var(--oro); }
+.premium-btn svg { width: 16px; height: 16px; flex: 0 0 auto; }
+.premium-chev { transition: transform .18s; } .premium-btn.open .premium-chev { transform: rotate(180deg); }
+.premium-pop { position: absolute; top: calc(100% + 10px); right: 0; z-index: 60; width: 268px; max-width: calc(100vw - 24px);
+  background: linear-gradient(180deg, #141a24, #0d1119); border: 1px solid rgba(255,255,255,.12); border-radius: 18px;
+  padding: 8px; box-shadow: 0 28px 66px rgba(0,0,0,.62); display: none; transform-origin: top right; animation: premIn .16s ease; }
+@keyframes premIn { from { opacity: 0; transform: translateY(-8px) scale(.97); } to { opacity: 1; transform: none; } }
+.premium-pop.open { display: block; }
+.premium-pop-h { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #7a8593; font-weight: 800; padding: 9px 12px 8px; }
+.premium-item { display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; background: none; border: 0;
+  padding: 11px 12px; border-radius: 13px; cursor: pointer; margin-bottom: 6px; color: #e7edf3; transition: background .13s; }
+.premium-item:last-child { margin-bottom: 0; }
+.premium-item:hover { background: rgba(255,255,255,.06); }
+.premium-item.on { background: linear-gradient(90deg, rgba(232,184,75,.16), rgba(232,184,75,.04)); }
+.pi-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 21px; flex: 0 0 auto;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09); }
+.pi-tx { flex: 1; min-width: 0; } .pi-tx b { display: block; font-size: 14.5px; color: #fff; font-weight: 700; font-family: "Chakra Petch",sans-serif; }
+.pi-tx em { font-style: normal; font-size: 11.5px; color: #98a4b4; }
+.pi-pro { font-size: 9px; font-weight: 800; letter-spacing: .05em; color: #241a06; background: linear-gradient(90deg,#e8c46a,#f6e2a6); padding: 3px 7px; border-radius: 6px; flex: 0 0 auto; }
+@media (max-width: 820px) {
+  .proj-nav { display: none !important; }
+  .premium-menu { display: inline-block; }
+}
+@media (max-width: 380px) { .premium-btn span { display: none; } .premium-btn { padding: 0 11px; } }
