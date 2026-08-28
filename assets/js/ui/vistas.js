@@ -246,7 +246,7 @@ export function detalle(p, opciones = {}) {
     chain.push(fig);
     const esFig0 = chain[0] === fig;
     const photo = `<img class="hd-pit-photo${esFig0 ? ' is-figura' : ''}" src="${esc(chain[0])}" alt="" loading="lazy"
-      data-fb="${esc(chain.slice(1).join('~~'))}" onerror="${FB_PIT}">`;
+      data-fb="${esc(chain.slice(1).join('~~'))}" onerror="${FB_PIT}" onload="window.__bevelFoto&&window.__bevelFoto(this)">`;
     const sideC = lado === 'local' ? 'l' : 'r';
     const pitIco = `<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><circle cx="12" cy="5" r="2.4"/><path d="M11 8c-1 2-3 3-5 3l.4 1.9c1.7-.1 3.3-.7 4.6-1.8l1 2.1-2.4 4.6 1.7.9 2.7-5.1c.3-.6.1-1.3-.4-1.7l-1.2-1 1.1-2.2c1.2 1.3 2.9 2 4.6 2.1l.2-1.9c-1.9 0-3.6-1.1-4.5-2.8z"/></svg>`;
     const badge = `<div class="hd-pit-badge">${pitIco} ${esc(badgeT)}</div>`;
