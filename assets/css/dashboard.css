@@ -245,21 +245,50 @@
   font-family:"Chakra Petch",sans-serif; font-weight:800; font-size:36px; color:var(--fav); }
 @media (max-width:520px){ .hd-gauge-chip-pct { font-size:30px; padding:0 16px; } .hd-gauge-chip-eq { font-size:18px; } }
 
-/* ===== Menú de secciones en móvil (detalle) — junto a Compartir ===== */
+/* ===== Menú de secciones en móvil (detalle) — premium ===== */
 .hd-menu { position: relative; display: none; }
-.hd-menu-btn { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 11px; border-radius: 9px;
-  border: 1px solid var(--linea); background: rgba(255,255,255,.05); color: #e7edf3; font-family: var(--body,inherit);
-  font-size: 11.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; }
-.hd-menu-btn svg { width: 15px; height: 15px; flex: 0 0 auto; }
-.hd-menu-btn span { max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hd-menu-pop { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; min-width: 190px;
-  background: #0e141b; border: 1px solid var(--linea); border-radius: 12px; padding: 6px; box-shadow: 0 22px 54px rgba(0,0,0,.55); display: none; }
+.hd-menu-btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 11px;
+  border: 1px solid rgba(255,255,255,.14); background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+  color: #eef3f9; font-family: var(--body,inherit); font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+  cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+.hd-menu-btn:hover { border-color: rgba(232,184,75,.5); }
+.hd-menu-btn.open { border-color: var(--oro); color: var(--oro); background: rgba(232,184,75,.1); }
+.hd-menu-btn svg { width: 16px; height: 16px; flex: 0 0 auto; }
+.hd-menu-btn .hd-menu-chev { transition: transform .18s; }
+.hd-menu-btn.open .hd-menu-chev { transform: rotate(180deg); }
+.hd-menu-btn span { max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hd-menu-pop { position: absolute; top: calc(100% + 8px); right: 0; z-index: 40; min-width: 210px;
+  background: linear-gradient(180deg, #121822, #0c1119); border: 1px solid rgba(255,255,255,.12); border-radius: 16px;
+  padding: 8px; box-shadow: 0 24px 60px rgba(0,0,0,.6); display: none; transform-origin: top right;
+  animation: hdMenuIn .16s ease; }
+@keyframes hdMenuIn { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
 .hd-menu-pop.open { display: block; }
-.hd-menu-item { display: block; width: 100%; text-align: left; background: none; border: 0; color: #c3ccd6;
-  font-size: 13.5px; font-weight: 600; padding: 11px 12px; border-radius: 8px; cursor: pointer; }
+.hd-menu-item { display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: left;
+  background: none; border: 0; color: #c8d2dd; font-size: 14px; font-weight: 600; padding: 13px 14px; border-radius: 11px;
+  cursor: pointer; margin-bottom: 5px; transition: background .13s, color .13s; }
+.hd-menu-item:last-child { margin-bottom: 0; }
 .hd-menu-item:hover { background: rgba(255,255,255,.06); color: #fff; }
-.hd-menu-item.on { background: rgba(232,184,75,.14); color: var(--oro); }
+.hd-menu-item.on { background: linear-gradient(90deg, rgba(232,184,75,.18), rgba(232,184,75,.05)); color: var(--oro); font-weight: 800; }
+.hd-menu-item.on::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--oro); box-shadow: 0 0 8px var(--oro); }
+
+/* ===== Cabecera de equipos en móvil: logo ARRIBA, nombre DEBAJO ===== */
+@media (max-width: 560px) {
+  .hd-hd { grid-template-columns: 1fr auto 1fr; gap: 6px; padding: 16px 8px 14px; align-items: start; }
+  .hd-hd-team, .hd-hd-team.l, .hd-hd-team.r { flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; gap: 8px; }
+  .hd-hd-team.r { flex-direction: column-reverse; }
+  .hd-hd-tx { min-width: 0; width: 100%; text-align: center; }
+  .hd-hd-logo { width: 46px; height: 46px; }
+  .hd-hd-name { font-size: 13px; white-space: normal; line-height: 1.12; }
+  .hd-hd-city { font-size: 8.5px; }
+  .hd-hd-rec { font-size: 10px; margin-top: 2px; }
+  .hd-hd-c { align-self: center; }
+}
+
+/* Barra: separación cómoda entre Menu / Compartir / Cerrar en móvil */
 @media (max-width: 700px) {
   .hd-tabs { display: none !important; }
   .hd-menu { display: inline-flex; }
+  .hd-acc { gap: 10px; }
+  .hd-acc .hd-share, .hd-acc .hd-close { height: 38px; border-radius: 11px; }
+  .hd-acc .hd-close { width: 38px; justify-content: center; }
 }
