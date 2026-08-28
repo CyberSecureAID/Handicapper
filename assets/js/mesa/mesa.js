@@ -328,6 +328,7 @@ async function abrirModalSenal(matchId) {
   const ITrophy = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 01-10 0zM7 6H4v1a3 3 0 003 3M17 6h3v1a3 3 0 01-3 3M9 20h6M12 15v5"/></svg>`;
   const ICheck = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`;
   const IEye = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const IClose = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
   const IBack = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>`;
   const IInfo = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-linecap="round"/></svg>`;
   const logo = (eq) => eq.logo ? `<img class="anm2-logo" src="${esc(eq.logo)}" alt="" onerror="this.style.visibility='hidden'">` : `<span class="anm2-logo anm2-logo-fb">${esc(eq.abrev || '')}</span>`;
@@ -339,7 +340,10 @@ async function abrirModalSenal(matchId) {
   <div class="anm2">
     <div class="anm2-head">
       <button class="anm2-back" id="anm-x">${IBack}<span>${L('Match Analysis', 'Análisis de partido')}</span></button>
-      <button class="anm2-prev" id="anm-prev">${IEye}${L('Preview', 'Vista previa')}</button>
+      <div class="anm2-head-r">
+        <button class="anm2-prev" id="anm-prev">${IEye}${L('Preview', 'Vista previa')}</button>
+        <button class="anm2-close2" id="anm-x2" aria-label="Close">${IClose}</button>
+      </div>
     </div>
 
     <div class="anm2-banner">
@@ -379,6 +383,9 @@ async function abrirModalSenal(matchId) {
             <div class="anm2-info-c">${IClock}<div><span>${L('Time', 'Hora')}</span><b>${esc(p.inicio || L('TBD', 'Por definir'))}</b></div></div>
             <div class="anm2-info-c">${IPin}<div><span>${L('Stadium', 'Estadio')}</span><b>${esc(p.sede || L('TBD', 'Por definir'))}</b></div></div>
             <div class="anm2-info-c">${ITrophy}<div><span>${L('League', 'Liga')}</span><b>${esc(p.liga || '—')}</b></div></div>
+            ${p.local.record ? `<div class="anm2-info-c">${ITrophy}<div><span>${esc(p.local.abrev)} ${L('record','récord')}</span><b>${esc(p.local.record)}${p.local.posicion ? ` · ${p.local.posicion}º` : ''}</b></div></div>` : ''}
+            ${p.visita.record ? `<div class="anm2-info-c">${ITrophy}<div><span>${esc(p.visita.abrev)} ${L('record','récord')}</span><b>${esc(p.visita.record)}${p.visita.posicion ? ` · ${p.visita.posicion}º` : ''}</b></div></div>` : ''}
+            ${(p.local.division || p.visita.division) ? `<div class="anm2-info-c">${IPin}<div><span>${L('Division','División')}</span><b>${esc(p.local.division || p.visita.division)}</b></div></div>` : ''}
           </div>
         </div>
       </div>
@@ -416,7 +423,6 @@ async function abrirModalSenal(matchId) {
       <label class="anm2-apply"><input type="checkbox" id="anm-adj" ${ya?.ajustar !== false ? 'checked' : ''}><div><b>${L('Apply my probability on the site', 'Aplicar mi probabilidad en la página')}</b><em>${L('Users will see these probabilities', 'Los usuarios verán estas probabilidades')}</em></div></label>
       <div class="anm2-foot-btns">
         ${ya ? `<button class="anm2-btn danger" id="anm-del">${L('Delete', 'Eliminar')}</button>` : ''}
-        <button class="anm2-btn ghost" id="anm-draft">${L('Save draft', 'Guardar borrador')}</button>
         <button class="anm2-btn primary" id="anm-guardar">${L('Publish signal', 'Publicar señal')}</button>
       </div>
     </div>
@@ -460,7 +466,13 @@ async function abrirModalSenal(matchId) {
 
   const cerrar = () => bg.remove();
   bg.querySelector('#anm-x').onclick = cerrar;
-  bg.querySelector('#anm-prev').onclick = () => window.open('index.html', '_blank');
+  bg.querySelector('#anm-x2')?.addEventListener('click', cerrar);
+  bg.querySelector('#anm-prev').onclick = () => {
+    const prev = bg.querySelector('#anm-prev'); const t = prev.querySelector('span') || prev;
+    prev.disabled = true; const orig = prev.innerHTML;
+    prev.innerHTML = L('Signals section coming soon', 'Sección de señales muy pronto');
+    setTimeout(() => { prev.innerHTML = orig; prev.disabled = false; }, 1800);
+  };
   bg.onclick = (e) => { if (e.target === bg) cerrar(); };
 
   const publicar = async (estado) => {
@@ -486,7 +498,6 @@ async function abrirModalSenal(matchId) {
     catch (_) { btn.disabled = false; btn.textContent = txtBtn; }
   };
   bg.querySelector('#anm-guardar').onclick = () => publicar('publicado');
-  bg.querySelector('#anm-draft').onclick = () => publicar('borrador');
   const del = bg.querySelector('#anm-del');
   if (del) del.onclick = async () => { del.disabled = true; try { await borrarAnalisis(matchId); _analisis = await listarAnalisis(); cerrar(); pintarTab(); } catch (_) { del.disabled = false; } };
 }
