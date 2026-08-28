@@ -9,6 +9,7 @@
 import { listarAnalisis, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores } from '../mesa/mesa-datos.js';
 import { usuarioActual } from '../auth/auth.js';
 import { planPorId } from '../datos/planes.js';
+import { estiloAttrs } from './estilo-senal.js';
 import { idiomaActual } from './idioma.js';
 
 const ES = () => idiomaActual() === 'es';
@@ -53,7 +54,13 @@ function inyectarCSS() {
   .sn-note p{color:var(--tx2);font-size:12.5px;line-height:1.55;margin:0}
   .sn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
   .sn-card{position:relative;background:linear-gradient(180deg,rgba(20,27,38,.9),rgba(13,18,26,.95));border:1px solid var(--line);border-radius:16px;padding:18px;overflow:hidden}
-  .sn-card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--g),transparent 75%)}
+  .sn-card{--acc:#e8b84b}
+  .sn-card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--acc),transparent 75%)}
+  .sn-c-emblema{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;color:var(--acc);background:color-mix(in srgb, var(--acc) 12%, transparent);flex:0 0 auto}
+  .sn-c-emblema svg{width:19px;height:19px}
+  .sn-i-subtle.sn-card::before{height:2px;opacity:.6}
+  .sn-i-strong.sn-card::before{height:4px}
+  .sn-i-strong.sn-card{box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--acc) 34%, transparent)}
   .sn-c-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
   .sn-c-match{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:17px;color:#fff}
   .sn-c-conf{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:4px 10px;border-radius:20px}
@@ -63,7 +70,7 @@ function inyectarCSS() {
   .sn-c-team{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:15px;color:#fff;flex:1;min-width:0}
   .sn-c-prob{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:26px;background:linear-gradient(180deg,#f8e7ad,#d4a53f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#e8c46a}
   .sn-c-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden;margin-bottom:12px}
-  .sn-c-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#c79a3c,#f6e2a6)}
+  .sn-c-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg, color-mix(in srgb, var(--acc) 80%, #000 8%), var(--acc))}
   .sn-c-txt{font-size:13px;color:#c3ccd6;line-height:1.55;margin:0 0 12px;white-space:pre-wrap}
   .sn-c-foot{display:flex;align-items:center;justify-content:space-between;padding-top:11px;border-top:1px solid rgba(255,255,255,.06)}
   .sn-c-market{font-size:11.5px;color:var(--tx2);font-weight:600}
@@ -84,7 +91,8 @@ function inyectarCSS() {
   .sn-newbanner{display:flex;align-items:center;gap:10px;border:1px solid rgba(56,169,240,.35);background:linear-gradient(180deg,rgba(56,169,240,.12),rgba(56,169,240,.03));border-radius:12px;padding:11px 15px;margin:0 0 16px;color:#dbeafe;font-size:13.5px;font-weight:600}
   .sn-newbanner svg{width:18px;height:18px;color:#5cc0ff;flex:0 0 auto}
   .sn-lock-badge{display:inline-block;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:12px;letter-spacing:.04em;color:#0a0e15;background:linear-gradient(90deg,#e8c46a,#f6e2a6);border-radius:999px;padding:5px 14px;margin-bottom:12px}
-  .sn-c-firma{display:inline-flex;align-items:center;gap:6px;font-family:'Chakra Petch',sans-serif;font-weight:800;font-size:13.5px;color:#e8c46a;background:rgba(232,196,106,.1);border:1px solid rgba(232,196,106,.32);border-radius:999px;padding:4px 12px 4px 10px;letter-spacing:.01em}
+  .sn-c-firma{display:inline-flex;align-items:center;gap:6px;font-family:'Chakra Petch',sans-serif;font-weight:800;font-size:13.5px;color:var(--acc);background:color-mix(in srgb, var(--acc) 12%, transparent);border:1px solid color-mix(in srgb, var(--acc) 34%, transparent);border-radius:999px;padding:4px 12px 4px 10px;letter-spacing:.01em}
+  .sn-i-strong .sn-c-firma{color:#0a0e15;background:var(--acc);border-color:var(--acc)}
   .sn-c-firma svg{width:13px;height:13px}
   .sn-c-name{font-size:11.5px;color:var(--tx3,#7a8593);font-weight:600}
   @media(max-width:560px){.sn-grid{grid-template-columns:1fr}}
@@ -106,6 +114,7 @@ function tarjeta(a, ctx = {}) {
   const pick = a.favorito ? `${esc(a.favorito)} ${L('to win', 'gana')}` : esc(a.veredicto || '');
   const firma = a.firma || a.autor || '';
   const uid = a.autorUid || '';
+  const est = estiloAttrs(a.estilo);   // color/intensidad/emblema saneados (límites)
   const IPen = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>`;
   const IUsers = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.2 2.7-5 5.5-5s5.5 1.8 5.5 5"/><path d="M16 6.5a3 3 0 010 6M18.5 20c0-2.4-1-3.9-2.5-4.7"/></svg>`;
   // Botón seguir (solo Premium y si hay uid y no soy yo mismo)
@@ -115,11 +124,12 @@ function tarjeta(a, ctx = {}) {
     ? `<button class="sn-follow ${sigo ? 'on' : ''}" data-follow="${esc(uid)}" data-firma="${esc(firma)}">${sigo ? L('Following', 'Siguiendo') : L('+ Follow', '+ Seguir')}</button>`
     : '';
   const by = firma ? `<div class="sn-c-by">
-      <span class="sn-c-firma">${IPen}${esc(firma)}</span>
+      ${emblema}<span class="sn-c-firma">${IPen}${esc(firma)}</span>
       ${uid ? `<span class="sn-c-fol" data-fol="${esc(uid)}">${IUsers}<b>·</b> ${L('followers', 'seguidores')}</span>` : ''}
       ${btn}
     </div>` : '';
-  return `<div class="sn-card">
+  const emblema = est.emblemaSVG ? `<span class="sn-c-emblema">${est.emblemaSVG}</span>` : '';
+  return `<div class="sn-card ${est.cls}" style="${est.varCss}">
     <div class="sn-c-top"><div class="sn-c-match">${esc(a.equipos || a.matchId || '')}</div><span class="sn-c-conf ${conf}">${esc(confTx(conf))}</span></div>
     ${by}
     <div class="sn-c-pick"><span class="sn-c-pick-lbl">${L('Pick', 'Pronóstico')}</span><span class="sn-c-team">${pick}</span>${prob != null ? `<span class="sn-c-prob">${prob}%</span>` : ''}</div>
@@ -129,9 +139,20 @@ function tarjeta(a, ctx = {}) {
   </div>`;
 }
 
+/* Para el editor del panel: inyecta el CSS de señales y devuelve una tarjeta
+   de MUESTRA con el estilo dado (WYSIWYG idéntico a lo que ve el usuario). */
+export function prepararEstilosSenal() { inyectarCSS(); }
+export function tarjetaMuestra(estilo, firma) {
+  return tarjeta({
+    equipos: 'Lakers vs Celtics', firma: firma || 'Falcón', autorUid: '',
+    favorito: 'Lakers', prob: 68, confianza: 'alta', mercado: 'ml',
+    texto: L('Better recent form and home edge. High chance of winning.', 'Mejor forma reciente y ventaja de local. Alta probabilidad de ganar.'),
+    estilo,
+  }, {});
+}
+
 /* Convierte un timestamp de Firestore (o fecha) a milisegundos. */
-function _tsMs(ts) {
-  if (!ts) return 0;
+function _tsMs(ts) {  if (!ts) return 0;
   if (typeof ts.toMillis === 'function') { try { return ts.toMillis(); } catch (_) { return 0; } }
   if (ts.seconds != null) return ts.seconds * 1000;
   const d = new Date(ts); return isNaN(d.getTime()) ? 0 : d.getTime();
