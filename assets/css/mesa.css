@@ -691,3 +691,18 @@ body.en-mesa { overflow: hidden; }
 .est-preview .est-prev { margin: 0; }
 .est-preview .est-prev .sn-card { max-width: 360px; }
 @media (max-width: 760px) { .est-grid { grid-template-columns: 1fr; gap: 18px; } .est-preview .est-prev .sn-card { max-width: none; } }
+
+/* ===== FASE 6 — Moderación ===== */
+.mod-add { display: flex; gap: 10px; margin-bottom: 16px; }
+.mod-add input { flex: 1; min-width: 0; background: rgba(255,255,255,.04); border: 1px solid var(--m-linea); border-radius: 10px; padding: 11px 14px; color: #eaf1f9; font-family: inherit; font-size: 14px; }
+.mod-add input::placeholder { color: #5d6b7d; }
+.mod-add input:focus { outline: none; border-color: rgba(232,184,75,.55); background: rgba(232,184,75,.06); }
+.mod-add .mesa-btn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; }
+.mod-add .mesa-btn svg { width: 15px; height: 15px; }
+.mod-chips { display: flex; flex-wrap: wrap; gap: 9px; }
+.mod-chip { display: inline-flex; align-items: center; gap: 7px; background: rgba(240,82,90,.1); border: 1px solid rgba(240,82,90,.32); color: #f7b3b6; border-radius: 999px; padding: 6px 8px 6px 13px; font-size: 13px; font-weight: 600; }
+.mod-x { width: 19px; height: 19px; border-radius: 50%; border: 0; background: rgba(240,82,90,.2); color: #ffd7d9; font-size: 15px; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0; }
+.mod-x:hover { background: #f0525a; color: #fff; }
+.mod-empty { color: var(--m-tinta-3); font-size: 13px; }
+.mod-note { margin-top: 14px; font-size: 12px; color: var(--m-tinta-3); }
+@media (max-width: 560px) { .mod-add { flex-direction: column; } .mod-add .mesa-btn { width: 100%; justify-content: center; } }
