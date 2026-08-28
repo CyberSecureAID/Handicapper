@@ -499,6 +499,10 @@ export function detalle(p, opciones = {}) {
     <div class="hd-bar">
       <div class="hd-tabs">${tabsHTML}</div>
       <div class="hd-acc">
+        <div class="hd-menu" id="hd-menu">
+          <button class="hd-menu-btn" id="hd-menu-btn" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span id="hd-menu-lbl">${esc((panes.find(x => x.on) || panes[0]).txt)}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="hd-menu-pop" id="hd-menu-pop">${panes.map(pane => `<button class="hd-menu-item ${pane.on ? 'on' : ''}" data-goto="${pane.id}">${esc(pane.txt)}</button>`).join('')}</div>
+        </div>
         <button class="hd-share" data-compartir="${esc(p.id || '')}">${shareSVG}<span>${ES ? 'Comparar' : 'Compare'}</span></button>
         <button class="hd-close x" data-cerrar>${xSVG}</button>
       </div>
