@@ -212,16 +212,29 @@
 
 /* Responsive de la tarjeta */
 @media (max-width: 1040px) {
-  .pmatch { grid-template-columns: 1fr; gap: 14px; padding: 16px; }
-  .pm-liga { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 14px; padding-right: 0; border-right: 0;
+  .pmatch {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "liga liga"
+      "teamL teamR"
+      "prob prob"
+      "acts acts";
+    gap: 14px; padding: 16px;
+  }
+  .pm-liga { grid-area: liga; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 14px; padding-right: 0; border-right: 0;
     border-bottom: 1px solid rgba(255,255,255,.08); padding-bottom: 12px; }
-  .pm-team.r { justify-content: flex-start; text-align: left; flex-direction: row-reverse; }
-  .pm-actions { justify-content: space-between; }
+  .pm-team { grid-area: teamL; }
+  .pm-team.l { flex-direction: column; align-items: center; text-align: center; gap: 9px; }
+  .pm-team.r { grid-area: teamR; flex-direction: column-reverse; align-items: center; text-align: center; justify-content: flex-start; gap: 9px; }
+  .pm-team-tx { text-align: center; }
+  .pm-prob { grid-area: prob; }
+  .pm-actions { grid-area: acts; justify-content: space-between; }
   .pm-ver { flex: 1; justify-content: center; }
 }
 @media (max-width: 520px) {
-  .pm-prob-c b { font-size: 24px; }
-  .pm-team-nm { font-size: 15px; }
+  .pm-prob-c b { font-size: 22px; }
+  .pm-team-nm { font-size: 14px; }
+  .pm-logo { width: 46px; height: 46px; }
 }
 
 /* ---------- Panel derecho ---------- */
