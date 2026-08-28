@@ -251,32 +251,105 @@ async function toggleBloqueo(uid, btn) {
 
 /* ================= ANALYSIS ================= */
 function vistaAnalisis() {
-  const ligas = LIGAS.map(l => `<button class="an-liga ${_ligaSel === l.id ? 'on' : ''}" data-liga="${l.id}">
-    <img src="${l.logo}" alt="${esc(l.nombre)}" height="26" style="height:26px;width:auto" onerror="this.style.display='none'"><span>${esc(l.corto || l.nombre)}</span></button>`).join('');
+  const ES = idiomaActual() === 'es';
+  const L = (en, es) => ES ? es : en;
+  const ligaObj = LIGAS.find(l => l.id === _ligaSel) || {};
+  const ligaNm = ligaObj.corto || ligaObj.nombre || '';
 
-  let partidosHTML;
-  if (!_ligaSel) partidosHTML = `<div class="an-hint">${IC.arrow} Pick a league to load its matches.</div>`;
-  else if (_cargandoPart) partidosHTML = `<div class="an-hint">Loading matches…</div>`;
-  else if (!_partidos.length) partidosHTML = `<div class="an-hint">No matches available in this league right now.</div>`;
-  else partidosHTML = `<div class="an-grid">${_partidos.map(tarjetaPartidoAdmin).join('')}</div>`;
+  const Ilupa = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`;
+  const Icheck = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`;
+  const Iflag = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V5a1 1 0 011-1h11l-2 4 2 4H6"/></svg>`;
+  const Iarrow = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+  const Iempty = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 14h8"/></svg>`;
 
-  const publicados = _analisis.length
-    ? _analisis.map(a => `<div class="an-item">
-        <div class="an-top"><b>${esc(a.equipos || a.matchId || a.id)}</b>${a.ajustar ? `<span class="an-adj">${a.prob}%</span>` : ''}</div>
-        <div class="an-ver">${esc(a.veredicto || '')}</div>
-        <div class="an-txt">${esc(a.texto || '')}</div>
-        <button class="an-del" data-del="${esc(a.matchId || a.id)}">Delete</button>
-      </div>`).join('')
-    : '<p class="mesa-vacio">No signals published yet.</p>';
+  const ligas = LIGAS.map(l => `<button class="ah2-lg ${_ligaSel === l.id ? 'on' : ''}" data-liga="${l.id}">
+    <img src="${l.logo}" alt="" onerror="this.style.display='none'"><span>${esc(l.corto || l.nombre)}</span></button>`).join('');
+
+  const confDe = (p) => {
+    if (p.confianza && ['alta', 'media', 'baja'].includes(p.confianza)) return p.confianza;
+    const l = p.mercado?.local, v = p.mercado?.visita;
+    if (l == null || v == null) return 'media';
+    const g = Math.abs(l - v); return g >= 30 ? 'alta' : g >= 12 ? 'media' : 'baja';
+  };
+  const confTx = { alta: L('High', 'Alta'), media: L('Medium', 'Media'), baja: L('Low', 'Baja') };
+
+  const dayKey = (p) => { const d = p.cuando ? new Date(p.cuando) : null; return d && !isNaN(d) ? d.toISOString().slice(0, 10) : 'tbd'; };
+  const dayLbl = (k) => {
+    if (k === 'tbd') return L('Date TBD', 'Fecha por definir');
+    const d = new Date(k + 'T12:00:00'); const t = new Date();
+    const tk = t.toISOString().slice(0, 10); const tm = new Date(t.getTime() + 864e5).toISOString().slice(0, 10);
+    if (k === tk) return L('Today', 'Hoy'); if (k === tm) return L('Tomorrow', 'Mañana');
+    return d.toLocaleDateString(ES ? 'es' : 'en', { weekday: 'long', day: 'numeric', month: 'short' });
+  };
+  const groups = {}; _partidos.forEach(p => { const k = dayKey(p); (groups[k] = groups[k] || []).push(p); });
+  const keys = Object.keys(groups).sort((a, b) => (a === 'tbd') - (b === 'tbd') || a.localeCompare(b));
+
+  const logoBox = (e) => e.logo
+    ? `<span class="ah2-lo"><img src="${esc(e.logo)}" alt="" onerror="this.parentNode.classList.add('fb');this.remove()" data-ab="${esc(e.abrev || '')}"><\/span>`
+    : `<span class="ah2-lo fb" data-ab="${esc(e.abrev || '')}">${esc(e.abrev || '')}<\/span>`;
+
+  const card = (p) => {
+    const c = confDe(p); const ya = _analisis.find(a => a.matchId === p.id);
+    const pL = p.mercado?.local, pV = p.mercado?.visita;
+    const barra = (pL != null && pV != null)
+      ? `<div class="ah2-mc-bar"><i class="l" style="width:${pL}%"></i><i class="r" style="width:${pV}%"></i></div>`
+      : `<div class="ah2-mc-bar"><i class="n" style="width:100%"></i></div>`;
+    return `<button class="ah2-mc ${ya ? 'has' : ''}" data-match="${esc(p.id)}">
+      <div class="ah2-mc-top"><span class="ah2-mc-time">${esc(p.inicio || '')}</span><span class="ah2-badge ${c}">${confTx[c]}</span></div>
+      <div class="ah2-mc-team">${logoBox(p.local)}<b>${esc(p.local.nombre)}</b><span class="ah2-mc-pct l">${pL != null ? pL + '%' : '—'}</span></div>
+      ${barra}
+      <div class="ah2-mc-team">${logoBox(p.visita)}<b>${esc(p.visita.nombre)}</b><span class="ah2-mc-pct r">${pV != null ? pV + '%' : '—'}</span></div>
+      <div class="ah2-mc-foot">${ya ? `<span class="ah2-mc-pub">${Icheck}${L('Signal published', 'Señal publicada')}</span>` : `<span class="ah2-mc-cta">${Ilupa}${L('Analyze & publish', 'Analizar y publicar')} ${Iarrow}</span>`}</div>
+    </button>`;
+  };
+
+  const dayTabs = _partidos.length ? `<div class="ah2-filter"><button class="ah2-ft on" data-day="all">${L('All', 'Todos')} <em>${_partidos.length}</em></button>${keys.map(k => `<button class="ah2-ft" data-day="${k}">${dayLbl(k)} <em>${groups[k].length}</em></button>`).join('')}</div>` : '';
+  const dias = keys.map(k => `<div class="ah2-day" data-daygroup="${k}"><div class="ah2-day-h">${dayLbl(k)}<span>${groups[k].length}</span></div><div class="ah2-grid">${groups[k].map(card).join('')}</div></div>`).join('');
+
+  let tablero;
+  if (!_ligaSel) tablero = `<div class="ah2-empty">${Iempty}<b>${L('Choose a league to start', 'Elige una liga para empezar')}</b><span>${L('Pick a competition above and its matches will appear here, ready to analyze.', 'Selecciona una competición arriba y sus partidos aparecerán aquí, listos para analizar.')}</span></div>`;
+  else if (_cargandoPart) tablero = `<div class="ah2-empty loading"><div class="ah2-spin"></div><b>${L('Loading matches…', 'Cargando partidos…')}</b></div>`;
+  else if (!_partidos.length) tablero = `<div class="ah2-empty">${Iempty}<b>${L('No matches right now', 'No hay partidos ahora')}</b><span>${L('There are no upcoming matches in this league at the moment.', 'No hay próximos partidos en esta liga por ahora.')}</span></div>`;
+  else tablero = `${dayTabs}<div class="ah2-days">${dias}</div>`;
+
+  const favs = _partidos.map(p => Math.max(p.mercado?.local || 0, p.mercado?.visita || 0)).filter(Boolean);
+  const avgFav = favs.length ? Math.round(favs.reduce((a, b) => a + b, 0) / favs.length) : 0;
+
+  const senales = _analisis.length
+    ? `<div class="ah2-sig-grid">${_analisis.map(a => `<div class="ah2-sig">
+        <div class="ah2-sig-h"><b>${esc(a.equipos || a.matchId)}</b>${a.prob != null ? `<span class="ah2-sig-pct">${a.prob}%</span>` : ''}</div>
+        <div class="ah2-sig-v">${esc(a.veredicto || '')}${a.confianza ? `<span class="ah2-sig-c ${a.confianza}">${esc(confTx[a.confianza] || a.confianza)}</span>` : ''}</div>
+        ${a.texto ? `<p class="ah2-sig-t">${esc(a.texto)}</p>` : ''}
+        <button class="ah2-sig-del" data-del="${esc(a.matchId || a.id)}">${L('Delete', 'Eliminar')}</button></div>`).join('')}</div>`
+    : `<div class="ah2-empty sm">${Iflag}<b>${L('No signals yet', 'Aún no hay señales')}</b><span>${L('When you publish an analysis it will show up here.', 'Cuando publiques un análisis aparecerá aquí.')}</span></div>`;
 
   return `
-    <div class="mesa-head"><h1>Analysis</h1><p>Pick a league, choose a match, publish your signal.</p></div>
-    <div class="an-ligas">${ligas}</div>
-    <div class="mesa-grid-an">
-      <div class="mesa-card">${partidosHTML}</div>
-      <div class="mesa-card"><div class="mc-t">Published signals (${_analisis.length})</div><div class="an-lista">${publicados}</div></div>
+    <div class="ah2">
+      <div class="ah2-top">
+        <div class="ah2-titles"><h1>Analysis Hub</h1><p>${L('Browse matches, set your read, publish signals.', 'Explora partidos, define tu lectura y publica señales.')}</p></div>
+        <div class="ah2-status"><span class="ah2-status-dot"></span><div><b>${L('Analyst', 'Analista')}</b><em>${L('Pro workspace', 'Espacio Pro')}</em></div></div>
+      </div>
+      <div class="ah2-metrics">
+        <div class="ah2-metric"><b>${LIGAS.length}</b><span>${L('Leagues', 'Ligas')}</span></div>
+        <div class="ah2-metric"><b>${_partidos.length}</b><span>${L('Matches', 'Partidos')}</span></div>
+        <div class="ah2-metric gold"><b>${_analisis.length}</b><span>${L('Signals', 'Señales')}</span></div>
+        <div class="ah2-metric"><b>${avgFav || '—'}${avgFav ? '%' : ''}</b><span>${L('Avg favorite', 'Favorito prom.')}</span></div>
+      </div>
+
+      <div class="ah2-lgs">${ligas}</div>
+
+      <div class="ah2-board">
+        <div class="ah2-sec-h"><span>${L('Upcoming matches', 'Próximos partidos')}${ligaNm ? ` · ${esc(ligaNm)}` : ''}</span></div>
+        ${tablero}
+      </div>
+
+      <div class="ah2-board">
+        <div class="ah2-sec-h"><span>${Icheck} ${L('Published signals', 'Señales publicadas')}</span><em>${_analisis.length}</em></div>
+        ${senales}
+      </div>
     </div>`;
 }
+
 
 function tarjetaPartidoAdmin(p) {
   const ya = _analisis.find(a => a.matchId === p.id);
@@ -293,9 +366,14 @@ function tarjetaPartidoAdmin(p) {
 }
 
 function enlazarAnalisis() {
-  // Los clicks de liga/partido/borrar se gestionan por delegación en render().
-  // (Se mantiene la función por compatibilidad con pintarTab.)
+  const cont = _cont; if (!cont) return;
+  cont.querySelectorAll('.ah2-ft').forEach(tab => tab.addEventListener('click', () => {
+    const d = tab.dataset.day;
+    cont.querySelectorAll('.ah2-ft').forEach(x => x.classList.toggle('on', x === tab));
+    cont.querySelectorAll('.ah2-day').forEach(g => { g.style.display = (d === 'all' || g.dataset.daygroup === d) ? '' : 'none'; });
+  }));
 }
+
 function seleccionarLiga(id) {
   _ligaSel = id; _cargandoPart = true; _partidos = []; pintarTab();
   listarPartidos(id).then(ps => { _partidos = ps || []; }).catch(() => { _partidos = []; }).finally(() => { _cargandoPart = false; pintarTab(); });
