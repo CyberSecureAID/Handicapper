@@ -310,117 +310,187 @@ async function eliminarAnalisis(matchId, btn) {
 async function abrirModalSenal(matchId) {
   const p = _partidos.find(x => x.id === matchId); if (!p) return;
   const ya = _analisis.find(a => a.matchId === matchId);
+  const ES = idiomaActual() === 'es';
+  const L = (en, es) => ES ? es : en;
+
+  const ciudadNombre = (nom) => {
+    const parts = String(nom || '').trim().split(/\s+/);
+    return parts.length > 1 ? { ciudad: parts.slice(0, -1).join(' '), nombre: parts.slice(-1)[0] } : { ciudad: '', nombre: nom || '' };
+  };
+  const cl = ciudadNombre(p.local.nombre), cv = ciudadNombre(p.visita.nombre);
+  const pL0 = Math.max(1, Math.min(99, ya?.prob ?? p.mercado?.local ?? 60));
+
+  const IHome = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9h14v-9"/></svg>`;
+  const IAway = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l20-7-7 20-3-8-8-3z"/></svg>`;
+  const ICal = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" stroke-linecap="round"/></svg>`;
+  const IClock = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>`;
+  const IPin = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.3-7-11a7 7 0 0114 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>`;
+  const ITrophy = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 01-10 0zM7 6H4v1a3 3 0 003 3M17 6h3v1a3 3 0 01-3 3M9 20h6M12 15v5"/></svg>`;
+  const ICheck = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`;
+  const IEye = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const IBack = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>`;
+  const IInfo = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-linecap="round"/></svg>`;
+  const logo = (eq) => eq.logo ? `<img class="anm2-logo" src="${esc(eq.logo)}" alt="" onerror="this.style.visibility='hidden'">` : `<span class="anm2-logo anm2-logo-fb">${esc(eq.abrev || '')}</span>`;
+  const logoSm = (eq) => eq.logo ? `<img src="${esc(eq.logo)}" alt="" onerror="this.style.display='none'">` : '';
+
   const bg = document.createElement('div');
-  bg.className = 'an-modal-bg';
+  bg.className = 'an-modal-bg anm2-bg';
   bg.innerHTML = `
-    <div class="an-modal grande">
-      <button class="an-modal-x" id="anm-x">${IC.close}</button>
-      <div class="anm-liga">${esc(p.liga)}</div>
-      <div class="anm-duelo">
-        <div class="anm-eq"><img class="anm-logo" src="${esc(p.local.logo||'')}" onerror="this.style.visibility='hidden'"><span class="anm-ab">${esc(p.local.nombre)}</span></div>
-        <span class="anm-vs">VS</span>
-        <div class="anm-eq"><img class="anm-logo" src="${esc(p.visita.logo||'')}" onerror="this.style.visibility='hidden'"><span class="anm-ab">${esc(p.visita.nombre)}</span></div>
+  <div class="anm2">
+    <div class="anm2-head">
+      <button class="anm2-back" id="anm-x">${IBack}<span>${L('Match Analysis', 'Análisis de partido')}</span></button>
+      <button class="anm2-prev" id="anm-prev">${IEye}${L('Preview', 'Vista previa')}</button>
+    </div>
+
+    <div class="anm2-banner">
+      <div class="anm2-team l">${logo(p.local)}
+        <div class="anm2-team-tx">${cl.ciudad ? `<span class="anm2-city">${esc(cl.ciudad)}</span>` : ''}<span class="anm2-name">${esc(cl.nombre)}</span><span class="anm2-side red">${L('Home', 'Casa')} ${IHome}</span></div>
+      </div>
+      <div class="anm2-mid"><span class="anm2-league">${esc(p.liga)}</span><span class="anm2-vs">VS</span><span class="anm2-date">${ICal}${esc(p.inicio || L('Date TBD', 'Fecha por definir'))}</span></div>
+      <div class="anm2-team r">
+        <div class="anm2-team-tx">${cv.ciudad ? `<span class="anm2-city">${esc(cv.ciudad)}</span>` : ''}<span class="anm2-name">${esc(cv.nombre)}</span><span class="anm2-side blue">${L('Away', 'Visita')} ${IAway}</span></div>${logo(p.visita)}
+      </div>
+    </div>
+
+    <div class="anm2-body">
+      <div class="anm2-col">
+        <div class="anm2-card">
+          <div class="anm2-card-t">${L('Match probabilities', 'Probabilidades del partido')}</div>
+          <div class="anm2-card-s">${L('Set each team\u2019s win probability', 'Define la probabilidad de victoria para cada equipo')}</div>
+          <div class="anm2-slider">
+            <div class="anm2-sl-top">${logoSm(p.local)}<span class="anm2-sl-nm">${esc(p.local.nombre)}</span><b id="pv-l">${pL0}%</b></div>
+            <input type="range" min="0" max="100" value="${pL0}" id="sl-l" class="anm2-range red">
+            <div class="anm2-sl-ax"><span>0%</span><span>50%</span><span>100%</span></div>
+          </div>
+          <div class="anm2-slider">
+            <div class="anm2-sl-top">${logoSm(p.visita)}<span class="anm2-sl-nm">${esc(p.visita.nombre)}</span><b id="pv-v">${100 - pL0}%</b></div>
+            <input type="range" min="0" max="100" value="${100 - pL0}" id="sl-v" class="anm2-range blue">
+            <div class="anm2-sl-ax"><span>0%</span><span>50%</span><span>100%</span></div>
+          </div>
+          <div class="anm2-total">
+            <div class="anm2-total-l"><span>${L('TOTAL', 'TOTAL')}</span><b id="tot">100%</b></div>
+            <div class="anm2-bal" id="bal"><span class="anm2-bal-ic">${ICheck}</span><div><b>${L('Probabilities are balanced', 'Las probabilidades están balanceadas')}</b><em>${L('The probabilities sum to 100%', 'La suma de las probabilidades es 100%')}</em></div></div>
+          </div>
+        </div>
+        <div class="anm2-card">
+          <div class="anm2-card-t">${L('Match information', 'Información del partido')}</div>
+          <div class="anm2-info">
+            <div class="anm2-info-c">${ICal}<div><span>${L('Date', 'Fecha')}</span><b>${esc(p.fecha || L('TBD', 'Por definir'))}</b></div></div>
+            <div class="anm2-info-c">${IClock}<div><span>${L('Time', 'Hora')}</span><b>${esc(p.inicio || L('TBD', 'Por definir'))}</b></div></div>
+            <div class="anm2-info-c">${IPin}<div><span>${L('Stadium', 'Estadio')}</span><b>${esc(p.sede || L('TBD', 'Por definir'))}</b></div></div>
+            <div class="anm2-info-c">${ITrophy}<div><span>${L('League', 'Liga')}</span><b>${esc(p.liga || '—')}</b></div></div>
+          </div>
+        </div>
       </div>
 
-      <div class="anm-dos">
-        <!-- SECTOR IZQUIERDO: análisis de la página -->
-        <section class="anm-sec izq">
-          <div class="anm-sec-cab"><h4>${idiomaActual()==='es'?'Análisis de la página':'Page analysis'}</h4>
-            <button class="anm-edit" id="anm-editar">${idiomaActual()==='es'?'Editar':'Edit'}</button></div>
-          <div class="anm-pag">
-            <div class="anm-prob-vis">
-              <div class="anm-pv-row"><span>${esc(p.local.abrev)}</span><b class="oro">${p.mercado?.local ?? '—'}%</b></div>
-              <div class="anm-bar"><i style="width:${p.mercado?.local ?? 0}%"></i></div>
-              <div class="anm-pv-row"><span>${esc(p.visita.abrev)}</span><b class="azul">${p.mercado?.visita ?? '—'}%</b></div>
-            </div>
-            <div id="anm-datos" class="anm-datos">${idiomaActual()==='es'?'Cargando datos del partido…':'Loading match data…'}</div>
+      <div class="anm2-col">
+        <div class="anm2-card">
+          <div class="anm2-card-t">${L('Your analysis', 'Tu análisis')}</div>
+          <label class="anm2-lbl">${L('Who will win?', '¿Quién ganará?')}</label>
+          <div class="anm2-pick">
+            <button class="anm2-pick-b red" data-fav="local">${logoSm(p.local)}<span>${esc(p.local.nombre)}</span></button>
+            <button class="anm2-pick-b blue" data-fav="visita">${logoSm(p.visita)}<span>${esc(p.visita.nombre)}</span></button>
           </div>
-          <div id="anm-editbox" class="anm-editbox" style="display:none">
-            <label class="anm-lbl">${idiomaActual()==='es'?'Corrige la probabilidad de':'Adjust probability for'} <b id="anm-fav-nom">${esc(p.local.abrev)}</b></label>
-            <div class="anm-chips" id="anm-chips">
-              ${[55,60,65,70,75,80,85,90].map(v=>`<button class="anm-chip" data-p="${v}">${v}%</button>`).join('')}
-              <span class="anm-custom">${idiomaActual()==='es'?'Otro':'Custom'} <input type="number" id="anm-prob" min="1" max="99" value="${p.mercado?.local ?? 60}"></span>
-            </div>
+          <div class="anm2-hint" id="anm-hint">${L('Select the team you consider the winner', 'Selecciona el equipo que consideras ganador del partido')}</div>
+          <label class="anm2-lbl">${L('Detailed analysis', 'Análisis detallado')}</label>
+          <div class="anm2-ta"><textarea id="anm-txt" maxlength="1000" rows="5" placeholder="${L('Write your detailed analysis here…', 'Escribe tu análisis detallado aquí…')}">${esc(ya?.texto || '')}</textarea><span class="anm2-ta-c" id="cnt">0/1000</span></div>
+          <label class="anm2-lbl">${L('Main market', 'Mercado principal')}</label>
+          <div class="anm2-select"><select id="anm-mkt">
+            <option value="ml">${L('Match winner (regulation)', 'Ganador del partido (Tiempo reglamentario)')}</option>
+            <option value="ml_ot">${L('Match winner (incl. OT)', 'Ganador (incl. tiempo extra)')}</option>
+            <option value="spread">${L('Spread / Handicap', 'Hándicap')}</option>
+            <option value="totals">${L('Totals (Over/Under)', 'Totales (Más/Menos)')}</option>
+          </select></div>
+          <label class="anm2-lbl">${L('Analysis confidence', 'Confidencia en el análisis')}</label>
+          <div class="anm2-conf" id="anm-conf">
+            <button data-c="baja">${L('Low', 'Baja')}</button>
+            <button data-c="media" class="on">${L('Medium', 'Media')}</button>
+            <button data-c="alta">${L('High', 'Alta')}</button>
           </div>
-        </section>
-
-        <!-- SECTOR DERECHO: análisis del analista -->
-        <section class="anm-sec der">
-          <div class="anm-sec-cab"><h4>${idiomaActual()==='es'?'Tu análisis':'Your analysis'}</h4></div>
-          <label class="anm-lbl">${idiomaActual()==='es'?'¿Quién gana?':'Who wins?'}</label>
-          <div class="anm-fav">
-            <button class="anm-fbtn on" data-fav="local">${esc(p.local.abrev)}</button>
-            <button class="anm-fbtn" data-fav="visita">${esc(p.visita.abrev)}</button>
-          </div>
-          <label class="anm-lbl">${idiomaActual()==='es'?'Ingresa tu análisis aquí':'Enter your analysis here'}</label>
-          <textarea id="anm-txt" class="mesa-area" rows="7" placeholder="${idiomaActual()==='es'?'Escribe tu criterio para los miembros Pro / Premium…':'Write your reasoning for Pro / Premium members…'}">${esc(ya?.texto||'')}</textarea>
-        </section>
+        </div>
       </div>
+    </div>
 
-      <div class="anm-acc">
-        ${ya ? `<button class="mesa-btn" id="anm-del">${idiomaActual()==='es'?'Eliminar':'Delete'}</button>` : ''}
-        <label class="anm-check"><input type="checkbox" id="anm-adj" ${ya?.ajustar!==false?'checked':''}> ${idiomaActual()==='es'?'Aplicar mi probabilidad en la página':'Apply my probability on the site'}</label>
-        <button class="mesa-btn oro" id="anm-guardar">${idiomaActual()==='es'?'Publicar señal':'Publish signal'}</button>
+    <div class="anm2-foot">
+      <div class="anm2-note">${IInfo}<div><b>${L('Important', 'Importante')}</b><em>${L('Make sure the probabilities reflect your analysis and sum to 100%.', 'Asegúrate de que las probabilidades reflejen tu análisis y estén balanceadas al 100%.')}</em></div></div>
+      <label class="anm2-apply"><input type="checkbox" id="anm-adj" ${ya?.ajustar !== false ? 'checked' : ''}><div><b>${L('Apply my probability on the site', 'Aplicar mi probabilidad en la página')}</b><em>${L('Users will see these probabilities', 'Los usuarios verán estas probabilidades')}</em></div></label>
+      <div class="anm2-foot-btns">
+        ${ya ? `<button class="anm2-btn danger" id="anm-del">${L('Delete', 'Eliminar')}</button>` : ''}
+        <button class="anm2-btn ghost" id="anm-draft">${L('Save draft', 'Guardar borrador')}</button>
+        <button class="anm2-btn primary" id="anm-guardar">${L('Publish signal', 'Publicar señal')}</button>
       </div>
-    </div>`;
+    </div>
+  </div>`;
   document.body.appendChild(bg);
 
-  // Trae datos reales (abridores, líderes) para el sector izquierdo
-  detallePartido(matchId).then(d => {
-    const cont = bg.querySelector('#anm-datos'); if (!cont || !d) return;
-    const mano = (a) => a?.mano === 'L' ? 'LHP' : (a?.mano === 'R' ? 'RHP' : '');
-    const bloque = (lado, e) => {
-      const partes = [];
-      if (e.abridor?.nombre) partes.push(`<div class="anm-d-row"><span>${idiomaActual()==='es'?'Abridor':'Starter'}</span><b>${esc(e.abridor.nombre)} ${mano(e.abridor)?`<em>${mano(e.abridor)}</em>`:''}</b></div>`);
-      const lids = (d.jugadores && d.jugadores[lado]) || [];
-      lids.slice(0,2).forEach(j => partes.push(`<div class="anm-d-row"><span>${esc(j.etiqueta)}</span><b>${esc(j.nombre)} ${esc(j.dato)}</b></div>`));
-      if (!partes.length) return '';
-      return `<div class="anm-d-col"><div class="anm-d-cab">${esc(e.abrev)}</div>${partes.join('')}</div>`;
-    };
-    const html = bloque('local', d.local) + bloque('visita', d.visita);
-    cont.innerHTML = html || (idiomaActual()==='es'?'Sin datos públicos para este partido todavía.':'No public data for this match yet.');
-  }).catch(()=>{ const c=bg.querySelector('#anm-datos'); if(c) c.textContent=''; });
+  // ---- Sliders enlazados (arrastrables, suma = 100) ----
+  const slL = bg.querySelector('#sl-l'), slV = bg.querySelector('#sl-v');
+  const pvL = bg.querySelector('#pv-l'), pvV = bg.querySelector('#pv-v');
+  const pintarRange = (el, val, color) => { el.style.background = `linear-gradient(90deg, ${color} 0%, ${color} ${val}%, rgba(255,255,255,.09) ${val}%, rgba(255,255,255,.09) 100%)`; };
+  const refrescar = (val) => {
+    val = Math.max(0, Math.min(100, Math.round(val)));
+    slL.value = val; slV.value = 100 - val;
+    pvL.textContent = val + '%'; pvV.textContent = (100 - val) + '%';
+    pintarRange(slL, val, '#f0353a'); pintarRange(slV, 100 - val, '#38a9f0');
+    bg.querySelector('#tot').textContent = '100%';
+  };
+  slL.oninput = () => refrescar(Number(slL.value));
+  slV.oninput = () => refrescar(100 - Number(slV.value));
+  refrescar(pL0);
 
-  let fav = 'local';
-  const probInput = bg.querySelector('#anm-prob');
-  const favNom = bg.querySelector('#anm-fav-nom');
+  // ---- Selección de equipo ganador (empieza sin selección) ----
+  let fav = null;
   bg.querySelectorAll('[data-fav]').forEach(b => b.onclick = () => {
     fav = b.dataset.fav;
     bg.querySelectorAll('[data-fav]').forEach(x => x.classList.toggle('on', x === b));
-    if (favNom) favNom.textContent = fav === 'local' ? p.local.abrev : p.visita.abrev;
-    if (probInput) probInput.value = (fav === 'local' ? p.mercado?.local : p.mercado?.visita) ?? 60;
+    const hint = bg.querySelector('#anm-hint'); hint.classList.remove('err');
+    hint.textContent = L('Select the team you consider the winner', 'Selecciona el equipo que consideras ganador del partido');
   });
-  bg.querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
-    if (probInput) probInput.value = b.dataset.p;
-    bg.querySelectorAll('[data-p]').forEach(x => x.classList.toggle('on', x === b));
+
+  // ---- Confianza ----
+  let conf = 'media';
+  bg.querySelectorAll('#anm-conf button').forEach(b => b.onclick = () => {
+    conf = b.dataset.c; bg.querySelectorAll('#anm-conf button').forEach(x => x.classList.toggle('on', x === b));
   });
-  bg.querySelector('#anm-editar').onclick = () => {
-    const box = bg.querySelector('#anm-editbox');
-    box.style.display = box.style.display === 'none' ? 'block' : 'none';
-  };
+
+  // ---- Contador del textarea ----
+  const ta = bg.querySelector('#anm-txt'), cnt = bg.querySelector('#cnt');
+  const actCnt = () => cnt.textContent = `${ta.value.length}/1000`;
+  ta.oninput = actCnt; actCnt();
+
   const cerrar = () => bg.remove();
   bg.querySelector('#anm-x').onclick = cerrar;
+  bg.querySelector('#anm-prev').onclick = () => window.open('index.html', '_blank');
   bg.onclick = (e) => { if (e.target === bg) cerrar(); };
 
-  bg.querySelector('#anm-guardar').onclick = async () => {
-    const prob = Math.max(1, Math.min(99, Number(probInput?.value) || 60));
-    const probLocal = fav === 'local' ? prob : 100 - prob;
+  const publicar = async (estado) => {
+    if (!fav) {
+      const hint = bg.querySelector('#anm-hint'); hint.classList.add('err');
+      hint.textContent = L('Please select the team you think will win.', 'Por favor selecciona el equipo que crees que va a ganar.');
+      bg.querySelector('.anm2-pick').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    const probLocal = Number(slL.value);
     const favAb = fav === 'local' ? p.local.abrev : p.visita.abrev;
     const analisis = {
       equipos: `${p.local.abrev} vs ${p.visita.abrev}`,
-      veredicto: `${favAb} ${idiomaActual()==='es'?'gana':'to win'}`,
-      texto: bg.querySelector('#anm-txt').value.trim(),
+      veredicto: `${favAb} ${L('to win', 'gana')}`,
+      texto: ta.value.trim(),
       ajustar: bg.querySelector('#anm-adj').checked,
-      prob: probLocal,
-      favorito: favAb,
+      prob: probLocal, favorito: favAb, confianza: conf,
+      mercado: bg.querySelector('#anm-mkt').value, estado,
     };
-    const btn = bg.querySelector('#anm-guardar'); btn.disabled = true; btn.textContent = '…';
+    const btn = bg.querySelector(estado === 'borrador' ? '#anm-draft' : '#anm-guardar');
+    const txtBtn = btn.textContent; btn.disabled = true; btn.textContent = '…';
     try { await guardarAnalisis(matchId, analisis); _analisis = await listarAnalisis(); cerrar(); pintarTab(); }
-    catch (_) { btn.disabled = false; btn.textContent = idiomaActual()==='es'?'Publicar señal':'Publish signal'; }
+    catch (_) { btn.disabled = false; btn.textContent = txtBtn; }
   };
+  bg.querySelector('#anm-guardar').onclick = () => publicar('publicado');
+  bg.querySelector('#anm-draft').onclick = () => publicar('borrador');
   const del = bg.querySelector('#anm-del');
   if (del) del.onclick = async () => { del.disabled = true; try { await borrarAnalisis(matchId); _analisis = await listarAnalisis(); cerrar(); pintarTab(); } catch (_) { del.disabled = false; } };
 }
+
 
 /* ================= utilidades ================= */
 function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
