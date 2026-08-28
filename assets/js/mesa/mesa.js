@@ -16,6 +16,7 @@ let _rol = 'admin', _deporteAnalista = null, _analistas = [];
 let _mesaLang = 'es';
 let _uBusqueda = '', _uFiltro = 'todos', _uPagina = 1;
 let _anBusqueda = '', _anFiltro = 'todos';
+let _monFiltro = 'todos';
 const U_POR_PAGINA = 8;
 const ML = (en, es) => _mesaLang === 'es' ? es : en;
 const DEPORTES = {
@@ -66,7 +67,8 @@ function render() {
     : `<button data-tab="resumen" class="${_tab==='resumen'?'on':''}">${IC.grid} ${ML('Overview','Resumen')}</button>
        <button data-tab="usuarios" class="${_tab==='usuarios'?'on':''}">${IC.users} ${ML('Users','Usuarios')}</button>
        <button data-tab="analisis" class="${_tab==='analisis'?'on':''}">${IC.pen} ${ML('Analysis','Análisis')}</button>
-       <button data-tab="analistas" class="${_tab==='analistas'?'on':''}">${IC.contrato} ${ML('Staff','Personal')}</button>`;
+       <button data-tab="analistas" class="${_tab==='analistas'?'on':''}">${IC.contrato} ${ML('Staff','Personal')}</button>
+       <button data-tab="monitoreo" class="${_tab==='monitoreo'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg> ${ML('Monitoring','Monitoreo')}</button>`;
   _cont.innerHTML = `
     <div class="mesa">
       <aside class="mesa-side" id="mesa-side">
@@ -158,6 +160,7 @@ function pintarTab() {
   else if (_tab === 'usuarios') { m.innerHTML = vistaUsuarios(); enlazarUsuarios(); }
   else if (_tab === 'analisis') { m.innerHTML = vistaAnalisis(); enlazarAnalisis(); }
   else if (_tab === 'analistas') { m.innerHTML = vistaAnalistas(); enlazarAnalistas(); }
+  else if (_tab === 'monitoreo') { m.innerHTML = vistaMonitoreo(); enlazarMonitoreo(); }
 }
 
 /* ================= OVERVIEW ================= */
@@ -375,6 +378,118 @@ function pintarCandidatos() {
     catch (_) { b.disabled = false; }
   });
 }
+/* ============================================================
+   FASE 1 — MONITOREO DE ANALISTAS (solo admin)
+   Rendimiento por analista: señales del mes (individual), seguidores,
+   estado y actividad (quién trabaja y quién no). No global.
+   ============================================================ */
+function _tsADate(ts) {
+  if (!ts) return null;
+  if (typeof ts.toDate === 'function') { try { return ts.toDate(); } catch (_) { return null; } }
+  if (ts.seconds != null) return new Date(ts.seconds * 1000);
+  const d = new Date(ts); return isNaN(d.getTime()) ? null : d;
+}
+function _senalesMesDe(uid) {
+  if (!uid) return 0;
+  const now = new Date(), y = now.getFullYear(), mo = now.getMonth();
+  return _analisis.filter(s => {
+    if (s.autorUid !== uid) return false;
+    const d = _tsADate(s.actualizado); if (!d) return false;
+    return d.getFullYear() === y && d.getMonth() === mo;
+  }).length;
+}
+function _nombreAnalista(a) {
+  const uu = _usuarios.find(x => x.uid === a.uid);
+  return a.alias || a.firma || a.nombre || (uu && uu.nombre) || (a.email || (uu && uu.email) || '').split('@')[0] || '—';
+}
+function _monDatos() {
+  return _analistas.map(a => {
+    const uu = _usuarios.find(x => x.uid === a.uid);
+    const sig = _senalesMesDe(a.uid);
+    return {
+      uid: a.uid,
+      nombre: _nombreAnalista(a),
+      email: a.email || (uu && uu.email) || '',
+      deporte: a.deporte,
+      seguidores: Number(a.seguidores || 0),
+      activo: a.activo !== false,
+      sig,
+      trabajando: sig > 0,
+    };
+  }).sort((x, y) => y.sig - x.sig || y.seguidores - x.seguidores);
+}
+
+function vistaMonitoreo() {
+  const IPulse = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>`;
+  const datos = _monDatos();
+  const total = datos.length;
+  const trabajando = datos.filter(d => d.trabajando && d.activo).length;
+  const inactivos = datos.filter(d => !d.trabajando && d.activo).length;
+  const bloqueados = datos.filter(d => !d.activo).length;
+
+  const filtros = [['todos', ML('All', 'Todos')], ['trab', ML('Working', 'Trabajando')], ['inac', ML('Inactive', 'Inactivos')], ['bloq', ML('Blocked', 'Bloqueados')]];
+  const chips = filtros.map(([k, l]) => `<button data-monf="${k}" class="u-chip ${_monFiltro === k ? 'on' : ''}">${esc(l)}</button>`).join('');
+
+  const kpi = (cls, val, lab) => `<div class="mon-kpi ${cls}"><b>${val}</b><span>${esc(lab)}</span></div>`;
+
+  return `
+    <div class="mesa-head"><h1>${ML('Analyst Monitoring', 'Monitoreo de analistas')}</h1>
+      <p>${ML('Performance by analyst: signals this month, followers, status and activity.', 'Rendimiento por analista: señales del mes, seguidores, estado y actividad.')}</p></div>
+    <div class="mon-kpis">
+      ${kpi('', total, ML('Analysts', 'Analistas'))}
+      ${kpi('ok', trabajando, ML('Working this month', 'Trabajando este mes'))}
+      ${kpi('warn', inactivos, ML('Inactive', 'Inactivos'))}
+      ${kpi('bad', bloqueados, ML('Blocked', 'Bloqueados'))}
+    </div>
+    <div class="u-toolbar"><div class="u-chips" id="mon-chips">${chips}</div></div>
+    <div class="mesa-card mesa-card-tabla">
+      <table class="mesa-tabla mon-tabla">
+        <thead><tr>
+          <th>${ML('Analyst', 'Analista')}</th>
+          <th>${ML('Sport', 'Deporte')}</th>
+          <th>${ML('Signals (month)', 'Señales (mes)')}</th>
+          <th>${ML('Followers', 'Seguidores')}</th>
+          <th>${ML('Status', 'Estado')}</th>
+          <th>${ML('Activity', 'Actividad')}</th>
+        </tr></thead>
+        <tbody id="mon-tbody"></tbody>
+      </table>
+    </div>
+    <p class="mon-note">${IPulse} ${ML('Signals are counted individually per analyst for the current month. Followers fill in once the follow system is live.', 'Las señales se cuentan por analista para el mes actual. Los seguidores se llenan al activar el sistema de seguidores.')}</p>`;
+}
+
+function pintarMonitoreo() {
+  const tbody = _cont.querySelector('#mon-tbody'); if (!tbody) return;
+  let datos = _monDatos();
+  if (_monFiltro === 'trab') datos = datos.filter(d => d.trabajando && d.activo);
+  else if (_monFiltro === 'inac') datos = datos.filter(d => !d.trabajando && d.activo);
+  else if (_monFiltro === 'bloq') datos = datos.filter(d => !d.activo);
+
+  tbody.innerHTML = datos.length ? datos.map(d => {
+    const estado = d.activo ? `<span class="pill on">${ML('Active', 'Activo')}</span>` : `<span class="pill red">${ML('Blocked', 'Bloqueado')}</span>`;
+    const act = !d.activo ? `<span class="mon-act off">${ML('Blocked', 'Bloqueado')}</span>`
+      : (d.trabajando ? `<span class="mon-act on"><i></i>${ML('Working', 'Trabajando')}</span>`
+        : `<span class="mon-act idle"><i></i>${ML('Inactive', 'Inactivo')}</span>`);
+    return `<tr>
+      <td data-l="${ML('Analyst', 'Analista')}"><div class="u-nom">${esc(d.nombre)}</div><div class="u-mail">${esc(correoCorto(d.email))}</div></td>
+      <td data-l="${ML('Sport', 'Deporte')}"><span class="mon-dep">${esc(depNombre(d.deporte))}</span></td>
+      <td data-l="${ML('Signals (month)', 'Señales (mes)')}"><b class="mon-sig">${d.sig}</b></td>
+      <td data-l="${ML('Followers', 'Seguidores')}">${d.seguidores.toLocaleString()}</td>
+      <td data-l="${ML('Status', 'Estado')}">${estado}</td>
+      <td data-l="${ML('Activity', 'Actividad')}">${act}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" class="mesa-vacio">${ML('No analysts to show.', 'No hay analistas para mostrar.')}</td></tr>`;
+}
+
+function enlazarMonitoreo() {
+  _cont.querySelectorAll('#mon-chips [data-monf]').forEach(b => b.onclick = () => {
+    _monFiltro = b.dataset.monf;
+    _cont.querySelectorAll('#mon-chips [data-monf]').forEach(x => x.classList.toggle('on', x === b));
+    pintarMonitoreo();
+  });
+  pintarMonitoreo();
+}
+
 function vistaAnalistas() {
   const Ilupa = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`;
   const filtros = [['todos', ML('All', 'Todos')], ['con', ML('With plan', 'Con plan')], ['sin', ML('No plan', 'Sin plan')], ['bloq', ML('Blocked', 'Bloqueados')]];
