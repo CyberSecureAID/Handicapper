@@ -188,7 +188,9 @@ body.en-mesa { overflow: hidden; }
 
 /* ---------- MÓVIL ---------- */
 @media (max-width: 820px) {
-  .mesa { grid-template-columns: 1fr; }
+  #mesa-screen { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .mesa { grid-template-columns: 1fr; display: block; height: auto; min-height: 100vh; }
+  .mesa-main { overflow: visible; }
   .mesa-side { border-right: 0; border-bottom: 1px solid var(--m-linea); padding: 14px 16px; position: sticky; top: 0; z-index: 10; background: #0e141b; }
   .mesa-burger { display: inline-flex; }
   .mesa-nav { position: absolute; top: 64px; right: 12px; left: 12px; background: #141a22; border: 1px solid var(--m-linea);
@@ -314,7 +316,7 @@ body.en-mesa { overflow: hidden; }
 .anm2-sl-nm { font-weight: 600; color: #e8eef7; flex: 1; }
 .anm2-sl-top b { font-family: 'Chakra Petch',sans-serif; font-weight: 800; font-size: 21px; color: #fff; }
 .anm2-range { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 6px; outline: none; cursor: pointer; background: rgba(255,255,255,.09); }
-.anm2-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid #0a0e15; box-shadow: 0 2px 8px rgba(0,0,0,.5); cursor: grab; }
+.anm2-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; margin-top: -7px; border-radius: 50%; background: #fff; border: 3px solid #0a0e15; box-shadow: 0 2px 8px rgba(0,0,0,.5); cursor: grab; }
 .anm2-range::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 3px solid #0a0e15; box-shadow: 0 2px 8px rgba(0,0,0,.5); cursor: grab; }
 .anm2-range:active::-webkit-slider-thumb { cursor: grabbing; }
 .anm2-sl-ax { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: #6b7480; font-weight: 600; }
@@ -405,7 +407,8 @@ body.en-mesa { overflow: hidden; }
 .ah2-metric span { font-size: 11.5px; color: var(--m-tinta2); margin-top: 6px; display: block; }
 .ah2-metric.gold b { color: var(--g); }
 
-.ah2-lgs { display: flex; flex-wrap: wrap; gap: 10px; padding-bottom: 4px; margin-bottom: 20px; }
+.ah2-lgs { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 20px; }
+.ah2-lg { justify-content: center; text-align: center; }
 .ah2-lg { flex: 0 0 auto; display: flex; align-items: center; gap: 9px; padding: 11px 16px; border-radius: 12px; border: 1px solid var(--m-linea); background: var(--m-tarjeta); color: #c3ccd6; font-weight: 700; font-size: 13px; cursor: pointer; transition: all .14s; }
 .ah2-lg img { height: 22px; width: auto; object-fit: contain; }
 .ah2-lg:hover { border-color: rgba(232,184,75,.4); color: #fff; }
@@ -610,3 +613,16 @@ body.en-mesa { overflow: hidden; }
 .anm2-infopop-x { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; border: 1px solid var(--m-linea); background: var(--m-tarjeta); color: #cdd6e2; cursor: pointer; flex: 0 0 auto; }
 .anm2-infopop-x:hover { color: #fff; border-color: rgba(240,53,58,.5); background: rgba(240,53,58,.12); }
 .anm2-infopop-x svg { width: 18px; height: 18px; }
+
+/* ===== Textos cortos del modal en móvil (Análisis / Vista) ===== */
+.anm2-sm-t { display: none; }
+@media (max-width: 560px) {
+  .anm2-lg-t { display: none; }
+  .anm2-sm-t { display: inline; }
+}
+
+/* ===== Ligas del Analysis Hub: móvil 2 col + último centrado si queda solo ===== */
+@media (max-width: 560px) {
+  .ah2-lgs { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .ah2-lg:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
