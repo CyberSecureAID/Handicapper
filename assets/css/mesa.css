@@ -380,3 +380,91 @@ body.en-mesa { overflow: hidden; }
 .anm2-close2:hover { color: #fff; border-color: rgba(240,53,58,.5); background: rgba(240,53,58,.12); }
 .anm2-close2 svg { width: 20px; height: 20px; }
 @media (max-width: 900px) { .anm2 { padding: 12px 12px 14px; } .anm2-prev span, .anm2-prev { font-size: 12px; } .anm2-name { font-size: 18px; } .anm2-logo { width: 54px; height: 54px; } }
+
+/* ===== Analysis Hub v2 — tablero premium ===== */
+.ah2 { --l:#38a9f0; --r:#f0353a; --g:#e8b84b; }
+.ah2 * { box-sizing: border-box; }
+.ah2-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.ah2-titles h1 { font-family: 'Chakra Petch',sans-serif; font-size: clamp(24px,4vw,32px); font-weight: 800; margin: 0; color: #fff; letter-spacing: -.01em; }
+.ah2-titles p { color: var(--m-tinta2); margin-top: 6px; font-size: 14px; }
+.ah2-status { display: flex; align-items: center; gap: 11px; flex: 0 0 auto; background: linear-gradient(180deg, rgba(232,184,75,.12), rgba(232,184,75,.03)); border: 1px solid rgba(232,184,75,.3); border-radius: 13px; padding: 10px 15px; }
+.ah2-status-dot { width: 9px; height: 9px; border-radius: 50%; background: #26c281; box-shadow: 0 0 10px rgba(38,194,129,.9); }
+.ah2-status b { display: block; font-size: 13px; color: #fff; } .ah2-status em { font-style: normal; font-size: 11px; color: var(--g); }
+
+.ah2-metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.ah2-metric { background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.01)); border: 1px solid var(--m-linea); border-radius: 14px; padding: 15px 16px; }
+.ah2-metric b { display: block; font-family: 'Chakra Petch',sans-serif; font-size: 28px; font-weight: 800; color: #fff; line-height: 1; }
+.ah2-metric span { font-size: 11.5px; color: var(--m-tinta2); margin-top: 6px; display: block; }
+.ah2-metric.gold b { color: var(--g); }
+
+.ah2-lgs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 20px; scrollbar-width: thin; }
+.ah2-lg { flex: 0 0 auto; display: flex; align-items: center; gap: 9px; padding: 11px 16px; border-radius: 12px; border: 1px solid var(--m-linea); background: var(--m-tarjeta); color: #c3ccd6; font-weight: 700; font-size: 13px; cursor: pointer; transition: all .14s; }
+.ah2-lg img { height: 22px; width: auto; object-fit: contain; }
+.ah2-lg:hover { border-color: rgba(232,184,75,.4); color: #fff; }
+.ah2-lg.on { border-color: var(--g); background: rgba(232,184,75,.12); color: var(--g); box-shadow: 0 0 0 1px rgba(232,184,75,.35); }
+
+.ah2-board { background: linear-gradient(180deg, rgba(255,255,255,.02), transparent); border: 1px solid var(--m-linea); border-radius: 20px; padding: 20px 22px; margin-bottom: 18px; }
+.ah2-sec-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.ah2-sec-h span { display: inline-flex; align-items: center; gap: 9px; font-family: 'Chakra Petch',sans-serif; font-size: 15px; font-weight: 800; color: #fff; }
+.ah2-sec-h span svg { width: 17px; height: 17px; color: var(--g); }
+.ah2-sec-h em { font-style: normal; font-family: 'Chakra Petch',sans-serif; font-weight: 800; color: var(--g); font-size: 16px; }
+
+.ah2-filter { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 6px; scrollbar-width: thin; }
+.ah2-ft { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 10px; border: 1px solid var(--m-linea); background: rgba(255,255,255,.02); color: #9aa6b2; font-weight: 700; font-size: 12.5px; cursor: pointer; text-transform: capitalize; }
+.ah2-ft em { font-style: normal; font-size: 11px; background: rgba(255,255,255,.08); color: #c3ccd6; padding: 1px 7px; border-radius: 20px; }
+.ah2-ft.on { border-color: var(--g); background: rgba(232,184,75,.12); color: var(--g); } .ah2-ft.on em { background: rgba(232,184,75,.25); color: #fff; }
+
+.ah2-day { margin-top: 16px; }
+.ah2-day-h { display: flex; align-items: center; gap: 9px; font-size: 11.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--g); margin-bottom: 12px; }
+.ah2-day-h span { font-size: 10px; background: rgba(232,184,75,.15); color: var(--g); padding: 2px 8px; border-radius: 20px; }
+.ah2-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px,1fr)); gap: 14px; }
+
+.ah2-mc { position: relative; text-align: left; width: 100%; background: linear-gradient(180deg, rgba(20,27,38,.9), rgba(13,18,26,.95)); border: 1px solid var(--m-linea); border-radius: 16px; padding: 15px 16px; cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; overflow: hidden; }
+.ah2-mc::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: linear-gradient(90deg, var(--l), var(--r)); opacity: 0; transition: opacity .15s; }
+.ah2-mc:hover { transform: translateY(-3px); border-color: rgba(232,184,75,.4); box-shadow: 0 14px 34px rgba(0,0,0,.4); }
+.ah2-mc:hover::before { opacity: 1; }
+.ah2-mc.has { border-color: rgba(38,194,129,.4); }
+.ah2-mc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px; }
+.ah2-mc-time { font-family: 'Chakra Petch',sans-serif; font-size: 12px; font-weight: 700; color: #9aa6b2; }
+.ah2-badge { font-size: 10.5px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: .03em; }
+.ah2-badge.alta { color: #48d17e; background: rgba(38,194,129,.14); } .ah2-badge.media { color: var(--g); background: rgba(232,184,75,.14); } .ah2-badge.baja { color: #ef9a5a; background: rgba(232,120,60,.14); }
+.ah2-mc-team { display: flex; align-items: center; gap: 11px; }
+.ah2-lo { width: 30px; height: 30px; flex: 0 0 auto; display: grid; place-items: center; }
+.ah2-lo img { width: 30px; height: 30px; object-fit: contain; }
+.ah2-lo.fb { font-family: 'Chakra Petch',sans-serif; font-size: 10px; font-weight: 800; color: #c3ccd6; background: rgba(255,255,255,.06); border-radius: 8px; }
+.ah2-mc-team b { flex: 1; min-width: 0; font-size: 14px; color: #eef3f9; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ah2-mc-pct { font-family: 'Chakra Petch',sans-serif; font-weight: 800; font-size: 16px; } .ah2-mc-pct.l { color: #6cc4fb; } .ah2-mc-pct.r { color: #f47b7f; }
+.ah2-mc-bar { display: flex; height: 6px; border-radius: 4px; overflow: hidden; margin: 9px 0; background: rgba(255,255,255,.06); gap: 2px; }
+.ah2-mc-bar i { height: 100%; border-radius: 3px; } .ah2-mc-bar i.l { background: linear-gradient(90deg,#1f7fd0,#38a9f0); } .ah2-mc-bar i.r { background: linear-gradient(90deg,#f0353a,#b3272b); } .ah2-mc-bar i.n { background: rgba(255,255,255,.12); }
+.ah2-mc-foot { margin-top: 13px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.06); }
+.ah2-mc-cta { display: inline-flex; align-items: center; gap: 8px; font-family: 'Chakra Petch',sans-serif; font-size: 12px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--g); }
+.ah2-mc-cta svg { width: 15px; height: 15px; } .ah2-mc-cta svg:last-child { margin-left: -2px; transition: transform .15s; } .ah2-mc:hover .ah2-mc-cta svg:last-child { transform: translateX(3px); }
+.ah2-mc-pub { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: #48d17e; } .ah2-mc-pub svg { width: 15px; height: 15px; }
+
+.ah2-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 54px 24px; color: var(--m-tinta2); }
+.ah2-empty.sm { padding: 34px 20px; }
+.ah2-empty svg { width: 42px; height: 42px; color: #3a4656; margin-bottom: 14px; }
+.ah2-empty b { font-family: 'Chakra Petch',sans-serif; font-size: 17px; color: #fff; margin-bottom: 6px; }
+.ah2-empty span { font-size: 13.5px; max-width: 420px; line-height: 1.5; }
+.ah2-spin { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(232,184,75,.2); border-top-color: var(--g); animation: ah2sp 1s linear infinite; margin-bottom: 14px; }
+@keyframes ah2sp { to { transform: rotate(360deg); } }
+
+.ah2-sig-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 14px; }
+.ah2-sig { background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.008)); border: 1px solid var(--m-linea); border-radius: 15px; padding: 16px; }
+.ah2-sig-h { display: flex; align-items: center; justify-content: space-between; }
+.ah2-sig-h b { color: #fff; font-family: 'Chakra Petch',sans-serif; font-size: 15px; }
+.ah2-sig-pct { font-family: 'Chakra Petch',sans-serif; font-weight: 800; color: var(--g); font-size: 18px; }
+.ah2-sig-v { display: flex; align-items: center; gap: 9px; font-size: 12.5px; color: #9aa6b2; margin-top: 5px; }
+.ah2-sig-c { font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; }
+.ah2-sig-c.alta { color: #48d17e; background: rgba(38,194,129,.14); } .ah2-sig-c.media { color: var(--g); background: rgba(232,184,75,.14); } .ah2-sig-c.baja { color: #ef9a5a; background: rgba(232,120,60,.14); }
+.ah2-sig-t { font-size: 13px; color: #c3ccd6; line-height: 1.55; margin: 10px 0 0; }
+.ah2-sig-del { margin-top: 12px; background: none; border: 1px solid rgba(240,53,58,.35); color: #ff8a94; border-radius: 9px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.ah2-sig-del:hover { background: rgba(240,53,58,.1); }
+
+@media (max-width: 760px) { .ah2-metrics { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 620px) {
+  .ah2-top { flex-direction: column; align-items: stretch; }
+  .ah2-status { align-self: flex-start; }
+  .ah2-grid, .ah2-sig-grid { grid-template-columns: 1fr; }
+  .ah2-board { padding: 16px 14px; border-radius: 16px; }
+}
