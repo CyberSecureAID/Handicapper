@@ -164,9 +164,12 @@ function inyectarCSS() {
   .ply-tag{font-size:11px;font-weight:600;color:var(--tx2);border:1px solid var(--line);border-radius:7px;padding:4px 8px;background:rgba(255,255,255,.02);white-space:nowrap}
   .ply-tag.h{color:var(--oro);border-color:rgba(232,196,106,.3)}
   .ply-meter{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+  .ply-ic{font-size:11px;color:var(--tx3);font-weight:700;letter-spacing:.02em;margin-top:3px}
+  .ply-track{position:relative;height:9px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden;margin:2px 0 14px}
+  .ply-band{position:absolute;top:0;bottom:0;background:rgba(232,196,106,.18);border-left:1px solid rgba(232,196,106,.5);border-right:1px solid rgba(232,196,106,.5);z-index:1;pointer-events:none}
+  .ply-fill{position:relative;z-index:2}
   .ply-pct{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:40px;line-height:1;color:#e8c46a;background:linear-gradient(180deg,#f8e7ad,#d4a53f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   .ply-plab{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);font-weight:700;text-align:right;line-height:1.35}
-  .ply-track{height:9px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden;margin:2px 0 14px}
   .ply-fill{height:100%;border-radius:6px;width:0;transition:width 1s cubic-bezier(.2,.7,.2,1);background:linear-gradient(90deg,var(--oro2),#f6e2a6);box-shadow:0 0 14px rgba(232,196,106,.4)}
   .ply-conf{display:inline-flex;align-items:center;gap:7px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:5px 12px}
   .ply-conf i{width:7px;height:7px;border-radius:50%}
@@ -226,13 +229,16 @@ function cardHTML(p, cfg) {
   const tags = (cfg.toCard(p).tags || []).map((t, i) => `<span class="ply-tag${i === 0 ? ' h' : ''}">${esc(tagTxt(t))}</span>`).join('');
   const fav = (p.factores || []).map(f => `<li>${esc(f)}</li>`).join('');
   const rsk = (p.riesgos || []).map(f => `<li>${esc(f)}</li>`).join('');
+  const iv = p.intervalo && p.intervalo.hi > p.intervalo.lo ? p.intervalo : null;
+  const ivTxt = iv ? `<div class="ply-ic">${L('range', 'rango')} ${iv.lo}–${iv.hi}%</div>` : '';
+  const band = iv ? `<span class="ply-band" style="left:${iv.lo}%;width:${Math.max(2, iv.hi - iv.lo)}%"></span>` : '';
   return `<article class="ply-c r${p.rank}" data-idx="${p.rank}">
     <div class="ply-c-top"><div class="ply-rank">${p.rank}</div>
       <div class="ply-idn"><div class="ply-nm">${esc(p.nombre)}</div>
         <div class="ply-mt"><b>${esc(p.equipoAbrev || '')}</b> ${L('vs', 'vs')} ${esc(p.rivalAbrev || '')}</div></div></div>
     <div class="ply-tags">${tags}</div>
-    <div class="ply-meter"><div class="ply-pct">${p.prob}%</div><div class="ply-plab">${cfg.metricLabel}</div></div>
-    <div class="ply-track"><div class="ply-fill" data-w="${p.prob}"></div></div>
+    <div class="ply-meter"><div class="ply-meter-l"><div class="ply-pct">${p.prob}%</div>${ivTxt}</div><div class="ply-plab">${cfg.metricLabel}</div></div>
+    <div class="ply-track">${band}<div class="ply-fill" data-w="${p.prob}"></div></div>
     <span class="ply-conf ${p.confianza}"><i></i>${L('Confidence', 'Confianza')} ${esc(confLabel(p.confianza))}</span>
     <div class="ply-split">
       ${fav ? `<div class="ply-blk f"><div class="ply-blk-t">${L('Key factors', 'Factores favorables')}</div><ul>${fav}</ul></div>` : ''}
