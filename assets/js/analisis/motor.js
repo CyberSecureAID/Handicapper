@@ -37,7 +37,7 @@ const W = {
   eraCap: 0.75,   // tope del efecto ERA
   lesion: 0.13,   // por cada lesionado clave neto
   lesionCap: 0.55,
-  clampLo: 0.06, clampHi: 0.94, // límites de la prob del local (no-fútbol)
+  clampLo: 0.15, clampHi: 0.85, // límites de la prob del local (no-fútbol)
 };
 
 const sig = (x) => 1 / (1 + Math.exp(-x));
@@ -109,14 +109,26 @@ export function analizar(match) {
   const futbol = match.futbol != null ? match.futbol : !!(match.mercado && match.mercado.empate != null);
   const ligaId = match.ligaId;
 
+  // Tope común: ninguna probabilidad mostrada baja de 15 ni pasa de 85 (no-fútbol),
+  // así la LISTA (cuota/predicción del scoreboard) y el DETALLE (moneyline) quedan
+  // en el mismo rango honesto y no aparecen extremos tipo 3/97.
+  const topeMerc = (mc) => {
+    if (!mc) return mc;
+    if (mc.empate != null) {   // fútbol: el empate ya modera; solo evita 0 duros
+      return mc;
+    }
+    const L = Math.max(15, Math.min(85, Math.round(mc.local)));
+    return { local: L, empate: null, visita: 100 - L };
+  };
+
   // 1) CUOTA real -> manda
   if (match._fuenteProb === 'cuota' && match.mercado) {
-    return { ...match.mercado, confianza: 'alta', sinDatos: false,
+    return { ...topeMerc(match.mercado), confianza: 'alta', sinDatos: false,
       factores: { en: 'Based on live betting market odds.', es: 'Basado en las cuotas reales del mercado.' } };
   }
   // 2) PROYECCIÓN de ESPN -> manda
   if (match._fuenteProb === 'prediccion' && match.mercado) {
-    return { ...match.mercado, confianza: 'media', sinDatos: false,
+    return { ...topeMerc(match.mercado), confianza: 'media', sinDatos: false,
       factores: { en: "Based on ESPN's win projection.", es: 'Basado en la proyección de victoria de ESPN.' } };
   }
 
