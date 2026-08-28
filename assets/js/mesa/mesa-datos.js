@@ -217,3 +217,52 @@ export async function guardarModeracion(palabras) {
   await S.setDoc(S.doc(db, 'config', 'moderacion'), { palabras: palabras || [], actualizado: S.serverTimestamp() }, { merge: true });
   return true;
 }
+
+/* ============================================================
+   FASE 7 — LIKES / DISLIKES (colección 'votos')
+   Doc id = `${uid}__${signalId}` = { uid, signalId, valor: 1|-1, fecha }
+   El conteo se hace por agregación; nunca se toca el doc de la señal.
+   ============================================================ */
+const _idVoto = (uid, sid) => `${uid}__${sid}`.replace(/[^\w:-]/g, '_');
+
+export async function votarSenal(signalId, valor) {
+  if (!await _asegurarListo()) return false;
+  const u = usuarioActual(); if (!u || !signalId || ![1, -1].includes(valor)) return false;
+  const S = _obtenerStore(), db = _obtenerDB();
+  await S.setDoc(S.doc(db, 'votos', _idVoto(u.uid, signalId)), {
+    uid: u.uid, signalId, valor, fecha: S.serverTimestamp(),
+  });
+  return true;
+}
+export async function quitarVoto(signalId) {
+  if (!await _asegurarListo()) return false;
+  const u = usuarioActual(); if (!u || !signalId) return false;
+  const S = _obtenerStore(), db = _obtenerDB();
+  await S.deleteDoc(S.doc(db, 'votos', _idVoto(u.uid, signalId)));
+  return true;
+}
+/* Mapa signalId -> valor (1|-1) de los votos del usuario actual. */
+export async function misVotos() {
+  if (!await _asegurarListo()) return {};
+  const u = usuarioActual(); if (!u) return {};
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const q = S.query(S.collection(db, 'votos'), S.where('uid', '==', u.uid));
+    const snap = await S.getDocs(q);
+    const out = {}; snap.forEach(d => { const v = d.data(); if (v.signalId) out[v.signalId] = v.valor; });
+    return out;
+  } catch (_) { return {}; }
+}
+/* { likes, dislikes } de una señal (agregación en servidor con respaldo). */
+export async function contarVotos(signalId) {
+  const base = { likes: 0, dislikes: 0 };
+  if (!signalId || !await _asegurarListo()) return base;
+  const S = _obtenerStore(), db = _obtenerDB();
+  const cuenta = async (valor) => {
+    const q = S.query(S.collection(db, 'votos'), S.where('signalId', '==', signalId), S.where('valor', '==', valor));
+    try { if (S.getCountFromServer) { const c = await S.getCountFromServer(q); return c.data().count || 0; } } catch (_) {}
+    try { const snap = await S.getDocs(q); return snap.size || 0; } catch (_) { return 0; }
+  };
+  const [likes, dislikes] = await Promise.all([cuenta(1), cuenta(-1)]);
+  return { likes, dislikes };
+}
