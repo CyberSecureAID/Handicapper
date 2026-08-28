@@ -198,3 +198,22 @@ export async function contarSeguidores(analistaUid) {
   } catch (_) {}
   try { const snap = await S.getDocs(q); return snap.size || 0; } catch (_) { return 0; }
 }
+
+/* ============================================================
+   FASE 6 — MODERACIÓN (doc 'config/moderacion' = { palabras: [...] })
+   Admin lee/escribe; el analista solo lee (para validar al publicar).
+   ============================================================ */
+export async function leerModeracion() {
+  if (!await _asegurarListo()) return [];
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const snap = await S.getDoc(S.doc(db, 'config', 'moderacion'));
+    return snap.exists() ? (snap.data().palabras || []) : [];
+  } catch (_) { return []; }
+}
+export async function guardarModeracion(palabras) {
+  if (!await _asegurarListo()) return false;
+  const S = _obtenerStore(), db = _obtenerDB();
+  await S.setDoc(S.doc(db, 'config', 'moderacion'), { palabras: palabras || [], actualizado: S.serverTimestamp() }, { merge: true });
+  return true;
+}
