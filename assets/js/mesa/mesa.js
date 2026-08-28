@@ -4,6 +4,8 @@
    Solo visible si esAdmin() (verificado en Firestore).
    ============================================================ */
 import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista } from './mesa-datos.js';
+import { prepararEstilosSenal, tarjetaMuestra } from '../ui/senales.js';
+import { PALETA, INTENSIDADES, EMBLEMAS, EMBLEMA_NOMBRE, estiloSeguro } from '../ui/estilo-senal.js';
 import { LIGAS, listarPartidos, detallePartido } from '../datos/proveedor.js';
 import { PLANES, planPorId } from '../datos/planes.js';
 import { salir, usuarioActual } from '../auth/auth.js';
@@ -13,7 +15,7 @@ import { idiomaActual } from '../ui/idioma.js';
 let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = [];
 let _ligaSel = null, _partidos = [], _cargandoPart = false;
 let _rol = 'admin', _deporteAnalista = null, _analistas = [];
-let _miFirma = null, _miNombre = null;
+let _miFirma = null, _miNombre = null, _miUid = null, _miEstilo = null;
 let _mesaLang = 'es';
 let _uBusqueda = '', _uFiltro = 'todos', _uPagina = 1;
 let _anBusqueda = '', _anFiltro = 'todos';
@@ -44,7 +46,7 @@ export async function abrirMesa() {
     return;
   }
   if (admin) { _rol = 'admin'; _deporteAnalista = null; }
-  else { _rol = 'analista'; _deporteAnalista = analista.deporte || null; _miFirma = analista.firma || analista.alias || null; _miNombre = analista.nombre || null; _tab = 'analisis'; }
+  else { _rol = 'analista'; _deporteAnalista = analista.deporte || null; _miFirma = analista.firma || analista.alias || null; _miNombre = analista.nombre || null; _miUid = analista.uid || null; _miEstilo = estiloSeguro(analista.estilo); _tab = 'analisis'; }
   render();
   cargarDatos();
 }
@@ -159,7 +161,7 @@ function pintarTab() {
   if (!m) return;
   if (_tab === 'resumen') { m.innerHTML = vistaResumen(); enlazarResumen(); }
   else if (_tab === 'usuarios') { m.innerHTML = vistaUsuarios(); enlazarUsuarios(); }
-  else if (_tab === 'analisis') { m.innerHTML = vistaAnalisis(); enlazarAnalisis(); }
+  else if (_tab === 'analisis') { m.innerHTML = (_rol === 'analista' ? editorEstilo() : '') + vistaAnalisis(); if (_rol === 'analista') enlazarEditorEstilo(); enlazarAnalisis(); }
   else if (_tab === 'analistas') { m.innerHTML = vistaAnalistas(); enlazarAnalistas(); }
   else if (_tab === 'monitoreo') { m.innerHTML = vistaMonitoreo(); enlazarMonitoreo(); }
 }
@@ -379,6 +381,62 @@ function pintarCandidatos() {
     catch (_) { b.disabled = false; }
   });
 }
+/* ============================================================
+   FASE 5 — EDITOR DE ESTILO DE SEÑAL (solo analista, en su hub)
+   Opciones curadas + vista previa en tiempo real. Límites automáticos:
+   solo colores de la paleta, 3 intensidades y emblemas de la lista.
+   ============================================================ */
+let _estGuardar = null;   // debounce del guardado
+function editorEstilo() {
+  const ES = _mesaLang === 'es';
+  const L = (en, es) => ES ? es : en;
+  const e = _miEstilo || estiloSeguro(null);
+  const IPaint = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M12 3a9 9 0 100 18 2 2 0 002-2c0-.6-.4-1-.4-1.5 0-.5.4-1 1-1H16a5 5 0 005-5c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="10.5" r="1.1" fill="currentColor"/><circle cx="12" cy="7.5" r="1.1" fill="currentColor"/><circle cx="16.5" cy="10.5" r="1.1" fill="currentColor"/></svg>`;
+  const swatches = PALETA.map(p =>
+    `<button class="est-sw ${e.color === p.id ? 'on' : ''}" data-color="${p.id}" style="--sw:${p.hex}" title="${esc(ES ? p.nombre.es : p.nombre.en)}"><i></i></button>`).join('');
+  const inten = INTENSIDADES.map(k =>
+    `<button class="est-int ${e.intensidad === k ? 'on' : ''}" data-inten="${k}">${esc(L(k === 'subtle' ? 'Subtle' : k === 'normal' ? 'Normal' : 'Bold', k === 'subtle' ? 'Sutil' : k === 'normal' ? 'Normal' : 'Fuerte'))}</button>`).join('');
+  const embs = Object.keys(EMBLEMAS).map(k =>
+    `<button class="est-emb ${e.emblema === k ? 'on' : ''}" data-emb="${k}" title="${esc(ES ? EMBLEMA_NOMBRE[k].es : EMBLEMA_NOMBRE[k].en)}">${k === 'none' ? `<span class="est-emb-none">${L('None', 'Ninguno')}</span>` : EMBLEMAS[k]}</button>`).join('');
+
+  return `<div class="mesa-card est-editor">
+    <div class="mc-t">${IPaint} ${L('My signal style', 'Estilo de mis señales')}</div>
+    <p class="est-sub">${L('Give your signals a personal touch. The platform keeps limits so everything stays premium.', 'Dale un toque personal a tus señales. La plataforma mantiene los límites para que todo se vea premium.')}</p>
+    <div class="est-grid">
+      <div class="est-controls">
+        <div class="est-field"><label>${L('Accent color', 'Color de acento')}</label><div class="est-sws">${swatches}</div></div>
+        <div class="est-field"><label>${L('Intensity', 'Intensidad')}</label><div class="est-seg">${inten}</div></div>
+        <div class="est-field"><label>${L('Emblem', 'Emblema')}</label><div class="est-embs">${embs}</div></div>
+      </div>
+      <div class="est-preview">
+        <label>${L('Live preview', 'Vista previa en tiempo real')}</label>
+        <div class="est-prev sn" id="est-prev"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function _renderPreview() {
+  const box = _cont.querySelector('#est-prev'); if (!box) return;
+  box.innerHTML = tarjetaMuestra(_miEstilo, _miFirma);
+}
+function _guardarEstilo() {
+  if (!_miUid) return;
+  clearTimeout(_estGuardar);
+  _estGuardar = setTimeout(async () => {
+    try { await fijarAnalista(_miUid, { estilo: { color: _miEstilo.color, intensidad: _miEstilo.intensidad, emblema: _miEstilo.emblema } }); } catch (_) {}
+  }, 500);
+}
+function enlazarEditorEstilo() {
+  prepararEstilosSenal();               // inyecta el CSS de señales para el preview
+  _miEstilo = estiloSeguro(_miEstilo);
+  _renderPreview();
+  const setSel = (sel, val, attr) => _cont.querySelectorAll(sel).forEach(x => x.classList.toggle('on', x.dataset[attr] === val));
+  _cont.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { _miEstilo.color = b.dataset.color; _miEstilo = estiloSeguro(_miEstilo); setSel('[data-color]', _miEstilo.color, 'color'); _renderPreview(); _guardarEstilo(); });
+  _cont.querySelectorAll('[data-inten]').forEach(b => b.onclick = () => { _miEstilo.intensidad = b.dataset.inten; _miEstilo = estiloSeguro(_miEstilo); setSel('[data-inten]', _miEstilo.intensidad, 'inten'); _renderPreview(); _guardarEstilo(); });
+  _cont.querySelectorAll('[data-emb]').forEach(b => b.onclick = () => { _miEstilo.emblema = b.dataset.emb; _miEstilo = estiloSeguro(_miEstilo); setSel('[data-emb]', _miEstilo.emblema, 'emb'); _renderPreview(); _guardarEstilo(); });
+}
+
 /* ============================================================
    FASE 1 — MONITOREO DE ANALISTAS (solo admin)
    Rendimiento por analista: señales del mes (individual), seguidores,
@@ -915,6 +973,7 @@ async function abrirModalSenal(matchId) {
       deporte: deporteDeLiga(p.ligaId),
       firma: _miFirma || null,
       autor: _miNombre || null,
+      estilo: _miEstilo ? { color: _miEstilo.color, intensidad: _miEstilo.intensidad, emblema: _miEstilo.emblema } : null,
     };
     const btn = bg.querySelector(estado === 'borrador' ? '#anm-draft' : '#anm-guardar');
     const txtBtn = btn.textContent; btn.disabled = true; btn.textContent = '…';
