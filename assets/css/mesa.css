@@ -667,3 +667,27 @@ body.en-mesa { overflow: hidden; }
 .an-mng-inp.firma { font-family: 'Chakra Petch', sans-serif; font-weight: 700; color: var(--m-oro); }
 .an-mng-inp.err { border-color: #f0525a; background: rgba(240,82,90,.1); }
 @media (max-width: 760px) { .an-mng-id { flex-basis: 100%; order: 3; } }
+
+/* ===== FASE 5 — Editor de estilo de señal ===== */
+.est-editor .mc-t { display: flex; align-items: center; gap: 8px; }
+.est-sub { font-size: 12.5px; color: var(--m-tinta-3); margin: 2px 0 16px; }
+.est-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+.est-field { margin-bottom: 16px; }
+.est-field label, .est-preview label { display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--m-tinta-2); font-weight: 700; margin-bottom: 9px; }
+.est-sws { display: flex; flex-wrap: wrap; gap: 9px; }
+.est-sw { width: 34px; height: 34px; border-radius: 10px; border: 2px solid transparent; background: transparent; cursor: pointer; padding: 0; display: grid; place-items: center; transition: transform .1s, border-color .14s; }
+.est-sw i { width: 22px; height: 22px; border-radius: 6px; background: var(--sw); display: block; box-shadow: 0 2px 8px color-mix(in srgb, var(--sw) 45%, transparent); }
+.est-sw:hover { transform: translateY(-1px); }
+.est-sw.on { border-color: var(--sw); }
+.est-seg { display: inline-flex; background: rgba(255,255,255,.04); border: 1px solid var(--m-linea); border-radius: 10px; padding: 3px; gap: 2px; }
+.est-int { border: 0; background: transparent; color: var(--m-tinta-2); font-family: inherit; font-weight: 700; font-size: 12.5px; padding: 7px 14px; border-radius: 8px; cursor: pointer; transition: background .14s, color .14s; }
+.est-int.on { background: var(--m-oro); color: #1a1206; }
+.est-embs { display: flex; flex-wrap: wrap; gap: 8px; }
+.est-emb { min-width: 40px; height: 40px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--m-linea); background: rgba(255,255,255,.03); color: #c7d2de; cursor: pointer; display: grid; place-items: center; transition: border-color .14s, background .14s, color .14s; }
+.est-emb svg { width: 19px; height: 19px; }
+.est-emb-none { font-size: 12px; font-weight: 700; color: var(--m-tinta-2); }
+.est-emb:hover { border-color: rgba(232,184,75,.4); }
+.est-emb.on { border-color: var(--m-oro); background: rgba(232,184,75,.1); color: var(--m-oro); }
+.est-preview .est-prev { margin: 0; }
+.est-preview .est-prev .sn-card { max-width: 360px; }
+@media (max-width: 760px) { .est-grid { grid-template-columns: 1fr; gap: 18px; } .est-preview .est-prev .sn-card { max-width: none; } }
