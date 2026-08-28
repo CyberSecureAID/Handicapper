@@ -442,6 +442,7 @@ function enlazarAnalistas() {
 function vistaAnalisis() {
   const ES = _mesaLang === 'es';
   const L = (en, es) => ES ? es : en;
+  const iniLoc = (p) => (p && p.inicio && typeof p.inicio === 'object') ? (ES ? p.inicio.es : p.inicio.en) : ((p && p.inicio) || '');
   const ligaObj = LIGAS.find(l => l.id === _ligaSel) || {};
   const ligaNm = ligaObj.corto || ligaObj.nombre || '';
 
@@ -485,7 +486,7 @@ function vistaAnalisis() {
       ? `<div class="ah2-mc-bar"><i class="l" style="width:${pL}%"></i><i class="r" style="width:${pV}%"></i></div>`
       : `<div class="ah2-mc-bar"><i class="n" style="width:100%"></i></div>`;
     return `<button class="ah2-mc ${ya ? 'has' : ''}" data-match="${esc(p.id)}">
-      <div class="ah2-mc-top"><span class="ah2-mc-time">${esc(p.inicio || '')}</span><span class="ah2-badge ${c}">${confTx[c]}</span></div>
+      <div class="ah2-mc-top"><span class="ah2-mc-time">${esc(iniLoc(p))}</span><span class="ah2-badge ${c}">${confTx[c]}</span></div>
       <div class="ah2-mc-team">${logoBox(p.local)}<b>${esc(p.local.nombre)}</b><span class="ah2-mc-pct l">${pL != null ? pL + '%' : '—'}</span></div>
       ${barra}
       <div class="ah2-mc-team">${logoBox(p.visita)}<b>${esc(p.visita.nombre)}</b><span class="ah2-mc-pct r">${pV != null ? pV + '%' : '—'}</span></div>
@@ -517,7 +518,6 @@ function vistaAnalisis() {
     <div class="ah2">
       <div class="ah2-top">
         <div class="ah2-titles"><h1>Analysis Hub</h1><p>${L('Browse matches, set your read, publish signals.', 'Explora partidos, define tu lectura y publica señales.')}</p></div>
-        <div class="ah2-status"><span class="ah2-status-dot"></span><div><b>${L('Analyst', 'Analista')}</b><em>${L('Pro workspace', 'Espacio Pro')}</em></div></div>
       </div>
       <div class="ah2-metrics">
         <div class="ah2-metric"><b>${LIGAS.length}</b><span>${L('Leagues', 'Ligas')}</span></div>
@@ -608,9 +608,9 @@ async function abrirModalSenal(matchId) {
   bg.innerHTML = `
   <div class="anm2">
     <div class="anm2-head">
-      <button class="anm2-back" id="anm-x">${IBack}<span>${L('Match Analysis', 'Análisis de partido')}</span></button>
+      <button class="anm2-back" id="anm-x">${IBack}<span class="anm2-lg-t">${L('Match Analysis', 'Análisis de partido')}</span><span class="anm2-sm-t">${L('Analysis', 'Análisis')}</span></button>
       <div class="anm2-head-r">
-        <button class="anm2-prev" id="anm-prev">${IEye}${L('Preview', 'Vista previa')}</button>
+        <button class="anm2-prev" id="anm-prev">${IEye}<span class="anm2-lg-t">${L('Preview', 'Vista previa')}</span><span class="anm2-sm-t">${L('Preview', 'Vista')}</span></button>
         <button class="anm2-close2" id="anm-x2" aria-label="Close">${IClose}</button>
       </div>
     </div>
@@ -642,7 +642,7 @@ async function abrirModalSenal(matchId) {
           </div>
           <div class="anm2-total">
             <div class="anm2-total-l"><span>${L('TOTAL', 'TOTAL')}</span><b id="tot">100%</b></div>
-            <div class="anm2-bal" id="bal"><span class="anm2-bal-ic">${ICheck}</span><div><b>${L('Probabilities are balanced', 'Las probabilidades están balanceadas')}</b><em>${L('The probabilities sum to 100%', 'La suma de las probabilidades es 100%')}</em></div></div>
+            <div class="anm2-bal" id="bal"><span class="anm2-bal-ic">${ICheck}</span><div><b>${L('Balanced at 100%', 'Probabilidades balanceadas al 100%')}</b></div></div>
           </div>
           <button type="button" class="anm2-info-btn" id="anm-info-btn">
             <span class="anm2-info-btn-l">${IInfo}${L('Match information', 'Información del partido')}</span>
