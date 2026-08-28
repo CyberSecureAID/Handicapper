@@ -3,7 +3,7 @@
    Secciones: Overview · Users · Analysis.
    Solo visible si esAdmin() (verificado en Firestore).
    ============================================================ */
-import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis } from './mesa-datos.js';
+import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista } from './mesa-datos.js';
 import { LIGAS, listarPartidos, detallePartido } from '../datos/proveedor.js';
 import { PLANES, planPorId } from '../datos/planes.js';
 import { salir, usuarioActual } from '../auth/auth.js';
@@ -12,18 +12,34 @@ import { idiomaActual } from '../ui/idioma.js';
 
 let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = [];
 let _ligaSel = null, _partidos = [], _cargandoPart = false;
+let _rol = 'admin', _deporteAnalista = null, _analistas = [];
+let _mesaLang = 'es';
+const ML = (en, es) => _mesaLang === 'es' ? es : en;
+const DEPORTES = {
+  beisbol: { en: 'Baseball', es: 'Béisbol', ligas: ['mlb'] },
+  basket:  { en: 'Basketball', es: 'Básquet', ligas: ['nba'] },
+  hockey:  { en: 'Ice hockey', es: 'Hockey', ligas: ['nhl'] },
+  futbol:  { en: 'Soccer', es: 'Fútbol', ligas: ['epl', 'laliga', 'ucl', 'seriea', 'bundes', 'nfl'] },
+};
+const depNombre = (id) => { const d = DEPORTES[id]; return d ? (_mesaLang === 'es' ? d.es : d.en) : (id || '—'); };
+const ligasDeporte = (id) => (DEPORTES[id] && DEPORTES[id].ligas) || [];
+const deporteDeLiga = (ligaId) => { for (const k in DEPORTES) if (DEPORTES[k].ligas.includes(ligaId)) return k; return 'futbol'; };
 
 export async function abrirMesa() {
   _cont = document.getElementById('mesa-screen');
   if (!_cont) return;
   mostrar();
   _cont.innerHTML = cargando();
-  const ok = await esAdmin();
-  if (!ok) {
+  const admin = await esAdmin();
+  let analista = null;
+  if (!admin) { try { analista = await esAnalista(); } catch (_) { analista = null; } }
+  if (!admin && !analista) {
     _cont.innerHTML = accesoDenegado();
     _cont.querySelector('#mesa-volver')?.addEventListener('click', () => { location.hash = ''; location.reload(); });
     return;
   }
+  if (admin) { _rol = 'admin'; _deporteAnalista = null; }
+  else { _rol = 'analista'; _deporteAnalista = analista.deporte || null; _tab = 'analisis'; }
   render();
   cargarDatos();
 }
@@ -34,30 +50,36 @@ function mostrar() {
   document.body.classList.add('en-mesa');
 }
 
-function cargando() { return `<div class="mesa-cargando">Loading…</div>`; }
+function cargando() { return `<div class="mesa-cargando">${ML('Loading…','Cargando…')}</div>`; }
 function accesoDenegado() {
-  return `<div class="mesa-denegado"><div class="md-ic">${IC.lock}</div><h2>Restricted area</h2><p>This panel is for administrators only.</p><button id="mesa-volver" class="mesa-btn">Go back</button></div>`;
+  return `<div class="mesa-denegado"><div class="md-ic">${IC.lock}</div><h2>${ML('Restricted area','Área restringida')}</h2><p>${ML('This panel is for administrators only.','Este panel es solo para administradores.')}</p><button id="mesa-volver" class="mesa-btn">${ML('Go back','Volver')}</button></div>`;
 }
 
 function render() {
   const u = usuarioActual();
+  const navBtns = _rol === 'analista'
+    ? `<button data-tab="analisis" class="on">${IC.pen} ${ML('Analysis Hub','Central de análisis')}</button>
+       <div class="mesa-dep-badge">${IC.check} ${esc(depNombre(_deporteAnalista))}</div>`
+    : `<button data-tab="resumen" class="${_tab==='resumen'?'on':''}">${IC.grid} ${ML('Overview','Resumen')}</button>
+       <button data-tab="usuarios" class="${_tab==='usuarios'?'on':''}">${IC.users} ${ML('Users','Usuarios')}</button>
+       <button data-tab="analisis" class="${_tab==='analisis'?'on':''}">${IC.pen} ${ML('Analysis','Análisis')}</button>
+       <button data-tab="analistas" class="${_tab==='analistas'?'on':''}">${IC.contrato} ${ML('Staff','Personal')}</button>`;
   _cont.innerHTML = `
     <div class="mesa">
       <aside class="mesa-side" id="mesa-side">
         <div class="mesa-side-top">
-          <div class="mesa-marca">HANDICAPPER<span>Mesa</span></div>
+          <div class="mesa-marca">HANDICAPPER<span>${_rol === 'analista' ? ML('Analyst','Analista') : 'Mesa'}</span></div>
           <button class="mesa-burger" id="mesa-burger" aria-label="Menu">${IC.menu}</button>
         </div>
         <nav class="mesa-nav" id="mesa-nav">
-          <button data-tab="resumen" class="on">${IC.grid} Overview</button>
-          <button data-tab="usuarios">${IC.users} Users</button>
-          <button data-tab="analisis">${IC.pen} Analysis</button>
-          <button class="mesa-ver" id="mesa-ver-sitio">${IC.eye} View site</button>
+          ${navBtns}
+          <button class="mesa-ver" id="mesa-ver-sitio">${IC.eye} ${ML('View site','Ver sitio')}</button>
+          <button class="mesa-lang" id="mesa-lang">${IC.globe} ${_mesaLang === 'es' ? 'English' : 'Español'}</button>
           <div class="mesa-yo">
             <div class="mesa-yo-av">${(u?.nombre || u?.email || '?').charAt(0).toUpperCase()}</div>
             <div class="mesa-yo-txt"><b>${esc(u?.nombre || '')}</b><span>${esc(correoCorto(u?.email || ''))}</span></div>
           </div>
-          <button class="mesa-salir" id="mesa-salir">${IC.exit} Log out</button>
+          <button class="mesa-salir" id="mesa-salir">${IC.exit} ${ML('Log out','Cerrar sesión')}</button>
         </nav>
       </aside>
       <main class="mesa-main" id="mesa-main"></main>
@@ -72,6 +94,7 @@ function render() {
   _cont.querySelector('#mesa-burger').onclick = () => _cont.querySelector('#mesa-nav').classList.toggle('abierto');
   _cont.querySelector('#mesa-salir').onclick = async () => { await salir(); location.hash = ''; location.reload(); };
   _cont.querySelector('#mesa-ver-sitio').onclick = () => verSitio();
+  _cont.querySelector('#mesa-lang').onclick = () => { _mesaLang = _mesaLang === 'es' ? 'en' : 'es'; render(); pintarTab(); };
 
   // Delegación de clicks sobre _cont (que persiste): liga, partido, borrar, bloquear.
   if (!_cont._delegado) {
@@ -103,6 +126,7 @@ async function cargarDatos() {
   try { _usuarios = await listarUsuarios(); } catch (_) { _usuarios = []; }
   try { _analisis = await listarAnalisis(); } catch (_) { _analisis = []; }
   try { _admins = await listarAdmins(); } catch (_) { _admins = []; }
+  if (_rol === 'admin') { try { _analistas = await listarAnalistas(); } catch (_) { _analistas = []; } }
   pintarTab();
 }
 function rolAdmin(u) {
@@ -130,6 +154,7 @@ function pintarTab() {
   if (_tab === 'resumen') { m.innerHTML = vistaResumen(); enlazarResumen(); }
   else if (_tab === 'usuarios') { m.innerHTML = vistaUsuarios(); enlazarUsuarios(); }
   else if (_tab === 'analisis') { m.innerHTML = vistaAnalisis(); enlazarAnalisis(); }
+  else if (_tab === 'analistas') { m.innerHTML = vistaAnalistas(); enlazarAnalistas(); }
 }
 
 /* ================= OVERVIEW ================= */
@@ -170,29 +195,29 @@ function vistaResumen() {
       ${spark(color, fill)}</div>`;
 
   return `
-    <div class="ov-head"><h1>Overview</h1><p>Live snapshot of the platform.</p></div>
+    <div class="ov-head"><h1>${ML('Overview','Resumen')}</h1><p>${ML('Live snapshot of the platform.','Vista en vivo de la plataforma.')}</p></div>
     <div class="ov-kpis">
-      ${kpi('blue', ICp, 'Registered users', '', total, 'Total registered', '#38a9f0', true)}
-      ${kpi('blue', ICu, 'Active', '<span class="ov-dot on"></span>', act, 'Paying members', '#38a9f0', false)}
-      ${kpi('muted', ICx, 'Inactive', '<span class="ov-dot off"></span>', inactivos, 'Free / lapsed', '#7b8494', false)}
-      ${kpi('gold', ICd, 'Monthly revenue', '', '$' + mrr.toFixed(2), 'MRR estimate', '#e8b84b', true)}
+      ${kpi('blue', ICp, ML('Registered users','Usuarios registrados'), '', total, ML('Total registered','Total registrados'), '#38a9f0', true)}
+      ${kpi('blue', ICu, ML('Active','Activos'), '<span class="ov-dot on"></span>', act, ML('Paying members','Miembros de pago'), '#38a9f0', false)}
+      ${kpi('muted', ICx, ML('Inactive','Inactivos'), '<span class="ov-dot off"></span>', inactivos, ML('Free / lapsed','Gratis / vencidos'), '#7b8494', false)}
+      ${kpi('gold', ICd, ML('Monthly revenue','Ingresos mensuales'), '', '$' + mrr.toFixed(2), ML('MRR estimate','MRR estimado'), '#e8b84b', true)}
     </div>
     <div class="ov-grid2">
-      <div class="ov-card"><div class="ov-card-t">Active by plan</div>
+      <div class="ov-card"><div class="ov-card-t">${ML('Active by plan','Activos por plan')}</div>
         <div class="ov-plan-wrap">
-          <div class="ov-donut"><svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="58" fill="none" stroke="#1b2433" stroke-width="15"/>${segs}</svg><div class="ov-donut-mid"><div class="c">${act}</div><div class="t">Total</div></div></div>
+          <div class="ov-donut"><svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="58" fill="none" stroke="#1b2433" stroke-width="15"/>${segs}</svg><div class="ov-donut-mid"><div class="c">${act}</div><div class="t">${ML('Total','Total')}</div></div></div>
           <div class="ov-plans">${barras}</div>
         </div></div>
-      <div class="ov-card"><div class="ov-card-t heart">Health</div>
-        <div class="ov-mini"><span>Blocked accounts</span><b>${bloqueados}</b></div>
-        <div class="ov-mini"><span>Published signals</span><b>${_analisis.length}</b></div>
-        <div class="ov-mini hl"><span>Conversion</span><b>${conv}%</b></div>
+      <div class="ov-card"><div class="ov-card-t heart">${ML('Health','Salud')}</div>
+        <div class="ov-mini"><span>${ML('Blocked accounts','Cuentas bloqueadas')}</span><b>${bloqueados}</b></div>
+        <div class="ov-mini"><span>${ML('Published signals','Señales publicadas')}</span><b>${_analisis.length}</b></div>
+        <div class="ov-mini hl"><span>${ML('Conversion','Conversión')}</span><b>${conv}%</b></div>
       </div>
     </div>
-    <div class="ov-band"><div class="ov-band-t">Admin only</div>
+    <div class="ov-band"><div class="ov-band-t">${ML('Admin only','Solo admin')}</div>
       <div class="ov-band-grid">
-        <button class="ov-adm" data-goto="usuarios"><span class="ov-adm-ic">${ICu}</span><span class="ov-adm-tx"><b>Manage users</b><em>Users, plans and blocks.</em></span><span class="ov-adm-go">›</span></button>
-        <button class="ov-adm" data-goto="analisis"><span class="ov-adm-ic gear">${ICp}</span><span class="ov-adm-tx"><b>Analysis</b><em>Published analysis &amp; signals.</em></span><span class="ov-adm-go">›</span></button>
+        <button class="ov-adm" data-goto="usuarios"><span class="ov-adm-ic">${ICu}</span><span class="ov-adm-tx"><b>${ML('Manage users','Gestionar usuarios')}</b><em>${ML('Users, plans and blocks.','Usuarios, planes y bloqueos.')}</em></span><span class="ov-adm-go">›</span></button>
+        <button class="ov-adm" data-goto="analisis"><span class="ov-adm-ic gear">${ICp}</span><span class="ov-adm-tx"><b>${ML('Analysis','Análisis')}</b><em>${ML('Published analysis &amp; signals.','Análisis y señales publicados.')}</em></span><span class="ov-adm-go">›</span></button>
       </div>
     </div>`;
 }
@@ -209,27 +234,27 @@ function vistaUsuarios() {
     const estado = rol
       ? `<span class="pill admin">${esc(rol)}</span>`
       : (u.bloqueado
-        ? `<span class="pill red">Blocked</span>`
-        : (sub.activo ? `<span class="pill on">${(planPorId(sub.plan)?.nombre || 'Active')}</span>` : `<span class="pill">Inactive</span>`));
+        ? `<span class="pill red">${ML('Blocked','Bloqueado')}</span>`
+        : (sub.activo ? `<span class="pill on">${(planPorId(sub.plan)?.nombre || ML('Active','Activo'))}</span>` : `<span class="pill">${ML('Inactive','Inactivo')}</span>`));
     const vence = sub.vence ? new Date(sub.vence).toLocaleDateString() : '—';
     return `<tr class="${u.bloqueado ? 'blocked' : ''}">
-      <td data-l="User"><div class="u-nom">${esc(u.nombre || (u.email || '').split('@')[0] || '—')}</div><div class="u-mail">${esc(correoCorto(u.email || ''))}</div></td>
-      <td data-l="Status">${estado}</td>
-      <td data-l="Expires">${vence}</td>
-      <td data-l="Plan"><select data-plan="${u.uid}" class="u-select">
-        <option value="">Inactive</option>
+      <td data-l="${ML('User','Usuario')}"><div class="u-nom">${esc(u.nombre || (u.email || '').split('@')[0] || '—')}</div><div class="u-mail">${esc(correoCorto(u.email || ''))}</div></td>
+      <td data-l="${ML('Status','Estado')}">${estado}</td>
+      <td data-l="${ML('Expires','Vence')}">${vence}</td>
+      <td data-l="${ML('Plan','Plan')}"><select data-plan="${u.uid}" class="u-select">
+        <option value="">${ML('Inactive','Inactivo')}</option>
         ${PLANES.map(p => `<option value="${p.id}" ${sub.activo && sub.plan === p.id ? 'selected' : ''}>${p.nombre}</option>`).join('')}
       </select></td>
-      <td data-l="Action"><button class="u-bloq ${u.bloqueado ? 'activo' : ''}" data-bloq="${u.uid}">${u.bloqueado ? 'Unblock' : 'Block'}</button></td>
+      <td data-l="${ML('Action','Acción')}"><button class="u-bloq ${u.bloqueado ? 'activo' : ''}" data-bloq="${u.uid}">${u.bloqueado ? ML('Unblock','Desbloquear') : ML('Block','Bloquear')}</button></td>
     </tr>`;
   }).join('');
   const act = _usuarios.filter(esActivoReciente).length;
   return `
-    <div class="mesa-head"><h1>Users</h1><p>${_usuarios.length} registered · ${act} active · ${_usuarios.length - act} inactive.</p></div>
+    <div class="mesa-head"><h1>${ML('Users','Usuarios')}</h1><p>${_usuarios.length} ${ML('registered','registrados')} · ${act} ${ML('active','activos')} · ${_usuarios.length - act} ${ML('inactive','inactivos')}.</p></div>
     <div class="mesa-card mesa-card-tabla">
       <table class="mesa-tabla">
-        <thead><tr><th>User</th><th>Status</th><th>Expires</th><th>Plan</th><th>Action</th></tr></thead>
-        <tbody>${filas || '<tr><td colspan="5" class="mesa-vacio">No users yet.</td></tr>'}</tbody>
+        <thead><tr><th>${ML('User','Usuario')}</th><th>${ML('Status','Estado')}</th><th>${ML('Expires','Vence')}</th><th>${ML('Plan','Plan')}</th><th>${ML('Action','Acción')}</th></tr></thead>
+        <tbody>${filas || `<tr><td colspan="5" class="mesa-vacio">${ML('No users yet.','Aún no hay usuarios.')}</td></tr>`}</tbody>
       </table>
     </div>`;
 }
@@ -249,9 +274,64 @@ async function toggleBloqueo(uid, btn) {
   try { await fijarBloqueo(uid, !u.bloqueado); u.bloqueado = !u.bloqueado; pintarTab(); } catch (_) { if (btn) btn.disabled = false; }
 }
 
+/* ================= ANALYSTS (contratación) ================= */
+function vistaAnalistas() {
+  return `
+    <div class="mesa-head"><h1>${ML('Staff','Personal')}</h1><p>${ML('Hire analysts and assign each one a sport.','Contrata analistas y asigna a cada uno un deporte.')} ${ML('They only access the Analysis Hub for their sport.','Solo acceden al Analysis Hub de su deporte.')}</p></div>
+    <div class="mesa-card an-mng">
+      <div class="mc-t">${IC.pen} ${ML('Analysts','Analistas')}</div>
+      <p class="an-mng-sub">${ML('An analyst can only open the Analysis Hub and publish signals for their assigned sport. You can block them anytime.','Un analista solo puede abrir el Analysis Hub y publicar señales de su deporte asignado. Puedes bloquearlo cuando quieras.')}</p>
+      <div class="an-mng-add">
+        <select id="an-add-user" class="u-select">
+          <option value="">${ML('Select a registered user…','Selecciona un usuario registrado…')}</option>
+          ${_usuarios.filter(u => !_analistas.some(a => a.uid === u.uid) && !rolAdmin(u)).map(u => `<option value="${esc(u.uid)}" data-mail="${esc(u.email || '')}">${esc(u.email || u.nombre || u.uid)}</option>`).join('')}
+        </select>
+        <select id="an-add-dep" class="u-select">${Object.keys(DEPORTES).map(k => `<option value="${k}">${esc(depNombre(k))}</option>`).join('')}</select>
+        <button class="mesa-btn oro" id="an-add-btn">${ML('Add analyst','Agregar analista')}</button>
+      </div>
+      <div class="an-mng-list">
+        ${_analistas.length ? _analistas.map(a => {
+          const uu = _usuarios.find(x => x.uid === a.uid);
+          const mail = a.email || (uu && uu.email) || a.uid;
+          return `<div class="an-mng-row ${a.activo === false ? 'off' : ''}">
+            <div class="an-mng-who"><b>${esc(mail)}</b><span class="an-mng-dep">${esc(depNombre(a.deporte))}</span></div>
+            <select data-an-dep="${esc(a.uid)}" class="u-select an-mng-sel">${Object.keys(DEPORTES).map(k => `<option value="${k}" ${a.deporte === k ? 'selected' : ''}>${esc(depNombre(k))}</option>`).join('')}</select>
+            <button class="an-mng-toggle ${a.activo === false ? '' : 'on'}" data-an-toggle="${esc(a.uid)}">${a.activo === false ? ML('Blocked','Bloqueado') : ML('Active','Activo')}</button>
+            <button class="an-mng-del" data-an-del="${esc(a.uid)}">${ML('Remove','Quitar')}</button>
+          </div>`;
+        }).join('') : `<div class="an-mng-empty">${ML('No analysts yet. Add one from your registered users.','Aún no hay analistas. Agrega uno desde tus usuarios registrados.')}</div>`}
+      </div>
+    </div>`;
+}
+function enlazarAnalistas() {
+  // ---- Analistas ----
+  const addBtn = _cont.querySelector('#an-add-btn');
+  if (addBtn) addBtn.onclick = async () => {
+    const sel = _cont.querySelector('#an-add-user'), dep = _cont.querySelector('#an-add-dep');
+    const uid = sel && sel.value; if (!uid) { sel && sel.focus(); return; }
+    const opt = sel.options[sel.selectedIndex], mail = (opt && opt.dataset.mail) || '';
+    addBtn.disabled = true;
+    try { await guardarAnalista(uid, { email: mail, deporte: dep.value, activo: true }); _analistas = await listarAnalistas(); pintarTab(); }
+    catch (_) { addBtn.disabled = false; }
+  };
+  _cont.querySelectorAll('[data-an-toggle]').forEach(b => b.onclick = async () => {
+    const uid = b.dataset.anToggle, a = _analistas.find(x => x.uid === uid); if (!a) return;
+    b.disabled = true;
+    try { await fijarAnalista(uid, { activo: a.activo === false }); _analistas = await listarAnalistas(); pintarTab(); } catch (_) { b.disabled = false; }
+  });
+  _cont.querySelectorAll('[data-an-dep]').forEach(sel => sel.onchange = async () => {
+    const uid = sel.dataset.anDep;
+    try { await fijarAnalista(uid, { deporte: sel.value }); const a = _analistas.find(x => x.uid === uid); if (a) a.deporte = sel.value; } catch (_) {}
+  });
+  _cont.querySelectorAll('[data-an-del]').forEach(b => b.onclick = async () => {
+    const uid = b.dataset.anDel; b.disabled = true;
+    try { await eliminarAnalista(uid); _analistas = await listarAnalistas(); pintarTab(); } catch (_) { b.disabled = false; }
+  });
+}
+
 /* ================= ANALYSIS ================= */
 function vistaAnalisis() {
-  const ES = idiomaActual() === 'es';
+  const ES = _mesaLang === 'es';
   const L = (en, es) => ES ? es : en;
   const ligaObj = LIGAS.find(l => l.id === _ligaSel) || {};
   const ligaNm = ligaObj.corto || ligaObj.nombre || '';
@@ -262,7 +342,8 @@ function vistaAnalisis() {
   const Iarrow = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
   const Iempty = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 14h8"/></svg>`;
 
-  const ligas = LIGAS.map(l => `<button class="ah2-lg ${_ligaSel === l.id ? 'on' : ''}" data-liga="${l.id}">
+  const ligasVis = _rol === 'analista' ? LIGAS.filter(l => ligasDeporte(_deporteAnalista).includes(l.id)) : LIGAS;
+  const ligas = ligasVis.map(l => `<button class="ah2-lg ${_ligaSel === l.id ? 'on' : ''}" data-liga="${l.id}">
     <img src="${l.logo}" alt="" onerror="this.style.display='none'"><span>${esc(l.corto || l.nombre)}</span></button>`).join('');
 
   const confDe = (p) => {
@@ -388,7 +469,7 @@ async function eliminarAnalisis(matchId, btn) {
 async function abrirModalSenal(matchId) {
   const p = _partidos.find(x => x.id === matchId); if (!p) return;
   const ya = _analisis.find(a => a.matchId === matchId);
-  const ES = idiomaActual() === 'es';
+  const ES = _mesaLang === 'es';
   const L = (en, es) => ES ? es : en;
 
   const ciudadNombre = (nom) => {
@@ -569,6 +650,7 @@ async function abrirModalSenal(matchId) {
       ajustar: bg.querySelector('#anm-adj').checked,
       prob: probLocal, favorito: favAb, confianza: conf,
       mercado: bg.querySelector('#anm-mkt').value, estado,
+      deporte: deporteDeLiga(p.ligaId),
     };
     const btn = bg.querySelector(estado === 'borrador' ? '#anm-draft' : '#anm-guardar');
     const txtBtn = btn.textContent; btn.disabled = true; btn.textContent = '…';
@@ -595,5 +677,7 @@ const IC = {
   arrow: svg('<path d="M5 12h14M13 6l6 6-6 6"/>'),
   check: svg('<path d="M20 6L9 17l-5-5"/>'),
   close: svg('<path d="M6 6l12 12M18 6L6 18"/>'),
+  contrato: svg('<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/>'),
+  globe: svg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18"/>'),
 };
 function svg(inner) { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">${inner}</svg>`; }

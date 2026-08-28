@@ -94,3 +94,51 @@ export async function listarAnalisis() {
   q.forEach(d => out.push({ id: d.id, ...d.data() }));
   return out;
 }
+
+/* ============================================================
+   ANALISTAS CONTRATADOS (colección 'analistas')
+   Doc = { email, deporte:'beisbol'|'basket'|'hockey'|'futbol', activo:bool }
+   Reglas: solo el admin crea/edita/borra; el propio analista lee su ficha.
+   ============================================================ */
+
+/* Ficha del analista actual si está ACTIVO; null si no es analista o está bloqueado. */
+export async function esAnalista() {
+  if (!await _asegurarListo()) return null;
+  const u = usuarioActual(); if (!u) return null;
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const snap = await S.getDoc(S.doc(db, 'analistas', u.uid));
+    if (!snap.exists()) return null;
+    const d = snap.data();
+    return d.activo === false ? null : { uid: u.uid, ...d };
+  } catch (_) { return null; }
+}
+
+/* Lista todos los analistas (solo admin por reglas). */
+export async function listarAnalistas() {
+  if (!await _asegurarListo()) return [];
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const q = await S.getDocs(S.collection(db, 'analistas'));
+    const out = []; q.forEach(d => out.push({ uid: d.id, ...d.data() }));
+    return out;
+  } catch (_) { return []; }
+}
+
+/* Crea o actualiza un analista (admin). */
+export async function guardarAnalista(uid, datos) {
+  const S = _obtenerStore(), db = _obtenerDB();
+  await S.setDoc(S.doc(db, 'analistas', uid), { ...datos }, { merge: true });
+}
+
+/* Activa/bloquea o cambia deporte (admin). */
+export async function fijarAnalista(uid, patch) {
+  const S = _obtenerStore(), db = _obtenerDB();
+  await S.setDoc(S.doc(db, 'analistas', uid), { ...patch }, { merge: true });
+}
+
+/* Elimina un analista (admin). */
+export async function eliminarAnalista(uid) {
+  const S = _obtenerStore(), db = _obtenerDB();
+  await S.deleteDoc(S.doc(db, 'analistas', uid));
+}
