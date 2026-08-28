@@ -13,6 +13,7 @@ import { idiomaActual } from '../ui/idioma.js';
 let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = [];
 let _ligaSel = null, _partidos = [], _cargandoPart = false;
 let _rol = 'admin', _deporteAnalista = null, _analistas = [];
+let _miFirma = null, _miNombre = null;
 let _mesaLang = 'es';
 let _uBusqueda = '', _uFiltro = 'todos', _uPagina = 1;
 let _anBusqueda = '', _anFiltro = 'todos';
@@ -43,7 +44,7 @@ export async function abrirMesa() {
     return;
   }
   if (admin) { _rol = 'admin'; _deporteAnalista = null; }
-  else { _rol = 'analista'; _deporteAnalista = analista.deporte || null; _tab = 'analisis'; }
+  else { _rol = 'analista'; _deporteAnalista = analista.deporte || null; _miFirma = analista.firma || analista.alias || null; _miNombre = analista.nombre || null; _tab = 'analisis'; }
   render();
   cargarDatos();
 }
@@ -498,6 +499,10 @@ function vistaAnalistas() {
     const uu = _usuarios.find(x => x.uid === a.uid); const mail = a.email || (uu && uu.email) || a.uid;
     return `<div class="an-mng-row ${a.activo === false ? 'off' : ''}">
       <div class="an-mng-who"><b>${esc(mail)}</b><span class="an-mng-dep">${esc(depNombre(a.deporte))}</span></div>
+      <div class="an-mng-id">
+        <input class="an-mng-inp" data-an-nombre="${esc(a.uid)}" placeholder="${ML('Full name', 'Nombre')}" value="${esc(a.nombre || '')}" maxlength="40">
+        <input class="an-mng-inp firma" data-an-firma="${esc(a.uid)}" placeholder="${ML('Signature / alias', 'Firma / alias')}" value="${esc(a.firma || a.alias || '')}" maxlength="24">
+      </div>
       <select data-an-dep="${esc(a.uid)}" class="u-select an-mng-sel">${Object.keys(DEPORTES).map(k => `<option value="${k}" ${a.deporte === k ? 'selected' : ''}>${esc(depNombre(k))}</option>`).join('')}</select>
       <button class="an-mng-toggle ${a.activo === false ? '' : 'on'}" data-an-toggle="${esc(a.uid)}">${a.activo === false ? ML('Blocked', 'Bloqueado') : ML('Active', 'Activo')}</button>
       <button class="an-mng-del" data-an-del="${esc(a.uid)}">${ML('Remove', 'Quitar')}</button>
@@ -544,6 +549,23 @@ function enlazarAnalistas() {
   _cont.querySelectorAll('[data-an-dep]').forEach(sel => sel.onchange = async () => {
     const uid = sel.dataset.anDep;
     try { await fijarAnalista(uid, { deporte: sel.value }); const a = _analistas.find(x => x.uid === uid); if (a) a.deporte = sel.value; } catch (_) {}
+  });
+  _cont.querySelectorAll('[data-an-nombre]').forEach(inp => inp.onchange = async () => {
+    const uid = inp.dataset.anNombre, val = inp.value.trim().slice(0, 40);
+    try { await fijarAnalista(uid, { nombre: val }); const a = _analistas.find(x => x.uid === uid); if (a) a.nombre = val; } catch (_) {}
+  });
+  _cont.querySelectorAll('[data-an-firma]').forEach(inp => inp.onchange = async () => {
+    const uid = inp.dataset.anFirma, val = inp.value.trim().slice(0, 24);
+    // La firma es única: si otro analista ya la usa, se rechaza (queda atada a un solo uid).
+    const choca = val && _analistas.some(x => x.uid !== uid && String(x.firma || x.alias || '').toLowerCase() === val.toLowerCase());
+    if (choca) {
+      inp.classList.add('err');
+      const a0 = _analistas.find(x => x.uid === uid); inp.value = a0 ? (a0.firma || a0.alias || '') : '';
+      setTimeout(() => inp.classList.remove('err'), 1600);
+      alert(ML('That signature is already taken by another analyst.', 'Esa firma ya está en uso por otro analista.'));
+      return;
+    }
+    try { await fijarAnalista(uid, { firma: val }); const a = _analistas.find(x => x.uid === uid); if (a) a.firma = val; } catch (_) {}
   });
   _cont.querySelectorAll('[data-an-del]').forEach(b => b.onclick = async () => {
     const uid = b.dataset.anDel, a = _analistas.find(x => x.uid === uid), mail = (a && a.email) || uid;
@@ -891,6 +913,8 @@ async function abrirModalSenal(matchId) {
       prob: probLocal, favorito: favAb, confianza: conf,
       mercado: bg.querySelector('#anm-mkt').value, estado,
       deporte: deporteDeLiga(p.ligaId),
+      firma: _miFirma || null,
+      autor: _miNombre || null,
     };
     const btn = bg.querySelector(estado === 'borrador' ? '#anm-draft' : '#anm-guardar');
     const txtBtn = btn.textContent; btn.disabled = true; btn.textContent = '…';

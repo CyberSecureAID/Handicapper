@@ -62,7 +62,8 @@ export async function guardarAnalisis(matchId, analisis) {
   await S.setDoc(S.doc(db, 'analisis', id), {
     ...analisis,
     matchId,
-    autor: u?.nombre || u?.email || 'Analyst',
+    autor: analisis.autor || u?.nombre || u?.email || 'Analyst',
+    firma: analisis.firma || null,
     autorUid: u?.uid || null,
     actualizado: S.serverTimestamp(),
   });
