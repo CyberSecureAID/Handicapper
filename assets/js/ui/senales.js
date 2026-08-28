@@ -6,7 +6,7 @@
    todos los días (solo cuando hay oportunidad).
    Bilingüe (inglés por defecto). Responsivo.
    ============================================================ */
-import { listarAnalisis, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores } from '../mesa/mesa-datos.js';
+import { listarAnalisis, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos } from '../mesa/mesa-datos.js';
 import { usuarioActual } from '../auth/auth.js';
 import { planPorId } from '../datos/planes.js';
 import { estiloAttrs } from './estilo-senal.js';
@@ -72,7 +72,16 @@ function inyectarCSS() {
   .sn-c-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden;margin-bottom:12px}
   .sn-c-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg, color-mix(in srgb, var(--acc) 80%, #000 8%), var(--acc))}
   .sn-c-txt{font-size:13px;color:#c3ccd6;line-height:1.55;margin:0 0 12px;white-space:pre-wrap}
-  .sn-c-foot{display:flex;align-items:center;justify-content:space-between;padding-top:11px;border-top:1px solid rgba(255,255,255,.06)}
+  .sn-c-vote{display:inline-flex;align-items:center;gap:8px;margin-left:auto}
+  .sn-v{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 10px;color:var(--tx2);font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:12.5px;cursor:pointer;transition:border-color .14s,color .14s,background .14s}
+  .sn-v svg{width:15px;height:15px}
+  .sn-v-n{color:#e9eff6;font-weight:800;min-width:8px;text-align:left}
+  .sn-v:hover{border-color:rgba(255,255,255,.22);color:#cdd7e2}
+  .sn-v.like.on{color:#2fd07f;border-color:rgba(47,208,127,.5);background:rgba(47,208,127,.1)}
+  .sn-v.like.on .sn-v-n{color:#2fd07f}
+  .sn-v.dis.on{color:#f0525a;border-color:rgba(240,82,90,.5);background:rgba(240,82,90,.1)}
+  .sn-v.dis.on .sn-v-n{color:#f0525a}
+  .sn-c-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:11px;border-top:1px solid rgba(255,255,255,.06)}
   .sn-c-market{font-size:11.5px;color:var(--tx2);font-weight:600}
   .sn-empty,.sn-lock{display:flex;flex-direction:column;align-items:center;text-align:center;padding:56px 24px;color:var(--tx2)}
   .sn-empty svg,.sn-lock svg{width:44px;height:44px;color:#3a4656;margin-bottom:14px}
@@ -129,13 +138,21 @@ function tarjeta(a, ctx = {}) {
       ${btn}
     </div>` : '';
   const emblema = est.emblemaSVG ? `<span class="sn-c-emblema">${est.emblemaSVG}</span>` : '';
+  const sid = a.id || a.matchId || '';
+  const miV = (ctx.votos && ctx.votos[sid]) || 0;
+  const IUp = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 22V10M2 12v8a2 2 0 002 2h13.4a2 2 0 002-1.6l1.4-7A2 2 0 0018.8 11H14V6a2.5 2.5 0 00-2.5-2.5c-.6 0-1.1.4-1.3 1L7 10"/></svg>`;
+  const IDown = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2v12M22 12V4a2 2 0 00-2-2H6.6a2 2 0 00-2 1.6l-1.4 7A2 2 0 005.2 13H10v5a2.5 2.5 0 002.5 2.5c.6 0 1.1-.4 1.3-1L17 14"/></svg>`;
+  const votos = sid ? `<div class="sn-c-vote" data-sid="${esc(sid)}">
+      <button class="sn-v like ${miV === 1 ? 'on' : ''}" data-v="1" title="${L('Like', 'Me gusta')}">${IUp}<b class="sn-v-n" data-likes>·</b></button>
+      <button class="sn-v dis ${miV === -1 ? 'on' : ''}" data-v="-1" title="${L('Dislike', 'No me gusta')}">${IDown}<b class="sn-v-n" data-dis>·</b></button>
+    </div>` : '';
   return `<div class="sn-card ${est.cls}" style="${est.varCss}">
     <div class="sn-c-top"><div class="sn-c-match">${esc(a.equipos || a.matchId || '')}</div><span class="sn-c-conf ${conf}">${esc(confTx(conf))}</span></div>
     ${by}
     <div class="sn-c-pick"><span class="sn-c-pick-lbl">${L('Pick', 'Pronóstico')}</span><span class="sn-c-team">${pick}</span>${prob != null ? `<span class="sn-c-prob">${prob}%</span>` : ''}</div>
     ${prob != null ? `<div class="sn-c-bar"><i style="width:${prob}%"></i></div>` : ''}
     ${a.texto ? `<p class="sn-c-txt">${esc(a.texto)}</p>` : ''}
-    <div class="sn-c-foot"><span class="sn-c-market">${esc(mk)}</span></div>
+    <div class="sn-c-foot"><span class="sn-c-market">${esc(mk)}</span>${votos}</div>
   </div>`;
 }
 
@@ -187,7 +204,9 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
   const me = (usuarioActual() && usuarioActual().uid) || null;
   let sigo = new Set();
   try { sigo = new Set(await misSeguidos()); } catch (_) {}
-  const ctx = { premium: esPremium, me, sigo };
+  let votos = {};
+  try { votos = await misVotos(); } catch (_) {}
+  const ctx = { premium: esPremium, me, sigo, votos };
 
   // Notificación: señales de analistas que sigo, más nuevas que mi última visita
   const VISTO = 'sn_visto_' + (me || 'anon');
@@ -234,5 +253,34 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
       });
     } catch (_) {}
     btn.disabled = false;
+  });
+
+  // Fase 7 — hidratar conteos de like/dislike por señal y cablear el toggle
+  const pintarVotos = async (sid) => {
+    let c = { likes: 0, dislikes: 0 };
+    try { c = await contarVotos(sid); } catch (_) {}
+    const box = cont.querySelector(`.sn-c-vote[data-sid="${CSS.escape(sid)}"]`);
+    if (!box) return;
+    const l = box.querySelector('[data-likes]'), d = box.querySelector('[data-dis]');
+    if (l) l.textContent = c.likes.toLocaleString();
+    if (d) d.textContent = c.dislikes.toLocaleString();
+  };
+  const sids = [...new Set(lista.map(a => a.id || a.matchId).filter(Boolean))];
+  sids.forEach(sid => pintarVotos(sid));
+
+  cont.querySelectorAll('.sn-c-vote').forEach(box => {
+    const sid = box.dataset.sid;
+    box.querySelectorAll('[data-v]').forEach(b => b.onclick = async () => {
+      const val = Number(b.dataset.v);
+      const actual = ctx.votos[sid] || 0;
+      const nuevo = (actual === val) ? 0 : val;      // volver a pulsar quita el voto
+      box.querySelectorAll('[data-v]').forEach(x => x.classList.remove('on'));
+      if (nuevo !== 0) b.classList.add('on');
+      ctx.votos[sid] = nuevo;
+      try {
+        if (nuevo === 0) await quitarVoto(sid); else await votarSenal(sid, nuevo);
+      } catch (_) {}
+      pintarVotos(sid);
+    });
   });
 }
