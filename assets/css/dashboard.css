@@ -244,3 +244,22 @@
 .hd-gauge-chip-pct { flex:0 0 auto; display:flex; align-items:center; justify-content:center; padding:0 20px;
   font-family:"Chakra Petch",sans-serif; font-weight:800; font-size:36px; color:var(--fav); }
 @media (max-width:520px){ .hd-gauge-chip-pct { font-size:30px; padding:0 16px; } .hd-gauge-chip-eq { font-size:18px; } }
+
+/* ===== Menú de secciones en móvil (detalle) — junto a Compartir ===== */
+.hd-menu { position: relative; display: none; }
+.hd-menu-btn { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 11px; border-radius: 9px;
+  border: 1px solid var(--linea); background: rgba(255,255,255,.05); color: #e7edf3; font-family: var(--body,inherit);
+  font-size: 11.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; }
+.hd-menu-btn svg { width: 15px; height: 15px; flex: 0 0 auto; }
+.hd-menu-btn span { max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hd-menu-pop { position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; min-width: 190px;
+  background: #0e141b; border: 1px solid var(--linea); border-radius: 12px; padding: 6px; box-shadow: 0 22px 54px rgba(0,0,0,.55); display: none; }
+.hd-menu-pop.open { display: block; }
+.hd-menu-item { display: block; width: 100%; text-align: left; background: none; border: 0; color: #c3ccd6;
+  font-size: 13.5px; font-weight: 600; padding: 11px 12px; border-radius: 8px; cursor: pointer; }
+.hd-menu-item:hover { background: rgba(255,255,255,.06); color: #fff; }
+.hd-menu-item.on { background: rgba(232,184,75,.14); color: var(--oro); }
+@media (max-width: 700px) {
+  .hd-tabs { display: none !important; }
+  .hd-menu { display: inline-flex; }
+}
