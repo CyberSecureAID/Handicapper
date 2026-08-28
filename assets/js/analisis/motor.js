@@ -20,6 +20,8 @@
      { local, empate, visita, confianza, sinDatos, factores:{en,es} }
    ============================================================ */
 
+import * as N from './nucleo.js';
+
 /* Ventaja de localía por deporte, ya en LOG-ODDS (ln(p/(1-p))).
    mlb .54, nba .60, nfl .57, nhl .55, fútbol ~.50 (el empate se separa aparte). */
 const HFA_LOGIT = {
@@ -204,6 +206,24 @@ export function analizar(match) {
 
   let pLocal = clamp(sig(L), W.clampLo, W.clampHi);
 
+  // 3g) NÚCLEO — Monte Carlo: propaga la incertidumbre del modelo.
+  // Menos señales reales => mayor incertidumbre (sd) del log-odds. Devuelve la
+  // probabilidad como MEDIA de miles de escenarios + un intervalo de confianza
+  // real, y templa extremos cuando el intervalo sale muy ancho. Reproducible por
+  // partido. Si algo fallara, se conserva el pLocal analítico ya calculado.
+  let icAncho = null, icPct = null;
+  try {
+    const nSen = factoresUsados.length;
+    const sd = N.clamp(0.85 - 0.11 * nSen - (muestra >= 20 ? 0.18 : 0), 0.20, 0.85);
+    const seed = (match.local.abrev || match.local.nombre || '') + '|' + (match.visita.abrev || match.visita.nombre || '') + '|' + ligaId;
+    const mc = N.montecarlo(seed, 4000, (r) => N.clamp(N.sig(L + N.gauss(r) * sd), W.clampLo, W.clampHi));
+    pLocal = mc.media;
+    icAncho = mc.ic80[1] - mc.ic80[0];
+    if (icAncho > 0.28) pLocal = N.calibrar(pLocal, 0.5, 0.82);   // mucha incertidumbre -> más cauto
+    pLocal = N.clamp(pLocal, W.clampLo, W.clampHi);
+    icPct = [Math.round(mc.ic80[0] * 100), Math.round(mc.ic80[1] * 100)];
+  } catch (e) { /* fallback: pLocal analítico */ }
+
   // Inclinación mínima: la página debe DECIDIR. Nunca 50-50; si quedó muy
   // pegado al centro, se separa un poco manteniendo la dirección (o la del
   // desparejador si estaba exactamente en 0.5).
@@ -222,6 +242,13 @@ export function analizar(match) {
   else if (muestra >= 3 || factoresUsados.includes('posicion')) confianza = 'baja';
   else confianza = 'muy baja';
 
+  // NÚCLEO — confianza a partir del ancho del intervalo (refleja muestra + señales).
+  try {
+    const nEff = (muestra >= 20 ? 60 : muestra * 2) + factoresUsados.length * 6;
+    const cNuc = N.confianza({ n: nEff, anchoIC: icAncho });
+    if (cNuc) confianza = cNuc;
+  } catch (e) {}
+
   // No aplanamos hacia 50/50: el usuario quiere números decididos. Solo el
   // recorte de seguridad de los límites, sin acercar al centro.
   pLocal = clamp(pLocal, W.clampLo, W.clampHi);
@@ -238,6 +265,8 @@ export function analizar(match) {
   }
   out.confianza = confianza;
   out.sinDatos = (muestra === 0 && nSenales <= 1);
+  out.intervalo = icPct ? { lo: Math.min(icPct[0], icPct[1]), hi: Math.max(icPct[0], icPct[1]) } : null;
+  out.metodo = icPct ? 'nucleo-montecarlo' : 'analitico';
   out.factores = explicar(match, { pLocal, muestra, confianza, futbol, eraEdge, lesEdge, eL, eV, iL, iV, factoresUsados });
   return out;
 }
