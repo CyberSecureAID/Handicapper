@@ -198,6 +198,38 @@ export function detalle(p, opciones = {}) {
     return `<div class="hd-hd-team ${lado}">${lado === 'l' ? logo + txt : txt + logo}</div>`;
   }
 
+  /* Posición legible por deporte (evita la letra suelta M/F/D/G) y etiquetas
+     de stats limpias. Así la tarjeta de destacado se ve bien en TODOS los
+     deportes, no solo béisbol. No toca las fotos. */
+  const ROL_MAP = {
+    soccer: { F: 'Forward|Delantero', ST: 'Striker|Delantero', CF: 'Forward|Delantero', S: 'Striker|Delantero',
+      W: 'Winger|Extremo', LW: 'Winger|Extremo', RW: 'Winger|Extremo', LM: 'Midfielder|Centrocampista', RM: 'Midfielder|Centrocampista',
+      M: 'Midfielder|Centrocampista', MF: 'Midfielder|Centrocampista', AM: 'Att. Mid|Mediapunta', CM: 'Midfielder|Centrocampista', DM: 'Def. Mid|Mediocentro',
+      D: 'Defender|Defensa', DF: 'Defender|Defensa', CB: 'Defender|Defensa', LB: 'Full-back|Lateral', RB: 'Full-back|Lateral', WB: 'Wing-back|Carrilero',
+      G: 'Goalkeeper|Portero', GK: 'Goalkeeper|Portero', A: 'Attacker|Atacante' },
+    nba: { PG: 'Point Guard|Base', SG: 'Shooting Guard|Escolta', G: 'Guard|Escolta', SF: 'Small Forward|Alero', PF: 'Power Forward|Ala-pívot', F: 'Forward|Alero', C: 'Center|Pívot' },
+    nhl: { C: 'Center|Centro', LW: 'Left Wing|Ala izq.', RW: 'Right Wing|Ala der.', W: 'Winger|Extremo', D: 'Defenseman|Defensa', G: 'Goalie|Portero' },
+    nfl: { QB: 'Quarterback|QB', RB: 'Running Back|RB', WR: 'Wide Receiver|WR', TE: 'Tight End|TE', K: 'Kicker|Pateador' },
+  };
+  const grupoLiga = (id) => (['epl', 'laliga', 'ucl', 'seriea', 'bundes', 'ligue1'].includes(id) ? 'soccer' : id);
+  function rolLegible(pos) {
+    const raw = String(pos || '').toUpperCase().trim(); if (!raw) return '';
+    const g = ROL_MAP[grupoLiga(p.ligaId)] || {};
+    if (g[raw]) { const [en, es] = g[raw].split('|'); return ES ? es : en; }
+    return raw.length >= 3 ? raw : '';   // desconocido: nunca una letra suelta
+  }
+  function limpiarEtiqueta(et) {
+    let s = (et && typeof et === 'object') ? (ES ? (et.es || et.en) : (et.en || et.es)) : et;
+    s = String(s || '').replace(/([a-z])([A-Z])/g, '$1 $2').trim();
+    const low = s.toLowerCase();
+    const map = { 'total shot': 'Shots', 'total shots': 'Shots', 'shots on target': ES ? 'A puerta' : 'On target',
+      'goals': ES ? 'Goles' : 'Goals', 'assists': ES ? 'Asist.' : 'Assists', 'matches': ES ? 'Partidos' : 'Matches',
+      'appearances': ES ? 'Partidos' : 'Matches', 'points': ES ? 'Puntos' : 'Points', 'rebounds': ES ? 'Rebotes' : 'Rebounds',
+      'saves': ES ? 'Paradas' : 'Saves', 'goals against': ES ? 'Goles contra' : 'Goals ag.' };
+    if (map[low] != null) return map[low];
+    return s.length > 12 ? s.slice(0, 12) : s;
+  }
+
   /* Tarjeta de abridor / jugador destacado con foto grande */
   function pitcher(lado) {
     const eq = p[lado];
@@ -228,13 +260,11 @@ export function detalle(p, opciones = {}) {
         const parts = String(j0.nombre).trim().split(/\s+/);
         fn = parts.length > 1 ? parts.slice(0, -1).join(' ') : '';
         ln = parts.length > 1 ? parts.slice(-1)[0] : j0.nombre;
-        if (j0.pos) meta.push(esc(j0.pos));
-        // Solo stats limpias y cortas (evita etiquetas largas que se montan).
-        const corta = (k) => { const s = String(k || '').replace(/([a-z])([A-Z])/g, '$1 $2'); return s.length > 10 ? s.slice(0, 10) : s; };
+        if (j0.pos) { const rl = rolLegible(j0.pos); if (rl) meta.push(rl); }
         const vistos = new Set();
         stats = lid.filter(x => x.nombre === j0.nombre && x.dato != null && String(x.dato).length <= 6)
-          .filter(x => { const k = x.etiqueta; if (vistos.has(k)) return false; vistos.add(k); return true; })
-          .slice(0, 4).map(x => ({ v: x.dato, k: corta(x.etiqueta) }));
+          .filter(x => { const k = JSON.stringify(x.etiqueta); if (vistos.has(k)) return false; vistos.add(k); return true; })
+          .slice(0, 3).map(x => ({ v: x.dato, k: limpiarEtiqueta(x.etiqueta) }));
       }
     }
     const foto = jug ? fotoConRoster(jug, lado) : null;
