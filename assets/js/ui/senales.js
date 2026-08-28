@@ -72,6 +72,10 @@ function inyectarCSS() {
   .sn-empty span,.sn-lock span{font-size:13.5px;max-width:440px;line-height:1.55}
   .sn-cta{display:inline-flex;align-items:center;gap:8px;margin-top:20px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:#241a06;background:linear-gradient(90deg,#e8c46a,#f6e2a6);border:0;border-radius:999px;padding:13px 26px;cursor:pointer;box-shadow:0 6px 20px rgba(199,154,60,.4)}
   .sn-cta:hover{filter:brightness(1.06)}
+  .sn-c-by{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-2px 0 10px}
+  .sn-c-firma{display:inline-flex;align-items:center;gap:6px;font-family:'Chakra Petch',sans-serif;font-weight:800;font-size:13.5px;color:#e8c46a;background:rgba(232,196,106,.1);border:1px solid rgba(232,196,106,.32);border-radius:999px;padding:4px 12px 4px 10px;letter-spacing:.01em}
+  .sn-c-firma svg{width:13px;height:13px}
+  .sn-c-name{font-size:11.5px;color:var(--tx3,#7a8593);font-weight:600}
   @media(max-width:560px){.sn-grid{grid-template-columns:1fr}}
   `;
   document.head.appendChild(st);
@@ -88,8 +92,12 @@ function tarjeta(a) {
   const prob = a.prob != null ? Math.max(1, Math.min(99, a.prob)) : null;
   const mk = (MERCADO[a.mercado] || MERCADO.ml)();
   const pick = a.favorito ? `${esc(a.favorito)} ${L('to win', 'gana')}` : esc(a.veredicto || '');
+  const firma = a.firma || a.autor || '';
+  const IPen = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>`;
+  const by = firma ? `<div class="sn-c-by"><span class="sn-c-firma">${IPen}${esc(firma)}</span>${a.autor && a.firma && a.autor !== a.firma ? `<span class="sn-c-name">${esc(a.autor)}</span>` : ''}</div>` : '';
   return `<div class="sn-card">
     <div class="sn-c-top"><div class="sn-c-match">${esc(a.equipos || a.matchId || '')}</div><span class="sn-c-conf ${conf}">${esc(confTx(conf))}</span></div>
+    ${by}
     <div class="sn-c-pick"><span class="sn-c-pick-lbl">${L('Pick', 'Pronóstico')}</span><span class="sn-c-team">${pick}</span>${prob != null ? `<span class="sn-c-prob">${prob}%</span>` : ''}</div>
     ${prob != null ? `<div class="sn-c-bar"><i style="width:${prob}%"></i></div>` : ''}
     ${a.texto ? `<p class="sn-c-txt">${esc(a.texto)}</p>` : ''}
