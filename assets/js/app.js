@@ -432,15 +432,16 @@ let _appArrancada = false;
 
 /* Decide la pantalla según sesión + acceso */
 let _esAdmin = false;
+let _esAnalista = false;
 
 async function onSesion(usuario, extra) {
   pintarCuenta(usuario);
   fijarSuscripcion(usuario?.suscripcion || null);
   if (extra && extra.bloqueado) { mostrarPantalla('landing'); avisarBloqueo(); return; }
-  if (!usuario) { _esAdmin = false; mostrarPantalla('landing'); return; }
+  if (!usuario) { _esAdmin = false; _esAnalista = false; mostrarPantalla('landing'); return; }
   // ¿Es administrador? (se comprueba en Firestore; la seguridad real está ahí)
-  _esAdmin = false;
-  try { const { esAdmin } = await import('./mesa/mesa-datos.js'); _esAdmin = await esAdmin(); } catch (_) {}
+  _esAdmin = false; _esAnalista = false;
+  try { const { esAdmin, esAnalista } = await import('./mesa/mesa-datos.js'); _esAdmin = await esAdmin(); if (!_esAdmin) { const a = await esAnalista(); _esAnalista = !!a; } } catch (_) {}
   pintarCuenta(usuario);   // repinta para mostrar la opción de panel si es admin
   if ((location.hash || '').toLowerCase() === '#mesa') { try { history.replaceState(null, '', location.pathname); } catch (_) {} }
   if (_esAdmin) marcarVistaPrevia('premium');   // el admin tiene acceso total cuando entre
@@ -524,8 +525,8 @@ function toggleCuentaMenu() {
   const menu = document.createElement('div');
   menu.id = 'cuenta-menu';
   menu.className = 'cuenta-menu abierto';
-  const botonPanel = _esAdmin
-    ? `<button id="cm-panel">${IC.grafico || ''} ${idiomaActual() === 'es' ? 'Panel administrativo' : 'Admin panel'}</button>` : '';
+  const botonPanel = (_esAdmin || _esAnalista)
+    ? `<button id="cm-panel">${IC.grafico || ''} ${_esAnalista && !_esAdmin ? (idiomaActual() === 'es' ? 'Panel de analista' : 'Analyst panel') : (idiomaActual() === 'es' ? 'Panel administrativo' : 'Admin panel')}</button>` : '';
   menu.innerHTML = `
     <div class="quien"><b>${esc(_sesion.nombre || '')}</b><span>${esc(_sesion.email || '')}</span></div>
     ${botonPanel}
