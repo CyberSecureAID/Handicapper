@@ -66,7 +66,13 @@ body.en-mesa { overflow: hidden; }
 .pill.on { background: rgba(232,184,75,.16); color: var(--m-oro); }
 .pill.red { background: rgba(255,80,100,.16); color: #ff8a9b; }
 .pill.admin { background: linear-gradient(180deg,#e8b84b,#c79426); color: #3a2800; }
-.u-select { background: #0e141b; color: #fff; border: 1px solid var(--m-linea); border-radius: 9px; padding: 7px 9px; font-size: 12.5px; }
+.u-select { appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  background-color: #0e141b;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2393a0ae' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; background-size: 12px;
+  color: #fff; border: 1px solid var(--m-linea); border-radius: 10px; padding: 9px 34px 9px 13px; font-size: 12.5px; font-family: inherit; cursor: pointer; transition: border-color .13s; }
+.u-select:hover { border-color: rgba(232,184,75,.35); }
+.u-select:focus { outline: none; border-color: rgba(232,184,75,.55); }
 .u-bloq { border: 1px solid var(--m-linea); background: none; color: var(--m-tinta2); border-radius: 9px; padding: 7px 14px; font-weight: 700; font-size: 12px; cursor: pointer; white-space: nowrap; }
 .u-bloq.activo { color: #ff8a9b; border-color: rgba(255,80,100,.4); }
 
@@ -270,7 +276,7 @@ body.en-mesa { overflow: hidden; }
 
 /* ===== Modal de Análisis (panel admin) — estilo "Análisis de partido" ===== */
 .anm2-bg { position: fixed; inset: 0; z-index: 300; background: rgba(3,6,11,.82); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 14px; overflow: auto; }
-.anm2 { width: 100%; max-width: 1040px; max-height: 94vh; overflow: auto; background: #0a0e15; border: 1px solid var(--m-linea); border-radius: 18px; padding: 16px 18px; margin: auto; }
+.anm2 { width: 100%; max-width: 1240px; max-height: 94vh; overflow: auto; background: #0a0e15; border: 1px solid var(--m-linea); border-radius: 18px; padding: 16px 20px; margin: auto; }
 .anm2 * { box-sizing: border-box; }
 .anm2-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .anm2-back { display: flex; align-items: center; gap: 12px; background: none; border: 0; color: #fff; cursor: pointer; font-family: 'Chakra Petch',sans-serif; font-weight: 700; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; }
@@ -296,7 +302,7 @@ body.en-mesa { overflow: hidden; }
 .anm2-vs { font-family: 'Chakra Petch',sans-serif; font-weight: 800; font-size: 26px; color: #fff; }
 .anm2-date { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: #9aa6b2; } .anm2-date svg { width: 15px; height: 15px; }
 
-.anm2-body { display: grid; grid-template-columns: 1.05fr 1fr; gap: 14px; }
+.anm2-body { display: grid; grid-template-columns: 1fr 1.05fr; gap: 14px; align-items: start; }
 .anm2-card { background: var(--m-tarjeta); border: 1px solid var(--m-linea); border-radius: 14px; padding: 13px 16px; margin-bottom: 11px; }
 .anm2-col > .anm2-card:last-child { margin-bottom: 0; }
 .anm2-card-t { font-family: 'Chakra Petch',sans-serif; font-size: 12.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #fff; }
@@ -322,10 +328,12 @@ body.en-mesa { overflow: hidden; }
 .anm2-bal.off { color: #ef9a5a; } .anm2-bal.off .anm2-bal-ic { background: rgba(232,120,60,.14); }
 .anm2-bal b { display: block; font-size: 13.5px; } .anm2-bal em { font-style: normal; font-size: 12px; color: #9aa6b2; }
 
-.anm2-info { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
-.anm2-info-c { display: flex; align-items: center; gap: 9px; border: 1px solid var(--m-linea); border-radius: 10px; padding: 10px; }
+.anm2-info { display: flex; flex-direction: column; gap: 8px; }
+.anm2-info-c { display: flex; align-items: center; gap: 11px; border: 1px solid var(--m-linea); border-radius: 10px; padding: 9px 12px; min-width: 0; }
 .anm2-info-c svg { width: 18px; height: 18px; color: #7cc7f7; flex: 0 0 auto; }
-.anm2-info-c span { display: block; font-size: 11px; color: #9aa6b2; } .anm2-info-c b { font-size: 13px; color: #fff; }
+.anm2-info-c > div { min-width: 0; }
+.anm2-info-c span { display: block; font-size: 10.5px; letter-spacing: .03em; text-transform: uppercase; color: #9aa6b2; }
+.anm2-info-c b { display: block; font-size: 13.5px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .anm2-lbl { display: block; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #b6c0cc; margin: 11px 0 7px; }
 .anm2-card > .anm2-lbl:first-of-type { margin-top: 4px; }
@@ -365,13 +373,13 @@ body.en-mesa { overflow: hidden; }
 
 @media (max-width: 900px) {
   .anm2-body { grid-template-columns: 1fr; }
-  .anm2-banner { grid-template-columns: 1fr; gap: 14px; text-align: center; }
-  .anm2-team, .anm2-team.r { justify-content: center; flex-direction: column; text-align: center; }
-  .anm2-team.r .anm2-team-tx { align-items: center; }
-  .anm2-info { grid-template-columns: 1fr 1fr; }
+  .anm2-banner { grid-template-columns: 1fr auto 1fr; gap: 8px; padding: 12px 10px; text-align: center; }
+  .anm2-team { justify-content: flex-start; flex-direction: column; align-items: center; text-align: center; gap: 7px; }
+  .anm2-team.r { flex-direction: column-reverse; }
+  .anm2-team-tx, .anm2-team.r .anm2-team-tx { align-items: center; }
   .anm2-foot { grid-template-columns: 1fr; }
   .anm2-foot-btns { flex-direction: column; } .anm2-foot-btns .anm2-btn { width: 100%; }
-  .anm2-logo { width: 66px; height: 66px; }
+  .anm2-logo { width: 48px; height: 48px; }
 }
 
 /* X de cerrar (arriba-derecha) del modal de análisis */
@@ -379,7 +387,7 @@ body.en-mesa { overflow: hidden; }
 .anm2-close2 { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--m-linea); background: var(--m-tarjeta); color: #cdd6e2; cursor: pointer; }
 .anm2-close2:hover { color: #fff; border-color: rgba(240,53,58,.5); background: rgba(240,53,58,.12); }
 .anm2-close2 svg { width: 20px; height: 20px; }
-@media (max-width: 900px) { .anm2 { padding: 12px 12px 14px; } .anm2-prev span, .anm2-prev { font-size: 12px; } .anm2-name { font-size: 18px; } .anm2-logo { width: 54px; height: 54px; } }
+@media (max-width: 900px) { .anm2 { padding: 12px 12px 14px; } .anm2-prev span, .anm2-prev { font-size: 12px; } }
 
 /* ===== Analysis Hub v2 — tablero premium ===== */
 .ah2 { --l:#38a9f0; --r:#f0353a; --g:#e8b84b; }
@@ -542,3 +550,63 @@ body.en-mesa { overflow: hidden; }
 .u-page.on { background: var(--m-oro); border-color: var(--m-oro); color: #201603; }
 .u-page:disabled { opacity: .4; cursor: default; }
 @media (max-width: 620px) { .u-toolbar { flex-direction: column; align-items: stretch; } .u-search { min-width: 0; } }
+
+/* ===== Personal: header con acción, buscador de candidatos, botones ===== */
+.mesa-head.an-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.mesa-btn.ghost { display: inline-flex; align-items: center; gap: 8px; background: none; border: 1px solid var(--m-linea); color: #c3ccd6; font-weight: 700; }
+.mesa-btn.ghost:hover { border-color: rgba(232,184,75,.45); color: #fff; }
+.mesa-btn.ghost svg { width: 16px; height: 16px; }
+.mesa-btn.sm { padding: 8px 15px; font-size: 12.5px; }
+.an-add-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 14px 0; }
+.an-add-tools .u-search { flex: 1; min-width: 220px; }
+.an-cands { display: flex; flex-direction: column; gap: 10px; }
+.an-cand { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 12px; padding: 11px 14px;
+  border: 1px solid var(--m-linea); border-radius: 12px; background: rgba(255,255,255,.02); }
+.an-cand-who { min-width: 0; } .an-cand-who b { display: block; color: #fff; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.an-cand-who span { font-size: 12px; color: var(--m-tinta2); }
+.an-cand-st { flex: 0 0 auto; }
+.an-cand-more { text-align: center; font-size: 12px; color: var(--m-tinta2); padding: 6px; }
+@media (max-width: 680px) {
+  .mesa-head.an-head { flex-direction: column; }
+  .an-add-tools { flex-direction: column; align-items: stretch; }
+  .an-cand { grid-template-columns: 1fr auto; }
+  .an-cand-who { grid-column: 1 / 3; }
+  .an-cand-st { grid-column: 1; }
+}
+
+/* ===== Modal: color de barras en móvil (track transparente para que se vea el fondo) ===== */
+.anm2-range::-webkit-slider-runnable-track { -webkit-appearance: none; background: transparent; border: none; height: 8px; border-radius: 6px; }
+.anm2-range::-moz-range-track { background: transparent; border: none; height: 8px; border-radius: 6px; }
+
+/* ===== Banner del modal en teléfono: equipos a los lados, pequeños ===== */
+@media (max-width: 560px) {
+  .anm2-banner { grid-template-columns: 1fr auto 1fr; gap: 4px; padding: 12px 6px; }
+  .anm2-logo { width: 42px; height: 42px; }
+  .anm2-logo-fb { font-size: 14px; border-radius: 10px; }
+  .anm2-name { font-size: 13px; line-height: 1.1; }
+  .anm2-city { font-size: 8px; letter-spacing: .08em; }
+  .anm2-side { font-size: 9.5px; margin-top: 2px; }
+  .anm2-side svg { width: 11px; height: 11px; }
+  .anm2-mid { gap: 6px; }
+  .anm2-vs { font-size: 17px; }
+  .anm2-league { font-size: 8.5px; padding: 3px 8px; }
+  .anm2-date { font-size: 10px; }
+}
+
+/* ===== Botón "Información del partido" + ventanita emergente ===== */
+.anm2-info-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 11px; padding: 13px 15px;
+  border: 1px solid var(--m-linea); border-radius: 12px; background: rgba(255,255,255,.02); color: #e3eaf2; font-family: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; transition: border-color .14s, background .14s; }
+.anm2-info-btn:hover { border-color: rgba(232,184,75,.5); background: rgba(232,184,75,.07); }
+.anm2-info-btn-l { display: inline-flex; align-items: center; gap: 9px; }
+.anm2-info-btn-l svg { width: 17px; height: 17px; color: #7cc7f7; }
+.anm2-info-btn-chev svg { width: 16px; height: 16px; color: #9aa6b2; }
+.anm2-infopop { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(2,4,8,.66); backdrop-filter: blur(3px); }
+.anm2-infopop[hidden] { display: none; }
+.anm2-infopop-card { width: 100%; max-width: 460px; max-height: 82vh; overflow: auto; background: #0c1119; border: 1px solid var(--m-linea); border-radius: 16px; padding: 16px 18px; box-shadow: 0 30px 70px rgba(0,0,0,.62); animation: infoPopIn .16s ease; }
+@keyframes infoPopIn { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: none; } }
+.anm2-infopop-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.anm2-infopop-h > span { display: inline-flex; align-items: center; gap: 9px; font-family: 'Chakra Petch',sans-serif; font-weight: 800; font-size: 15px; color: #fff; }
+.anm2-infopop-h > span svg { width: 18px; height: 18px; color: #7cc7f7; }
+.anm2-infopop-x { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; border: 1px solid var(--m-linea); background: var(--m-tarjeta); color: #cdd6e2; cursor: pointer; flex: 0 0 auto; }
+.anm2-infopop-x:hover { color: #fff; border-color: rgba(240,53,58,.5); background: rgba(240,53,58,.12); }
+.anm2-infopop-x svg { width: 18px; height: 18px; }
