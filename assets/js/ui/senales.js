@@ -8,6 +8,7 @@
    ============================================================ */
 import { listarAnalisis, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores } from '../mesa/mesa-datos.js';
 import { usuarioActual } from '../auth/auth.js';
+import { planPorId } from '../datos/planes.js';
 import { idiomaActual } from './idioma.js';
 
 const ES = () => idiomaActual() === 'es';
@@ -82,6 +83,7 @@ function inyectarCSS() {
   .sn-follow.on{color:#cfe0ee;background:transparent;border:1px solid rgba(120,150,180,.5)}
   .sn-newbanner{display:flex;align-items:center;gap:10px;border:1px solid rgba(56,169,240,.35);background:linear-gradient(180deg,rgba(56,169,240,.12),rgba(56,169,240,.03));border-radius:12px;padding:11px 15px;margin:0 0 16px;color:#dbeafe;font-size:13.5px;font-weight:600}
   .sn-newbanner svg{width:18px;height:18px;color:#5cc0ff;flex:0 0 auto}
+  .sn-lock-badge{display:inline-block;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:12px;letter-spacing:.04em;color:#0a0e15;background:linear-gradient(90deg,#e8c46a,#f6e2a6);border-radius:999px;padding:5px 14px;margin-bottom:12px}
   .sn-c-firma{display:inline-flex;align-items:center;gap:6px;font-family:'Chakra Petch',sans-serif;font-weight:800;font-size:13.5px;color:#e8c46a;background:rgba(232,196,106,.1);border:1px solid rgba(232,196,106,.32);border-radius:999px;padding:4px 12px 4px 10px;letter-spacing:.01em}
   .sn-c-firma svg{width:13px;height:13px}
   .sn-c-name{font-size:11.5px;color:var(--tx3,#7a8593);font-weight:600}
@@ -145,10 +147,14 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
     <div class="sn-note">${IC.info}<div><b>${L('Please read', 'Ten en cuenta')}</b><p>${L('These are the analyst\u2019s opinions for informational purposes, not betting advice. Signals are not posted every day — only when there is a real edge. High variance: a high probability is never a guarantee.', 'Son opiniones del analista con fines informativos, no asesoría de apuestas. No se publican todos los días — solo cuando hay una ventaja real. Alta varianza: una probabilidad alta nunca es garantía.')}</p></div></div>`;
 
   if (!esPremium) {
+    const pr = planPorId('premium');
+    const precio = pr ? `$${pr.mensual}/${L('mo', 'mes')}` : `$8.99/${L('mo', 'mes')}`;
     cont.innerHTML = `<div class="sn">${head}
-      <div class="sn-lock">${IC.lock}<b>${L('Premium only', 'Solo Premium')}</b>
-        <span>${L('The analyst\u2019s signals are exclusive to the Premium plan. Upgrade to see every published call with the full reasoning.', 'Las señales del analista son exclusivas del plan Premium. Mejora tu plan para ver cada pronóstico con el análisis completo.')}</span>
-        <button class="sn-cta" id="sn-cta">${L('See Premium plan', 'Ver plan Premium')}</button></div></div>`;
+      <div class="sn-lock">${IC.lock}
+        <span class="sn-lock-badge">${L('Premium', 'Premium')} · ${precio}</span>
+        <b>${L('Analyst signals are Premium', 'Las señales son Premium')}</b>
+        <span>${L('Following analysts and seeing every published call with the full reasoning is included in the Premium plan only. Lower plans don\u2019t have access to signals.', 'Seguir analistas y ver cada pronóstico publicado con el análisis completo está incluido solo en el plan Premium. Los planes inferiores no tienen acceso a las señales.')}</span>
+        <button class="sn-cta" id="sn-cta">${L('Get Premium', 'Obtener Premium')} · ${precio}</button></div></div>`;
     const b = cont.querySelector('#sn-cta'); if (b && abrirPlanes) b.onclick = abrirPlanes;
     return;
   }
