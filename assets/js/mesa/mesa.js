@@ -14,6 +14,8 @@ let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = []
 let _ligaSel = null, _partidos = [], _cargandoPart = false;
 let _rol = 'admin', _deporteAnalista = null, _analistas = [];
 let _mesaLang = 'es';
+let _uBusqueda = '', _uFiltro = 'todos', _uPagina = 1;
+const U_POR_PAGINA = 8;
 const ML = (en, es) => _mesaLang === 'es' ? es : en;
 const DEPORTES = {
   beisbol: { en: 'Baseball', es: 'Béisbol', ligas: ['mlb'] },
@@ -231,51 +233,107 @@ function esActivoReciente(u) {
   // "activo" = con plan pagado. (Con el tiempo se puede sumar último acceso.)
   return activo(u);
 }
-function vistaUsuarios() {
-  const filas = _usuarios.map(u => {
-    const sub = u.suscripcion || {};
-    const rol = rolAdmin(u);
-    const estado = rol
-      ? `<span class="pill admin">${esc(rol)}</span>`
-      : (u.bloqueado
-        ? `<span class="pill red">${ML('Blocked','Bloqueado')}</span>`
-        : (sub.activo ? `<span class="pill on">${(planPorId(sub.plan)?.nombre || ML('Active','Activo'))}</span>` : `<span class="pill">${ML('Inactive','Inactivo')}</span>`));
-    const vence = sub.vence ? new Date(sub.vence).toLocaleDateString() : '—';
-    return `<tr class="${u.bloqueado ? 'blocked' : ''}">
-      <td data-l="${ML('User','Usuario')}"><div class="u-nom">${esc(u.nombre || (u.email || '').split('@')[0] || '—')}</div><div class="u-mail">${esc(correoCorto(u.email || ''))}</div></td>
-      <td data-l="${ML('Status','Estado')}">${estado}</td>
-      <td data-l="${ML('Expires','Vence')}">${vence}</td>
-      <td data-l="${ML('Plan','Plan')}"><select data-plan="${u.uid}" class="u-select">
-        <option value="">${ML('Inactive','Inactivo')}</option>
-        ${PLANES.map(p => `<option value="${p.id}" ${sub.activo && sub.plan === p.id ? 'selected' : ''}>${p.nombre}</option>`).join('')}
-      </select></td>
-      <td data-l="${ML('Action','Acción')}"><button class="u-bloq ${u.bloqueado ? 'activo' : ''}" data-bloq="${u.uid}">${u.bloqueado ? ML('Unblock','Desbloquear') : ML('Block','Bloquear')}</button></td>
-    </tr>`;
-  }).join('');
-  const act = _usuarios.filter(esActivoReciente).length;
-  return `
-    <div class="mesa-head"><h1>${ML('Users','Usuarios')}</h1><p>${_usuarios.length} ${ML('registered','registrados')} · ${act} ${ML('active','activos')} · ${_usuarios.length - act} ${ML('inactive','inactivos')}.</p></div>
-    <div class="mesa-card mesa-card-tabla">
-      <table class="mesa-tabla">
-        <thead><tr><th>${ML('User','Usuario')}</th><th>${ML('Status','Estado')}</th><th>${ML('Expires','Vence')}</th><th>${ML('Plan','Plan')}</th><th>${ML('Action','Acción')}</th></tr></thead>
-        <tbody>${filas || `<tr><td colspan="5" class="mesa-vacio">${ML('No users yet.','Aún no hay usuarios.')}</td></tr>`}</tbody>
-      </table>
-    </div>`;
+function filaUsuario(u) {
+  const sub = u.suscripcion || {};
+  const rol = rolAdmin(u);
+  const estado = rol
+    ? `<span class="pill admin">${esc(rol)}</span>`
+    : (u.bloqueado
+      ? `<span class="pill red">${ML('Blocked','Bloqueado')}</span>`
+      : (sub.activo ? `<span class="pill on">${(planPorId(sub.plan)?.nombre || ML('Active','Activo'))}</span>` : `<span class="pill">${ML('Inactive','Inactivo')}</span>`));
+  const vence = sub.vence ? new Date(sub.vence).toLocaleDateString() : '—';
+  return `<tr class="${u.bloqueado ? 'blocked' : ''}">
+    <td data-l="${ML('User','Usuario')}"><div class="u-nom">${esc(u.nombre || (u.email || '').split('@')[0] || '—')}</div><div class="u-mail">${esc(correoCorto(u.email || ''))}</div></td>
+    <td data-l="${ML('Status','Estado')}">${estado}</td>
+    <td data-l="${ML('Expires','Vence')}">${vence}</td>
+    <td data-l="${ML('Plan','Plan')}"><select data-plan="${u.uid}" class="u-select">
+      <option value="">${ML('Inactive','Inactivo')}</option>
+      ${PLANES.map(p => `<option value="${p.id}" ${sub.activo && sub.plan === p.id ? 'selected' : ''}>${p.nombre}</option>`).join('')}
+    </select></td>
+    <td data-l="${ML('Action','Acción')}"><button class="u-bloq ${u.bloqueado ? 'activo' : ''}" data-bloq="${u.uid}">${u.bloqueado ? ML('Unblock','Desbloquear') : ML('Block','Bloquear')}</button></td>
+  </tr>`;
 }
-function enlazarUsuarios() {
-  _cont.querySelectorAll('[data-plan]').forEach(sel => sel.onchange = async () => {
-    const uid = sel.dataset.plan; const u = _usuarios.find(x => x.uid === uid); if (!u) return;
+
+function filtrarUsuarios() {
+  const q = _uBusqueda.trim().toLowerCase();
+  return _usuarios.filter(u => {
+    const sub = u.suscripcion || {};
+    if (_uFiltro === 'con' && !sub.activo) return false;
+    if (_uFiltro === 'sin' && sub.activo) return false;
+    if (_uFiltro === 'bloq' && !u.bloqueado) return false;
+    if (_uFiltro.indexOf('plan:') === 0 && !(sub.activo && sub.plan === _uFiltro.slice(5))) return false;
+    if (q) {
+      const nom = (u.nombre || '').toLowerCase(), mail = (u.email || '').toLowerCase();
+      if (nom.indexOf(q) === -1 && mail.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+}
+
+function pintarUsuariosTabla() {
+  const tbody = _cont.querySelector('#u-tbody'), pager = _cont.querySelector('#u-pager');
+  if (!tbody) return;
+  const lista = filtrarUsuarios();
+  const paginas = Math.max(1, Math.ceil(lista.length / U_POR_PAGINA));
+  if (_uPagina > paginas) _uPagina = paginas;
+  const ini = (_uPagina - 1) * U_POR_PAGINA;
+  const slice = lista.slice(ini, ini + U_POR_PAGINA);
+  tbody.innerHTML = slice.length ? slice.map(filaUsuario).join('')
+    : `<tr><td colspan="5" class="mesa-vacio">${ML('No matches for this search.','Sin resultados para esta búsqueda.')}</td></tr>`;
+  if (pager) {
+    let dentro = `<span class="u-pager-info">${lista.length} ${ML('results','resultados')}</span>`;
+    if (paginas > 1) {
+      let btns = '';
+      for (let i = 1; i <= paginas; i++) btns += `<button class="u-page ${i === _uPagina ? 'on' : ''}" data-upage="${i}">${i}</button>`;
+      dentro += `<div class="u-pages"><button class="u-page nav" data-upage="${Math.max(1, _uPagina - 1)}" ${_uPagina === 1 ? 'disabled' : ''}>‹</button>${btns}<button class="u-page nav" data-upage="${Math.min(paginas, _uPagina + 1)}" ${_uPagina === paginas ? 'disabled' : ''}>›</button></div>`;
+    }
+    pager.innerHTML = dentro;
+    pager.querySelectorAll('[data-upage]').forEach(b => b.onclick = () => { _uPagina = +b.dataset.upage; pintarUsuariosTabla(); });
+  }
+  tbody.querySelectorAll('[data-plan]').forEach(sel => sel.onchange = async () => {
+    const uid = sel.dataset.plan, u = _usuarios.find(x => x.uid === uid); if (!u) return;
     const planId = sel.value;
     let sub;
     if (!planId) sub = { activo: false, plan: null, vence: null, metodo: 'manual' };
     else { const v = new Date(); v.setMonth(v.getMonth() + 1); sub = { activo: true, plan: planId, vence: v.toISOString(), metodo: 'manual' }; }
-    try { await fijarSuscripcionUsuario(uid, sub); u.suscripcion = sub; pintarTab(); } catch (_) {}
+    try { await fijarSuscripcionUsuario(uid, sub); u.suscripcion = sub; pintarUsuariosTabla(); } catch (_) {}
   });
 }
+
+function vistaUsuarios() {
+  const Ilupa = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`;
+  const act = _usuarios.filter(esActivoReciente).length;
+  const filtros = [['todos', ML('All', 'Todos')], ['con', ML('With plan', 'Con plan')], ['sin', ML('No plan', 'Sin plan')], ['bloq', ML('Blocked', 'Bloqueados')]].concat(PLANES.map(p => ['plan:' + p.id, p.nombre]));
+  const chips = filtros.map(([k, l]) => `<button data-uf="${k}" class="u-chip ${_uFiltro === k ? 'on' : ''}">${esc(l)}</button>`).join('');
+  return `
+    <div class="mesa-head"><h1>${ML('Users', 'Usuarios')}</h1><p>${_usuarios.length} ${ML('registered', 'registrados')} · ${act} ${ML('active', 'activos')} · ${_usuarios.length - act} ${ML('inactive', 'inactivos')}.</p></div>
+    <div class="u-toolbar">
+      <div class="u-search">${Ilupa}<input id="u-buscar" type="text" placeholder="${ML('Search by name or email…', 'Buscar por nombre o correo…')}" value="${esc(_uBusqueda)}"></div>
+      <div class="u-chips" id="u-chips">${chips}</div>
+    </div>
+    <div class="mesa-card mesa-card-tabla">
+      <table class="mesa-tabla">
+        <thead><tr><th>${ML('User', 'Usuario')}</th><th>${ML('Status', 'Estado')}</th><th>${ML('Expires', 'Vence')}</th><th>${ML('Plan', 'Plan')}</th><th>${ML('Action', 'Acción')}</th></tr></thead>
+        <tbody id="u-tbody"></tbody>
+      </table>
+      <div class="u-pager" id="u-pager"></div>
+    </div>`;
+}
+function enlazarUsuarios() {
+  const buscar = _cont.querySelector('#u-buscar');
+  if (buscar) buscar.oninput = () => { _uBusqueda = buscar.value; _uPagina = 1; pintarUsuariosTabla(); };
+  _cont.querySelectorAll('#u-chips [data-uf]').forEach(b => b.onclick = () => {
+    _uFiltro = b.dataset.uf; _uPagina = 1;
+    _cont.querySelectorAll('#u-chips [data-uf]').forEach(x => x.classList.toggle('on', x === b));
+    pintarUsuariosTabla();
+  });
+  pintarUsuariosTabla();
+}
+
 async function toggleBloqueo(uid, btn) {
   const u = _usuarios.find(x => x.uid === uid); if (!u) return;
   if (btn) btn.disabled = true;
-  try { await fijarBloqueo(uid, !u.bloqueado); u.bloqueado = !u.bloqueado; pintarTab(); } catch (_) { if (btn) btn.disabled = false; }
+  try { await fijarBloqueo(uid, !u.bloqueado); u.bloqueado = !u.bloqueado; if (_cont.querySelector('#u-tbody')) pintarUsuariosTabla(); else pintarTab(); } catch (_) { if (btn) btn.disabled = false; }
 }
 
 /* ================= ANALYSTS (contratación) ================= */
