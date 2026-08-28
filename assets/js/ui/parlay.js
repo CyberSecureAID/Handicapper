@@ -164,10 +164,11 @@ function inyectarCSS() {
   .ply-tag{font-size:11px;font-weight:600;color:var(--tx2);border:1px solid var(--line);border-radius:7px;padding:4px 8px;background:rgba(255,255,255,.02);white-space:nowrap}
   .ply-tag.h{color:var(--oro);border-color:rgba(232,196,106,.3)}
   .ply-meter{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
-  .ply-ic{font-size:11px;color:var(--tx3);font-weight:700;letter-spacing:.02em;margin-top:3px}
-  .ply-track{position:relative;height:9px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden;margin:2px 0 14px}
-  .ply-band{position:absolute;top:0;bottom:0;background:rgba(232,196,106,.18);border-left:1px solid rgba(232,196,106,.5);border-right:1px solid rgba(232,196,106,.5);z-index:1;pointer-events:none}
-  .ply-fill{position:relative;z-index:2}
+  .ply-track{height:9px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden;margin:2px 0 12px}
+  .ply-verdict{font-size:13px;line-height:1.5;color:#e3eaf3;background:rgba(255,255,255,.03);border-left:3px solid var(--tx3);border-radius:8px;padding:10px 13px;margin:0 0 12px}
+  .ply-verdict.bueno{border-left-color:var(--ok);background:rgba(65,214,160,.07)}
+  .ply-verdict.medio{border-left-color:var(--am);background:rgba(243,177,61,.07)}
+  .ply-verdict.malo{border-left-color:var(--ro);background:rgba(244,73,78,.07)}
   .ply-pct{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:40px;line-height:1;color:#e8c46a;background:linear-gradient(180deg,#f8e7ad,#d4a53f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   .ply-plab{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);font-weight:700;text-align:right;line-height:1.35}
   .ply-fill{height:100%;border-radius:6px;width:0;transition:width 1s cubic-bezier(.2,.7,.2,1);background:linear-gradient(90deg,var(--oro2),#f6e2a6);box-shadow:0 0 14px rgba(232,196,106,.4)}
@@ -225,20 +226,61 @@ function comingSoonHTML(cfg) {
       <h3>${esc(cfg.titulo)}</h3><p>${L('This projection is on the way.', 'Esta proyección está en camino.')}</p></div></div></div>`;
 }
 
+/* Veredicto humanizado: una frase clara que dice qué significa el número y qué
+   hacer con él. El % sigue siendo EL dato; esto lo interpreta en palabras. */
+const METRICA_TXT = {
+  'P(≥1 hit)':  { es: 'pegar al menos un hit', en: 'get at least one hit' },
+  'P(≥1 goal)': { es: 'marcar al menos un gol', en: 'score at least one goal' },
+  'P(20+ pts)': { es: 'anotar 20 o más puntos', en: 'score 20+ points' },
+  'P(2+ SOG)':  { es: 'hacer 2 o más tiros a puerta', en: 'take 2+ shots on goal' },
+};
+function veredicto(p, cfg) {
+  const es = ES();
+  const pr = p.prob, conf = p.confianza;
+  const met = (METRICA_TXT[cfg.metric] || { es: 'cumplir la línea', en: 'hit the line' });
+  const metTxt = es ? met.es : met.en;
+  const fav = (p.factores || [])[0];
+  const rsk = (p.riesgos || [])[0];
+  const baja = (conf === 'baja' || conf === 'muy baja');
+  let tono, txt;
+
+  if (conf === 'muy baja') {
+    tono = 'malo';
+    txt = es
+      ? `Dato poco fiable hoy: faltan partidos para confiar en este ${pr}%.${rsk ? ' ' + rsk + '.' : ''} Mejor no apoyarse solo en esto.`
+      : `Low-trust today: not enough games to rely on this ${pr}%.${rsk ? ' ' + rsk + '.' : ''} Don't lean on it alone.`;
+  } else if (pr >= 68) {
+    tono = baja ? 'medio' : 'bueno';
+    txt = es
+      ? `Alta probabilidad de ${metTxt} (${pr}%).${fav ? ' A favor: ' + fav.toLowerCase() + '.' : ''}${baja ? ' Confianza limitada por ahora.' : ' Selección sólida.'}`
+      : `High chance to ${metTxt} (${pr}%).${fav ? ' In favor: ' + fav.toLowerCase() + '.' : ''}${baja ? ' Confidence still limited.' : ' Solid pick.'}`;
+  } else if (pr >= 56) {
+    tono = 'medio';
+    txt = es
+      ? `Probabilidad moderada de ${metTxt} (${pr}%).${fav ? ' A favor: ' + fav.toLowerCase() + '.' : ''} Ventaja ligera, no garantía.`
+      : `Moderate chance to ${metTxt} (${pr}%).${fav ? ' In favor: ' + fav.toLowerCase() + '.' : ''} Slight edge, not a lock.`;
+  } else {
+    tono = 'medio';
+    txt = es
+      ? `Escenario parejo (${pr}%): sin ventaja clara para ${metTxt}.${rsk ? ' Cuidado: ' + rsk.toLowerCase() + '.' : ''}`
+      : `Coin-flip (${pr}%): no clear edge to ${metTxt}.${rsk ? ' Watch out: ' + rsk.toLowerCase() + '.' : ''}`;
+  }
+  return { texto: txt, tono };
+}
+
 function cardHTML(p, cfg) {
   const tags = (cfg.toCard(p).tags || []).map((t, i) => `<span class="ply-tag${i === 0 ? ' h' : ''}">${esc(tagTxt(t))}</span>`).join('');
   const fav = (p.factores || []).map(f => `<li>${esc(f)}</li>`).join('');
   const rsk = (p.riesgos || []).map(f => `<li>${esc(f)}</li>`).join('');
-  const iv = p.intervalo && p.intervalo.hi > p.intervalo.lo ? p.intervalo : null;
-  const ivTxt = iv ? `<div class="ply-ic">${L('range', 'rango')} ${iv.lo}–${iv.hi}%</div>` : '';
-  const band = iv ? `<span class="ply-band" style="left:${iv.lo}%;width:${Math.max(2, iv.hi - iv.lo)}%"></span>` : '';
+  const vd = veredicto(p, cfg);
   return `<article class="ply-c r${p.rank}" data-idx="${p.rank}">
     <div class="ply-c-top"><div class="ply-rank">${p.rank}</div>
       <div class="ply-idn"><div class="ply-nm">${esc(p.nombre)}</div>
         <div class="ply-mt"><b>${esc(p.equipoAbrev || '')}</b> ${L('vs', 'vs')} ${esc(p.rivalAbrev || '')}</div></div></div>
     <div class="ply-tags">${tags}</div>
-    <div class="ply-meter"><div class="ply-meter-l"><div class="ply-pct">${p.prob}%</div>${ivTxt}</div><div class="ply-plab">${cfg.metricLabel}</div></div>
-    <div class="ply-track">${band}<div class="ply-fill" data-w="${p.prob}"></div></div>
+    <div class="ply-meter"><div class="ply-pct">${p.prob}%</div><div class="ply-plab">${cfg.metricLabel}</div></div>
+    <div class="ply-track"><div class="ply-fill" data-w="${p.prob}"></div></div>
+    <div class="ply-verdict ${vd.tono}">${esc(vd.texto)}</div>
     <span class="ply-conf ${p.confianza}"><i></i>${L('Confidence', 'Confianza')} ${esc(confLabel(p.confianza))}</span>
     <div class="ply-split">
       ${fav ? `<div class="ply-blk f"><div class="ply-blk-t">${L('Key factors', 'Factores favorables')}</div><ul>${fav}</ul></div>` : ''}
