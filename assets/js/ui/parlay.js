@@ -76,8 +76,8 @@ function VISTA(sport) {
     mlb: {
       activo: true, img: 'fondo-hits.jpg', run: () => topParlayHits({ fecha: hoyISO(), n: 9 }), demo: DEMO_MLB,
       eyebrow: L('Premium · Hit Projection', 'Premium · Proyección de Hits'),
-      titulo: `${L('Top 9 · Probability of', 'Top 9 · Probabilidad de')} <em>≥1 Hit</em>`,
-      metric: 'P(≥1 hit)', metricLabel: L('Probability<br>of ≥1 hit', 'Probabilidad<br>de ≥1 hit'),
+      titulo: `${L('Top picks · Best', 'Top del día · Mejores')} <em>${L('Hit chances', 'opciones de hit')}</em>`,
+      metric: 'P(≥1 hit)', metricLabel: L('Chance<br>of a hit', 'Opción<br>de hit'),
       lead: L('The nine batters with the highest estimated probability of getting at least one hit today.',
               'Los nueve bateadores con mayor probabilidad estimada de conectar al menos un imparable hoy.'),
       foot: L('Model probability estimates, not betting advice. Baseball is high-variance: a high probability is not a certainty.',
@@ -87,8 +87,8 @@ function VISTA(sport) {
     soccer: {
       activo: true, img: 'fondo-goals.jpg', run: () => topGoalProjection({ fecha: hoyISO(), n: 9 }), demo: DEMO_SOCCER,
       eyebrow: L('Premium · Goal Projection', 'Premium · Proyección de Goles'),
-      titulo: `${L('Top 9 · Probability of', 'Top 9 · Probabilidad de')} <em>≥1 Goal</em>`,
-      metric: 'P(≥1 goal)', metricLabel: L('Probability<br>of ≥1 goal', 'Probabilidad<br>de ≥1 gol'),
+      titulo: `${L('Top picks · Best', 'Top del día · Mejores')} <em>${L('Goal chances', 'opciones de gol')}</em>`,
+      metric: 'P(≥1 goal)', metricLabel: L('Chance<br>of a goal', 'Opción<br>de gol'),
       lead: L('The nine players with the highest estimated probability of scoring at least one goal today (anytime goalscorer).',
               'Los nueve jugadores con mayor probabilidad estimada de anotar al menos un gol hoy (anytime goalscorer).'),
       foot: L('Model probability estimates, not betting advice. Football is high-variance: a high probability is not a certainty.',
@@ -98,8 +98,8 @@ function VISTA(sport) {
     nba: {
       activo: true, img: 'fondo-points.jpg', run: () => topPointsProjection({ fecha: hoyISO(), n: 9 }), demo: DEMO_NBA,
       eyebrow: L('Premium · Points Projection', 'Premium · Proyección de Puntos'),
-      titulo: `${L('Top 9 · Probability of', 'Top 9 · Probabilidad de')} <em>20+ ${L('Points', 'Puntos')}</em>`,
-      metric: 'P(20+ pts)', metricLabel: L('Probability<br>of 20+ pts', 'Probabilidad<br>de 20+ pts'),
+      titulo: `${L('Top picks · Best', 'Top del día · Mejores')} <em>${L('20+ point chances', 'opciones de 20+ pts')}</em>`,
+      metric: 'P(20+ pts)', metricLabel: L('Chance of<br>20+ pts', 'Opción de<br>20+ pts'),
       lead: L('The nine players with the highest estimated probability of scoring 20 or more points today.',
               'Los nueve jugadores con mayor probabilidad estimada de anotar 20 o más puntos hoy.'),
       foot: L('Model probability estimates, not betting advice. Basketball is high-variance: a high probability is not a certainty.',
@@ -109,8 +109,8 @@ function VISTA(sport) {
     nhl: {
       activo: true, img: 'fondo-shots.jpg', run: () => topShotsProjection({ fecha: hoyISO(), n: 9 }), demo: DEMO_NHL,
       eyebrow: L('Premium · Shots Projection', 'Premium · Proyección de Tiros'),
-      titulo: `${L('Top 9 · Probability of', 'Top 9 · Probabilidad de')} <em>2+ ${L('Shots', 'Tiros')}</em>`,
-      metric: 'P(2+ SOG)', metricLabel: L('Probability<br>of 2+ shots', 'Probabilidad<br>de 2+ tiros'),
+      titulo: `${L('Top picks · Best', 'Top del día · Mejores')} <em>${L('2+ shot chances', 'opciones de 2+ tiros')}</em>`,
+      metric: 'P(2+ SOG)', metricLabel: L('Chance of<br>2+ shots', 'Opción de<br>2+ tiros'),
       lead: L('The nine players with the highest estimated probability of registering 2 or more shots on goal today. In-house Poisson model: opponent shots allowed, home/away and recent form.',
               'Los nueve jugadores con mayor probabilidad estimada de registrar 2 o más tiros a puerta hoy. Modelo propio de Poisson: tiros que permite el rival, local/visita y forma reciente.'),
       foot: L('Model probability estimates, not betting advice. Hockey is high-variance: a high probability is not a certainty.',
@@ -259,6 +259,28 @@ const FRASES = {
 };
 FRASES._def = FRASES['P(≥1 hit)'];
 
+/* Confianza MOSTRADA en base a la probabilidad (no a la muestra de temporada,
+   que a inicio de año castiga a todos). Así un 79% se ve "alta", no "media",
+   y desaparece el mensaje de "muy baja" que espantaba al usuario. */
+function confPorProb(prob, cfg) {
+  const S = FRASES[cfg.metric] || FRASES._def;
+  if (prob >= S.hi) return 'alta';
+  if (prob >= S.mid) return 'media';
+  return 'baja';
+}
+
+/* Curación (regla obligatoria): solo jugadores BUENOS. Ordena por probabilidad
+   y, si hay suficientes por encima del umbral del deporte, descarta a los flojos.
+   Nunca deja la vista vacía. Máximo 9. */
+function curar(jugadores, cfg) {
+  const S = FRASES[cfg.metric] || FRASES._def;
+  let arr = (jugadores || []).slice().sort((a, b) => (b.prob || 0) - (a.prob || 0));
+  const buenos = arr.filter(j => (j.prob || 0) >= S.mid);
+  if (buenos.length >= 5) arr = buenos;
+  return arr.slice(0, 9).map((j, i) => ({ ...j, rank: i + 1 }));
+}
+
+
 function veredicto(p, cfg) {
   const es = ES();
   const pr = p.prob, conf = p.confianza;
@@ -290,10 +312,12 @@ function veredicto(p, cfg) {
 
 function cardHTML(p, cfg) {
 
+  const conf = confPorProb(p.prob, cfg);       // confianza coherente con la probabilidad
+  const pv = { ...p, confianza: conf };
   const tags = (cfg.toCard(p).tags || []).map((t, i) => `<span class="ply-tag${i === 0 ? ' h' : ''}">${esc(tagTxt(t))}</span>`).join('');
   const fav = (p.factores || []).map(f => `<li>${esc(f)}</li>`).join('');
   const rsk = (p.riesgos || []).map(f => `<li>${esc(f)}</li>`).join('');
-  const vd = veredicto(p, cfg);
+  const vd = veredicto(pv, cfg);
   return `<article class="ply-c r${p.rank}" data-idx="${p.rank}">
     <div class="ply-c-top"><div class="ply-rank">${p.rank}</div>
       <div class="ply-idn"><div class="ply-nm">${esc(p.nombre)}</div>
@@ -302,7 +326,7 @@ function cardHTML(p, cfg) {
     <div class="ply-meter"><div class="ply-pct">${p.prob}%</div><div class="ply-plab">${cfg.metricLabel}</div></div>
     <div class="ply-track"><div class="ply-fill" data-w="${p.prob}"></div></div>
     <div class="ply-verdict ${vd.tono}">${esc(vd.texto)}</div>
-    <span class="ply-conf ${p.confianza}"><i></i>${L('Confidence', 'Confianza')} ${esc(confLabel(p.confianza))}</span>
+    <span class="ply-conf ${conf}"><i></i>${L('Confidence', 'Confianza')} ${esc(confLabel(conf))}</span>
     <div class="ply-split">
       ${fav ? `<div class="ply-blk f"><div class="ply-blk-t">${L('Key factors', 'Factores favorables')}</div><ul>${fav}</ul></div>` : ''}
       ${rsk ? `<div class="ply-blk r"><div class="ply-blk-t">${L('Risks', 'Riesgos')}</div><ul>${rsk}</ul></div>` : ''}
@@ -362,8 +386,9 @@ export async function pintarParlay(cont, { sport = 'mlb', esPremium = false, abr
     try {
       const r = await conTimeout(cfg.run(), 9000);
       if (r && r.jugadores && r.jugadores.length) {
-        CACHE.set(sport, { jugadores: r.jugadores, meta: r.meta, ts: Date.now() });
-        pintarGrid(cont, cfg, r.jugadores, r.meta, false);
+        const jug = curar(r.jugadores, cfg);   // regla: solo los buenos, ordenados, máx 9
+        CACHE.set(sport, { jugadores: jug, meta: r.meta, ts: Date.now() });
+        pintarGrid(cont, cfg, jug, r.meta, false);
       }
     } catch (_) { /* se queda la vista preliminar */ }
   }
