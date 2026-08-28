@@ -334,6 +334,8 @@ function repintarTodo() {
 /* -------- Proyecciones premium (barra superior) -------- */
 function marcarProyeccion() {
   document.querySelectorAll('.proj-b').forEach(b => b.classList.toggle('on', proyActiva === b.dataset.proj));
+  document.querySelectorAll('.premium-item').forEach(it => it.classList.toggle('on', proyActiva === it.dataset.projgoto));
+  const pb = document.getElementById('premium-btn'); if (pb) pb.classList.toggle('activo', !!proyActiva);
 }
 function initProyeccion() {
   document.querySelectorAll('.proj-b').forEach(b => b.addEventListener('click', () => {
@@ -342,6 +344,18 @@ function initProyeccion() {
     marcarProyeccion(); pintarLigas(); pintarPestanas();
     cargarLista();
   }));
+  // Botón Premium (móvil): despliega las proyecciones reusando los handlers de arriba
+  const pBtn = document.getElementById('premium-btn');
+  const pPop = document.getElementById('premium-pop');
+  if (pBtn && pPop) {
+    pBtn.addEventListener('click', (e) => { e.stopPropagation(); const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); });
+    document.querySelectorAll('.premium-item[data-projgoto]').forEach(it => it.addEventListener('click', () => {
+      const b = document.querySelector(`.proj-b[data-proj="${it.dataset.projgoto}"]`);
+      if (b) b.click();
+      pPop.classList.remove('open'); pBtn.classList.remove('open');
+    }));
+    document.addEventListener('click', (e) => { if (!e.target.closest('.premium-menu')) { pPop.classList.remove('open'); pBtn.classList.remove('open'); } });
+  }
 }
 
 /* -------- Arranque -------- */
