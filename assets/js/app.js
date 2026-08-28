@@ -156,6 +156,14 @@ async function abrirDetalle(id, el) {
   try {
     const p = await detallePartido(id);
     if (!p || partidoSel !== id) return;        // el usuario ya cerró/cambió
+    // El número de AFUERA manda: el detalle muestra EXACTAMENTE la misma
+    // probabilidad que la tarjeta de la lista (no un recálculo distinto).
+    if (base && base.mercado) {
+      p.mercado = base.mercado;
+      if (base.confianza != null) p.confianza = base.confianza;
+      if (base.factores != null) p.factores = base.factores;
+      if (base.sinDatos != null) p.sinDatos = base.sinDatos;
+    }
     await aplicarAnalista(p);
     if (partidoSel !== id) return;
     const cuerpo = document.querySelector('#det-modal-bg .det-modal-cuerpo');
