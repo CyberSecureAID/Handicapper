@@ -206,23 +206,19 @@ export function analizar(match) {
 
   let pLocal = clamp(sig(L), W.clampLo, W.clampHi);
 
-  // 3g) NÚCLEO — Monte Carlo: propaga la incertidumbre del modelo.
-  // Menos señales reales => mayor incertidumbre (sd) del log-odds. Devuelve la
-  // probabilidad como MEDIA de miles de escenarios + un intervalo de confianza
-  // real, y templa extremos cuando el intervalo sale muy ancho. Reproducible por
-  // partido. Si algo fallara, se conserva el pLocal analítico ya calculado.
+  // 3g) NÚCLEO — Monte Carlo SOLO para medir la incertidumbre (el intervalo).
+  // El número mostrado es el punto decisivo sig(L) (determinista y estable);
+  // la simulación NO lo mueve (antes lo empujaba hacia 50-50 con pocas señales).
+  // Reproducible por partido. Si algo fallara, no pasa nada: pLocal ya está.
   let icAncho = null, icPct = null;
   try {
     const nSen = factoresUsados.length;
     const sd = N.clamp(0.85 - 0.11 * nSen - (muestra >= 20 ? 0.18 : 0), 0.20, 0.85);
     const seed = (match.local.abrev || match.local.nombre || '') + '|' + (match.visita.abrev || match.visita.nombre || '') + '|' + ligaId;
-    const mc = N.montecarlo(seed, 4000, (r) => N.clamp(N.sig(L + N.gauss(r) * sd), W.clampLo, W.clampHi));
-    pLocal = mc.media;
+    const mc = N.montecarlo(seed, 3000, (r) => N.clamp(N.sig(L + N.gauss(r) * sd), W.clampLo, W.clampHi));
     icAncho = mc.ic80[1] - mc.ic80[0];
-    if (icAncho > 0.28) pLocal = N.calibrar(pLocal, 0.5, 0.82);   // mucha incertidumbre -> más cauto
-    pLocal = N.clamp(pLocal, W.clampLo, W.clampHi);
     icPct = [Math.round(mc.ic80[0] * 100), Math.round(mc.ic80[1] * 100)];
-  } catch (e) { /* fallback: pLocal analítico */ }
+  } catch (e) { /* sin intervalo; el número decisivo se conserva */ }
 
   // Inclinación mínima: la página debe DECIDIR. Nunca 50-50; si quedó muy
   // pegado al centro, se separa un poco manteniendo la dirección (o la del
