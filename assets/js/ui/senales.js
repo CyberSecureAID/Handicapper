@@ -6,7 +6,8 @@
    todos los días (solo cuando hay oportunidad).
    Bilingüe (inglés por defecto). Responsivo.
    ============================================================ */
-import { listarAnalisis } from '../mesa/mesa-datos.js';
+import { listarAnalisis, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores } from '../mesa/mesa-datos.js';
+import { usuarioActual } from '../auth/auth.js';
 import { idiomaActual } from './idioma.js';
 
 const ES = () => idiomaActual() === 'es';
@@ -72,7 +73,15 @@ function inyectarCSS() {
   .sn-empty span,.sn-lock span{font-size:13.5px;max-width:440px;line-height:1.55}
   .sn-cta{display:inline-flex;align-items:center;gap:8px;margin-top:20px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:#241a06;background:linear-gradient(90deg,#e8c46a,#f6e2a6);border:0;border-radius:999px;padding:13px 26px;cursor:pointer;box-shadow:0 6px 20px rgba(199,154,60,.4)}
   .sn-cta:hover{filter:brightness(1.06)}
-  .sn-c-by{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-2px 0 10px}
+  .sn-c-by{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-2px 0 12px}
+  .sn-c-fol{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2)}
+  .sn-c-fol svg{width:14px;height:14px;opacity:.85}
+  .sn-c-fol b{color:#e9eff6;font-weight:800}
+  .sn-follow{margin-left:auto;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:11.5px;letter-spacing:.02em;color:#0a0e15;background:linear-gradient(90deg,#38a9f0,#5cc0ff);border:0;border-radius:999px;padding:6px 14px;cursor:pointer;transition:filter .14s,transform .1s}
+  .sn-follow:hover{filter:brightness(1.08)} .sn-follow:active{transform:scale(.97)}
+  .sn-follow.on{color:#cfe0ee;background:transparent;border:1px solid rgba(120,150,180,.5)}
+  .sn-newbanner{display:flex;align-items:center;gap:10px;border:1px solid rgba(56,169,240,.35);background:linear-gradient(180deg,rgba(56,169,240,.12),rgba(56,169,240,.03));border-radius:12px;padding:11px 15px;margin:0 0 16px;color:#dbeafe;font-size:13.5px;font-weight:600}
+  .sn-newbanner svg{width:18px;height:18px;color:#5cc0ff;flex:0 0 auto}
   .sn-c-firma{display:inline-flex;align-items:center;gap:6px;font-family:'Chakra Petch',sans-serif;font-weight:800;font-size:13.5px;color:#e8c46a;background:rgba(232,196,106,.1);border:1px solid rgba(232,196,106,.32);border-radius:999px;padding:4px 12px 4px 10px;letter-spacing:.01em}
   .sn-c-firma svg{width:13px;height:13px}
   .sn-c-name{font-size:11.5px;color:var(--tx3,#7a8593);font-weight:600}
@@ -85,16 +94,29 @@ const IC = {
   info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-linecap="round"/></svg>`,
   flag: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V5a1 1 0 011-1h11l-2 4 2 4H6"/></svg>`,
   lock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 018 0v2.5"/></svg>`,
+  bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10.5 20a2 2 0 003 0"/></svg>`,
 };
 
-function tarjeta(a) {
+function tarjeta(a, ctx = {}) {
   const conf = a.confianza || 'media';
   const prob = a.prob != null ? Math.max(1, Math.min(99, a.prob)) : null;
   const mk = (MERCADO[a.mercado] || MERCADO.ml)();
   const pick = a.favorito ? `${esc(a.favorito)} ${L('to win', 'gana')}` : esc(a.veredicto || '');
   const firma = a.firma || a.autor || '';
+  const uid = a.autorUid || '';
   const IPen = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>`;
-  const by = firma ? `<div class="sn-c-by"><span class="sn-c-firma">${IPen}${esc(firma)}</span>${a.autor && a.firma && a.autor !== a.firma ? `<span class="sn-c-name">${esc(a.autor)}</span>` : ''}</div>` : '';
+  const IUsers = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.2 2.7-5 5.5-5s5.5 1.8 5.5 5"/><path d="M16 6.5a3 3 0 010 6M18.5 20c0-2.4-1-3.9-2.5-4.7"/></svg>`;
+  // Botón seguir (solo Premium y si hay uid y no soy yo mismo)
+  const puedeSeguir = ctx.premium && uid && uid !== ctx.me;
+  const sigo = ctx.sigo && ctx.sigo.has(uid);
+  const btn = puedeSeguir
+    ? `<button class="sn-follow ${sigo ? 'on' : ''}" data-follow="${esc(uid)}" data-firma="${esc(firma)}">${sigo ? L('Following', 'Siguiendo') : L('+ Follow', '+ Seguir')}</button>`
+    : '';
+  const by = firma ? `<div class="sn-c-by">
+      <span class="sn-c-firma">${IPen}${esc(firma)}</span>
+      ${uid ? `<span class="sn-c-fol" data-fol="${esc(uid)}">${IUsers}<b>·</b> ${L('followers', 'seguidores')}</span>` : ''}
+      ${btn}
+    </div>` : '';
   return `<div class="sn-card">
     <div class="sn-c-top"><div class="sn-c-match">${esc(a.equipos || a.matchId || '')}</div><span class="sn-c-conf ${conf}">${esc(confTx(conf))}</span></div>
     ${by}
@@ -103,6 +125,14 @@ function tarjeta(a) {
     ${a.texto ? `<p class="sn-c-txt">${esc(a.texto)}</p>` : ''}
     <div class="sn-c-foot"><span class="sn-c-market">${esc(mk)}</span></div>
   </div>`;
+}
+
+/* Convierte un timestamp de Firestore (o fecha) a milisegundos. */
+function _tsMs(ts) {
+  if (!ts) return 0;
+  if (typeof ts.toMillis === 'function') { try { return ts.toMillis(); } catch (_) { return 0; } }
+  if (ts.seconds != null) return ts.seconds * 1000;
+  const d = new Date(ts); return isNaN(d.getTime()) ? 0 : d.getTime();
 }
 
 export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {}) {
@@ -125,8 +155,57 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
 
   cont.innerHTML = `<div class="sn">${head}<div class="sn-empty"><div class="sn-spin"></div>${L('Loading signals…', 'Cargando señales…')}</div></div>`;
   const lista = await cargarSenales();
+
+  // Fase 3 — a quién sigo + notificaciones de nuevas señales
+  const me = (usuarioActual() && usuarioActual().uid) || null;
+  let sigo = new Set();
+  try { sigo = new Set(await misSeguidos()); } catch (_) {}
+  const ctx = { premium: esPremium, me, sigo };
+
+  // Notificación: señales de analistas que sigo, más nuevas que mi última visita
+  const VISTO = 'sn_visto_' + (me || 'anon');
+  const lastSeen = Number(localStorage.getItem(VISTO) || 0);
+  const nuevas = lista.filter(a => a.autorUid && sigo.has(a.autorUid) && _tsMs(a.actualizado) > lastSeen).length;
+  const banner = nuevas > 0
+    ? `<div class="sn-newbanner">${IC.bell}<span>${nuevas} ${nuevas === 1 ? L('new signal from analysts you follow', 'nueva señal de analistas que sigues') : L('new signals from analysts you follow', 'nuevas señales de analistas que sigues')}</span></div>`
+    : '';
+
   const cuerpo = lista.length
-    ? `<div class="sn-grid">${lista.map(tarjeta).join('')}</div>`
+    ? `${banner}<div class="sn-grid">${lista.map(a => tarjeta(a, ctx)).join('')}</div>`
     : `<div class="sn-empty">${IC.flag}<b>${L('No signals right now', 'No hay señales ahora')}</b><span>${L('The analyst hasn\u2019t published today. New calls appear here only when there\u2019s a clear opportunity — check back later.', 'El analista no ha publicado hoy. Los nuevos pronósticos aparecen aquí solo cuando hay una oportunidad clara — vuelve más tarde.')}</span></div>`;
   cont.innerHTML = `<div class="sn">${head}${cuerpo}</div>`;
+
+  // Marcar como visto (la última fecha entre las señales cargadas)
+  try {
+    const maxTs = lista.reduce((m, a) => Math.max(m, _tsMs(a.actualizado)), lastSeen);
+    localStorage.setItem(VISTO, String(Math.max(maxTs, Date.now() - 1)));
+  } catch (_) {}
+
+  // Hidratar nº de seguidores por analista (agregación) — sin bloquear el render
+  const uids = [...new Set(lista.map(a => a.autorUid).filter(Boolean))];
+  uids.forEach(async uid => {
+    let n = 0; try { n = await contarSeguidores(uid); } catch (_) {}
+    cont.querySelectorAll(`.sn-c-fol[data-fol="${CSS.escape(uid)}"]`).forEach(el => {
+      el.innerHTML = `${el.querySelector('svg') ? el.querySelector('svg').outerHTML : ''}<b>${n.toLocaleString()}</b> ${L('followers', 'seguidores')}`;
+    });
+  });
+
+  // Cablear botones Seguir / Siguiendo
+  cont.querySelectorAll('[data-follow]').forEach(btn => btn.onclick = async () => {
+    const uid = btn.dataset.follow, firma = btn.dataset.firma || null;
+    const seguir = !btn.classList.contains('on');
+    btn.disabled = true;
+    try {
+      if (seguir) { await seguirAnalista(uid, firma); ctx.sigo.add(uid); }
+      else { await dejarDeSeguir(uid); ctx.sigo.delete(uid); }
+      btn.classList.toggle('on', seguir);
+      btn.textContent = seguir ? L('Following', 'Siguiendo') : L('+ Follow', '+ Seguir');
+      // refrescar el contador de ese analista
+      let n = 0; try { n = await contarSeguidores(uid); } catch (_) {}
+      cont.querySelectorAll(`.sn-c-fol[data-fol="${CSS.escape(uid)}"]`).forEach(el => {
+        el.innerHTML = `${el.querySelector('svg') ? el.querySelector('svg').outerHTML : ''}<b>${n.toLocaleString()}</b> ${L('followers', 'seguidores')}`;
+      });
+    } catch (_) {}
+    btn.disabled = false;
+  });
 }
