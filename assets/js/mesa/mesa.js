@@ -3,7 +3,7 @@
    Secciones: Overview · Users · Analysis.
    Solo visible si esAdmin() (verificado en Firestore).
    ============================================================ */
-import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion } from './mesa-datos.js';
+import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos } from './mesa-datos.js';
 import { prepararEstilosSenal, tarjetaMuestra } from '../ui/senales.js';
 import { PALETA, INTENSIDADES, EMBLEMAS, EMBLEMA_NOMBRE, estiloSeguro } from '../ui/estilo-senal.js';
 import { PALABRAS_DEFECTO, terminoProhibido, limpiarLista } from '../datos/moderacion.js';
@@ -22,6 +22,7 @@ let _uBusqueda = '', _uFiltro = 'todos', _uPagina = 1;
 let _anBusqueda = '', _anFiltro = 'todos';
 let _monFiltro = 'todos';
 let _moderacion = [];
+let _ingresos = {};
 const U_POR_PAGINA = 8;
 const ML = (en, es) => _mesaLang === 'es' ? es : en;
 const DEPORTES = {
@@ -139,6 +140,7 @@ async function cargarDatos() {
   try { _moderacion = await leerModeracion(); } catch (_) { _moderacion = []; }
   try { _admins = await listarAdmins(); } catch (_) { _admins = []; }
   if (_rol === 'admin') { try { _analistas = await listarAnalistas(); } catch (_) { _analistas = []; } }
+  if (_rol === 'admin') { try { _ingresos = await resumenIngresos(); } catch (_) { _ingresos = {}; } }
   pintarTab();
 }
 function rolAdmin(u) {
@@ -528,11 +530,41 @@ function _monDatos() {
       email: a.email || (uu && uu.email) || '',
       deporte: a.deporte,
       seguidores: Number(a.seguidores || 0),
+      apoyos: Number((_ingresos || {})[a.uid] || 0),
       activo: a.activo !== false,
       sig,
       trabajando: sig > 0,
     };
   }).sort((x, y) => y.sig - x.sig || y.seguidores - x.seguidores);
+}
+
+function _bloqueIngresos() {
+  const ES = _mesaLang === 'es';
+  const L = (en, es) => ES ? es : en;
+  const Icoin = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><circle cx="12" cy="12" r="9"/><path d="M15 9.5A2.5 2.5 0 0012.5 8h-1a2 2 0 000 4h1a2 2 0 010 4h-1A2.5 2.5 0 019 14.5M12 6.5v11"/></svg>`;
+  const datos = _monDatos().filter(d => d.apoyos > 0).sort((a, b) => b.apoyos - a.apoyos);
+  const totSub = _monDatos().reduce((s, d) => s + d.apoyos, 0);
+  const paraAnalistas = totSub * 1, paraPlataforma = totSub * 1, total = totSub * 2;
+  const kpi = (cls, val, lab) => `<div class="mon-kpi ${cls}"><b>${val}</b><span>${esc(lab)}</span></div>`;
+  const filas = datos.length ? datos.map(d => `
+    <div class="ing-row">
+      <div class="ing-who"><b>${esc(d.nombre)}</b><span>${esc(depNombre(d.deporte))}</span></div>
+      <div class="ing-sub">${d.apoyos} <span>${ML('supporters', 'suscriptores')}</span></div>
+      <div class="ing-amt an">$${d.apoyos}<span>${ML('analyst', 'analista')}</span></div>
+      <div class="ing-amt pl">$${d.apoyos}<span>${ML('platform', 'plataforma')}</span></div>
+      <div class="ing-amt tot">$${d.apoyos * 2}<span>${ML('total', 'total')}</span></div>
+    </div>`).join('') : `<div class="ing-empty">${ML('No paid supporters yet.', 'Aún no hay suscriptores de pago.')}</div>`;
+  return `<div class="mesa-card mon-ing">
+    <div class="mc-t">${Icoin} ${L('Monthly earnings · paid supporters', 'Ingresos mensuales · suscriptores de pago')}</div>
+    <div class="mon-kpis ing-kpis">
+      ${kpi('', totSub, L('Paid supporters', 'Suscriptores'))}
+      ${kpi('ok', '$' + paraAnalistas, L('To analysts', 'Para analistas'))}
+      ${kpi('', '$' + paraPlataforma, L('Platform revenue', 'Para la plataforma'))}
+      ${kpi('warn', '$' + total, L('Total generated', 'Total generado'))}
+    </div>
+    <div class="ing-list">${filas}</div>
+    <p class="mon-note">${Icoin} ${L('Each supporter pays $2/mo → $1 analyst + $1 platform. Figures are in preview until the payment gateway (Stripe) is connected.', 'Cada suscriptor paga $2/mes → $1 analista + $1 plataforma. Las cifras son de vista previa hasta conectar la pasarela de pago (Stripe).')}</p>
+  </div>`;
 }
 
 function vistaMonitoreo() {
@@ -571,7 +603,8 @@ function vistaMonitoreo() {
         <tbody id="mon-tbody"></tbody>
       </table>
     </div>
-    <p class="mon-note">${IPulse} ${ML('Signals are counted individually per analyst for the current month. Followers fill in once the follow system is live.', 'Las señales se cuentan por analista para el mes actual. Los seguidores se llenan al activar el sistema de seguidores.')}</p>`;
+    <p class="mon-note">${IPulse} ${ML('Signals are counted individually per analyst for the current month. Followers fill in once the follow system is live.', 'Las señales se cuentan por analista para el mes actual. Los seguidores se llenan al activar el sistema de seguidores.')}</p>
+    ${_bloqueIngresos()}`;
 }
 
 function pintarMonitoreo() {

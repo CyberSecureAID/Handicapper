@@ -266,3 +266,73 @@ export async function contarVotos(signalId) {
   const [likes, dislikes] = await Promise.all([cuenta(1), cuenta(-1)]);
   return { likes, dislikes };
 }
+
+/* ============================================================
+   FASE 8 — APOYO DE PAGO AL ANALISTA (colección 'apoyos')
+   Doc id = `${uid}__${analistaUid}` =
+     { uid, analistaUid, firma, activo, precio:2, corteAnalista:1, cortePlataforma:1,
+       inicio, vence, metodo:'preview'|'stripe' }
+   El cobro real se conecta con la pasarela (Stripe) más adelante; por ahora
+   'preview' permite ver el flujo y el dashboard de ingresos del admin.
+   ============================================================ */
+const _idApoyo = (uid, aid) => `${uid}__${aid}`.replace(/[^\w:-]/g, '_');
+
+export async function apoyarAnalista(analistaUid, firma, metodo = 'preview') {
+  if (!await _asegurarListo()) return false;
+  const u = usuarioActual(); if (!u || !analistaUid) return false;
+  const S = _obtenerStore(), db = _obtenerDB();
+  const vence = new Date(); vence.setMonth(vence.getMonth() + 1);
+  await S.setDoc(S.doc(db, 'apoyos', _idApoyo(u.uid, analistaUid)), {
+    uid: u.uid, analistaUid, firma: firma || null, activo: true,
+    precio: 2, corteAnalista: 1, cortePlataforma: 1,
+    inicio: S.serverTimestamp(), vence: vence.toISOString(), metodo,
+  }, { merge: true });
+  return true;
+}
+export async function cancelarApoyo(analistaUid) {
+  if (!await _asegurarListo()) return false;
+  const u = usuarioActual(); if (!u || !analistaUid) return false;
+  const S = _obtenerStore(), db = _obtenerDB();
+  await S.setDoc(S.doc(db, 'apoyos', _idApoyo(u.uid, analistaUid)), { activo: false, cancelado: S.serverTimestamp() }, { merge: true });
+  return true;
+}
+export async function apoyoActivo(analistaUid) {
+  if (!analistaUid || !await _asegurarListo()) return false;
+  const u = usuarioActual(); if (!u) return false;
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const snap = await S.getDoc(S.doc(db, 'apoyos', _idApoyo(u.uid, analistaUid)));
+    return snap.exists() && snap.data().activo === true;
+  } catch (_) { return false; }
+}
+/* Analistas que el usuario apoya (activos). */
+export async function misApoyos() {
+  if (!await _asegurarListo()) return [];
+  const u = usuarioActual(); if (!u) return [];
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const q = S.query(S.collection(db, 'apoyos'), S.where('uid', '==', u.uid), S.where('activo', '==', true));
+    const snap = await S.getDocs(q);
+    const out = []; snap.forEach(d => out.push(d.data().analistaUid));
+    return out;
+  } catch (_) { return []; }
+}
+/* Nº de suscriptores de pago activos de un analista. */
+export async function contarApoyos(analistaUid) {
+  if (!analistaUid || !await _asegurarListo()) return 0;
+  const S = _obtenerStore(), db = _obtenerDB();
+  const q = S.query(S.collection(db, 'apoyos'), S.where('analistaUid', '==', analistaUid), S.where('activo', '==', true));
+  try { if (S.getCountFromServer) { const c = await S.getCountFromServer(q); return c.data().count || 0; } } catch (_) {}
+  try { const snap = await S.getDocs(q); return snap.size || 0; } catch (_) { return 0; }
+}
+/* Resumen de ingresos (admin): mapa analistaUid -> nº de apoyos activos. */
+export async function resumenIngresos() {
+  if (!await _asegurarListo()) return {};
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const q = S.query(S.collection(db, 'apoyos'), S.where('activo', '==', true));
+    const snap = await S.getDocs(q);
+    const out = {}; snap.forEach(d => { const a = d.data().analistaUid; if (a) out[a] = (out[a] || 0) + 1; });
+    return out;
+  } catch (_) { return {}; }
+}
