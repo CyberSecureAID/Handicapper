@@ -322,7 +322,8 @@ function mostrarVista(v) {
 function actualizarPuntoSenales() {
   const has = contarSenales() > 0;
   $('tab-dot')?.classList.toggle('on', has);
-  $('side-dot')?.classList.toggle('on', has);
+  $('premium-btn-dot')?.classList.toggle('on', has);
+  $('premium-an-dot')?.classList.toggle('on', has);
 }
 
 /* -------- Botón de idioma -------- */
@@ -371,6 +372,13 @@ function initProyeccion() {
   const pPop = document.getElementById('premium-pop');
   if (pBtn && pPop) {
     pBtn.addEventListener('click', (e) => { e.stopPropagation(); const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); });
+    const pAn = document.getElementById('premium-analisis');
+    if (pAn) pAn.addEventListener('click', () => {
+      pPop.classList.remove('open'); pBtn.classList.remove('open');
+      document.querySelectorAll('#tabbar .t').forEach(x => x.classList.toggle('on', x.dataset.vista === 'analisis'));
+      mostrarVista('analisis');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
     document.querySelectorAll('.premium-item[data-projgoto]').forEach(it => it.addEventListener('click', () => {
       const b = document.querySelector(`.proj-b[data-proj="${it.dataset.projgoto}"]`);
       if (b) b.click();
@@ -541,5 +549,35 @@ function cerrarSiFuera(e) {
   if (!e.target.closest('#cuenta-menu') && !e.target.closest('#cuenta-btn')) cerrarCuentaMenu();
 }
 function esc(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* Bisel adaptativo para la foto del jugador destacado:
+   detecta (con una imagen-sonda CORS) si la foto tiene fondo. Si tiene fondo → bisel;
+   si es recorte transparente o no se puede leer → sin bisel. Nunca rompe la imagen mostrada. */
+window.__bevelFoto = function (img) {
+  try {
+    if (!img || img.classList.contains('is-figura') || img.dataset.bevelChecked === img.src) return;
+    img.dataset.bevelChecked = img.src;
+    img.classList.remove('con-fondo', 'sin-fondo');
+    const probe = new Image();
+    probe.crossOrigin = 'anonymous';
+    probe.onload = function () {
+      try {
+        const w = Math.min(probe.naturalWidth, 48), h = Math.min(probe.naturalHeight, 48);
+        if (!w || !h) return;
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d'); ctx.drawImage(probe, 0, 0, w, h);
+        let data;
+        try { data = ctx.getImageData(0, 0, w, h).data; } catch (e) { return; } // tainted → sin bisel
+        let transp = 0, tot = 0;
+        const chk = (x, y) => { const i = (y * w + x) * 4; tot++; if (data[i + 3] < 25) transp++; };
+        for (let x = 0; x < w; x++) { chk(x, 0); chk(x, h - 1); }
+        for (let y = 0; y < h; y++) { chk(0, y); chk(w - 1, y); }
+        img.classList.add((transp / tot) > 0.22 ? 'sin-fondo' : 'con-fondo');
+      } catch (e) {}
+    };
+    probe.onerror = function () {}; // no CORS → no se puede leer → sin bisel (seguro)
+    probe.src = img.src;
+  } catch (e) {}
+};
 
 document.addEventListener('DOMContentLoaded', init);
