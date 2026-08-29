@@ -8,7 +8,7 @@ import { IC } from './ui/iconos.js';
 import { initTema } from './ui/tema.js';
 import { initIdioma, fijarIdioma, idiomaActual, t } from './ui/idioma.js';
 import { compartirPartido } from './ui/compartir.js';
-import { iniciarAuth, registrarCorreo, entrarCorreo, entrarGoogle, salir, mensajeError, estaConfigurado } from './auth/auth.js';
+import { iniciarAuth, registrarCorreo, entrarCorreo, entrarGoogle, salir, mensajeError, estaConfigurado, actualizarPerfil, esCuentaGoogle } from './auth/auth.js';
 import { initAuthUI, abrirAuth } from './auth/auth-ui.js';
 import { initNavegacion, mostrarPantalla, aplicarI18n } from './ui/navegacion.js';
 import { fijarSuscripcion, tieneAcceso, limpiarVistaPrevia, marcarVistaPrevia, planActual } from './auth/estado-pago.js';
@@ -543,12 +543,19 @@ function toggleCuentaMenu() {
   menu.className = 'cuenta-menu abierto';
   const botonPanel = (_esAdmin || _esAnalista)
     ? `<button id="cm-panel">${IC.grafico || ''} ${_esAnalista && !_esAdmin ? (idiomaActual() === 'es' ? 'Panel de analista' : 'Analyst panel') : (idiomaActual() === 'es' ? 'Panel administrativo' : 'Admin panel')}</button>` : '';
+  const ES = idiomaActual() === 'es';
+  const icAjustes = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/></svg>`;
+  const icIdioma = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg>`;
   menu.innerHTML = `
     <div class="quien"><b>${esc(_sesion.nombre || '')}</b><span>${esc(_sesion.email || '')}</span></div>
     ${botonPanel}
+    <button id="cm-perfil">${icAjustes} ${ES ? 'Ajustes de perfil' : 'Profile settings'}</button>
+    <button id="cm-idioma">${icIdioma} ${ES ? 'Idioma' : 'Language'} · ${idiomaActual().toUpperCase()}</button>
     <button id="cm-salir">${IC.salir || ''} ${t('auth.salir')}</button>`;
   document.body.appendChild(menu);
   menu.querySelector('#cm-panel')?.addEventListener('click', () => { cerrarCuentaMenu(); abrirPanelMesa(); });
+  menu.querySelector('#cm-perfil')?.addEventListener('click', () => { cerrarCuentaMenu(); abrirAjustesPerfil(); });
+  menu.querySelector('#cm-idioma')?.addEventListener('click', () => { fijarIdioma(idiomaActual() === 'en' ? 'es' : 'en'); cerrarCuentaMenu(); });
   menu.querySelector('#cm-salir').addEventListener('click', async () => { limpiarVistaPrevia(); await salir(); cerrarCuentaMenu(); });
   setTimeout(() => document.addEventListener('click', cerrarSiFuera), 0);
 }
@@ -557,6 +564,78 @@ function cerrarSiFuera(e) {
   if (!e.target.closest('#cuenta-menu') && !e.target.closest('#cuenta-btn')) cerrarCuentaMenu();
 }
 function esc(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* -------- Modal: Ajustes de perfil -------- */
+function _errPerfil(e, ES) {
+  const L = (en, es) => ES ? es : en;
+  const c = (e && e.code) || '';
+  if (c === 'reauth-needed' || c === 'auth/requires-recent-login') return L('Enter your current password to change email or password.', 'Escribe tu contraseña actual para cambiar el correo o la contraseña.');
+  if (c === 'auth/wrong-password' || c === 'auth/invalid-credential') return L('Current password is incorrect.', 'La contraseña actual es incorrecta.');
+  if (c === 'auth/email-already-in-use') return L('That email is already in use.', 'Ese correo ya está en uso.');
+  if (c === 'auth/invalid-email') return L('The email is not valid.', 'El correo no es válido.');
+  if (c === 'auth/weak-password') return L('The password is too weak.', 'La contraseña es muy débil.');
+  if (c === 'google-no-pass') return L('Your Google account manages email and password.', 'Tu cuenta de Google gestiona el correo y la contraseña.');
+  return L('Could not save changes. Try again.', 'No se pudieron guardar los cambios. Inténtalo de nuevo.');
+}
+function abrirAjustesPerfil() {
+  const ES = idiomaActual() === 'es';
+  const L = (en, es) => ES ? es : en;
+  const esGoogle = esCuentaGoogle();
+  const s = _sesion || {};
+  document.getElementById('ap-bg')?.remove();
+  const bg = document.createElement('div'); bg.id = 'ap-bg'; bg.className = 'ap-bg abierto';
+  const esc2 = (e) => { if (e.key === 'Escape') cerrar(); };
+  const cerrar = () => { bg.remove(); document.removeEventListener('keydown', esc2); };
+  bg.innerHTML = `<div class="ap-card" role="dialog" aria-modal="true">
+    <button class="ap-x" aria-label="close">✕</button>
+    <h3 class="ap-title">${L('Profile settings', 'Ajustes de perfil')}</h3>
+    <div class="ap-body">
+      <label class="ap-lbl">${L('Name', 'Nombre')}</label>
+      <input class="ap-in" id="ap-nombre" type="text" value="${esc(s.nombre || '')}" autocomplete="name">
+      <label class="ap-lbl">${L('Username', 'Nombre de usuario')}</label>
+      <input class="ap-in" id="ap-usuario" type="text" value="${esc(s.usuario || '')}" placeholder="@usuario">
+      <label class="ap-lbl">${L('Email', 'Correo')}</label>
+      <input class="ap-in" id="ap-email" type="email" value="${esc(s.email || '')}" ${esGoogle ? 'disabled' : ''} autocomplete="email">
+      <label class="ap-lbl">${L('New password', 'Nueva contraseña')}</label>
+      <input class="ap-in" id="ap-pass" type="password" placeholder="${L('Leave blank to keep it', 'Déjalo vacío para no cambiarla')}" ${esGoogle ? 'disabled' : ''} autocomplete="new-password">
+      <div class="ap-reauth" id="ap-reauth" hidden>
+        <label class="ap-lbl">${L('Current password', 'Contraseña actual')}</label>
+        <input class="ap-in" id="ap-passact" type="password" placeholder="${L('Needed to change email or password', 'Necesaria para cambiar correo o contraseña')}" autocomplete="current-password">
+      </div>
+      ${esGoogle ? `<div class="ap-note">${L('Your account uses Google. Email and password are managed by Google.', 'Tu cuenta usa Google. El correo y la contraseña se gestionan en Google.')}</div>` : ''}
+      <div class="ap-msg" id="ap-msg"></div>
+    </div>
+    <div class="ap-foot"><button class="ap-cancel">${L('Cancel', 'Cancelar')}</button><button class="ap-apply">${L('Apply', 'Aplicar')}</button></div>
+  </div>`;
+  document.body.appendChild(bg);
+  document.addEventListener('keydown', esc2);
+  bg.querySelector('.ap-x').onclick = cerrar; bg.querySelector('.ap-cancel').onclick = cerrar;
+  bg.onclick = (e) => { if (e.target === bg) cerrar(); };
+  const emailIn = bg.querySelector('#ap-email'), passIn = bg.querySelector('#ap-pass'), reauth = bg.querySelector('#ap-reauth');
+  const chkReauth = () => { const need = !esGoogle && ((emailIn.value.trim() && emailIn.value.trim() !== (s.email || '')) || passIn.value); reauth.hidden = !need; };
+  emailIn.addEventListener('input', chkReauth); passIn.addEventListener('input', chkReauth);
+  bg.querySelector('.ap-apply').onclick = async () => {
+    const msg = bg.querySelector('#ap-msg'); msg.className = 'ap-msg';
+    const nombre = bg.querySelector('#ap-nombre').value.trim();
+    const usuario = bg.querySelector('#ap-usuario').value.trim().replace(/^@+/, '');
+    const email = esGoogle ? '' : emailIn.value.trim();
+    const password = esGoogle ? '' : passIn.value;
+    const passwordActual = bg.querySelector('#ap-passact')?.value || '';
+    if (!nombre) { msg.classList.add('err'); msg.textContent = L('Name cannot be empty.', 'El nombre no puede estar vacío.'); return; }
+    if (password && password.length < 6) { msg.classList.add('err'); msg.textContent = L('Password must be at least 6 characters.', 'La contraseña debe tener al menos 6 caracteres.'); return; }
+    const apply = bg.querySelector('.ap-apply'); apply.disabled = true; const orig = apply.textContent; apply.textContent = '…';
+    try {
+      await actualizarPerfil({ nombre, usuario, email, password, passwordActual });
+      pintarCuenta(_sesion);
+      msg.classList.add('ok'); msg.textContent = L('Changes saved.', 'Cambios guardados.');
+      setTimeout(cerrar, 900);
+    } catch (e) {
+      apply.disabled = false; apply.textContent = orig;
+      if ((e && e.code) === 'reauth-needed') reauth.hidden = false;
+      msg.classList.add('err'); msg.textContent = _errPerfil(e, ES);
+    }
+  };
+}
 
 /* Bisel adaptativo para la foto del jugador destacado:
    detecta (con una imagen-sonda CORS) si la foto tiene fondo. Si tiene fondo → bisel;
