@@ -6,7 +6,7 @@
 import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos } from './mesa-datos.js';
 import { prepararEstilosSenal, tarjetaMuestra } from '../ui/senales.js';
 import { PALETA, INTENSIDADES, EMBLEMAS, EMBLEMA_NOMBRE, estiloSeguro } from '../ui/estilo-senal.js';
-import { PALABRAS_DEFECTO, terminoProhibido, limpiarLista } from '../datos/moderacion.js';
+import { PALABRAS_DEFECTO, terminoProhibido, limpiarLista, detectarPublicidad } from '../datos/moderacion.js';
 import { LIGAS, listarPartidos, detallePartido } from '../datos/proveedor.js';
 import { PLANES, planPorId } from '../datos/planes.js';
 import { salir, usuarioActual } from '../auth/auth.js';
@@ -465,6 +465,20 @@ function enlazarEditorEstilo() {
    ============================================================ */
 let _modGuardar = null;
 function _listaModEfectiva() { return _moderacion.length ? _moderacion : PALABRAS_DEFECTO.slice(); }
+
+/* Revisa el análisis (lenguaje + publicidad/enlaces) y devuelve el mensaje del
+   motivo por el que se bloquea, o null si está limpio. `L` traduce en/es. */
+function _revisarAnalisis(texto, L) {
+  const mal = terminoProhibido(texto, _listaModEfectiva());
+  if (mal) return L(`Your analysis contains language that isn't allowed ("${mal}"). Please edit it.`, `Tu análisis contiene lenguaje no permitido ("${mal}"). Edítalo.`);
+  const ad = detectarPublicidad(texto);
+  if (ad) {
+    if (ad.tipo === 'sitio') return L(`You can't promote external sites ("${ad.detalle}") in the analysis. Remove it to publish.`, `No puedes promocionar páginas externas ("${ad.detalle}") en el análisis. Quítalo para publicar.`);
+    if (ad.tipo === 'contacto') return L(`You can't share contact info or social networks in the analysis. Remove it to publish.`, `No puedes compartir contactos ni redes sociales en el análisis. Quítalo para publicar.`);
+    return L(`Links and web addresses aren't allowed in the analysis. Remove it to publish.`, `No se permiten enlaces ni direcciones web en el análisis. Quítalo para publicar.`);
+  }
+  return null;
+}
 function vistaModeracion() {
   const IShield = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M12 3l7 3v5c0 4.4-3 7.4-7 9-4-1.6-7-4.6-7-9V6l7-3z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg>`;
   const Iplus = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`;
@@ -967,8 +981,8 @@ function abrirModalEditarSenal(a, padre) {
   bg.querySelectorAll('[data-cf]').forEach(b => b.onclick = () => { conf = b.dataset.cf; bg.querySelectorAll('[data-cf]').forEach(x => x.classList.toggle('on', x === b)); });
   bg.querySelector('.edit-save').onclick = async () => {
     const texto = bg.querySelector('#edit-txt').value.trim();
-    const mal = terminoProhibido(texto, _moderacion.length ? _moderacion : PALABRAS_DEFECTO);
-    if (mal) { const h = bg.querySelector('#edit-hint'); h.classList.add('err'); h.textContent = L(`This contains language that isn't allowed ("${mal}"). Please edit it.`, `Esto contiene lenguaje no permitido ("${mal}"). Edítalo.`); return; }
+    const motivo = _revisarAnalisis(texto, L);
+    if (motivo) { const h = bg.querySelector('#edit-hint'); h.classList.add('err'); h.textContent = motivo; return; }
     const nProb = Number(prob.value);
     const analisis = { ...a, equipos, veredicto: `${fav} ${L('to win', 'gana')}`, prob: nProb, favorito: fav, confianza: conf, mercado: bg.querySelector('#edit-mkt').value, texto, estado: 'publicado' };
     const save = bg.querySelector('.edit-save'); save.disabled = true; save.textContent = '…';
@@ -1236,11 +1250,11 @@ async function abrirModalSenal(matchId) {
       bg.querySelector('.anm2-pick').scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
-    // Fase 6 — moderación: no se publica si el análisis tiene lenguaje prohibido
-    const mal = terminoProhibido(ta.value, _moderacion.length ? _moderacion : PALABRAS_DEFECTO);
-    if (mal) {
+    // Moderación: no se publica si el análisis tiene lenguaje prohibido, enlaces o publicidad
+    const motivo = _revisarAnalisis(ta.value, L);
+    if (motivo) {
       const hint = bg.querySelector('#anm-hint'); hint.classList.add('err');
-      hint.textContent = L(`Your analysis contains language that isn't allowed ("${mal}"). Please edit it before publishing.`, `Tu análisis contiene lenguaje no permitido ("${mal}"). Edítalo antes de publicar.`);
+      hint.textContent = motivo;
       ta.scrollIntoView({ behavior: 'smooth', block: 'center' }); ta.focus();
       return;
     }
