@@ -118,6 +118,8 @@ function render() {
       if (match) { abrirModalSenal(match.dataset.match); return; }
       const del = e.target.closest('[data-del]');
       if (del) { eliminarAnalisis(del.dataset.del, del); return; }
+      const pub = e.target.closest('[data-open-pub]');
+      if (pub) { abrirModalPublicadas(); return; }
       const bloq = e.target.closest('[data-bloq]');
       if (bloq) { toggleBloqueo(bloq.dataset.bloq, bloq); return; }
     });
@@ -749,6 +751,7 @@ function vistaAnalisis() {
   const Iflag = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V5a1 1 0 011-1h11l-2 4 2 4H6"/></svg>`;
   const Iarrow = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
   const Iempty = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 14h8"/></svg>`;
+  const IEyeMini = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`;
 
   const ligasVis = _rol === 'analista' ? LIGAS.filter(l => ligasDeporte(_deporteAnalista).includes(l.id)) : LIGAS;
   const ligas = ligasVis.map(l => `<button class="ah2-lg ${_ligaSel === l.id ? 'on' : ''}" data-liga="${l.id}">
@@ -801,27 +804,16 @@ function vistaAnalisis() {
   else if (!_partidos.length) tablero = `<div class="ah2-empty">${Iempty}<b>${L('No matches right now', 'No hay partidos ahora')}</b><span>${L('There are no upcoming matches in this league at the moment.', 'No hay próximos partidos en esta liga por ahora.')}</span></div>`;
   else tablero = `${dayTabs}<div class="ah2-days">${dias}</div>`;
 
-  const favs = _partidos.map(p => Math.max(p.mercado?.local || 0, p.mercado?.visita || 0)).filter(Boolean);
-  const avgFav = favs.length ? Math.round(favs.reduce((a, b) => a + b, 0) / favs.length) : 0;
-
-  const senales = _analisis.length
-    ? `<div class="ah2-sig-grid">${_analisis.map(a => `<div class="ah2-sig">
-        <div class="ah2-sig-h"><b>${esc(a.equipos || a.matchId)}</b>${a.prob != null ? `<span class="ah2-sig-pct">${a.prob}%</span>` : ''}</div>
-        <div class="ah2-sig-v">${esc(a.veredicto || '')}${a.confianza ? `<span class="ah2-sig-c ${a.confianza}">${esc(confTx[a.confianza] || a.confianza)}</span>` : ''}</div>
-        ${a.texto ? `<p class="ah2-sig-t">${esc(a.texto)}</p>` : ''}
-        <button class="ah2-sig-del" data-del="${esc(a.matchId || a.id)}">${L('Delete', 'Eliminar')}</button></div>`).join('')}</div>`
-    : `<div class="ah2-empty sm">${Iflag}<b>${L('No signals yet', 'Aún no hay señales')}</b><span>${L('When you publish an analysis it will show up here.', 'Cuando publiques un análisis aparecerá aquí.')}</span></div>`;
-
   return `
     <div class="ah2">
       <div class="ah2-top">
-        <div class="ah2-titles"><h1>Analysis Hub</h1><p>${L('Browse matches, set your read, publish signals.', 'Explora partidos, define tu lectura y publica señales.')}</p></div>
+        <div class="ah2-titles"><h1>Analysis Hub</h1></div>
       </div>
       <div class="ah2-metrics">
         <div class="ah2-metric"><b>${LIGAS.length}</b><span>${L('Leagues', 'Ligas')}</span></div>
         <div class="ah2-metric"><b>${_partidos.length}</b><span>${L('Matches', 'Partidos')}</span></div>
         <div class="ah2-metric gold"><b>${_analisis.length}</b><span>${L('Signals', 'Señales')}</span></div>
-        <div class="ah2-metric"><b>${avgFav || '—'}${avgFav ? '%' : ''}</b><span>${L('Avg favorite', 'Favorito prom.')}</span></div>
+        <button class="ah2-metric ah2-metric-btn" data-open-pub><b>${IEyeMini}</b><span>${L('Published signals', 'Señales publicadas')} ›</span></button>
       </div>
 
       <div class="ah2-lgs">${ligas}</div>
@@ -829,11 +821,6 @@ function vistaAnalisis() {
       <div class="ah2-board">
         <div class="ah2-sec-h"><span>${L('Upcoming matches', 'Próximos partidos')}${ligaNm ? ` · ${esc(ligaNm)}` : ''}</span></div>
         ${tablero}
-      </div>
-
-      <div class="ah2-board">
-        <div class="ah2-sec-h"><span>${Icheck} ${L('Published signals', 'Señales publicadas')}</span><em>${_analisis.length}</em></div>
-        ${senales}
       </div>
     </div>`;
 }
@@ -873,6 +860,125 @@ async function eliminarAnalisis(matchId, btn) {
 
 /* Modal de señal: dos sectores. Izquierda = análisis de la página
    (datos reales + ajustar %). Derecha = criterio del analista. */
+/* ============================================================
+   BLOQUE 1 — Señales publicadas (modal) + editar + confirmación
+   ============================================================ */
+function confirmar(msg, textoOk, onOk) {
+  const ES = _mesaLang === 'es', L = (en, es) => ES ? es : en;
+  document.getElementById('mesa-confirm')?.remove();
+  const bg = document.createElement('div'); bg.className = 'mesa-cfm-bg'; bg.id = 'mesa-confirm';
+  bg.innerHTML = `<div class="mesa-cfm" role="dialog" aria-modal="true">
+    <div class="mesa-cfm-msg">${esc(msg)}</div>
+    <div class="mesa-cfm-btns">
+      <button class="mesa-cfm-cancel">${L('Cancel', 'Cancelar')}</button>
+      <button class="mesa-cfm-ok">${esc(textoOk)}</button>
+    </div></div>`;
+  document.body.appendChild(bg);
+  const cerrar = () => bg.remove();
+  bg.onclick = (e) => { if (e.target === bg) cerrar(); };
+  bg.querySelector('.mesa-cfm-cancel').onclick = cerrar;
+  bg.querySelector('.mesa-cfm-ok').onclick = async () => { const b = bg.querySelector('.mesa-cfm-ok'); b.disabled = true; try { await onOk(); } catch (_) {} cerrar(); };
+}
+
+function _confTxMesa() { const ES = _mesaLang === 'es', L = (en, es) => ES ? es : en; return { alta: L('High', 'Alta'), media: L('Medium', 'Media'), baja: L('Low', 'Baja') }; }
+
+function cuerpoPublicadas() {
+  const ES = _mesaLang === 'es', L = (en, es) => ES ? es : en, cf = _confTxMesa();
+  const IEdit = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>`;
+  const ITrash = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg>`;
+  const Iempty = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 14h8"/></svg>`;
+  if (!_analisis.length) return `<div class="pub-empty">${Iempty}<b>${L('No signals yet', 'Aún no hay señales')}</b><span>${L('When you publish an analysis it will show up here.', 'Cuando publiques un análisis aparecerá aquí.')}</span></div>`;
+  return `<div class="pub-grid">${_analisis.map(a => `<div class="pub-card">
+    <div class="pub-c-h"><b>${esc(a.equipos || a.matchId)}</b>${a.prob != null ? `<span class="pub-c-pct">${a.prob}%</span>` : ''}</div>
+    <div class="pub-c-v">${esc(a.veredicto || '')}${a.confianza ? `<span class="pub-c-conf ${a.confianza}">${esc(cf[a.confianza] || a.confianza)}</span>` : ''}</div>
+    ${a.texto ? `<p class="pub-c-t">${esc(a.texto)}</p>` : ''}
+    <div class="pub-c-acts">
+      <button class="pub-edit" data-pubedit="${esc(a.matchId || a.id)}">${IEdit} ${L('Edit', 'Editar')}</button>
+      <button class="pub-del" data-pubdel="${esc(a.matchId || a.id)}">${ITrash} ${L('Delete', 'Eliminar')}</button>
+    </div></div>`).join('')}</div>`;
+}
+
+function enlazarPublicadas(bg) {
+  const ES = _mesaLang === 'es', L = (en, es) => ES ? es : en;
+  const refrescar = () => { const body = bg.querySelector('.pub-body'); if (body) body.innerHTML = cuerpoPublicadas(); const em = bg.querySelector('.pub-head em'); if (em) em.textContent = _analisis.length; enlazarPublicadas(bg); pintarTab(); };
+  bg.querySelectorAll('[data-pubdel]').forEach(b => b.onclick = () => {
+    const id = b.dataset.pubdel;
+    confirmar(L('Are you sure you want to delete this signal?', '¿Estás seguro que quieres eliminar esta señal?'), L('Yes, delete', 'Sí, eliminar'), async () => {
+      try { await borrarAnalisis(id); _analisis = await listarAnalisis(); } catch (_) {}
+      refrescar();
+    });
+  });
+  bg.querySelectorAll('[data-pubedit]').forEach(b => b.onclick = () => {
+    const a = _analisis.find(x => (x.matchId || x.id) === b.dataset.pubedit); if (!a) return;
+    abrirModalEditarSenal(a, bg);
+  });
+}
+
+function abrirModalPublicadas() {
+  const ES = _mesaLang === 'es', L = (en, es) => ES ? es : en;
+  document.getElementById('pub-modal')?.remove();
+  const bg = document.createElement('div'); bg.className = 'pub-bg'; bg.id = 'pub-modal';
+  const cerrar = () => bg.remove();
+  bg.innerHTML = `<div class="pub-modal" role="dialog" aria-modal="true">
+    <div class="pub-head"><h2>${L('Published signals', 'Señales publicadas')} <em>${_analisis.length}</em></h2><button class="pub-x" aria-label="close">✕</button></div>
+    <div class="pub-body">${cuerpoPublicadas()}</div>
+  </div>`;
+  document.body.appendChild(bg);
+  bg.querySelector('.pub-x').onclick = cerrar;
+  bg.onclick = (e) => { if (e.target === bg) cerrar(); };
+  enlazarPublicadas(bg);
+}
+
+function abrirModalEditarSenal(a, padre) {
+  const ES = _mesaLang === 'es', L = (en, es) => ES ? es : en, cf = _confTxMesa();
+  const equipos = String(a.equipos || ''); const partes = equipos.split(/\s+vs\s+/i);
+  const tA = (partes[0] || '').trim(), tB = (partes[1] || '').trim();
+  let fav = a.favorito || tA, conf = a.confianza || 'media';
+  const mkOpts = [['ml', L('Match winner', 'Ganador del partido')], ['ml_ot', L('Winner (incl. OT)', 'Ganador (incl. TE)')], ['spread', L('Spread / Handicap', 'Hándicap')], ['totals', L('Totals (O/U)', 'Totales (M/M)')]];
+  document.getElementById('edit-modal')?.remove();
+  const bg = document.createElement('div'); bg.className = 'edit-bg'; bg.id = 'edit-modal';
+  const cerrar = () => bg.remove();
+  bg.innerHTML = `<div class="edit-modal" role="dialog" aria-modal="true">
+    <div class="edit-head"><h3>${L('Edit signal', 'Editar señal')}</h3><button class="edit-x" aria-label="close">✕</button></div>
+    <div class="edit-body">
+      <div class="edit-match">${esc(equipos)}</div>
+      <label class="edit-lbl">${L('Winner', 'Ganador')}</label>
+      <div class="edit-pick">
+        <button class="edit-team ${fav === tA ? 'on' : ''}" data-team="${esc(tA)}">${esc(tA)}</button>
+        <button class="edit-team ${fav === tB ? 'on' : ''}" data-team="${esc(tB)}">${esc(tB)}</button>
+      </div>
+      <label class="edit-lbl">${L('Probability', 'Probabilidad')}: <b id="edit-probv">${a.prob ?? 60}%</b></label>
+      <input type="range" id="edit-prob" min="1" max="99" value="${a.prob ?? 60}" class="edit-range">
+      <label class="edit-lbl">${L('Confidence', 'Confianza')}</label>
+      <div class="edit-conf">${['alta', 'media', 'baja'].map(k => `<button class="edit-cf ${conf === k ? 'on' : ''}" data-cf="${k}">${esc(cf[k] || k)}</button>`).join('')}</div>
+      <label class="edit-lbl">${L('Market', 'Mercado')}</label>
+      <select id="edit-mkt" class="edit-select">${mkOpts.map(([v, t]) => `<option value="${v}" ${(a.mercado || 'ml') === v ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>
+      <label class="edit-lbl">${L('Analysis', 'Análisis')}</label>
+      <textarea id="edit-txt" class="edit-txt" rows="4">${esc(a.texto || '')}</textarea>
+      <div class="edit-hint" id="edit-hint"></div>
+    </div>
+    <div class="edit-btns"><button class="edit-cancel">${L('Cancel', 'Cancelar')}</button><button class="edit-save">${L('Save changes', 'Guardar cambios')}</button></div>
+  </div>`;
+  document.body.appendChild(bg);
+  bg.querySelector('.edit-x').onclick = cerrar; bg.querySelector('.edit-cancel').onclick = cerrar;
+  bg.onclick = (e) => { if (e.target === bg) cerrar(); };
+  bg.querySelectorAll('[data-team]').forEach(b => b.onclick = () => { fav = b.dataset.team; bg.querySelectorAll('[data-team]').forEach(x => x.classList.toggle('on', x === b)); });
+  const prob = bg.querySelector('#edit-prob'); prob.oninput = () => { bg.querySelector('#edit-probv').textContent = prob.value + '%'; };
+  bg.querySelectorAll('[data-cf]').forEach(b => b.onclick = () => { conf = b.dataset.cf; bg.querySelectorAll('[data-cf]').forEach(x => x.classList.toggle('on', x === b)); });
+  bg.querySelector('.edit-save').onclick = async () => {
+    const texto = bg.querySelector('#edit-txt').value.trim();
+    const mal = terminoProhibido(texto, _moderacion.length ? _moderacion : PALABRAS_DEFECTO);
+    if (mal) { const h = bg.querySelector('#edit-hint'); h.classList.add('err'); h.textContent = L(`This contains language that isn't allowed ("${mal}"). Please edit it.`, `Esto contiene lenguaje no permitido ("${mal}"). Edítalo.`); return; }
+    const nProb = Number(prob.value);
+    const analisis = { ...a, equipos, veredicto: `${fav} ${L('to win', 'gana')}`, prob: nProb, favorito: fav, confianza: conf, mercado: bg.querySelector('#edit-mkt').value, texto, estado: 'publicado' };
+    const save = bg.querySelector('.edit-save'); save.disabled = true; save.textContent = '…';
+    try { await guardarAnalisis(a.matchId || a.id, analisis); _analisis = await listarAnalisis(); } catch (_) {}
+    cerrar();
+    if (padre) { const body = padre.querySelector('.pub-body'); if (body) { body.innerHTML = cuerpoPublicadas(); enlazarPublicadas(padre); } }
+    pintarTab();
+  };
+}
+
 async function abrirModalSenal(matchId) {
   const p = _partidos.find(x => x.id === matchId); if (!p) return;
   const ya = _analisis.find(a => a.matchId === matchId);

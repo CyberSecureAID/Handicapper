@@ -64,7 +64,7 @@ export async function guardarAnalisis(matchId, analisis) {
     matchId,
     autor: analisis.autor || u?.nombre || u?.email || 'Analyst',
     firma: analisis.firma || null,
-    autorUid: u?.uid || null,
+    autorUid: analisis.autorUid || u?.uid || null,
     actualizado: S.serverTimestamp(),
   });
 }
