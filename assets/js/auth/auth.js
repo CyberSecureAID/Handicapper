@@ -61,7 +61,7 @@ export async function iniciarAuth(alCambiar) {
         alCambiar?.(null, { bloqueado: true });
         return;
       }
-      if (perfil) { _usuario.suscripcion = perfil.suscripcion || null; _usuario.rol = perfil.rol || 'usuario'; }
+      if (perfil) { _usuario.suscripcion = perfil.suscripcion || null; _usuario.rol = perfil.rol || 'usuario'; _usuario.usuario = perfil.usuario || ''; }
     } else {
       _usuario = null;
     }
@@ -117,6 +117,54 @@ export async function entrarGoogle() {
 export async function salir() {
   if (!_auth) return;
   await _fbAuth.signOut(_auth);
+}
+
+/* ¿La sesión actual entró con Google? (entonces no gestiona correo/contraseña aquí) */
+export function esCuentaGoogle() {
+  const u = _auth && _auth.currentUser;
+  return !!(u && (u.providerData || []).some(p => p.providerId === 'google.com'));
+}
+
+/* Actualiza el perfil del usuario: nombre, nombre de usuario, correo y/o contraseña.
+   Reautentica con la contraseña actual cuando Firebase lo exige (cambio de correo o
+   contraseña). Lanza errores con .code para que la interfaz muestre el mensaje adecuado. */
+export async function actualizarPerfil({ nombre, usuario, email, password, passwordActual }) {
+  if (!await cargar()) throw new Error('Firebase no configurado');
+  const u = _auth.currentUser;
+  if (!u) { const e = new Error('no-session'); e.code = 'no-session'; throw e; }
+  const esGoogle = (u.providerData || []).some(p => p.providerId === 'google.com');
+  const cambiaEmail = !!(email && email !== u.email);
+  const cambiaPass = !!password;
+
+  if ((cambiaEmail || cambiaPass) && esGoogle) { const e = new Error('google'); e.code = 'google-no-pass'; throw e; }
+
+  // Reautenticar si se cambia correo o contraseña
+  if (cambiaEmail || cambiaPass) {
+    if (!passwordActual) { const e = new Error('reauth'); e.code = 'reauth-needed'; throw e; }
+    const cred = _fbAuth.EmailAuthProvider.credential(u.email, passwordActual);
+    await _fbAuth.reauthenticateWithCredential(u, cred);
+  }
+
+  if (nombre && nombre !== u.displayName) { await _fbAuth.updateProfile(u, { displayName: nombre }); }
+  if (cambiaEmail) { await _fbAuth.updateEmail(u, email); }
+  if (cambiaPass) { await _fbAuth.updatePassword(u, password); }
+
+  // Documento de perfil en Firestore
+  try {
+    const { doc, updateDoc } = _fbStore;
+    const patch = {};
+    if (nombre) patch.nombre = nombre;
+    if (usuario != null) patch.usuario = usuario;
+    if (cambiaEmail) patch.email = email;
+    if (Object.keys(patch).length) await updateDoc(doc(_db, 'usuarios', u.uid), patch);
+  } catch (_) {}
+
+  if (_usuario) {
+    if (nombre) _usuario.nombre = nombre;
+    if (usuario != null) _usuario.usuario = usuario;
+    if (cambiaEmail) _usuario.email = email;
+  }
+  return { esGoogle };
 }
 
 /* Traduce códigos de error de Firebase a mensajes claros */
