@@ -741,3 +741,76 @@ body.en-mesa { overflow: hidden; }
 .est-apply-row { display: flex; align-items: center; justify-content: flex-end; gap: 14px; margin-top: 18px; }
 .est-saved { font-size: 12.5px; font-weight: 700; color: #2fd07f; }
 .est-apply-row .mesa-btn { flex: 0 0 auto; }
+
+/* ===== BLOQUE 1 — botón "Señales publicadas" + modales ===== */
+.ah2-metric-btn { cursor: pointer; text-align: left; font-family: inherit; transition: border-color .14s, background .14s, transform .1s; }
+.ah2-metric-btn:hover { border-color: rgba(232,184,75,.5); background: linear-gradient(180deg, rgba(232,184,75,.1), rgba(232,184,75,.02)); }
+.ah2-metric-btn:active { transform: scale(.98); }
+.ah2-metric-btn b { color: var(--m-oro); }
+.ah2-metric-btn b svg { width: 26px; height: 26px; }
+.ah2-metric-btn span { color: #e7d3a3; font-weight: 700; }
+
+/* Modal grande de señales publicadas */
+.pub-bg { position: fixed; inset: 0; z-index: 900; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(2,4,8,.72); backdrop-filter: blur(5px); }
+.pub-modal { width: 100%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; background: linear-gradient(180deg,#141b26,#0d1219); border: 1px solid var(--m-linea); border-radius: 20px; box-shadow: 0 30px 90px rgba(0,0,0,.6); overflow: hidden; }
+.pub-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--m-linea); }
+.pub-head h2 { margin: 0; font-family: 'Chakra Petch',sans-serif; font-size: 20px; color: #fff; display: flex; align-items: center; gap: 10px; }
+.pub-head em { font-style: normal; font-size: 13px; font-weight: 700; color: #1a1206; background: var(--m-oro); border-radius: 999px; padding: 2px 10px; }
+.pub-x { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--m-linea); background: rgba(255,255,255,.03); color: #cdd6e2; font-size: 18px; cursor: pointer; }
+.pub-x:hover { color: #fff; border-color: rgba(240,53,58,.5); background: rgba(240,53,58,.12); }
+.pub-body { padding: 20px 24px; overflow-y: auto; }
+.pub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 14px; }
+.pub-card { border: 1px solid var(--m-linea); border-radius: 14px; padding: 15px; background: rgba(255,255,255,.02); }
+.pub-c-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.pub-c-h b { color: #fff; font-size: 14px; }
+.pub-c-pct { font-family: 'Chakra Petch',sans-serif; font-weight: 800; color: var(--m-oro); }
+.pub-c-v { font-size: 13px; color: #c7d2de; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.pub-c-conf { font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 2px 9px; }
+.pub-c-conf.alta { color: #48d17e; background: rgba(38,194,129,.12); } .pub-c-conf.media { color: #e8b84b; background: rgba(232,184,75,.12); } .pub-c-conf.baja { color: #ff8a94; background: rgba(240,82,90,.12); }
+.pub-c-t { font-size: 12.5px; color: var(--m-tinta2); line-height: 1.5; margin: 0 0 12px; max-height: 66px; overflow: hidden; }
+.pub-c-acts { display: flex; gap: 8px; }
+.pub-edit, .pub-del { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 9px; padding: 9px; font-family: inherit; font-weight: 700; font-size: 12.5px; cursor: pointer; transition: background .14s, border-color .14s; }
+.pub-edit svg, .pub-del svg { width: 15px; height: 15px; }
+.pub-edit { border: 1px solid rgba(232,184,75,.4); background: rgba(232,184,75,.08); color: var(--m-oro); }
+.pub-edit:hover { background: rgba(232,184,75,.16); }
+.pub-del { border: 1px solid rgba(240,53,58,.35); background: none; color: #ff8a94; }
+.pub-del:hover { background: rgba(240,53,58,.12); }
+.pub-empty { text-align: center; padding: 50px 20px; color: var(--m-tinta2); }
+.pub-empty svg { width: 42px; height: 42px; color: #3a4656; margin-bottom: 12px; }
+.pub-empty b { display: block; color: #fff; font-size: 16px; margin-bottom: 6px; }
+.pub-empty span { font-size: 13px; }
+
+/* Modal de editar señal */
+.edit-bg { position: fixed; inset: 0; z-index: 950; display: flex; align-items: center; justify-content: center; padding: 18px; background: rgba(2,4,8,.75); backdrop-filter: blur(5px); }
+.edit-modal { width: 100%; max-width: 460px; max-height: 92vh; display: flex; flex-direction: column; background: linear-gradient(180deg,#151c28,#0d1219); border: 1px solid var(--m-linea); border-radius: 18px; box-shadow: 0 30px 90px rgba(0,0,0,.65); overflow: hidden; }
+.edit-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--m-linea); }
+.edit-head h3 { margin: 0; font-family: 'Chakra Petch',sans-serif; font-size: 17px; color: #fff; }
+.edit-x { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--m-linea); background: rgba(255,255,255,.03); color: #cdd6e2; font-size: 17px; cursor: pointer; }
+.edit-x:hover { color: #fff; border-color: rgba(240,53,58,.5); background: rgba(240,53,58,.12); }
+.edit-body { padding: 18px 20px; overflow-y: auto; }
+.edit-match { font-family: 'Chakra Petch',sans-serif; font-weight: 800; font-size: 16px; color: #fff; margin-bottom: 14px; }
+.edit-lbl { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--m-tinta2); font-weight: 700; margin: 14px 0 8px; }
+.edit-lbl b { color: var(--m-oro); }
+.edit-pick, .edit-conf { display: flex; gap: 8px; }
+.edit-team, .edit-cf { flex: 1; border: 1px solid var(--m-linea); background: rgba(255,255,255,.03); color: #c7d2de; border-radius: 10px; padding: 10px; font-family: inherit; font-weight: 700; font-size: 13px; cursor: pointer; transition: border-color .14s, background .14s, color .14s; }
+.edit-team.on { border-color: var(--m-oro); background: rgba(232,184,75,.12); color: var(--m-oro); }
+.edit-cf.on { border-color: var(--m-oro); background: var(--m-oro); color: #1a1206; }
+.edit-range { width: 100%; accent-color: #e8b84b; }
+.edit-select { width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--m-linea); border-radius: 10px; padding: 11px 12px; color: #eaf1f9; font-family: inherit; font-size: 14px; }
+.edit-txt { width: 100%; box-sizing: border-box; background: rgba(255,255,255,.04); border: 1px solid var(--m-linea); border-radius: 10px; padding: 11px 12px; color: #eaf1f9; font-family: inherit; font-size: 13.5px; line-height: 1.5; resize: vertical; }
+.edit-hint { font-size: 12px; color: #ff8a94; margin-top: 8px; min-height: 1px; }
+.edit-hint.err { color: #ff8a94; }
+.edit-btns { display: flex; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--m-linea); }
+.edit-cancel { flex: 0 0 auto; border: 1px solid var(--m-linea); background: none; color: #c7d2de; border-radius: 10px; padding: 12px 18px; font-family: inherit; font-weight: 700; cursor: pointer; }
+.edit-save { flex: 1; border: 0; background: var(--m-oro); color: #1a1206; border-radius: 10px; padding: 12px; font-family: 'Chakra Petch',sans-serif; font-weight: 800; cursor: pointer; }
+.edit-save:hover { filter: brightness(1.05); }
+
+/* Confirmación */
+.mesa-cfm-bg { position: fixed; inset: 0; z-index: 1100; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(2,4,8,.7); backdrop-filter: blur(4px); }
+.mesa-cfm { width: 100%; max-width: 380px; background: linear-gradient(180deg,#161d29,#0e131b); border: 1px solid var(--m-linea); border-radius: 16px; padding: 24px; box-shadow: 0 24px 70px rgba(0,0,0,.6); text-align: center; }
+.mesa-cfm-msg { color: #eef3f9; font-size: 15px; line-height: 1.5; margin-bottom: 20px; }
+.mesa-cfm-btns { display: flex; gap: 10px; }
+.mesa-cfm-cancel { flex: 1; border: 1px solid var(--m-linea); background: none; color: #c7d2de; border-radius: 10px; padding: 12px; font-family: inherit; font-weight: 700; cursor: pointer; }
+.mesa-cfm-ok { flex: 1; border: 0; background: #f0525a; color: #fff; border-radius: 10px; padding: 12px; font-family: 'Chakra Petch',sans-serif; font-weight: 800; cursor: pointer; }
+.mesa-cfm-ok:hover { filter: brightness(1.06); }
+@media (max-width: 560px) { .pub-modal, .edit-modal { max-height: 94vh; } .pub-bg, .edit-bg { padding: 10px; } }
