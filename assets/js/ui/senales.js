@@ -249,11 +249,14 @@ function tarjeta(a, ctx = {}) {
 /* Para el editor del panel: inyecta el CSS de señales y devuelve una tarjeta
    de MUESTRA con el estilo dado (WYSIWYG idéntico a lo que ve el usuario). */
 export function prepararEstilosSenal() { inyectarCSS(); }
-export function tarjetaMuestra(estilo, firma) {
+export function tarjetaMuestra(estilo, firma, datos = {}) {
   return tarjeta({
-    equipos: 'Lakers vs Celtics', firma: firma || 'Falcón', autorUid: '',
-    favorito: 'Lakers', prob: 68, confianza: 'alta', mercado: 'ml',
-    texto: L('Better recent form and home edge. High chance of winning.', 'Mejor forma reciente y ventaja de local. Alta probabilidad de ganar.'),
+    equipos: datos.equipos || 'Lakers vs Celtics', firma: firma || 'Falcón', autorUid: '',
+    favorito: datos.favorito || 'Lakers',
+    prob: datos.prob != null ? datos.prob : 68,
+    confianza: datos.confianza || 'alta',
+    mercado: datos.mercado || 'ml',
+    texto: datos.texto != null ? datos.texto : L('Better recent form and home edge. High chance of winning.', 'Mejor forma reciente y ventaja de local. Alta probabilidad de ganar.'),
     estilo,
   }, {});
 }
