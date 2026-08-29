@@ -17,7 +17,7 @@ const L = (en, es) => (ES() ? es : en);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
 
 let _cache = null;   // señales cacheadas para el punto indicador
-let _snTab = 'todas';   // Fase: pestaña activa del feed (todas | siguiendo)
+let _snTab = 'inicio';   // Fase 9: pestaña activa del feed (inicio | siguiendo | populares)
 
 const MERCADO = {
   ml: () => L('Match winner', 'Ganador del partido'),
@@ -105,6 +105,21 @@ function inyectarCSS() {
   .sn-sub:hover{background:rgba(232,184,75,.18)}
   .sn-sub.on{color:#1a1206;background:linear-gradient(90deg,#e8b84b,#f6e2a6);border-color:transparent}
   /* Tabs del feed (Todas / Siguiendo) */
+  /* Descubre analistas */
+  .sn-disc{margin:0 0 18px}
+  .sn-disc-head{display:flex;align-items:center;gap:8px;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:13px;letter-spacing:.02em;color:#eef3f9;margin-bottom:10px}
+  .sn-disc-head svg{width:16px;height:16px;color:var(--g)}
+  .sn-disc-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+  .sn-disc-row::-webkit-scrollbar{height:6px}.sn-disc-row::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:99px}
+  .sn-disc-card{--acc:#e8b84b;flex:0 0 auto;width:148px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;background:linear-gradient(180deg,rgba(20,27,38,.9),rgba(13,18,26,.95));border:1px solid var(--line);border-radius:14px;padding:15px 12px 13px}
+  .sn-disc-ava{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:19px;color:var(--acc);background:color-mix(in srgb, var(--acc) 15%, transparent);border:1px solid color-mix(in srgb, var(--acc) 34%, transparent);margin-bottom:4px}
+  .sn-disc-ava svg{width:23px;height:23px}
+  .sn-disc-firma{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:14px;color:var(--acc);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sn-disc-sport{font-size:11px;color:var(--tx2)}
+  .sn-disc-fol{font-size:11px;color:var(--tx3);margin-bottom:8px}
+  .sn-disc-follow{width:100%;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:11.5px;color:#0a0e15;background:linear-gradient(90deg,#38a9f0,#5cc0ff);border:0;border-radius:999px;padding:8px 12px;cursor:pointer;transition:filter .14s}
+  .sn-disc-follow:hover{filter:brightness(1.08)}
+  .sn-disc-follow.on{color:#cfe0ee;background:transparent;border:1px solid rgba(120,150,180,.5)}
   .sn-tabs{display:flex;gap:6px;margin:0 0 16px;border-bottom:1px solid var(--line);padding-bottom:0}
   .sn-tab{position:relative;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:13px;letter-spacing:.02em;color:var(--tx2);background:transparent;border:0;padding:10px 4px;margin-right:16px;cursor:pointer;border-bottom:2px solid transparent;transition:color .14s,border-color .14s}
   .sn-tab b{display:inline-block;margin-left:6px;font-size:11px;background:rgba(232,184,75,.16);color:#e8c46a;border-radius:999px;padding:1px 7px}
@@ -152,6 +167,32 @@ const IC = {
   bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10.5 20a2 2 0 003 0"/></svg>`,
 };
 
+/* Franja "Descubre analistas": una tarjeta por analista (a partir de las señales). */
+function bloqueDescubrir(analistas, ctx) {
+  const IComp = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>`;
+  const cards = analistas.map(an => {
+    const est = estiloAttrs(an.estilo);
+    const sigo = ctx.sigo && ctx.sigo.has(an.uid);
+    const ini = (an.firma || '?').trim().charAt(0).toUpperCase();
+    const puede = ctx.premium && an.uid && an.uid !== ctx.me;
+    return `<div class="sn-disc-card" style="${est.varCss}">
+      <div class="sn-disc-ava">${est.emblemaSVG || ini}</div>
+      <div class="sn-disc-firma">${esc(an.firma || '')}</div>
+      <div class="sn-disc-sport">${esc(depenNombre(an.deporte))}</div>
+      <div class="sn-disc-fol" data-discfol="${esc(an.uid)}">…</div>
+      ${puede ? `<button class="sn-disc-follow ${sigo ? 'on' : ''}" data-follow="${esc(an.uid)}" data-firma="${esc(an.firma || '')}">${sigo ? L('Following', 'Siguiendo') : L('Follow', 'Seguir')}</button>` : ''}
+    </div>`;
+  }).join('');
+  return `<div class="sn-disc">
+    <div class="sn-disc-head">${IComp}<span>${L('Discover analysts', 'Descubre analistas')}</span></div>
+    <div class="sn-disc-row">${cards}</div>
+  </div>`;
+}
+
+/* Nombre de deporte legible (mapa mínimo; cae al id si no está). */
+const _DEP = { soccer: { en: 'Soccer', es: 'Fútbol' }, nba: { en: 'Basketball', es: 'Básquet' }, basketball: { en: 'Basketball', es: 'Básquet' }, mlb: { en: 'Baseball', es: 'Béisbol' }, baseball: { en: 'Baseball', es: 'Béisbol' }, nhl: { en: 'Hockey', es: 'Hockey' }, hockey: { en: 'Hockey', es: 'Hockey' }, nfl: { en: 'Football', es: 'Fútbol Am.' } };
+function depenNombre(id) { const d = _DEP[id]; return d ? L(d.en, d.es) : (id || ''); }
+
 function tarjeta(a, ctx = {}) {
   const conf = a.confianza || 'media';
   const prob = a.prob != null ? Math.max(1, Math.min(99, a.prob)) : null;
@@ -182,11 +223,12 @@ function tarjeta(a, ctx = {}) {
     </div>${acciones}` : acciones;
 
   const miV = (ctx.votos && ctx.votos[sid]) || 0;
+  const cVot = (ctx.conteos && ctx.conteos[sid]) || { likes: 0, dislikes: 0 };
   const IUp = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 22V10M2 12v8a2 2 0 002 2h13.4a2 2 0 002-1.6l1.4-7A2 2 0 0018.8 11H14V6a2.5 2.5 0 00-2.5-2.5c-.6 0-1.1.4-1.3 1L7 10"/></svg>`;
   const IDown = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2v12M22 12V4a2 2 0 00-2-2H6.6a2 2 0 00-2 1.6l-1.4 7A2 2 0 005.2 13H10v5a2.5 2.5 0 002.5 2.5c.6 0 1.1-.4 1.3-1L17 14"/></svg>`;
   const votos = sid ? `<div class="sn-c-vote" data-sid="${esc(sid)}">
-      <button class="sn-v like ${miV === 1 ? 'on' : ''}" data-v="1" title="${L('Like', 'Me gusta')}">${IUp}<b class="sn-v-n" data-likes>·</b></button>
-      <button class="sn-v dis ${miV === -1 ? 'on' : ''}" data-v="-1" title="${L('Dislike', 'No me gusta')}">${IDown}<b class="sn-v-n" data-dis>·</b></button>
+      <button class="sn-v like ${miV === 1 ? 'on' : ''}" data-v="1" title="${L('Like', 'Me gusta')}">${IUp}<b class="sn-v-n" data-likes>${(cVot.likes || 0).toLocaleString()}</b></button>
+      <button class="sn-v dis ${miV === -1 ? 'on' : ''}" data-v="-1" title="${L('Dislike', 'No me gusta')}">${IDown}<b class="sn-v-n" data-dis>${(cVot.dislikes || 0).toLocaleString()}</b></button>
     </div>` : '';
 
   // Análisis largo (hasta ~1000 palabras): desplegable centrado y responsivo
@@ -228,7 +270,7 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
   const head = `<div class="sn-head">
       <span class="sn-eyebrow"><i></i>${L('Analyst signals', 'Señales del analista')}</span>
       <div class="sn-title">${L('Analyst signals', 'Señales del analista')}</div>
-      <div class="sn-sub">${L('Curated calls from our analyst, published only when there is a clear opportunity.', 'Pronósticos escogidos por nuestro analista, publicados solo cuando hay una oportunidad clara.')}</div>
+      <div class="sn-sub">${L('Follow analysts, see who is hot, and get their calls first.', 'Sigue analistas, mira quién está en racha y recibe sus pronósticos primero.')}</div>
     </div>
     <div class="sn-note">${IC.info}<div><b>${L('Please read', 'Ten en cuenta')}</b><p>${L('These are the analyst\u2019s opinions for informational purposes, not betting advice. Signals are not posted every day, only when there is a real edge. High variance: a high probability is never a guarantee.', 'Son opiniones del analista con fines informativos, no asesoría de apuestas. No se publican todos los días, solo cuando hay una ventaja real. Alta varianza: una probabilidad alta nunca es garantía.')}</p></div></div>`;
 
@@ -256,7 +298,12 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
   try { votos = await misVotos(); } catch (_) {}
   let apoyos = new Set();
   try { apoyos = new Set(await misApoyos()); } catch (_) {}
-  const ctx = { premium: esPremium, me, sigo, votos, apoyos };
+  const ctx = { premium: esPremium, me, sigo, votos, apoyos, conteos: {} };
+
+  // Conteos de like/dislike de todas las señales (para mostrar y para ordenar "Populares")
+  const sids = [...new Set(lista.map(a => a.id || a.matchId).filter(Boolean))];
+  try { await Promise.all(sids.map(async sid => { ctx.conteos[sid] = await contarVotos(sid); })); } catch (_) {}
+  const score = (a) => { const c = ctx.conteos[a.id || a.matchId] || { likes: 0, dislikes: 0 }; return (c.likes || 0) - (c.dislikes || 0); };
 
   // Notificación: señales de analistas que sigo, más nuevas que mi última visita
   const VISTO = 'sn_visto_' + (me || 'anon');
@@ -266,19 +313,30 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
     ? `<div class="sn-newbanner">${IC.bell}<span>${nuevas} ${nuevas === 1 ? L('new signal from analysts you follow', 'nueva señal de analistas que sigues') : L('new signals from analysts you follow', 'nuevas señales de analistas que sigues')}</span></div>`
     : '';
 
-  // Orden: las señales de analistas que sigues van SIEMPRE arriba, luego por fecha
-  const ordenadas = lista.slice().sort((x, y) => {
+  // Órdenes por pestaña
+  const porFecha = (x, y) => _tsMs(y.actualizado) - _tsMs(x.actualizado);
+  const inicio = lista.slice().sort((x, y) => {
     const sx = sigo.has(x.autorUid) ? 1 : 0, sy = sigo.has(y.autorUid) ? 1 : 0;
-    if (sx !== sy) return sy - sx;
-    return _tsMs(y.actualizado) - _tsMs(x.actualizado);
+    if (sx !== sy) return sy - sx;                 // seguidos primero
+    return porFecha(x, y);
   });
-  const deSeguidos = ordenadas.filter(a => sigo.has(a.autorUid));
-  const tab = (_snTab === 'siguiendo' && deSeguidos.length) ? 'siguiendo' : 'todas';
-  const visibles = tab === 'siguiendo' ? deSeguidos : ordenadas;
+  const deSeguidos = inicio.filter(a => sigo.has(a.autorUid));
+  const populares = lista.slice().sort((x, y) => (score(y) - score(x)) || porFecha(x, y));
+
+  const permitidas = ['inicio', 'siguiendo', 'populares'];
+  let tab = permitidas.includes(_snTab) ? _snTab : 'inicio';
+  if (tab === 'siguiendo' && !deSeguidos.length) tab = 'inicio';
+  const visibles = tab === 'siguiendo' ? deSeguidos : tab === 'populares' ? populares : inicio;
+
+  // Descubrir analistas: uno por firma, a partir de las señales
+  const vistos = new Set(); const analistas = [];
+  inicio.forEach(a => { if (a.autorUid && !vistos.has(a.autorUid)) { vistos.add(a.autorUid); analistas.push({ uid: a.autorUid, firma: a.firma || a.autor || '', deporte: a.deporte, estilo: a.estilo }); } });
+  const discover = analistas.length ? bloqueDescubrir(analistas, ctx) : '';
 
   const tabs = `<div class="sn-tabs">
-      <button class="sn-tab ${tab === 'todas' ? 'on' : ''}" data-sntab="todas">${L('All', 'Todas')}</button>
+      <button class="sn-tab ${tab === 'inicio' ? 'on' : ''}" data-sntab="inicio">${L('Home', 'Inicio')}</button>
       <button class="sn-tab ${tab === 'siguiendo' ? 'on' : ''}" data-sntab="siguiendo">${L('Following', 'Siguiendo')}${deSeguidos.length ? `<b>${deSeguidos.length}</b>` : ''}</button>
+      <button class="sn-tab ${tab === 'populares' ? 'on' : ''}" data-sntab="populares">${L('Popular', 'Populares')}</button>
     </div>`;
 
   const grid = visibles.length
@@ -286,7 +344,7 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
     : `<div class="sn-empty">${IC.flag}<b>${L('Nothing here yet', 'Nada aquí todavía')}</b><span>${tab === 'siguiendo' ? L('Follow analysts to see their signals gathered here.', 'Sigue analistas para ver sus señales reunidas aquí.') : L('No signals right now. New calls appear only when there is a clear opportunity.', 'No hay señales ahora. Los nuevos pronósticos aparecen solo cuando hay una oportunidad clara.')}</span></div>`;
 
   const cuerpo = lista.length
-    ? `${banner}${tabs}${grid}`
+    ? `${banner}${discover}${tabs}${grid}`
     : `<div class="sn-empty">${IC.flag}<b>${L('No signals right now', 'No hay señales ahora')}</b><span>${L('The analyst hasn\u2019t published today. New calls appear here only when there is a clear opportunity. Check back later.', 'El analista no ha publicado hoy. Los nuevos pronósticos aparecen aquí solo cuando hay una oportunidad clara. Vuelve más tarde.')}</span></div>`;
   cont.innerHTML = `<div class="sn">${head}${cuerpo}</div>`;
 
@@ -298,46 +356,46 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
     localStorage.setItem(VISTO, String(Math.max(maxTs, Date.now() - 1)));
   } catch (_) {}
 
-  // Hidratar nº de seguidores por analista (agregación) — sin bloquear el render
+  // Hidratar nº de seguidores (tarjetas + franja de descubrir)
   const uids = [...new Set(lista.map(a => a.autorUid).filter(Boolean))];
-  uids.forEach(async uid => {
+  const pintarSeguidores = async (uid) => {
     let n = 0; try { n = await contarSeguidores(uid); } catch (_) {}
     cont.querySelectorAll(`.sn-c-fol[data-fol="${CSS.escape(uid)}"]`).forEach(el => {
       el.innerHTML = `${el.querySelector('svg') ? el.querySelector('svg').outerHTML : ''}<b>${n.toLocaleString()}</b> ${L('followers', 'seguidores')}`;
     });
-  });
+    cont.querySelectorAll(`[data-discfol="${CSS.escape(uid)}"]`).forEach(el => { el.textContent = `${n.toLocaleString()} ${L('followers', 'seguidores')}`; });
+  };
+  uids.forEach(uid => pintarSeguidores(uid));
 
-  // Cablear botones Seguir / Siguiendo
+  // Seguir / Siguiendo: sincroniza TODOS los botones del mismo analista (tarjeta + descubrir)
+  const syncFollow = (uid, seguir) => cont.querySelectorAll(`[data-follow="${CSS.escape(uid)}"]`).forEach(b => {
+    b.classList.toggle('on', seguir);
+    b.textContent = seguir ? L('Following', 'Siguiendo') : L('Follow', 'Seguir');
+  });
   cont.querySelectorAll('[data-follow]').forEach(btn => btn.onclick = async () => {
     const uid = btn.dataset.follow, firma = btn.dataset.firma || null;
-    const seguir = !btn.classList.contains('on');
-    btn.disabled = true;
+    const seguir = !ctx.sigo.has(uid);
+    const grupo = cont.querySelectorAll(`[data-follow="${CSS.escape(uid)}"]`);
+    grupo.forEach(b => b.disabled = true);
     try {
       if (seguir) { await seguirAnalista(uid, firma); ctx.sigo.add(uid); }
       else { await dejarDeSeguir(uid); ctx.sigo.delete(uid); }
-      btn.classList.toggle('on', seguir);
-      btn.textContent = seguir ? L('Following', 'Siguiendo') : L('+ Follow', '+ Seguir');
-      // refrescar el contador de ese analista
-      let n = 0; try { n = await contarSeguidores(uid); } catch (_) {}
-      cont.querySelectorAll(`.sn-c-fol[data-fol="${CSS.escape(uid)}"]`).forEach(el => {
-        el.innerHTML = `${el.querySelector('svg') ? el.querySelector('svg').outerHTML : ''}<b>${n.toLocaleString()}</b> ${L('followers', 'seguidores')}`;
-      });
+      syncFollow(uid, seguir);
+      await pintarSeguidores(uid);
     } catch (_) {}
-    btn.disabled = false;
+    grupo.forEach(b => b.disabled = false);
   });
 
-  // Fase 7 — hidratar conteos de like/dislike por señal y cablear el toggle
+  // Votos: los conteos ya se pintaron desde ctx.conteos; aquí solo el toggle
   const pintarVotos = async (sid) => {
-    let c = { likes: 0, dislikes: 0 };
-    try { c = await contarVotos(sid); } catch (_) {}
+    let c = ctx.conteos[sid] || { likes: 0, dislikes: 0 };
+    try { c = await contarVotos(sid); ctx.conteos[sid] = c; } catch (_) {}
     const box = cont.querySelector(`.sn-c-vote[data-sid="${CSS.escape(sid)}"]`);
     if (!box) return;
     const l = box.querySelector('[data-likes]'), d = box.querySelector('[data-dis]');
-    if (l) l.textContent = c.likes.toLocaleString();
-    if (d) d.textContent = c.dislikes.toLocaleString();
+    if (l) l.textContent = (c.likes || 0).toLocaleString();
+    if (d) d.textContent = (c.dislikes || 0).toLocaleString();
   };
-  const sids = [...new Set(lista.map(a => a.id || a.matchId).filter(Boolean))];
-  sids.forEach(sid => pintarVotos(sid));
 
   cont.querySelectorAll('.sn-c-vote').forEach(box => {
     const sid = box.dataset.sid;
