@@ -326,8 +326,11 @@ export function detalle(p, opciones = {}) {
     }
     const casa = eq.recordCasa, fuera = eq.recordFuera;
     if (!casa && !fuera) return '';
-    const chip = (etq, val) => val ? `<div class="hd-fm"><span class="hd-fm-b" style="background:var(--tinta-3)">${etq.charAt(0)}</span><span class="hd-fm-x">${etq}</span><span class="hd-fm-s">${esc(val)}</span></div>` : '';
-    return `<div><div class="hd-blk-t">${ES ? 'Rendimiento' : 'Form'}</div><div class="hd-form" style="grid-template-columns:1fr 1fr">${chip(ES ? 'Casa' : 'Home', casa)}${chip(ES ? 'Fuera' : 'Away', fuera)}</div></div>`;
+    const col = lado === 'visita' ? 'var(--c-vis)' : 'var(--c-loc)';
+    const IHome = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9h14v-9"/></svg>`;
+    const IAway = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l20-7-7 20-3-8-8-3z"/></svg>`;
+    const chip = (etq, val, ic) => val ? `<div class="hd-fm hd-fm-hf"><span class="hd-fm-b" style="background:${col}">${ic}</span><span class="hd-fm-x">${etq}</span><span class="hd-fm-s">${esc(val)}</span></div>` : '';
+    return `<div><div class="hd-blk-t">${ES ? 'Rendimiento' : 'Form'}</div><div class="hd-form" style="grid-template-columns:1fr 1fr">${chip(ES ? 'Casa' : 'Home', casa, IHome)}${chip(ES ? 'Fuera' : 'Away', fuera, IAway)}</div></div>`;
   }
 
   /* Filas de comparación: usa comparativa REAL (equipos-stats) si existe */
@@ -478,9 +481,12 @@ export function detalle(p, opciones = {}) {
   function estadisticasHTML() {
     const filas = [];
     const fila = (k, l, r) => (l || r) ? filas.push(`<div class="hd-tb-row"><span class="hd-tb-l">${esc(l ?? '—')}</span><span class="hd-tb-k">${esc(k)}</span><span class="hd-tb-r">${esc(r ?? '—')}</span></div>`) : 0;
+    const IHomeS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9h14v-9"/></svg>`;
+    const IAwayS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l20-7-7 20-3-8-8-3z"/></svg>`;
+    const filaIc = (k, ic, l, r) => (l || r) ? filas.push(`<div class="hd-tb-row"><span class="hd-tb-l">${esc(l ?? '—')}</span><span class="hd-tb-k hd-tb-k-ic">${ic}<span>${esc(k)}</span></span><span class="hd-tb-r">${esc(r ?? '—')}</span></div>`) : 0;
     fila(ES ? 'Récord' : 'Record', p.local.record, p.visita.record);
-    fila(ES ? 'Casa' : 'Home', p.local.recordCasa, p.visita.recordCasa);
-    fila(ES ? 'Fuera' : 'Away', p.local.recordFuera, p.visita.recordFuera);
+    filaIc(ES ? 'En casa' : 'At home', IHomeS, p.local.recordCasa, p.visita.recordCasa);
+    filaIc(ES ? 'De visita' : 'Away', IAwayS, p.local.recordFuera, p.visita.recordFuera);
     let extras = '';
     if (p.comparativa && p.comparativa.length) {
       extras = `<div class="hd-tb-sep">${ES ? 'Temporada' : 'Season'}</div>` + p.comparativa.map(c =>
