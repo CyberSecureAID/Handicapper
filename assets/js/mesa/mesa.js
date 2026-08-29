@@ -167,7 +167,7 @@ function pintarTab() {
   if (!m) return;
   if (_tab === 'resumen') { m.innerHTML = vistaResumen(); enlazarResumen(); }
   else if (_tab === 'usuarios') { m.innerHTML = vistaUsuarios(); enlazarUsuarios(); }
-  else if (_tab === 'analisis') { m.innerHTML = (_rol === 'analista' ? editorEstilo() : '') + vistaAnalisis(); if (_rol === 'analista') enlazarEditorEstilo(); enlazarAnalisis(); }
+  else if (_tab === 'analisis') { m.innerHTML = vistaAnalisis() + (_rol === 'analista' ? editorEstilo() : ''); enlazarAnalisis(); if (_rol === 'analista') enlazarEditorEstilo(); }
   else if (_tab === 'analistas') { m.innerHTML = vistaAnalistas(); enlazarAnalistas(); }
   else if (_tab === 'monitoreo') { m.innerHTML = vistaMonitoreo(); enlazarMonitoreo(); }
   else if (_tab === 'moderacion') { m.innerHTML = vistaModeracion(); enlazarModeracion(); }
@@ -378,7 +378,7 @@ function pintarCandidatos() {
       <select class="u-select" data-cand-dep="${esc(u.uid)}">${deps.map(k => `<option value="${k}">${esc(depNombre(k))}</option>`).join('')}</select>
       <button class="mesa-btn oro sm" data-cand-add="${esc(u.uid)}" data-mail="${esc(u.email || '')}">${ML('Add', 'Agregar')}</button>
     </div>`;
-  }).join('') + (lista.length > MAX ? `<div class="an-cand-more">${ML('Showing', 'Mostrando')} ${MAX} ${ML('of', 'de')} ${lista.length} — ${ML('refine your search.', 'afina la búsqueda.')}</div>` : ''))
+  }).join('') + (lista.length > MAX ? `<div class="an-cand-more">${ML('Showing', 'Mostrando')} ${MAX} ${ML('of', 'de')} ${lista.length}. ${ML('Refine your search.', 'Afina la búsqueda.')}</div>` : ''))
     : `<div class="an-mng-empty">${ML('No matching users.', 'Sin usuarios que coincidan.')}</div>`;
   cont.querySelectorAll('[data-cand-add]').forEach(b => b.onclick = async () => {
     const uid = b.dataset.candAdd, mail = b.dataset.mail || '';
@@ -393,12 +393,13 @@ function pintarCandidatos() {
    Opciones curadas + vista previa en tiempo real. Límites automáticos:
    solo colores de la paleta, 3 intensidades y emblemas de la lista.
    ============================================================ */
-let _estGuardar = null;   // debounce del guardado
+let _estiloDraft = null;   // borrador del editor (se guarda al Aplicar)
 function editorEstilo() {
   const ES = _mesaLang === 'es';
   const L = (en, es) => ES ? es : en;
-  const e = _miEstilo || estiloSeguro(null);
+  const e = _estiloDraft || estiloSeguro(_miEstilo);
   const IPaint = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M12 3a9 9 0 100 18 2 2 0 002-2c0-.6-.4-1-.4-1.5 0-.5.4-1 1-1H16a5 5 0 005-5c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="10.5" r="1.1" fill="currentColor"/><circle cx="12" cy="7.5" r="1.1" fill="currentColor"/><circle cx="16.5" cy="10.5" r="1.1" fill="currentColor"/></svg>`;
+  const IChev = `<svg class="est-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M6 9l6 6 6-6"/></svg>`;
   const swatches = PALETA.map(p =>
     `<button class="est-sw ${e.color === p.id ? 'on' : ''}" data-color="${p.id}" style="--sw:${p.hex}" title="${esc(ES ? p.nombre.es : p.nombre.en)}"><i></i></button>`).join('');
   const inten = INTENSIDADES.map(k =>
@@ -406,42 +407,54 @@ function editorEstilo() {
   const embs = Object.keys(EMBLEMAS).map(k =>
     `<button class="est-emb ${e.emblema === k ? 'on' : ''}" data-emb="${k}" title="${esc(ES ? EMBLEMA_NOMBRE[k].es : EMBLEMA_NOMBRE[k].en)}">${k === 'none' ? `<span class="est-emb-none">${L('None', 'Ninguno')}</span>` : EMBLEMAS[k]}</button>`).join('');
 
-  return `<div class="mesa-card est-editor">
-    <div class="mc-t">${IPaint} ${L('My signal style', 'Estilo de mis señales')}</div>
-    <p class="est-sub">${L('Give your signals a personal touch. The platform keeps limits so everything stays premium.', 'Dale un toque personal a tus señales. La plataforma mantiene los límites para que todo se vea premium.')}</p>
-    <div class="est-grid">
-      <div class="est-controls">
-        <div class="est-field"><label>${L('Accent color', 'Color de acento')}</label><div class="est-sws">${swatches}</div></div>
-        <div class="est-field"><label>${L('Intensity', 'Intensidad')}</label><div class="est-seg">${inten}</div></div>
-        <div class="est-field"><label>${L('Emblem', 'Emblema')}</label><div class="est-embs">${embs}</div></div>
+  return `<details class="mesa-card est-editor">
+    <summary class="est-sum">
+      <span class="est-sum-t">${IPaint} ${L('My signal style', 'Estilo de mis señales')}<span class="est-opt">${L('optional', 'opcional')}</span></span>
+      ${IChev}
+    </summary>
+    <div class="est-body">
+      <p class="est-sub">${L('Give your signals a personal touch, then apply the changes. The platform keeps limits so everything stays premium.', 'Dale un toque personal a tus señales y luego aplica los cambios. La plataforma mantiene los límites para que todo se vea premium.')}</p>
+      <div class="est-grid">
+        <div class="est-controls">
+          <div class="est-field"><label>${L('Accent color', 'Color de acento')}</label><div class="est-sws">${swatches}</div></div>
+          <div class="est-field"><label>${L('Intensity', 'Intensidad')}</label><div class="est-seg">${inten}</div></div>
+          <div class="est-field"><label>${L('Emblem', 'Emblema')}</label><div class="est-embs">${embs}</div></div>
+        </div>
+        <div class="est-preview">
+          <label>${L('Live preview', 'Vista previa en tiempo real')}</label>
+          <div class="est-prev sn" id="est-prev"></div>
+        </div>
       </div>
-      <div class="est-preview">
-        <label>${L('Live preview', 'Vista previa en tiempo real')}</label>
-        <div class="est-prev sn" id="est-prev"></div>
+      <div class="est-apply-row">
+        <span class="est-saved" id="est-saved" hidden>${L('Saved', 'Guardado')} ✓</span>
+        <button class="mesa-btn oro" id="est-apply">${L('Apply changes', 'Aplicar cambios')}</button>
       </div>
     </div>
-  </div>`;
+  </details>`;
 }
 
 function _renderPreview() {
   const box = _cont.querySelector('#est-prev'); if (!box) return;
-  box.innerHTML = tarjetaMuestra(_miEstilo, _miFirma);
-}
-function _guardarEstilo() {
-  if (!_miUid) return;
-  clearTimeout(_estGuardar);
-  _estGuardar = setTimeout(async () => {
-    try { await fijarAnalista(_miUid, { estilo: { color: _miEstilo.color, intensidad: _miEstilo.intensidad, emblema: _miEstilo.emblema } }); } catch (_) {}
-  }, 500);
+  box.innerHTML = tarjetaMuestra(_estiloDraft, _miFirma);
 }
 function enlazarEditorEstilo() {
   prepararEstilosSenal();               // inyecta el CSS de señales para el preview
   _miEstilo = estiloSeguro(_miEstilo);
+  _estiloDraft = { ..._miEstilo };      // borrador: el preview cambia en vivo, se guarda al Aplicar
   _renderPreview();
   const setSel = (sel, val, attr) => _cont.querySelectorAll(sel).forEach(x => x.classList.toggle('on', x.dataset[attr] === val));
-  _cont.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { _miEstilo.color = b.dataset.color; _miEstilo = estiloSeguro(_miEstilo); setSel('[data-color]', _miEstilo.color, 'color'); _renderPreview(); _guardarEstilo(); });
-  _cont.querySelectorAll('[data-inten]').forEach(b => b.onclick = () => { _miEstilo.intensidad = b.dataset.inten; _miEstilo = estiloSeguro(_miEstilo); setSel('[data-inten]', _miEstilo.intensidad, 'inten'); _renderPreview(); _guardarEstilo(); });
-  _cont.querySelectorAll('[data-emb]').forEach(b => b.onclick = () => { _miEstilo.emblema = b.dataset.emb; _miEstilo = estiloSeguro(_miEstilo); setSel('[data-emb]', _miEstilo.emblema, 'emb'); _renderPreview(); _guardarEstilo(); });
+  const marcarSucio = () => { const s = _cont.querySelector('#est-saved'); if (s) s.hidden = true; };
+  _cont.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { _estiloDraft.color = b.dataset.color; _estiloDraft = estiloSeguro(_estiloDraft); setSel('[data-color]', _estiloDraft.color, 'color'); _renderPreview(); marcarSucio(); });
+  _cont.querySelectorAll('[data-inten]').forEach(b => b.onclick = () => { _estiloDraft.intensidad = b.dataset.inten; _estiloDraft = estiloSeguro(_estiloDraft); setSel('[data-inten]', _estiloDraft.intensidad, 'inten'); _renderPreview(); marcarSucio(); });
+  _cont.querySelectorAll('[data-emb]').forEach(b => b.onclick = () => { _estiloDraft.emblema = b.dataset.emb; _estiloDraft = estiloSeguro(_estiloDraft); setSel('[data-emb]', _estiloDraft.emblema, 'emb'); _renderPreview(); marcarSucio(); });
+  const apply = _cont.querySelector('#est-apply');
+  if (apply) apply.onclick = async () => {
+    apply.disabled = true; const txt = apply.textContent; apply.textContent = '…';
+    _miEstilo = { ..._estiloDraft };
+    try { if (_miUid) await fijarAnalista(_miUid, { estilo: { color: _miEstilo.color, intensidad: _miEstilo.intensidad, emblema: _miEstilo.emblema } }); } catch (_) {}
+    apply.disabled = false; apply.textContent = txt;
+    const s = _cont.querySelector('#est-saved'); if (s) s.hidden = false;
+  };
 }
 
 /* ============================================================
@@ -663,7 +676,7 @@ function vistaAnalistas() {
     </div>
     <div class="mesa-card an-mng">
       <div class="mc-t">${IC.contrato} ${ML('Add analyst', 'Agregar analista')}</div>
-      <p class="an-mng-sub">${ML('Search a registered user and assign a sport. You only see who matches — so you won\u2019t add the wrong person by mistake.', 'Busca un usuario registrado y asígnale un deporte. Solo ves a quién coincide, para no agregar a la persona equivocada.')}</p>
+      <p class="an-mng-sub">${ML('Search a registered user and assign a sport. You only see who matches, so you won\u2019t add the wrong person by mistake.', 'Busca un usuario registrado y asígnale un deporte. Solo ves a quién coincide, para no agregar a la persona equivocada.')}</p>
       <div class="an-add-tools">
         <div class="u-search">${Ilupa}<input id="an-buscar" type="text" placeholder="${ML('Search by name or email…', 'Buscar por nombre o correo…')}" value="${esc(_anBusqueda)}"></div>
         <div class="u-chips" id="an-chips">${chips}</div>
@@ -717,7 +730,7 @@ function enlazarAnalistas() {
   });
   _cont.querySelectorAll('[data-an-del]').forEach(b => b.onclick = async () => {
     const uid = b.dataset.anDel, a = _analistas.find(x => x.uid === uid), mail = (a && a.email) || uid;
-    if (!confirm(ML('Remove ' + mail + ' as analyst? This is permanent — they lose the role and access.', '¿Quitar a ' + mail + ' como analista? Es permanente: pierde el rol y el acceso.'))) return;
+    if (!confirm(ML('Remove ' + mail + ' as analyst? This is permanent. They lose the role and access.', '¿Quitar a ' + mail + ' como analista? Es permanente: pierde el rol y el acceso.'))) return;
     b.disabled = true;
     try { await eliminarAnalista(uid); _analistas = await listarAnalistas(); pintarTab(); } catch (_) { b.disabled = false; }
   });
