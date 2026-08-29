@@ -120,6 +120,10 @@
 .hd-fm-b { display:inline-flex; width:20px; height:20px; align-items:center; justify-content:center; border-radius:6px;
   font-family:"Chakra Petch",sans-serif; font-weight:800; font-size:11px; color:#fff; }
 .hd-fm.w .hd-fm-b { background:var(--verde); } .hd-fm.l .hd-fm-b { background:var(--rojo); }
+.hd-fm-b svg { width:12px; height:12px; }
+.hd-fm-hf .hd-fm-b { color:#fff; }
+.hd-tb-k-ic { display:inline-flex; align-items:center; gap:5px; justify-content:center; }
+.hd-tb-k-ic svg { width:12px; height:12px; opacity:.7; flex:0 0 auto; }
 .hd-fm-x { display:block; font-size:8.5px; color:var(--tinta-2); font-weight:700; margin-top:4px; white-space:nowrap; }
 .hd-fm-s { display:block; font-size:8.5px; color:var(--tinta-3); font-weight:600; }
 
