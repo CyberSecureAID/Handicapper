@@ -6,7 +6,7 @@
    todos los días (solo cuando hay oportunidad).
    Bilingüe (inglés por defecto). Responsivo.
    ============================================================ */
-import { listarAnalisis, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos, misApoyos, apoyarAnalista, cancelarApoyo, contarApoyos } from '../mesa/mesa-datos.js';
+import { listarAnalisis, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos, misApoyos, apoyarAnalista, cancelarApoyo, contarApoyos, reportarSenal } from '../mesa/mesa-datos.js';
 import { usuarioActual } from '../auth/auth.js';
 import { planPorId } from '../datos/planes.js';
 import { estiloAttrs } from './estilo-senal.js';
@@ -155,6 +155,35 @@ function inyectarCSS() {
   .sn-i-strong .sn-c-firma{color:#0a0e15;background:var(--acc);border-color:var(--acc)}
   .sn-c-firma svg{width:13px;height:13px}
   .sn-c-name{font-size:11.5px;color:var(--tx3,#7a8593);font-weight:600}
+  /* Bloque 5: animación de pulsación del voto + botón reportar + modal */
+  .sn-v:active{transform:scale(.92)}
+  .sn-v.bump{animation:snPop .28s ease}
+  @keyframes snPop{0%{transform:scale(1)}35%{transform:scale(1.16)}100%{transform:scale(1)}}
+  .sn-report{display:inline-flex;align-items:center;gap:6px;margin-left:auto;background:none;border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--tx2);font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;transition:border-color .14s,color .14s,background .14s}
+  .sn-report svg{width:14px;height:14px}
+  .sn-report:hover{color:#ffb4ba;border-color:rgba(240,82,90,.45);background:rgba(240,82,90,.08)}
+  .sn-report:active{transform:scale(.96)}
+  @media(max-width:400px){.sn-report span{display:none}}
+  .rep-bg{position:fixed;inset:0;z-index:130;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(3,6,11,.74);backdrop-filter:blur(5px)}
+  .rep-card{width:100%;max-width:420px;background:linear-gradient(180deg,#151c28,#0d1219);border:1px solid var(--line);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden}
+  .rep-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}
+  .rep-head h3{margin:0;font-family:"Chakra Petch",sans-serif;font-size:17px;color:#fff}
+  .rep-x{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#cdd6e2;font-size:16px;cursor:pointer}
+  .rep-x:hover{color:#fff;border-color:rgba(240,82,90,.5);background:rgba(240,82,90,.12)}
+  .rep-body{padding:18px 20px}
+  .rep-sub{margin:0 0 14px;font-size:13px;color:var(--tx2);line-height:1.5}
+  .rep-motivos{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .rep-m{border:1px solid var(--line);background:rgba(255,255,255,.03);color:#cdd7e2;border-radius:999px;padding:9px 14px;font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer;transition:border-color .14s,background .14s,color .14s}
+  .rep-m.on{border-color:var(--g,#e8b84b);background:rgba(232,184,75,.12);color:var(--g,#e8b84b)}
+  .rep-txt{width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:11px;padding:11px 12px;color:#eaf1f9;font-family:inherit;font-size:13.5px;line-height:1.5;resize:vertical}
+  .rep-txt:focus{outline:none;border-color:var(--g,#e8b84b)}
+  .rep-msg{font-size:13px;margin-top:12px;min-height:1px}
+  .rep-msg.ok{color:#48d17e;font-weight:600}.rep-msg.err{color:#ff8a94;font-weight:600}
+  .rep-foot{display:flex;gap:10px;padding:16px 20px;border-top:1px solid var(--line)}
+  .rep-cancel{flex:0 0 auto;border:1px solid var(--line);background:none;color:#c7d2de;border-radius:11px;padding:12px 18px;font-family:inherit;font-weight:700;cursor:pointer}
+  .rep-send{flex:1;border:0;background:var(--g,#e8b84b);color:#1a1206;border-radius:11px;padding:12px;font-family:"Chakra Petch",sans-serif;font-weight:800;cursor:pointer}
+  .rep-send:hover{filter:brightness(1.05)}
+  @media(max-width:480px){.rep-bg{padding:10px}}
   @media(max-width:560px){.sn-grid{grid-template-columns:1fr}}
   `;
   document.head.appendChild(st);
@@ -226,9 +255,11 @@ function tarjeta(a, ctx = {}) {
   const cVot = (ctx.conteos && ctx.conteos[sid]) || { likes: 0, dislikes: 0 };
   const IUp = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 22V10M2 12v8a2 2 0 002 2h13.4a2 2 0 002-1.6l1.4-7A2 2 0 0018.8 11H14V6a2.5 2.5 0 00-2.5-2.5c-.6 0-1.1.4-1.3 1L7 10"/></svg>`;
   const IDown = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2v12M22 12V4a2 2 0 00-2-2H6.6a2 2 0 00-2 1.6l-1.4 7A2 2 0 005.2 13H10v5a2.5 2.5 0 002.5 2.5c.6 0 1.1-.4 1.3-1L17 14"/></svg>`;
+  const IFlag = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V4"/></svg>`;
   const votos = sid ? `<div class="sn-c-vote" data-sid="${esc(sid)}">
       <button class="sn-v like ${miV === 1 ? 'on' : ''}" data-v="1" title="${L('Like', 'Me gusta')}">${IUp}<b class="sn-v-n" data-likes>${(cVot.likes || 0).toLocaleString()}</b></button>
       <button class="sn-v dis ${miV === -1 ? 'on' : ''}" data-v="-1" title="${L('Dislike', 'No me gusta')}">${IDown}<b class="sn-v-n" data-dis>${(cVot.dislikes || 0).toLocaleString()}</b></button>
+      <button class="sn-report" data-report="${esc(sid)}" data-rfirma="${esc(a.firma || '')}" data-rautor="${esc(a.autorUid || '')}" title="${L('Report', 'Reportar')}">${IFlag}<span>${L('Report', 'Reportar')}</span></button>
     </div>` : '';
 
   // Análisis largo (hasta ~1000 palabras): desplegable centrado y responsivo
@@ -406,14 +437,30 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
       const val = Number(b.dataset.v);
       const actual = ctx.votos[sid] || 0;
       const nuevo = (actual === val) ? 0 : val;      // volver a pulsar quita el voto
+      // Actualización optimista de los conteos (respuesta visual inmediata)
+      const c = ctx.conteos[sid] || { likes: 0, dislikes: 0 };
+      if (actual === 1) c.likes = Math.max(0, (c.likes || 0) - 1);
+      if (actual === -1) c.dislikes = Math.max(0, (c.dislikes || 0) - 1);
+      if (nuevo === 1) c.likes = (c.likes || 0) + 1;
+      if (nuevo === -1) c.dislikes = (c.dislikes || 0) + 1;
+      ctx.conteos[sid] = c; ctx.votos[sid] = nuevo;
+      // Pintar al instante: estado, números y animación de pulsación
       box.querySelectorAll('[data-v]').forEach(x => x.classList.remove('on'));
       if (nuevo !== 0) b.classList.add('on');
-      ctx.votos[sid] = nuevo;
+      const l = box.querySelector('[data-likes]'), d = box.querySelector('[data-dis]');
+      if (l) l.textContent = (c.likes || 0).toLocaleString();
+      if (d) d.textContent = (c.dislikes || 0).toLocaleString();
+      b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
       try {
         if (nuevo === 0) await quitarVoto(sid); else await votarSenal(sid, nuevo);
       } catch (_) {}
       pintarVotos(sid);
     });
+  });
+
+  // Reportar señal (soporte)
+  cont.querySelectorAll('[data-report]').forEach(b => b.onclick = () => {
+    abrirModalReporte({ sid: b.dataset.report, firma: b.dataset.rfirma || '', autorUid: b.dataset.rautor || '' });
   });
 
   // Desplegable del análisis (texto largo) sin romper la tarjeta
@@ -444,6 +491,47 @@ const ICheckMini = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 
 /* Modal de suscripción al servicio del analista (Fase 8). Servicio profesional,
    no caridad: compras las señales de ese analista por $2/mes. */
+function abrirModalReporte(info) {
+  const es = idiomaActual() === 'es';
+  const L = (en, esx) => es ? esx : en;
+  document.getElementById('rep-bg')?.remove();
+  const bg = document.createElement('div'); bg.id = 'rep-bg'; bg.className = 'rep-bg';
+  const cerrar = () => bg.remove();
+  const motivos = [
+    ['enganoso', L('Misleading content', 'Contenido engañoso')],
+    ['spam', L('Spam or advertising', 'Spam o publicidad')],
+    ['ofensivo', L('Offensive language', 'Lenguaje ofensivo')],
+    ['otro', L('Other', 'Otro')],
+  ];
+  let motivo = 'enganoso';
+  bg.innerHTML = `<div class="rep-card" role="dialog" aria-modal="true">
+    <div class="rep-head"><h3>${L('Report signal', 'Reportar señal')}</h3><button class="rep-x" aria-label="close">✕</button></div>
+    <div class="rep-body">
+      <p class="rep-sub">${L('Tell us what\u2019s wrong with this signal. Our team will review it.', 'Cuéntanos qué pasa con esta señal. Nuestro equipo la revisará.')}</p>
+      <div class="rep-motivos">${motivos.map(([v, t]) => `<button class="rep-m ${v === motivo ? 'on' : ''}" data-m="${v}">${esc(t)}</button>`).join('')}</div>
+      <textarea class="rep-txt" id="rep-txt" rows="3" maxlength="500" placeholder="${L('Add details (optional)', 'Agrega detalles (opcional)')}"></textarea>
+      <div class="rep-msg" id="rep-msg"></div>
+    </div>
+    <div class="rep-foot"><button class="rep-cancel">${L('Cancel', 'Cancelar')}</button><button class="rep-send">${L('Send report', 'Enviar reporte')}</button></div>
+  </div>`;
+  document.body.appendChild(bg);
+  bg.querySelector('.rep-x').onclick = cerrar; bg.querySelector('.rep-cancel').onclick = cerrar;
+  bg.onclick = (e) => { if (e.target === bg) cerrar(); };
+  bg.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { motivo = b.dataset.m; bg.querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b)); });
+  bg.querySelector('.rep-send').onclick = async () => {
+    const msg = bg.querySelector('#rep-msg'); msg.className = 'rep-msg';
+    const send = bg.querySelector('.rep-send'); send.disabled = true; const orig = send.textContent; send.textContent = '…';
+    try {
+      await reportarSenal(info.sid, { firma: info.firma, autorUid: info.autorUid, motivo, comentario: bg.querySelector('#rep-txt').value.trim() });
+      msg.classList.add('ok'); msg.textContent = L('Thanks. Your report was sent.', 'Gracias. Tu reporte fue enviado.');
+      setTimeout(cerrar, 1100);
+    } catch (_) {
+      send.disabled = false; send.textContent = orig;
+      msg.classList.add('err'); msg.textContent = L('Could not send the report. Try again.', 'No se pudo enviar el reporte. Inténtalo de nuevo.');
+    }
+  };
+}
+
 function abrirModalSuscripcion(firma, yaSuscrito, onAccion) {
   document.getElementById('sn-sub-bg')?.remove();
   const bg = document.createElement('div');
