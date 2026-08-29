@@ -6,7 +6,7 @@
    todos los días (solo cuando hay oportunidad).
    Bilingüe (inglés por defecto). Responsivo.
    ============================================================ */
-import { listarAnalisis, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos, misApoyos, apoyarAnalista, cancelarApoyo, contarApoyos, reportarSenal } from '../mesa/mesa-datos.js';
+import { listarAnalisis, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos, misApoyos, apoyarAnalista, cancelarApoyo, contarApoyos, reportarSenal, miReporte } from '../mesa/mesa-datos.js';
 import { usuarioActual } from '../auth/auth.js';
 import { planPorId } from '../datos/planes.js';
 import { estiloAttrs } from './estilo-senal.js';
@@ -183,6 +183,9 @@ function inyectarCSS() {
   .rep-cancel{flex:0 0 auto;border:1px solid var(--line);background:none;color:#c7d2de;border-radius:11px;padding:12px 18px;font-family:inherit;font-weight:700;cursor:pointer}
   .rep-send{flex:1;border:0;background:var(--g,#e8b84b);color:#1a1206;border-radius:11px;padding:12px;font-family:"Chakra Petch",sans-serif;font-weight:800;cursor:pointer}
   .rep-send:hover{filter:brightness(1.05)}
+  .rep-tg{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:#2aabee;color:#fff}
+  .rep-tg-ic{width:56px;height:56px;margin:6px auto 14px;border-radius:50%;background:rgba(42,171,238,.14);display:flex;align-items:center;justify-content:center}
+  .rep-tg-ic svg{width:30px;height:30px;color:#2aabee}
   @media(max-width:480px){.rep-bg{padding:10px}}
   @media(max-width:560px){.sn-grid{grid-template-columns:1fr}}
   `;
@@ -332,7 +335,9 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
   try { votos = await misVotos(); } catch (_) {}
   let apoyos = new Set();
   try { apoyos = new Set(await misApoyos()); } catch (_) {}
-  const ctx = { premium: esPremium, me, sigo, votos, apoyos, conteos: {} };
+  let yaReporte = false;
+  try { yaReporte = !!(await miReporte()); } catch (_) {}
+  const ctx = { premium: esPremium, me, sigo, votos, apoyos, conteos: {}, yaReporte };
 
   // Conteos de like/dislike de todas las señales (para mostrar y para ordenar "Populares")
   const sids = [...new Set(lista.map(a => a.id || a.matchId).filter(Boolean))];
@@ -458,9 +463,10 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
     });
   });
 
-  // Reportar señal (soporte)
+  // Reportar señal (soporte). Un solo reporte por usuario; después, grupo de Telegram.
   cont.querySelectorAll('[data-report]').forEach(b => b.onclick = () => {
-    abrirModalReporte({ sid: b.dataset.report, firma: b.dataset.rfirma || '', autorUid: b.dataset.rautor || '' });
+    if (ctx.yaReporte) { abrirModalTelegram(); return; }
+    abrirModalReporte({ sid: b.dataset.report, firma: b.dataset.rfirma || '', autorUid: b.dataset.rautor || '' }, () => { ctx.yaReporte = true; });
   });
 
   // Desplegable del análisis (texto largo) sin romper la tarjeta
@@ -491,7 +497,29 @@ const ICheckMini = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 
 /* Modal de suscripción al servicio del analista (Fase 8). Servicio profesional,
    no caridad: compras las señales de ese analista por $2/mes. */
-function abrirModalReporte(info) {
+function abrirModalTelegram() {
+  const es = idiomaActual() === 'es';
+  const L = (en, esx) => es ? esx : en;
+  const URL_TG = 'https://t.me/TraderRecord';
+  document.getElementById('rep-bg')?.remove();
+  const bg = document.createElement('div'); bg.id = 'rep-bg'; bg.className = 'rep-bg';
+  const cerrar = () => bg.remove();
+  const ITg = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3l-3 14.1c-.2 1-.8 1.2-1.7.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-.9.5l.3-4.6 8.4-7.6c.4-.3-.1-.5-.6-.2L7.4 13 2.9 11.6c-1-.3-1-1 .2-1.4L20.6 3c.8-.3 1.5.2 1.3 1.3z"/></svg>`;
+  bg.innerHTML = `<div class="rep-card" role="dialog" aria-modal="true" style="max-width:400px">
+    <div class="rep-head"><h3>${L('Need more help?', '¿Necesitas más ayuda?')}</h3><button class="rep-x" aria-label="close">✕</button></div>
+    <div class="rep-body" style="text-align:center">
+      <div class="rep-tg-ic">${ITg}</div>
+      <p class="rep-sub" style="text-align:center">${L('You have already sent your report. For any other issue, join our Telegram group and tell us there.', 'Ya enviaste tu reporte. Para cualquier otra reclamación, únete a nuestro grupo de Telegram y cuéntanos ahí.')}</p>
+    </div>
+    <div class="rep-foot"><button class="rep-cancel">${L('Close', 'Cerrar')}</button><a class="rep-send rep-tg" href="${URL_TG}" target="_blank" rel="noopener">${L('Join Telegram', 'Unirme a Telegram')}</a></div>
+  </div>`;
+  document.body.appendChild(bg);
+  bg.querySelector('.rep-x').onclick = cerrar; bg.querySelector('.rep-cancel').onclick = cerrar;
+  bg.querySelector('.rep-tg').onclick = () => setTimeout(cerrar, 200);
+  bg.onclick = (e) => { if (e.target === bg) cerrar(); };
+}
+
+function abrirModalReporte(info, onSuccess) {
   const es = idiomaActual() === 'es';
   const L = (en, esx) => es ? esx : en;
   document.getElementById('rep-bg')?.remove();
@@ -507,7 +535,7 @@ function abrirModalReporte(info) {
   bg.innerHTML = `<div class="rep-card" role="dialog" aria-modal="true">
     <div class="rep-head"><h3>${L('Report signal', 'Reportar señal')}</h3><button class="rep-x" aria-label="close">✕</button></div>
     <div class="rep-body">
-      <p class="rep-sub">${L('Tell us what\u2019s wrong with this signal. Our team will review it.', 'Cuéntanos qué pasa con esta señal. Nuestro equipo la revisará.')}</p>
+      <p class="rep-sub">${L('Tell us what\u2019s wrong with this signal. Our team will review it. You can send one report; after that you can reach us on Telegram.', 'Cuéntanos qué pasa con esta señal. Nuestro equipo la revisará. Puedes enviar un reporte; después podrás escribirnos por Telegram.')}</p>
       <div class="rep-motivos">${motivos.map(([v, t]) => `<button class="rep-m ${v === motivo ? 'on' : ''}" data-m="${v}">${esc(t)}</button>`).join('')}</div>
       <textarea class="rep-txt" id="rep-txt" rows="3" maxlength="500" placeholder="${L('Add details (optional)', 'Agrega detalles (opcional)')}"></textarea>
       <div class="rep-msg" id="rep-msg"></div>
@@ -523,6 +551,7 @@ function abrirModalReporte(info) {
     const send = bg.querySelector('.rep-send'); send.disabled = true; const orig = send.textContent; send.textContent = '…';
     try {
       await reportarSenal(info.sid, { firma: info.firma, autorUid: info.autorUid, motivo, comentario: bg.querySelector('#rep-txt').value.trim() });
+      if (typeof onSuccess === 'function') onSuccess();
       msg.classList.add('ok'); msg.textContent = L('Thanks. Your report was sent.', 'Gracias. Tu reporte fue enviado.');
       setTimeout(cerrar, 1100);
     } catch (_) {
