@@ -155,6 +155,14 @@ function inyectarCSS() {
   .sn-i-strong .sn-c-firma{color:#0a0e15;background:var(--acc);border-color:var(--acc)}
   .sn-c-firma svg{width:13px;height:13px}
   .sn-c-name{font-size:11.5px;color:var(--tx3,#7a8593);font-weight:600}
+  /* Fase 2: barra superior con botón "What is this section?" + disclaimer del modal */
+  .sn-topbar{display:flex;justify-content:flex-end;margin:0 0 12px}
+  .sn-about{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--tx2);border-radius:999px;padding:7px 13px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;transition:color .14s,border-color .14s,background .14s}
+  .sn-about:hover{color:#fff;border-color:rgba(232,184,75,.42);background:rgba(232,184,75,.08)}
+  .sn-about svg{width:14px;height:14px;flex:0 0 auto}
+  .sni-disc{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03)}
+  .sni-disc svg{width:17px;height:17px;color:var(--g);flex:0 0 auto;margin-top:1px}
+  .sni-disc p{margin:0;font-size:12.5px;color:var(--tx2);line-height:1.55}
   /* Bloque 5: animación de pulsación del voto + botón reportar + modal */
   .sn-v:active{transform:scale(.92)}
   .sn-v.bump{animation:snPop .28s ease}
@@ -304,17 +312,13 @@ function _tsMs(ts) {  if (!ts) return 0;
 
 export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {}) {
   inyectarCSS();
-  const head = `<div class="sn-head">
-      <span class="sn-eyebrow"><i></i>${L('Analyst signals', 'Señales del analista')}</span>
-      <div class="sn-title">${L('Analyst signals', 'Señales del analista')}</div>
-      <div class="sn-sub">${L('Follow analysts, see who is hot, and get their calls first.', 'Sigue analistas, mira quién está en racha y recibe sus pronósticos primero.')}</div>
-    </div>
-    <div class="sn-note">${IC.info}<div><b>${L('Please read', 'Ten en cuenta')}</b><p>${L('These are the analyst\u2019s opinions for informational purposes, not betting advice. Signals are not posted every day, only when there is a real edge. High variance: a high probability is never a guarantee.', 'Son opiniones del analista con fines informativos, no asesoría de apuestas. No se publican todos los días, solo cuando hay una ventaja real. Alta varianza: una probabilidad alta nunca es garantía.')}</p></div></div>`;
+  const IHelp = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.5a2.4 2.4 0 013.6-1.6c1.3.8 1.2 2.4 0 3.1-.7.4-1.2.9-1.2 1.8M12 17h.01"/></svg>`;
+  const topbar = `<div class="sn-topbar"><button class="sn-about" id="sn-about">${IHelp}<span>${L('What is this section?', '¿Qué es esta sección?')}</span></button></div>`;
 
   if (!esPremium) {
     const pr = planPorId('premium');
     const precio = pr ? `$${pr.mensual}/${L('mo', 'mes')}` : `$8.99/${L('mo', 'mes')}`;
-    cont.innerHTML = `<div class="sn">${head}
+    cont.innerHTML = `<div class="sn">
       <div class="sn-lock">${IC.lock}
         <span class="sn-lock-badge">${L('Premium', 'Premium')} · ${precio}</span>
         <b>${L('Analyst signals are Premium', 'Las señales son Premium')}</b>
@@ -324,7 +328,7 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
     return;
   }
 
-  cont.innerHTML = `<div class="sn">${head}<div class="sn-empty"><div class="sn-spin"></div>${L('Loading signals…', 'Cargando señales…')}</div></div>`;
+  cont.innerHTML = `<div class="sn">${topbar}<div class="sn-empty"><div class="sn-spin"></div>${L('Loading signals…', 'Cargando señales…')}</div></div>`;
   const lista = await cargarSenales();
 
   // Fase 3 — a quién sigo + notificaciones de nuevas señales
@@ -383,9 +387,13 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
     : `<div class="sn-empty">${IC.flag}<b>${L('Nothing here yet', 'Nada aquí todavía')}</b><span>${tab === 'siguiendo' ? L('Follow analysts to see their signals gathered here.', 'Sigue analistas para ver sus señales reunidas aquí.') : L('No signals right now. New calls appear only when there is a clear opportunity.', 'No hay señales ahora. Los nuevos pronósticos aparecen solo cuando hay una oportunidad clara.')}</span></div>`;
 
   const cuerpo = lista.length
-    ? `${banner}${discover}${tabs}${grid}`
-    : `<div class="sn-empty">${IC.flag}<b>${L('No signals right now', 'No hay señales ahora')}</b><span>${L('The analyst hasn\u2019t published today. New calls appear here only when there is a clear opportunity. Check back later.', 'El analista no ha publicado hoy. Los nuevos pronósticos aparecen aquí solo cuando hay una oportunidad clara. Vuelve más tarde.')}</span></div>`;
-  cont.innerHTML = `<div class="sn">${head}${cuerpo}</div>`;
+    ? `${topbar}${discover}${banner}${tabs}${grid}`
+    : `${topbar}<div class="sn-empty">${IC.flag}<b>${L('No signals right now', 'No hay señales ahora')}</b><span>${L('The analyst hasn\u2019t published today. New calls appear here only when there is a clear opportunity. Check back later.', 'El analista no ha publicado hoy. Los nuevos pronósticos aparecen aquí solo cuando hay una oportunidad clara. Vuelve más tarde.')}</span></div>`;
+  cont.innerHTML = `<div class="sn">${cuerpo}</div>`;
+
+  cont.querySelector('#sn-about')?.addEventListener('click', () => abrirModalInfoSenales());
+  // Aviso (descargo de responsabilidad) emergente la primera vez, se puede cerrar
+  try { if (!localStorage.getItem('sn_info_visto')) { abrirModalInfoSenales(); localStorage.setItem('sn_info_visto', '1'); } } catch (_) {}
 
   cont.querySelectorAll('[data-sntab]').forEach(b => b.onclick = () => { _snTab = b.dataset.sntab; pintarSenales(cont, { esPremium, abrirPlanes }); });
 
@@ -497,6 +505,26 @@ const ICheckMini = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 
 /* Modal de suscripción al servicio del analista (Fase 8). Servicio profesional,
    no caridad: compras las señales de ese analista por $2/mes. */
+function abrirModalInfoSenales() {
+  const es = idiomaActual() === 'es';
+  const L = (en, esx) => es ? esx : en;
+  document.getElementById('rep-bg')?.remove();
+  const bg = document.createElement('div'); bg.id = 'rep-bg'; bg.className = 'rep-bg';
+  const cerrar = () => bg.remove();
+  bg.innerHTML = `<div class="rep-card" role="dialog" aria-modal="true" style="max-width:430px">
+    <div class="rep-head"><h3>${L('Analyst signals', 'Señales del analista')}</h3><button class="rep-x" aria-label="close">✕</button></div>
+    <div class="rep-body">
+      <p class="rep-sub">${L('Follow analysts, see who is hot, and get their published calls first. Signals are posted only when there is a real edge, not every day.', 'Sigue analistas, mira quién está en racha y recibe sus pronósticos primero. Las señales se publican solo cuando hay una ventaja real, no todos los días.')}</p>
+      <div class="sni-disc">${IC.info}<p>${L('These are the analyst\u2019s opinions for informational purposes, not betting advice. High variance: a high probability is never a guarantee.', 'Son opiniones del analista con fines informativos, no asesoría de apuestas. Alta varianza: una probabilidad alta nunca es garantía.')}</p></div>
+    </div>
+    <div class="rep-foot"><button class="rep-send" style="flex:1">${L('Got it', 'Entendido')}</button></div>
+  </div>`;
+  document.body.appendChild(bg);
+  bg.querySelector('.rep-x').onclick = cerrar;
+  bg.querySelector('.rep-send').onclick = cerrar;
+  bg.onclick = (e) => { if (e.target === bg) cerrar(); };
+}
+
 function abrirModalTelegram() {
   const es = idiomaActual() === 'es';
   const L = (en, esx) => es ? esx : en;
