@@ -235,12 +235,13 @@ export async function votarSenal(signalId, valor) {
   return true;
 }
 
-/* Reporta una señal (soporte). Guarda en la colección 'reportes'. */
+/* Reporta una señal (soporte). UN SOLO reporte por usuario: el documento usa
+   el uid como id, así cada usuario tiene como máximo un reporte. */
 export async function reportarSenal(signalId, datos = {}) {
   if (!await _asegurarListo()) return false;
   const u = usuarioActual(); if (!u || !signalId) return false;
   const S = _obtenerStore(), db = _obtenerDB();
-  await S.addDoc(S.collection(db, 'reportes'), {
+  await S.setDoc(S.doc(db, 'reportes', u.uid), {
     signalId,
     firma: datos.firma || null,
     autorUid: datos.autorUid || null,
@@ -252,6 +253,39 @@ export async function reportarSenal(signalId, datos = {}) {
     creado: S.serverTimestamp(),
   });
   return true;
+}
+
+/* ¿El usuario actual ya envió su reporte? Devuelve el reporte o null (1 sola lectura). */
+export async function miReporte() {
+  if (!await _asegurarListo()) return null;
+  const u = usuarioActual(); if (!u) return null;
+  const S = _obtenerStore(), db = _obtenerDB();
+  try { const d = await S.getDoc(S.doc(db, 'reportes', u.uid)); return d.exists() ? { id: u.uid, ...d.data() } : null; }
+  catch (_) { return null; }
+}
+
+/* Admin: lista todos los reportes. */
+export async function listarReportes() {
+  if (!await _asegurarListo()) return [];
+  const S = _obtenerStore(), db = _obtenerDB();
+  try { const q = await S.getDocs(S.collection(db, 'reportes')); return q.docs.map(d => ({ id: d.id, ...d.data() })); }
+  catch (_) { return []; }
+}
+
+/* Admin: marca un reporte con un estado ('resuelto' | 'abierto'). */
+export async function resolverReporte(id, estado) {
+  if (!await _asegurarListo()) return false;
+  const S = _obtenerStore(), db = _obtenerDB();
+  try { await S.updateDoc(S.doc(db, 'reportes', id), { estado: estado || 'resuelto' }); return true; }
+  catch (_) { return false; }
+}
+
+/* Admin: elimina un reporte (deja que ese usuario pueda enviar uno nuevo). */
+export async function borrarReporte(id) {
+  if (!await _asegurarListo()) return false;
+  const S = _obtenerStore(), db = _obtenerDB();
+  try { await S.deleteDoc(S.doc(db, 'reportes', id)); return true; }
+  catch (_) { return false; }
 }
 export async function quitarVoto(signalId) {
   if (!await _asegurarListo()) return false;

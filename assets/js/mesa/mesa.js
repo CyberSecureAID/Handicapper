@@ -3,7 +3,7 @@
    Secciones: Overview · Users · Analysis.
    Solo visible si esAdmin() (verificado en Firestore).
    ============================================================ */
-import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos } from './mesa-datos.js';
+import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte } from './mesa-datos.js';
 import { prepararEstilosSenal, tarjetaMuestra } from '../ui/senales.js';
 import { PALETA, INTENSIDADES, EMBLEMAS, EMBLEMA_NOMBRE, estiloSeguro } from '../ui/estilo-senal.js';
 import { PALABRAS_DEFECTO, terminoProhibido, limpiarLista, detectarPublicidad } from '../datos/moderacion.js';
@@ -22,6 +22,8 @@ let _uBusqueda = '', _uFiltro = 'todos', _uPagina = 1;
 let _anBusqueda = '', _anFiltro = 'todos';
 let _monFiltro = 'todos';
 let _moderacion = [];
+let _reportes = [];
+function _reportesAbiertos() { return _reportes.filter(r => (r.estado || 'abierto') !== 'resuelto').length; }
 let _ingresos = {};
 const U_POR_PAGINA = 8;
 const ML = (en, es) => _mesaLang === 'es' ? es : en;
@@ -75,7 +77,8 @@ function render() {
        <button data-tab="analisis" class="${_tab==='analisis'?'on':''}">${IC.pen} ${ML('Analysis','Análisis')}</button>
        <button data-tab="analistas" class="${_tab==='analistas'?'on':''}">${IC.contrato} ${ML('Staff','Personal')}</button>
        <button data-tab="monitoreo" class="${_tab==='monitoreo'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg> ${ML('Monitoring','Monitoreo')}</button>
-       <button data-tab="moderacion" class="${_tab==='moderacion'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M12 3l7 3v5c0 4.4-3 7.4-7 9-4-1.6-7-4.6-7-9V6l7-3z"/></svg> ${ML('Moderation','Moderación')}</button>`;
+       <button data-tab="moderacion" class="${_tab==='moderacion'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M12 3l7 3v5c0 4.4-3 7.4-7 9-4-1.6-7-4.6-7-9V6l7-3z"/></svg> ${ML('Moderation','Moderación')}</button>
+       <button data-tab="reportes" class="${_tab==='reportes'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V4"/></svg> ${ML('Reports','Reportes')}${_reportesAbiertos() ? `<span class="mesa-nav-badge">${_reportesAbiertos()}</span>` : ''}</button>`;
   _cont.innerHTML = `
     <div class="mesa">
       <aside class="mesa-side" id="mesa-side">
@@ -140,6 +143,7 @@ async function cargarDatos() {
   try { _usuarios = await listarUsuarios(); } catch (_) { _usuarios = []; }
   try { _analisis = await listarAnalisis(); } catch (_) { _analisis = []; }
   try { _moderacion = await leerModeracion(); } catch (_) { _moderacion = []; }
+  try { _reportes = await listarReportes(); } catch (_) { _reportes = []; }
   try { _admins = await listarAdmins(); } catch (_) { _admins = []; }
   if (_rol === 'admin') { try { _analistas = await listarAnalistas(); } catch (_) { _analistas = []; } }
   if (_rol === 'admin') { try { _ingresos = await resumenIngresos(); } catch (_) { _ingresos = {}; } }
@@ -173,6 +177,7 @@ function pintarTab() {
   else if (_tab === 'analistas') { m.innerHTML = vistaAnalistas(); enlazarAnalistas(); }
   else if (_tab === 'monitoreo') { m.innerHTML = vistaMonitoreo(); enlazarMonitoreo(); }
   else if (_tab === 'moderacion') { m.innerHTML = vistaModeracion(); enlazarModeracion(); }
+  else if (_tab === 'reportes') { m.innerHTML = vistaReportes(); enlazarReportes(); }
 }
 
 /* ================= OVERVIEW ================= */
@@ -523,6 +528,74 @@ function enlazarModeracion() {
   };
   if (btn) btn.onclick = agregar;
   if (inp) inp.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); agregar(); } };
+}
+
+/* ============================================================
+   REPORTES (solo admin) — quejas de usuarios sobre señales.
+   Un reporte por usuario (id del documento = uid), para no llenar
+   Firebase; el resto de reclamaciones van al grupo de Telegram.
+   ============================================================ */
+function _repMotivoTxt(m) {
+  const map = {
+    enganoso: ML('Misleading content', 'Contenido engañoso'),
+    spam: ML('Spam or advertising', 'Spam o publicidad'),
+    ofensivo: ML('Offensive language', 'Lenguaje ofensivo'),
+    otro: ML('Other', 'Otro'),
+  };
+  return map[m] || m || ML('Other', 'Otro');
+}
+function _repFecha(ts) {
+  try { const d = ts && ts.toDate ? ts.toDate() : (ts ? new Date(ts) : null); return d ? d.toLocaleString(_mesaLang === 'es' ? 'es' : 'en') : ''; } catch (_) { return ''; }
+}
+function vistaReportes() {
+  const IFlag = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V4"/></svg>`;
+  const abiertos = _reportesAbiertos();
+  const orden = _reportes.slice().sort((a, b) => {
+    const ra = (a.estado || 'abierto') === 'resuelto' ? 1 : 0, rb = (b.estado || 'abierto') === 'resuelto' ? 1 : 0;
+    if (ra !== rb) return ra - rb;
+    const ta = a.creado && a.creado.toMillis ? a.creado.toMillis() : 0, tb = b.creado && b.creado.toMillis ? b.creado.toMillis() : 0;
+    return tb - ta;
+  });
+  const filas = orden.length ? orden.map(r => {
+    const resuelto = (r.estado || 'abierto') === 'resuelto';
+    return `<div class="rep-row ${resuelto ? 'ok' : ''}" data-repid="${esc(r.id)}">
+      <div class="rep-row-main">
+        <div class="rep-row-top"><span class="rep-tag ${esc(r.motivo || 'otro')}">${esc(_repMotivoTxt(r.motivo))}</span>${resuelto ? `<span class="rep-tag done">${ML('Resolved', 'Resuelto')}</span>` : ''}<span class="rep-row-sig">${esc(r.firma ? '@' + r.firma : (r.signalId || ''))}</span></div>
+        ${r.comentario ? `<p class="rep-row-txt">${esc(r.comentario)}</p>` : `<p class="rep-row-txt empty">${ML('No extra details.', 'Sin detalles adicionales.')}</p>`}
+        <div class="rep-row-meta">${esc(r.correo || r.reportadoPor || '')} · ${esc(_repFecha(r.creado))}</div>
+      </div>
+      <div class="rep-row-acts">
+        <button class="rep-act ok" data-repok="${esc(r.id)}">${resuelto ? ML('Reopen', 'Reabrir') : ML('Resolve', 'Resolver')}</button>
+        <button class="rep-act del" data-repdel="${esc(r.id)}">${ML('Delete', 'Eliminar')}</button>
+      </div>
+    </div>`;
+  }).join('') : `<div class="rep-adm-empty">${IFlag}<b>${ML('No reports', 'Sin reportes')}</b><span>${ML('User complaints about signals will show up here.', 'Las quejas de los usuarios sobre las señales aparecerán aquí.')}</span></div>`;
+  return `
+    <div class="mesa-head"><h1>${ML('Reports', 'Reportes')}</h1>
+      <p>${ML('User complaints about signals. Each user can send one report; further issues go to the Telegram group.', 'Quejas de los usuarios sobre las señales. Cada usuario puede enviar un reporte; lo demás va al grupo de Telegram.')}</p></div>
+    <div class="rep-adm-kpis">
+      <div class="rep-adm-kpi"><b>${_reportes.length}</b><span>${ML('Total', 'Total')}</span></div>
+      <div class="rep-adm-kpi ${abiertos ? 'alerta' : ''}"><b>${abiertos}</b><span>${ML('Open', 'Abiertos')}</span></div>
+      <div class="rep-adm-kpi"><b>${_reportes.length - abiertos}</b><span>${ML('Resolved', 'Resueltos')}</span></div>
+    </div>
+    <div class="rep-adm-list">${filas}</div>`;
+}
+function enlazarReportes() {
+  const refrescarMain = () => { const m = _cont.querySelector('.mesa-main'); if (m) { m.innerHTML = vistaReportes(); enlazarReportes(); } };
+  _cont.querySelectorAll('[data-repok]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.repok; const r = _reportes.find(x => x.id === id); if (!r) return;
+    const nuevo = (r.estado || 'abierto') === 'resuelto' ? 'abierto' : 'resuelto';
+    b.disabled = true;
+    try { await resolverReporte(id, nuevo); r.estado = nuevo; } catch (_) {}
+    refrescarMain();
+  });
+  _cont.querySelectorAll('[data-repdel]').forEach(b => b.onclick = () => {
+    const id = b.dataset.repdel;
+    confirmar(ML('Delete this report? The user will be able to send a new one.', '¿Eliminar este reporte? El usuario podrá enviar uno nuevo.'), ML('Yes, delete', 'Sí, eliminar'), async () => {
+      try { await borrarReporte(id); _reportes = _reportes.filter(x => x.id !== id); } catch (_) {}
+      refrescarMain();
+    });
+  });
 }
 
 /* ============================================================
