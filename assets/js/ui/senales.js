@@ -6,7 +6,7 @@
    todos los días (solo cuando hay oportunidad).
    Bilingüe (inglés por defecto). Responsivo.
    ============================================================ */
-import { listarAnalisis, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos } from '../mesa/mesa-datos.js';
+import { listarAnalisis, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos, misApoyos, apoyarAnalista, cancelarApoyo, contarApoyos } from '../mesa/mesa-datos.js';
 import { usuarioActual } from '../auth/auth.js';
 import { planPorId } from '../datos/planes.js';
 import { estiloAttrs } from './estilo-senal.js';
@@ -17,6 +17,7 @@ const L = (en, es) => (ES() ? es : en);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
 
 let _cache = null;   // señales cacheadas para el punto indicador
+let _snTab = 'todas';   // Fase: pestaña activa del feed (todas | siguiendo)
 
 const MERCADO = {
   ml: () => L('Match winner', 'Ganador del partido'),
@@ -94,9 +95,44 @@ function inyectarCSS() {
   .sn-c-fol{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2)}
   .sn-c-fol svg{width:14px;height:14px;opacity:.85}
   .sn-c-fol b{color:#e9eff6;font-weight:800}
-  .sn-follow{margin-left:auto;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:11.5px;letter-spacing:.02em;color:#0a0e15;background:linear-gradient(90deg,#38a9f0,#5cc0ff);border:0;border-radius:999px;padding:6px 14px;cursor:pointer;transition:filter .14s,transform .1s}
+  .sn-c-actions{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 12px}
+  .sn-follow{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:11.5px;letter-spacing:.02em;color:#0a0e15;background:linear-gradient(90deg,#38a9f0,#5cc0ff);border:0;border-radius:999px;padding:7px 16px;cursor:pointer;transition:filter .14s,transform .1s}
   .sn-follow:hover{filter:brightness(1.08)} .sn-follow:active{transform:scale(.97)}
   .sn-follow.on{color:#cfe0ee;background:transparent;border:1px solid rgba(120,150,180,.5)}
+  /* Suscripción al servicio del analista (profesional, sin corazón/rosa) */
+  .sn-sub{display:inline-flex;align-items:center;gap:6px;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:11.5px;letter-spacing:.02em;color:#efe3c6;background:rgba(232,184,75,.1);border:1px solid rgba(232,184,75,.42);border-radius:999px;padding:7px 15px;cursor:pointer;transition:filter .14s,background .14s}
+  .sn-sub svg{width:14px;height:14px}
+  .sn-sub:hover{background:rgba(232,184,75,.18)}
+  .sn-sub.on{color:#1a1206;background:linear-gradient(90deg,#e8b84b,#f6e2a6);border-color:transparent}
+  /* Tabs del feed (Todas / Siguiendo) */
+  .sn-tabs{display:flex;gap:6px;margin:0 0 16px;border-bottom:1px solid var(--line);padding-bottom:0}
+  .sn-tab{position:relative;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:13px;letter-spacing:.02em;color:var(--tx2);background:transparent;border:0;padding:10px 4px;margin-right:16px;cursor:pointer;border-bottom:2px solid transparent;transition:color .14s,border-color .14s}
+  .sn-tab b{display:inline-block;margin-left:6px;font-size:11px;background:rgba(232,184,75,.16);color:#e8c46a;border-radius:999px;padding:1px 7px}
+  .sn-tab:hover{color:#cdd7e2}
+  .sn-tab.on{color:#fff;border-bottom-color:var(--g)}
+  /* Desplegable del análisis (texto largo) */
+  .sn-c-toggle{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin:2px 0 4px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:12.5px;letter-spacing:.02em;color:#cbd5e2;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;transition:background .14s,border-color .14s}
+  .sn-c-toggle:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.18)}
+  .sn-c-toggle svg{width:15px;height:15px;transition:transform .2s}
+  .sn-c-toggle.on svg{transform:rotate(180deg)}
+  .sn-c-an{margin:8px 0 4px;padding:14px 15px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02);max-height:340px;overflow-y:auto}
+  .sn-c-an p{margin:0;color:#c5d0dc;font-size:13.5px;line-height:1.62;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
+  /* Modal de suscripción */
+  .sn-sub-bg{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(2,4,8,.72);backdrop-filter:blur(4px)}
+  .sn-sub-modal{position:relative;width:100%;max-width:440px;background:linear-gradient(180deg,#151c28,#0d1219);border:1px solid var(--line);border-radius:20px;padding:30px 28px 26px;box-shadow:0 30px 90px rgba(0,0,0,.65)}
+  .sn-sub-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:#cdd6e2;font-size:20px;line-height:1;cursor:pointer}
+  .sn-sub-x:hover{color:#fff;border-color:rgba(240,53,58,.5);background:rgba(240,53,58,.12)}
+  .sn-sub-eyebrow{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#efe3c6;margin-bottom:8px}
+  .sn-sub-t{font-size:17px;color:var(--tx2);line-height:1.4}.sn-sub-t b{color:#fff}
+  .sn-sub-price{font-family:"Chakra Petch",sans-serif;font-weight:800;color:#fff;margin:12px 0 16px;line-height:1;font-size:52px;display:flex;align-items:flex-start;gap:2px}
+  .sn-sub-price .cur{font-size:26px;margin-top:6px}.sn-sub-price .per{font-size:16px;color:var(--tx2);font-weight:700;margin-top:auto;margin-bottom:8px}
+  .sn-sub-list{list-style:none;margin:0 0 16px;padding:0;display:flex;flex-direction:column;gap:10px}
+  .sn-sub-list li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:#d3dce7;line-height:1.4}
+  .sn-sub-list svg{width:16px;height:16px;color:#2fd07f;flex:0 0 auto;margin-top:1px}
+  .sn-sub-note{font-size:11.5px;color:var(--tx3);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:10px 13px;line-height:1.55;margin-bottom:18px}
+  .sn-sub-btn{width:100%;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:14px;letter-spacing:.03em;color:#1a1206;background:linear-gradient(90deg,#e8b84b,#f6e2a6);border:0;border-radius:12px;padding:15px;cursor:pointer}
+  .sn-sub-btn:hover{filter:brightness(1.05)}
+  .sn-sub-btn.cancel{color:#f7b3b6;background:transparent;border:1px solid rgba(240,82,90,.5)}
   .sn-newbanner{display:flex;align-items:center;gap:10px;border:1px solid rgba(56,169,240,.35);background:linear-gradient(180deg,rgba(56,169,240,.12),rgba(56,169,240,.03));border-radius:12px;padding:11px 15px;margin:0 0 16px;color:#dbeafe;font-size:13.5px;font-weight:600}
   .sn-newbanner svg{width:18px;height:18px;color:#5cc0ff;flex:0 0 auto}
   .sn-lock-badge{display:inline-block;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:12px;letter-spacing:.04em;color:#0a0e15;background:linear-gradient(90deg,#e8c46a,#f6e2a6);border-radius:999px;padding:5px 14px;margin-bottom:12px}
@@ -123,22 +159,28 @@ function tarjeta(a, ctx = {}) {
   const pick = a.favorito ? `${esc(a.favorito)} ${L('to win', 'gana')}` : esc(a.veredicto || '');
   const firma = a.firma || a.autor || '';
   const uid = a.autorUid || '';
-  const est = estiloAttrs(a.estilo);   // color/intensidad/emblema saneados (límites)
+  const sid = a.id || a.matchId || '';
+  const est = estiloAttrs(a.estilo);
+  const emblema = est.emblemaSVG ? `<span class="sn-c-emblema">${est.emblemaSVG}</span>` : '';
   const IPen = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>`;
   const IUsers = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.2 2.7-5 5.5-5s5.5 1.8 5.5 5"/><path d="M16 6.5a3 3 0 010 6M18.5 20c0-2.4-1-3.9-2.5-4.7"/></svg>`;
-  // Botón seguir (solo Premium y si hay uid y no soy yo mismo)
-  const puedeSeguir = ctx.premium && uid && uid !== ctx.me;
+  const ICheck = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`;
+
+  const puede = ctx.premium && uid && uid !== ctx.me;
   const sigo = ctx.sigo && ctx.sigo.has(uid);
-  const btn = puedeSeguir
-    ? `<button class="sn-follow ${sigo ? 'on' : ''}" data-follow="${esc(uid)}" data-firma="${esc(firma)}">${sigo ? L('Following', 'Siguiendo') : L('+ Follow', '+ Seguir')}</button>`
+  const suscrito = ctx.apoyos && ctx.apoyos.has(uid);
+  const btnFollow = puede
+    ? `<button class="sn-follow ${sigo ? 'on' : ''}" data-follow="${esc(uid)}" data-firma="${esc(firma)}">${sigo ? L('Following', 'Siguiendo') : L('Follow', 'Seguir')}</button>`
     : '';
+  const btnSub = puede
+    ? `<button class="sn-sub ${suscrito ? 'on' : ''}" data-sub="${esc(uid)}" data-firma="${esc(firma)}">${suscrito ? `${ICheck}${L('Subscribed', 'Suscrito')}` : `${L('Signals for $2/mo', 'Señales por $2/mes')}`}</button>`
+    : '';
+  const acciones = (btnFollow || btnSub) ? `<div class="sn-c-actions">${btnFollow}${btnSub}</div>` : '';
   const by = firma ? `<div class="sn-c-by">
       ${emblema}<span class="sn-c-firma">${IPen}${esc(firma)}</span>
       ${uid ? `<span class="sn-c-fol" data-fol="${esc(uid)}">${IUsers}<b>·</b> ${L('followers', 'seguidores')}</span>` : ''}
-      ${btn}
-    </div>` : '';
-  const emblema = est.emblemaSVG ? `<span class="sn-c-emblema">${est.emblemaSVG}</span>` : '';
-  const sid = a.id || a.matchId || '';
+    </div>${acciones}` : acciones;
+
   const miV = (ctx.votos && ctx.votos[sid]) || 0;
   const IUp = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 22V10M2 12v8a2 2 0 002 2h13.4a2 2 0 002-1.6l1.4-7A2 2 0 0018.8 11H14V6a2.5 2.5 0 00-2.5-2.5c-.6 0-1.1.4-1.3 1L7 10"/></svg>`;
   const IDown = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2v12M22 12V4a2 2 0 00-2-2H6.6a2 2 0 00-2 1.6l-1.4 7A2 2 0 005.2 13H10v5a2.5 2.5 0 002.5 2.5c.6 0 1.1-.4 1.3-1L17 14"/></svg>`;
@@ -146,12 +188,18 @@ function tarjeta(a, ctx = {}) {
       <button class="sn-v like ${miV === 1 ? 'on' : ''}" data-v="1" title="${L('Like', 'Me gusta')}">${IUp}<b class="sn-v-n" data-likes>·</b></button>
       <button class="sn-v dis ${miV === -1 ? 'on' : ''}" data-v="-1" title="${L('Dislike', 'No me gusta')}">${IDown}<b class="sn-v-n" data-dis>·</b></button>
     </div>` : '';
+
+  // Análisis largo (hasta ~1000 palabras): desplegable centrado y responsivo
+  const IChev = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
+  const analisis = a.texto ? `<button class="sn-c-toggle" data-an="${esc(sid)}"><span>${L('Read analysis', 'Ver análisis')}</span>${IChev}</button>
+    <div class="sn-c-an" id="an-${esc(sid)}" hidden><p>${esc(a.texto)}</p></div>` : '';
+
   return `<div class="sn-card ${est.cls}" style="${est.varCss}">
     <div class="sn-c-top"><div class="sn-c-match">${esc(a.equipos || a.matchId || '')}</div><span class="sn-c-conf ${conf}">${esc(confTx(conf))}</span></div>
     ${by}
     <div class="sn-c-pick"><span class="sn-c-pick-lbl">${L('Pick', 'Pronóstico')}</span><span class="sn-c-team">${pick}</span>${prob != null ? `<span class="sn-c-prob">${prob}%</span>` : ''}</div>
     ${prob != null ? `<div class="sn-c-bar"><i style="width:${prob}%"></i></div>` : ''}
-    ${a.texto ? `<p class="sn-c-txt">${esc(a.texto)}</p>` : ''}
+    ${analisis}
     <div class="sn-c-foot"><span class="sn-c-market">${esc(mk)}</span>${votos}</div>
   </div>`;
 }
@@ -180,9 +228,9 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
   const head = `<div class="sn-head">
       <span class="sn-eyebrow"><i></i>${L('Analyst signals', 'Señales del analista')}</span>
       <div class="sn-title">${L('Analyst signals', 'Señales del analista')}</div>
-      <div class="sn-sub">${L('Curated calls from our analyst — published only when there is a clear opportunity.', 'Pronósticos escogidos por nuestro analista — publicados solo cuando hay una oportunidad clara.')}</div>
+      <div class="sn-sub">${L('Curated calls from our analyst, published only when there is a clear opportunity.', 'Pronósticos escogidos por nuestro analista, publicados solo cuando hay una oportunidad clara.')}</div>
     </div>
-    <div class="sn-note">${IC.info}<div><b>${L('Please read', 'Ten en cuenta')}</b><p>${L('These are the analyst\u2019s opinions for informational purposes, not betting advice. Signals are not posted every day — only when there is a real edge. High variance: a high probability is never a guarantee.', 'Son opiniones del analista con fines informativos, no asesoría de apuestas. No se publican todos los días — solo cuando hay una ventaja real. Alta varianza: una probabilidad alta nunca es garantía.')}</p></div></div>`;
+    <div class="sn-note">${IC.info}<div><b>${L('Please read', 'Ten en cuenta')}</b><p>${L('These are the analyst\u2019s opinions for informational purposes, not betting advice. Signals are not posted every day, only when there is a real edge. High variance: a high probability is never a guarantee.', 'Son opiniones del analista con fines informativos, no asesoría de apuestas. No se publican todos los días, solo cuando hay una ventaja real. Alta varianza: una probabilidad alta nunca es garantía.')}</p></div></div>`;
 
   if (!esPremium) {
     const pr = planPorId('premium');
@@ -206,7 +254,9 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
   try { sigo = new Set(await misSeguidos()); } catch (_) {}
   let votos = {};
   try { votos = await misVotos(); } catch (_) {}
-  const ctx = { premium: esPremium, me, sigo, votos };
+  let apoyos = new Set();
+  try { apoyos = new Set(await misApoyos()); } catch (_) {}
+  const ctx = { premium: esPremium, me, sigo, votos, apoyos };
 
   // Notificación: señales de analistas que sigo, más nuevas que mi última visita
   const VISTO = 'sn_visto_' + (me || 'anon');
@@ -216,10 +266,31 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
     ? `<div class="sn-newbanner">${IC.bell}<span>${nuevas} ${nuevas === 1 ? L('new signal from analysts you follow', 'nueva señal de analistas que sigues') : L('new signals from analysts you follow', 'nuevas señales de analistas que sigues')}</span></div>`
     : '';
 
+  // Orden: las señales de analistas que sigues van SIEMPRE arriba, luego por fecha
+  const ordenadas = lista.slice().sort((x, y) => {
+    const sx = sigo.has(x.autorUid) ? 1 : 0, sy = sigo.has(y.autorUid) ? 1 : 0;
+    if (sx !== sy) return sy - sx;
+    return _tsMs(y.actualizado) - _tsMs(x.actualizado);
+  });
+  const deSeguidos = ordenadas.filter(a => sigo.has(a.autorUid));
+  const tab = (_snTab === 'siguiendo' && deSeguidos.length) ? 'siguiendo' : 'todas';
+  const visibles = tab === 'siguiendo' ? deSeguidos : ordenadas;
+
+  const tabs = `<div class="sn-tabs">
+      <button class="sn-tab ${tab === 'todas' ? 'on' : ''}" data-sntab="todas">${L('All', 'Todas')}</button>
+      <button class="sn-tab ${tab === 'siguiendo' ? 'on' : ''}" data-sntab="siguiendo">${L('Following', 'Siguiendo')}${deSeguidos.length ? `<b>${deSeguidos.length}</b>` : ''}</button>
+    </div>`;
+
+  const grid = visibles.length
+    ? `<div class="sn-grid">${visibles.map(a => tarjeta(a, ctx)).join('')}</div>`
+    : `<div class="sn-empty">${IC.flag}<b>${L('Nothing here yet', 'Nada aquí todavía')}</b><span>${tab === 'siguiendo' ? L('Follow analysts to see their signals gathered here.', 'Sigue analistas para ver sus señales reunidas aquí.') : L('No signals right now. New calls appear only when there is a clear opportunity.', 'No hay señales ahora. Los nuevos pronósticos aparecen solo cuando hay una oportunidad clara.')}</span></div>`;
+
   const cuerpo = lista.length
-    ? `${banner}<div class="sn-grid">${lista.map(a => tarjeta(a, ctx)).join('')}</div>`
-    : `<div class="sn-empty">${IC.flag}<b>${L('No signals right now', 'No hay señales ahora')}</b><span>${L('The analyst hasn\u2019t published today. New calls appear here only when there\u2019s a clear opportunity — check back later.', 'El analista no ha publicado hoy. Los nuevos pronósticos aparecen aquí solo cuando hay una oportunidad clara — vuelve más tarde.')}</span></div>`;
+    ? `${banner}${tabs}${grid}`
+    : `<div class="sn-empty">${IC.flag}<b>${L('No signals right now', 'No hay señales ahora')}</b><span>${L('The analyst hasn\u2019t published today. New calls appear here only when there is a clear opportunity. Check back later.', 'El analista no ha publicado hoy. Los nuevos pronósticos aparecen aquí solo cuando hay una oportunidad clara. Vuelve más tarde.')}</span></div>`;
   cont.innerHTML = `<div class="sn">${head}${cuerpo}</div>`;
+
+  cont.querySelectorAll('[data-sntab]').forEach(b => b.onclick = () => { _snTab = b.dataset.sntab; pintarSenales(cont, { esPremium, abrirPlanes }); });
 
   // Marcar como visto (la última fecha entre las señales cargadas)
   try {
@@ -283,4 +354,59 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
       pintarVotos(sid);
     });
   });
+
+  // Desplegable del análisis (texto largo) sin romper la tarjeta
+  cont.querySelectorAll('[data-an]').forEach(b => b.onclick = () => {
+    const body = cont.querySelector(`#an-${CSS.escape(b.dataset.an)}`);
+    if (!body) return;
+    const abierto = !body.hasAttribute('hidden');
+    if (abierto) { body.setAttribute('hidden', ''); b.classList.remove('on'); }
+    else { body.removeAttribute('hidden'); b.classList.add('on'); }
+  });
+
+  // Suscripción al servicio del analista ($2/mes)
+  cont.querySelectorAll('[data-sub]').forEach(b => b.onclick = () => {
+    const uid = b.dataset.sub, firma = b.dataset.firma || '';
+    const ya = b.classList.contains('on');
+    abrirModalSuscripcion(firma, ya, async (accion) => {
+      b.disabled = true;
+      try {
+        if (accion === 'suscribir') { await apoyarAnalista(uid, firma); b.classList.add('on'); b.innerHTML = `${ICheckMini}${L('Subscribed', 'Suscrito')}`; ctx.apoyos.add(uid); }
+        else if (accion === 'cancelar') { await cancelarApoyo(uid); b.classList.remove('on'); b.textContent = L('Signals for $2/mo', 'Señales por $2/mes'); ctx.apoyos.delete(uid); }
+      } catch (_) {}
+      b.disabled = false;
+    });
+  });
 }
+
+const ICheckMini = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`;
+
+/* Modal de suscripción al servicio del analista (Fase 8). Servicio profesional,
+   no caridad: compras las señales de ese analista por $2/mes. */
+function abrirModalSuscripcion(firma, yaSuscrito, onAccion) {
+  document.getElementById('sn-sub-bg')?.remove();
+  const bg = document.createElement('div');
+  bg.className = 'sn-sub-bg'; bg.id = 'sn-sub-bg';
+  const cerrar = () => bg.remove();
+  const nombre = esc(firma || L('this analyst', 'este analista'));
+  bg.innerHTML = `<div class="sn-sub-modal" role="dialog" aria-modal="true">
+    <button class="sn-sub-x" aria-label="close">&times;</button>
+    <div class="sn-sub-eyebrow">${L('Analyst service', 'Servicio del analista')}</div>
+    <div class="sn-sub-t">${yaSuscrito ? L('You receive the signals from', 'Recibes las señales de') : L('Receive the signals from', 'Recibe las señales de')} <b>${nombre}</b></div>
+    <div class="sn-sub-price"><span class="cur">$</span>2<span class="per">/${L('mo', 'mes')}</span></div>
+    <ul class="sn-sub-list">
+      <li>${ICheckMini}${L('Every signal this analyst publishes', 'Todas las señales que publique este analista')}</li>
+      <li>${ICheckMini}${L('Pinned to the top of your feed', 'Fijadas arriba en tu feed')}</li>
+      <li>${ICheckMini}${L('Cancel whenever you want', 'Cancela cuando quieras')}</li>
+    </ul>
+    <div class="sn-sub-note">${L('Card payments arrive soon. For now this activates a preview so you can try the flow. No real charge is made yet.', 'Los pagos con tarjeta llegan pronto. Por ahora esto activa una vista previa para probar el flujo. Todavía no se hace ningún cobro real.')}</div>
+    ${yaSuscrito
+      ? `<button class="sn-sub-btn cancel" data-act="cancelar">${L('Cancel subscription', 'Cancelar suscripción')}</button>`
+      : `<button class="sn-sub-btn" data-act="suscribir">${L('Subscribe for $2/mo', 'Suscribirme por $2/mes')}</button>`}
+  </div>`;
+  document.body.appendChild(bg);
+  bg.querySelector('.sn-sub-x').onclick = cerrar;
+  bg.onclick = (e) => { if (e.target === bg) cerrar(); };
+  bg.querySelector('[data-act]').onclick = async (e) => { const acc = e.currentTarget.dataset.act; await onAccion(acc); cerrar(); };
+}
+
