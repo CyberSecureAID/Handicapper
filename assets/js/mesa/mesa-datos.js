@@ -234,6 +234,25 @@ export async function votarSenal(signalId, valor) {
   });
   return true;
 }
+
+/* Reporta una señal (soporte). Guarda en la colección 'reportes'. */
+export async function reportarSenal(signalId, datos = {}) {
+  if (!await _asegurarListo()) return false;
+  const u = usuarioActual(); if (!u || !signalId) return false;
+  const S = _obtenerStore(), db = _obtenerDB();
+  await S.addDoc(S.collection(db, 'reportes'), {
+    signalId,
+    firma: datos.firma || null,
+    autorUid: datos.autorUid || null,
+    motivo: datos.motivo || 'otro',
+    comentario: (datos.comentario || '').slice(0, 500),
+    reportadoPor: u.uid,
+    correo: u.email || null,
+    estado: 'abierto',
+    creado: S.serverTimestamp(),
+  });
+  return true;
+}
 export async function quitarVoto(signalId) {
   if (!await _asegurarListo()) return false;
   const u = usuarioActual(); if (!u || !signalId) return false;
