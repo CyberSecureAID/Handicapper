@@ -16,7 +16,7 @@ import { idiomaActual } from '../ui/idioma.js';
 let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = [];
 let _ligaSel = null, _partidos = [], _cargandoPart = false;
 let _rol = 'admin', _deporteAnalista = null, _analistas = [];
-let _miFirma = null, _miNombre = null, _miUid = null, _miEstilo = null;
+let _miFirma = null, _miNombre = null, _miUid = null, _miEstilo = null, _estiloAuto = false;
 let _mesaLang = 'es';
 let _uBusqueda = '', _uFiltro = 'todos', _uPagina = 1;
 let _anBusqueda = '', _anFiltro = 'todos';
@@ -49,7 +49,7 @@ export async function abrirMesa() {
     return;
   }
   if (admin) { _rol = 'admin'; _deporteAnalista = null; }
-  else { _rol = 'analista'; _deporteAnalista = analista.deporte || null; _miFirma = analista.firma || analista.alias || null; _miNombre = analista.nombre || null; _miUid = analista.uid || null; _miEstilo = estiloSeguro(analista.estilo); _tab = 'analisis'; }
+  else { _rol = 'analista'; _deporteAnalista = analista.deporte || null; _miFirma = analista.firma || analista.alias || null; _miNombre = analista.nombre || null; _miUid = analista.uid || null; _miEstilo = estiloSeguro(analista.estilo); _estiloAuto = analista.estiloAuto === true; _tab = 'analisis'; }
   render();
   cargarDatos();
 }
@@ -169,7 +169,7 @@ function pintarTab() {
   if (!m) return;
   if (_tab === 'resumen') { m.innerHTML = vistaResumen(); enlazarResumen(); }
   else if (_tab === 'usuarios') { m.innerHTML = vistaUsuarios(); enlazarUsuarios(); }
-  else if (_tab === 'analisis') { m.innerHTML = vistaAnalisis() + (_rol === 'analista' ? editorEstilo() : ''); enlazarAnalisis(); if (_rol === 'analista') enlazarEditorEstilo(); }
+  else if (_tab === 'analisis') { m.innerHTML = vistaAnalisis(); enlazarAnalisis(); }
   else if (_tab === 'analistas') { m.innerHTML = vistaAnalistas(); enlazarAnalistas(); }
   else if (_tab === 'monitoreo') { m.innerHTML = vistaMonitoreo(); enlazarMonitoreo(); }
   else if (_tab === 'moderacion') { m.innerHTML = vistaModeracion(); enlazarModeracion(); }
@@ -1067,12 +1067,16 @@ async function abrirModalSenal(matchId) {
           <label class="anm2-lbl">${L('Detailed analysis', 'Análisis detallado')}</label>
           <div class="anm2-ta"><textarea id="anm-txt" maxlength="1000" rows="4" placeholder="${L('Write your detailed analysis here…', 'Escribe tu análisis detallado aquí…')}">${esc(ya?.texto || '')}</textarea><span class="anm2-ta-c" id="cnt">0/1000</span></div>
           <label class="anm2-lbl">${L('Main market', 'Mercado principal')}</label>
-          <div class="anm2-select"><select id="anm-mkt">
-            <option value="ml">${L('Match winner (regulation)', 'Ganador del partido (Tiempo reglamentario)')}</option>
-            <option value="ml_ot">${L('Match winner (incl. OT)', 'Ganador (incl. tiempo extra)')}</option>
-            <option value="spread">${L('Spread / Handicap', 'Hándicap')}</option>
-            <option value="totals">${L('Totals (Over/Under)', 'Totales (Más/Menos)')}</option>
-          </select></div>
+          <div class="anm2-dd" id="anm-mkt-dd">
+            <input type="hidden" id="anm-mkt" value="${esc(ya?.mercado || 'ml')}">
+            <button type="button" class="anm2-dd-btn" id="anm-mkt-btn"><span id="anm-mkt-lbl"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+            <div class="anm2-dd-list" id="anm-mkt-list" hidden>
+              <button type="button" data-mkt="ml">${L('Match winner (regulation)', 'Ganador del partido (Tiempo reglamentario)')}</button>
+              <button type="button" data-mkt="ml_ot">${L('Match winner (incl. OT)', 'Ganador (incl. tiempo extra)')}</button>
+              <button type="button" data-mkt="spread">${L('Spread / Handicap', 'Hándicap')}</button>
+              <button type="button" data-mkt="totals">${L('Totals (Over/Under)', 'Totales (Más/Menos)')}</button>
+            </div>
+          </div>
           <label class="anm2-lbl">${L('Analysis confidence', 'Confidencia en el análisis')}</label>
           <div class="anm2-conf" id="anm-conf">
             <button data-c="baja">${L('Low', 'Baja')}</button>
@@ -1103,6 +1107,7 @@ async function abrirModalSenal(matchId) {
       <label class="anm2-apply"><input type="checkbox" id="anm-adj" ${ya?.ajustar !== false ? 'checked' : ''}><div><b>${L('Apply my probability on the site', 'Aplicar mi probabilidad en la página')}</b><em>${L('Users will see these probabilities', 'Los usuarios verán estas probabilidades')}</em></div></label>
       <div class="anm2-foot-btns">
         ${ya ? `<button class="anm2-btn danger" id="anm-del">${L('Delete', 'Eliminar')}</button>` : ''}
+        <button class="anm2-btn ghost" id="anm-estilo">${L('Style / Preview', 'Estilo / Vista previa')}</button>
         <button class="anm2-btn primary" id="anm-guardar">${L('Publish signal', 'Publicar señal')}</button>
       </div>
     </div>
@@ -1155,12 +1160,73 @@ async function abrirModalSenal(matchId) {
   const cerrar = () => bg.remove();
   bg.querySelector('#anm-x').onclick = cerrar;
   bg.querySelector('#anm-x2')?.addEventListener('click', cerrar);
-  bg.querySelector('#anm-prev').onclick = () => {
-    const prev = bg.querySelector('#anm-prev'); const t = prev.querySelector('span') || prev;
-    prev.disabled = true; const orig = prev.innerHTML;
-    prev.innerHTML = L('Signals section coming soon', 'Sección de señales muy pronto');
-    setTimeout(() => { prev.innerHTML = orig; prev.disabled = false; }, 1800);
+  // ---- Dropdown de mercado (custom, con estilo completo) ----
+  const mktLabels = { ml: L('Match winner (regulation)', 'Ganador del partido (Tiempo reglamentario)'), ml_ot: L('Match winner (incl. OT)', 'Ganador (incl. tiempo extra)'), spread: L('Spread / Handicap', 'Hándicap'), totals: L('Totals (Over/Under)', 'Totales (Más/Menos)') };
+  const mktInput = bg.querySelector('#anm-mkt'), mktBtn = bg.querySelector('#anm-mkt-btn'), mktList = bg.querySelector('#anm-mkt-list'), mktLbl = bg.querySelector('#anm-mkt-lbl');
+  mktLbl.textContent = mktLabels[mktInput.value] || mktLabels.ml;
+  mktBtn.onclick = () => { mktList.hidden = !mktList.hidden; mktBtn.classList.toggle('open', !mktList.hidden); };
+  mktList.querySelectorAll('[data-mkt]').forEach(o => o.onclick = () => { mktInput.value = o.dataset.mkt; mktLbl.textContent = mktLabels[o.dataset.mkt]; mktList.hidden = true; mktBtn.classList.remove('open'); });
+  document.addEventListener('click', (e) => { if (mktBtn && !e.target.closest('#anm-mkt-dd')) { mktList.hidden = true; mktBtn.classList.remove('open'); } });
+
+  // ---- Modal de vista previa + estilo ----
+  const abrirEstiloPreview = (modoPublicar) => {
+    const ES2 = _mesaLang === 'es', L2 = (en, es) => ES2 ? es : en;
+    _estiloDraft = { ...estiloSeguro(_miEstilo) };
+    const datos = () => ({
+      equipos: `${p.local.abrev} vs ${p.visita.abrev}`,
+      favorito: fav === 'visita' ? p.visita.abrev : p.local.abrev,
+      prob: Number(slL.value),
+      confianza: conf,
+      mercado: mktInput.value,
+      texto: ta.value.trim() || L2('Your analysis will appear here.', 'Tu análisis aparecerá aquí.'),
+    });
+    document.getElementById('estp-modal')?.remove();
+    const pv = document.createElement('div'); pv.className = 'estp-bg'; pv.id = 'estp-modal';
+    const cerrar = () => pv.remove();
+    const sw = PALETA.map(pp => `<button class="est-sw ${_estiloDraft.color === pp.id ? 'on' : ''}" data-color="${pp.id}" style="--sw:${pp.hex}" title="${esc(ES2 ? pp.nombre.es : pp.nombre.en)}"><i></i></button>`).join('');
+    const it = INTENSIDADES.map(k => `<button class="est-int ${_estiloDraft.intensidad === k ? 'on' : ''}" data-inten="${k}">${esc(L2(k === 'subtle' ? 'Subtle' : k === 'normal' ? 'Normal' : 'Bold', k === 'subtle' ? 'Sutil' : k === 'normal' ? 'Normal' : 'Fuerte'))}</button>`).join('');
+    const em = Object.keys(EMBLEMAS).map(k => `<button class="est-emb ${_estiloDraft.emblema === k ? 'on' : ''}" data-emb="${k}" title="${esc(ES2 ? EMBLEMA_NOMBRE[k].es : EMBLEMA_NOMBRE[k].en)}">${k === 'none' ? `<span class="est-emb-none">${L2('None', 'Ninguno')}</span>` : EMBLEMAS[k]}</button>`).join('');
+    pv.innerHTML = `<div class="estp-modal" role="dialog" aria-modal="true">
+      <div class="estp-head"><h3>${L2('This is how your signal will look', 'Así se verá tu señal')}</h3><button class="estp-x" aria-label="close">✕</button></div>
+      <div class="estp-body">
+        <label class="estp-keep"><input type="checkbox" id="estp-keep" ${_estiloAuto ? 'checked' : ''}><span class="estp-keep-sw"></span><div><b>${L2('Keep my changes for future signals', 'Mantener mis cambios para próximas señales')}</b><em>${L2('Don\u2019t show this window every time. New signals will use this style.', 'No mostrar esta ventana cada vez. Las nuevas señales usarán este estilo.')}</em></div></label>
+        <div class="estp-prev sn" id="estp-prev"></div>
+        <div class="estp-controls">
+          <div class="est-field"><label>${L2('Accent color', 'Color de acento')}</label><div class="est-sws">${sw}</div></div>
+          <div class="est-field"><label>${L2('Intensity', 'Intensidad')}</label><div class="est-seg">${it}</div></div>
+          <div class="est-field"><label>${L2('Emblem', 'Emblema')}</label><div class="est-embs">${em}</div></div>
+        </div>
+      </div>
+      <div class="estp-btns"><button class="estp-cancel">${L2('Cancel', 'Cancelar')}</button><button class="estp-primary">${modoPublicar ? L2('Publish signal', 'Publicar señal') : L2('Save style', 'Guardar estilo')}</button></div>
+    </div>`;
+    document.body.appendChild(pv);
+    const render = () => { const box = pv.querySelector('#estp-prev'); if (box) box.innerHTML = tarjetaMuestra(_estiloDraft, _miFirma, datos()); };
+    render();
+    const setSel = (sel, val, attr) => pv.querySelectorAll(sel).forEach(x => x.classList.toggle('on', x.dataset[attr] === val));
+    pv.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { _estiloDraft.color = b.dataset.color; _estiloDraft = estiloSeguro(_estiloDraft); setSel('[data-color]', _estiloDraft.color, 'color'); render(); });
+    pv.querySelectorAll('[data-inten]').forEach(b => b.onclick = () => { _estiloDraft.intensidad = b.dataset.inten; _estiloDraft = estiloSeguro(_estiloDraft); setSel('[data-inten]', _estiloDraft.intensidad, 'inten'); render(); });
+    pv.querySelectorAll('[data-emb]').forEach(b => b.onclick = () => { _estiloDraft.emblema = b.dataset.emb; _estiloDraft = estiloSeguro(_estiloDraft); setSel('[data-emb]', _estiloDraft.emblema, 'emb'); render(); });
+    pv.querySelector('.estp-x').onclick = cerrar; pv.querySelector('.estp-cancel').onclick = cerrar;
+    pv.onclick = (e) => { if (e.target === pv) cerrar(); };
+    pv.querySelector('.estp-primary').onclick = async () => {
+      _miEstilo = { ..._estiloDraft };
+      _estiloAuto = pv.querySelector('#estp-keep').checked;
+      try { if (_miUid) await fijarAnalista(_miUid, { estilo: { color: _miEstilo.color, intensidad: _miEstilo.intensidad, emblema: _miEstilo.emblema }, estiloAuto: _estiloAuto }); } catch (_) {}
+      cerrar();
+      if (modoPublicar) publicar('publicado');
+    };
   };
+
+  const validarFav = () => {
+    if (fav) return true;
+    const h = bg.querySelector('#anm-hint'); h.classList.add('err');
+    h.textContent = L('Please select the team you think will win.', 'Por favor selecciona el equipo que crees que va a ganar.');
+    bg.querySelector('.anm2-pick').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  };
+  bg.querySelector('#anm-estilo').onclick = () => { if (validarFav()) abrirEstiloPreview(false); };
+  bg.querySelector('#anm-prev').onclick = () => { if (validarFav()) abrirEstiloPreview(false); };
+  bg.querySelector('#anm-guardar').onclick = () => { if (!validarFav()) return; if (_estiloAuto) publicar('publicado'); else abrirEstiloPreview(true); };
   bg.onclick = (e) => { if (e.target === bg) cerrar(); };
 
   const publicar = async (estado) => {
@@ -1197,7 +1263,6 @@ async function abrirModalSenal(matchId) {
     try { await guardarAnalisis(matchId, analisis); _analisis = await listarAnalisis(); cerrar(); pintarTab(); }
     catch (_) { btn.disabled = false; btn.textContent = txtBtn; }
   };
-  bg.querySelector('#anm-guardar').onclick = () => publicar('publicado');
   const del = bg.querySelector('#anm-del');
   if (del) del.onclick = async () => { del.disabled = true; try { await borrarAnalisis(matchId); _analisis = await listarAnalisis(); cerrar(); pintarTab(); } catch (_) { del.disabled = false; } };
 }
