@@ -57,11 +57,11 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
   background: rgba(232,184,75,.12); border: 1px solid rgba(232,184,75,.35); margin-bottom: 22px;
   backdrop-filter: blur(4px); }
 .hero-h1 { font-family: var(--display); font-weight: 800; font-size: clamp(38px, 6vw, 66px);
-  line-height: 1.02; letter-spacing: -.02em; margin: 0 0 20px;
-  background: linear-gradient(180deg, #ffffff 0%, #e6edf6 38%, #9fb2c6 52%, #ffffff 70%, #c4d1e0 100%);
+  line-height: 1.1; letter-spacing: -.02em; margin: 0 0 20px; padding-bottom: .1em;
+  background: linear-gradient(180deg, #ffe39a, var(--oro) 55%, #b9831a);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
-  filter: drop-shadow(0 2px 1px rgba(0,0,0,.55)) drop-shadow(0 8px 20px rgba(0,0,0,.5)); }
+  filter: drop-shadow(0 2px 1px rgba(0,0,0,.6)) drop-shadow(0 10px 20px rgba(0,0,0,.5)); }
 .hero-sub { font-size: clamp(16px, 1.7vw, 19px); line-height: 1.6; color: #d3dae2; max-width: 560px; margin: 0 0 30px;
   text-shadow: 0 1px 12px rgba(0,0,0,.5); }
 .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 34px; }
