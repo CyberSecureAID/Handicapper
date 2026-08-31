@@ -41,25 +41,22 @@ async function pintarPartidos(){
   }
 }
 
-/* ---------- Jugador destacado: ROTA cada 6h, fotos oficiales (CDN NBA/MLB) ---------- */
-function fotoNBA(id){ return 'https://cdn.nba.com/headshots/nba/latest/1040x760/' + id + '.png'; }
-function fotoMLB(id){ return 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_360,q_auto:best/v1/people/' + id + '/headshot/67/current'; }
+/* ---------- Jugador destacado: ROTA cada hora, RECORTES transparentes de ESPN ---------- */
+function fotoEspn(dep, id){ return 'https://a.espncdn.com/i/headshots/' + dep + '/players/full/' + id + '.png'; }
 var DESTACADOS = [
-  { nm:'Erling Haaland', tm:'Manchester City',        lb:'SOCCER', img:'https://a.espncdn.com/i/headshots/soccer/players/full/253989.png' },
-  { nm:'Shohei Ohtani',  tm:'Los Angeles Dodgers',    lb:'MLB', img: fotoMLB(660271) },
-  { nm:'LeBron James',   tm:'Los Angeles Lakers',     lb:'NBA', img: fotoNBA(2544)   },
-  { nm:'Aaron Judge',    tm:'New York Yankees',        lb:'MLB', img: fotoMLB(592450) },
-  { nm:'Stephen Curry',  tm:'Golden State Warriors',   lb:'NBA', img: fotoNBA(201939) },
-  { nm:'Nikola Jokic',   tm:'Denver Nuggets',          lb:'NBA', img: fotoNBA(203999) }
+  { nm:'Erling Haaland', tm:'Manchester City',  lb:'SOCCER', img: fotoEspn('soccer', 253989) },
+  { nm:'Kylian Mbappe',  tm:'Real Madrid',       lb:'SOCCER', img: fotoEspn('soccer', 231388) },
+  { nm:'Lamine Yamal',   tm:'FC Barcelona',      lb:'SOCCER', img: fotoEspn('soccer', 362150) },
+  { nm:'Nikola Jokic',   tm:'Denver Nuggets',    lb:'NBA',    img: fotoEspn('nba', 3112335) }
 ];
 function pintarDestacado(){
   var img = document.getElementById('mlp-leader-img'); if (!img) return;
-  var i = Math.floor(Date.now() / (6*3600*1000)) % DESTACADOS.length;   // cambia cada 6 horas
+  var i = Math.floor(Date.now() / (3600*1000)) % DESTACADOS.length;   // cambia cada hora
   var p = DESTACADOS[i];
   document.getElementById('mlp-leader-nm').textContent = p.nm;
   document.getElementById('mlp-leader-tm').textContent = p.tm;
   document.getElementById('mlp-leader-lb').textContent = p.lb;
-  img.onerror = function(){ img.style.display='none'; };
+  img.onerror = function(){ img.style.display = 'none'; };
   img.src = p.img;
 }
 
@@ -80,6 +77,15 @@ function tabs(){
   }); });
 }
 
-function init(){ pintarPartidos(); pintarDestacado(); tabs(); }
+function botonCTA(){
+  var cta = document.getElementById('mlp-cta');
+  if (!cta) return;
+  cta.addEventListener('click', function(){
+    var b = document.getElementById('btn-register') || document.getElementById('btn-hero') || document.getElementById('btn-login');
+    if (b) b.click();
+  });
+}
+
+function init(){ pintarPartidos(); pintarDestacado(); tabs(); botonCTA(); }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
