@@ -33,8 +33,8 @@
 
   /* ---------- HERO ---------- */
   .mlp-hero { position: relative; overflow: hidden;
-    background: #06090e url('../imagenes/fondos/hero-fondo.webp') 78% center / cover no-repeat;
-    min-height: 66vh; display: flex; flex-direction: column; justify-content: flex-end;
+    background: #06090e url('../imagenes/fondos/hero-fondo.webp') center top / contain no-repeat;
+    min-height: 72vh; display: flex; flex-direction: column; justify-content: flex-end;
     padding: 78px 18px 30px; }
   .mlp-hero::before { content: ''; position: absolute; inset: 0;
     background:
