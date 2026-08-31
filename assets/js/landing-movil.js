@@ -1,8 +1,7 @@
 /* Portada móvil (solo <=640px).
    - Partidos destacados: REALES desde el proveedor del repo (ESPN). Sin probabilidades.
-   - Fotos de jugador por Wikipedia (mismo método de la app).
+   - Jugador destacado: rota cada 6h con fotos oficiales (CDN NBA/MLB).
    - Tabs de Key stats: promedios generales de muestra (no probabilidad). */
-import { listarPartidos } from './datos/proveedor.js';
 
 /* ---------- Partidos reales ---------- */
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -20,10 +19,11 @@ function crest(eq){
 function nombre(eq){ return esc((eq && (eq.abrev || eq.nombre)) || ''); }
 
 function matchHtml(m){
-  var score = m.marcador ? (m.marcador.local + ' – ' + m.marcador.visita) : 'vs';
+  var score = m.marcador ? (m.marcador.local + ' – ' + m.marcador.visita) : '';
   return '<div class="mlp-match">' +
     '<div class="mlp-team">' + crest(m.local) + '<span class="mlp-tname">' + nombre(m.local) + '</span></div>' +
-    '<div class="mlp-mid"><div class="mlp-score">' + esc(score) + '</div>' + estadoHtml(m) + '</div>' +
+    '<div class="mlp-mid"><img class="mlp-vsico" src="assets/imagenes/vs.png" alt="vs">' +
+      (score ? '<div class="mlp-score">' + esc(score) + '</div>' : '') + estadoHtml(m) + '</div>' +
     '<div class="mlp-team r"><span class="mlp-tname">' + nombre(m.visita) + '</span>' + crest(m.visita) + '</div>' +
   '</div>';
 }
@@ -32,7 +32,8 @@ async function pintarPartidos(){
   var cont = document.getElementById('mlp-matches');
   if (!cont) return;
   try {
-    var todos = await listarPartidos();
+    var mod = await import('./datos/proveedor.js');
+    var todos = await mod.listarPartidos();
     var lista = (todos || []).filter(function(m){ return m && m.local && m.visita; }).slice(0, 5);
     cont.innerHTML = lista.length ? lista.map(matchHtml).join('') : '<div class="mlp-empty">No matches scheduled right now.</div>';
   } catch (_) {
@@ -40,20 +41,26 @@ async function pintarPartidos(){
   }
 }
 
-/* ---------- Foto de jugador (Wikipedia) ---------- */
-function norm(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'').replace(/\s+/g,' ').trim(); }
-async function pintarFotos(){
-  var faces = document.querySelectorAll('.mlp-face[data-name]');
-  if (!faces.length) return;
-  var names = []; faces.forEach(function(f){ var n=f.getAttribute('data-name'); if(names.indexOf(n)<0) names.push(n); });
-  try {
-    var r = await fetch('https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=240&titles=' + encodeURIComponent(names.join('|')));
-    var d = await r.json(); var map = {}, alias = {};
-    (d.query.normalized||[]).forEach(function(n){ alias[norm(n.to)] = norm(n.from); });
-    (d.query.redirects||[]).forEach(function(n){ alias[norm(n.to)] = alias[norm(n.from)] || norm(n.from); });
-    Object.keys(d.query.pages||{}).forEach(function(k){ var p=d.query.pages[k]; var s=p.thumbnail&&p.thumbnail.source; if(!s) return; map[norm(p.title)]=s; if(alias[norm(p.title)]) map[alias[norm(p.title)]]=s; });
-    faces.forEach(function(f){ var k=norm(f.getAttribute('data-name')); if(map[k]) f.style.backgroundImage='url("'+map[k]+'")'; });
-  } catch(_){}
+/* ---------- Jugador destacado: ROTA cada 6h, fotos oficiales (CDN NBA/MLB) ---------- */
+function fotoNBA(id){ return 'https://cdn.nba.com/headshots/nba/latest/1040x760/' + id + '.png'; }
+function fotoMLB(id){ return 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_360,q_auto:best/v1/people/' + id + '/headshot/67/current'; }
+var DESTACADOS = [
+  { nm:'Shohei Ohtani',  tm:'Los Angeles Dodgers',   lb:'MLB', img: fotoMLB(660271) },
+  { nm:'Aaron Judge',    tm:'New York Yankees',       lb:'MLB', img: fotoMLB(592450) },
+  { nm:'LeBron James',   tm:'Los Angeles Lakers',     lb:'NBA', img: fotoNBA(2544)   },
+  { nm:'Stephen Curry',  tm:'Golden State Warriors',  lb:'NBA', img: fotoNBA(201939) },
+  { nm:'Nikola Jokic',   tm:'Denver Nuggets',         lb:'NBA', img: fotoNBA(203999) },
+  { nm:'Mike Trout',     tm:'Los Angeles Angels',     lb:'MLB', img: fotoMLB(545361) }
+];
+function pintarDestacado(){
+  var img = document.getElementById('mlp-leader-img'); if (!img) return;
+  var i = Math.floor(Date.now() / (6*3600*1000)) % DESTACADOS.length;   // cambia cada 6 horas
+  var p = DESTACADOS[i];
+  document.getElementById('mlp-leader-nm').textContent = p.nm;
+  document.getElementById('mlp-leader-tm').textContent = p.tm;
+  document.getElementById('mlp-leader-lb').textContent = p.lb;
+  img.onerror = function(){ img.style.display='none'; };
+  img.src = p.img;
 }
 
 /* ---------- Tabs de Key stats (promedios generales de muestra) ---------- */
@@ -73,6 +80,6 @@ function tabs(){
   }); });
 }
 
-function init(){ pintarPartidos(); pintarFotos(); tabs(); }
+function init(){ pintarPartidos(); pintarDestacado(); tabs(); }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
