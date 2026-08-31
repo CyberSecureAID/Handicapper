@@ -8,7 +8,7 @@ function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c
 function hora(iso){ try { return new Date(iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); } catch(_){ return ''; } }
 
 function estadoHtml(m){
-  if (m.estado === 'vivo')   return '<span class="mlp-live vivo">LIVE</span>';
+  if (m.estado === 'vivo')   return '<span class="mlp-live vivo"><i class="ldot"></i>LIVE</span>';
   if (m.estado === 'final')  return '<span class="mlp-live fin">FINAL</span>';
   return '<span class="mlp-live q">' + esc(hora(m.cuando)) + '</span>';
 }
@@ -45,12 +45,12 @@ async function pintarPartidos(){
 function fotoNBA(id){ return 'https://cdn.nba.com/headshots/nba/latest/1040x760/' + id + '.png'; }
 function fotoMLB(id){ return 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_360,q_auto:best/v1/people/' + id + '/headshot/67/current'; }
 var DESTACADOS = [
-  { nm:'Shohei Ohtani',  tm:'Los Angeles Dodgers',   lb:'MLB', img: fotoMLB(660271) },
-  { nm:'Aaron Judge',    tm:'New York Yankees',       lb:'MLB', img: fotoMLB(592450) },
+  { nm:'Erling Haaland', tm:'Manchester City',        lb:'SOCCER', img:'https://a.espncdn.com/i/headshots/soccer/players/full/253989.png' },
+  { nm:'Shohei Ohtani',  tm:'Los Angeles Dodgers',    lb:'MLB', img: fotoMLB(660271) },
   { nm:'LeBron James',   tm:'Los Angeles Lakers',     lb:'NBA', img: fotoNBA(2544)   },
-  { nm:'Stephen Curry',  tm:'Golden State Warriors',  lb:'NBA', img: fotoNBA(201939) },
-  { nm:'Nikola Jokic',   tm:'Denver Nuggets',         lb:'NBA', img: fotoNBA(203999) },
-  { nm:'Mike Trout',     tm:'Los Angeles Angels',     lb:'MLB', img: fotoMLB(545361) }
+  { nm:'Aaron Judge',    tm:'New York Yankees',        lb:'MLB', img: fotoMLB(592450) },
+  { nm:'Stephen Curry',  tm:'Golden State Warriors',   lb:'NBA', img: fotoNBA(201939) },
+  { nm:'Nikola Jokic',   tm:'Denver Nuggets',          lb:'NBA', img: fotoNBA(203999) }
 ];
 function pintarDestacado(){
   var img = document.getElementById('mlp-leader-img'); if (!img) return;
