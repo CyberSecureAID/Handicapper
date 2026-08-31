@@ -15,6 +15,14 @@
   .mlp-sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
   .mlp-sec-head h2 { font-family: var(--display); font-size: 18px; font-weight: 800; color: var(--tinta);
     letter-spacing: .01em; margin: 0; }
+  .mlp-live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rojo); box-shadow: 0 0 0 4px rgba(226,59,63,.18); }
+  .mlp-crest { width: 34px; height: 34px; border-radius: 8px; object-fit: contain; background: #0b1420; flex: none; padding: 3px; }
+  .mlp-crest.ph { background: #0b1420; }
+  .mlp-empty { padding: 22px; text-align: center; color: var(--tinta-3); font-size: 13px;
+    background: var(--tarjeta); border: 1px solid var(--linea); border-radius: 14px; }
+  .mlp-face { width: 66px; height: 66px; border-radius: 50%; background: #0b1420 center 18% / cover no-repeat;
+    box-shadow: inset 0 0 0 2px var(--oro), 0 4px 10px rgba(0,0,0,.5); flex: none; }
+  .mlp-leader .mlp-face { width: 58px; height: 58px; }
   .mlp-more { font-size: 13px; font-weight: 700; color: var(--oro); text-decoration: none; }
 
   /* ---------- HERO ---------- */
