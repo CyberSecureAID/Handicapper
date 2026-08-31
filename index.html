@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="assets/css/app.css">
   <link rel="stylesheet" href="assets/css/dashboard.css">
   <link rel="stylesheet" href="assets/css/landing.css">
+  <link rel="stylesheet" href="assets/css/landing-movil.css">
   <link rel="stylesheet" href="assets/css/mesa.css">
 </head>
 <body>
@@ -29,6 +30,69 @@
       <button class="lbtn oro" id="btn-register" data-i18n="auth.registrar">Sign up</button>
     </div>
   </header>
+
+  <!-- ===================== PORTADA MÓVIL (solo <=640px) ===================== -->
+  <div class="mlp">
+    <div class="mlp-hero">
+      <div class="mlp-hero-in">
+        <h1 class="mlp-h1">Real-time<br><span class="ac">sports stats</span></h1>
+        <span class="mlp-rule"></span>
+        <p class="mlp-sub">Verifiable data. Deep analysis. A real edge for every match.</p>
+        <button class="mlp-cta" id="mlp-cta">Explore stats
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="mlp-sec">
+      <div class="mlp-sec-head"><h2>Featured matches</h2><a class="mlp-more" href="#">See all ›</a></div>
+      <div class="mlp-match">
+        <div class="mlp-team"><span class="mlp-badge" style="background:#3a7bd5;">MC</span><span class="mlp-tname">Man City</span></div>
+        <div class="mlp-mid"><div class="mlp-score">2 – 1</div><span class="mlp-live vivo">LIVE 78'</span></div>
+        <div class="mlp-team r"><span class="mlp-tname">Real Madrid</span><span class="mlp-badge" style="background:#2c3e57;">RM</span></div>
+      </div>
+      <div class="mlp-match">
+        <div class="mlp-team"><span class="mlp-badge" style="background:#7455c8;">LA</span><span class="mlp-tname">Lakers</span></div>
+        <div class="mlp-mid"><div class="mlp-score">98 – 105</div><span class="mlp-live q">Q4 08:45</span></div>
+        <div class="mlp-team r"><span class="mlp-tname">Celtics</span><span class="mlp-badge" style="background:#1a7a4c;">BC</span></div>
+      </div>
+      <div class="mlp-match">
+        <div class="mlp-team"><span class="mlp-badge" style="background:#28407a;">NY</span><span class="mlp-tname">Yankees</span></div>
+        <div class="mlp-mid"><div class="mlp-score">5 – 3</div><span class="mlp-live fin">FINAL</span></div>
+        <div class="mlp-team r"><span class="mlp-tname">Astros</span><span class="mlp-badge" style="background:#b5642a;">HA</span></div>
+      </div>
+    </div>
+
+    <div class="mlp-sec">
+      <div class="mlp-sec-head"><h2>Key stats</h2></div>
+      <div class="mlp-tabs">
+        <div class="mlp-tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg>Soccer</div>
+        <div class="mlp-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18"/></svg>NBA</div>
+        <div class="mlp-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M5 6c4 3 4 9 0 12M19 6c-4 3-4 9 0 12"/></svg>MLB</div>
+        <div class="mlp-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="17" r="2"/><path d="M10 16l9-9M15 5h4v4"/></svg>NHL</div>
+      </div>
+      <div class="mlp-stats">
+        <div class="mlp-stat"><div class="k">Goals</div><div class="v oro">2.45</div><div class="d">Avg per match</div>
+          <svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="0,22 15,18 30,20 45,12 60,16 75,8 100,6" fill="none" stroke="#E8B84B" stroke-width="2"/></svg></div>
+        <div class="mlp-stat"><div class="k">Possession</div><div class="v azul">58%</div><div class="d">Avg per match</div>
+          <svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="0,20 15,22 30,14 45,16 60,10 75,12 100,6" fill="none" stroke="#1d9bf0" stroke-width="2"/></svg></div>
+        <div class="mlp-stat"><div class="k">Shots</div><div class="v rojo">12.7</div><div class="d">Avg per match</div>
+          <svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="0,18 15,20 30,12 45,14 60,8 75,10 100,4" fill="none" stroke="#e23b3f" stroke-width="2"/></svg></div>
+        <div class="mlp-stat"><div class="k">Passes</div><div class="v verde">87%</div><div class="d">Avg accuracy</div>
+          <svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="0,16 15,10 30,14 45,8 60,12 75,6 100,8" fill="none" stroke="#2e9e57" stroke-width="2"/></svg></div>
+      </div>
+    </div>
+
+    <div class="mlp-sec">
+      <div class="mlp-sec-head"><h2>Season leader</h2><a class="mlp-more" href="#">See all ›</a></div>
+      <div class="mlp-leader">
+        <img class="ph" src="assets/imagenes/jugadores/futbol.png" alt="">
+        <div class="who"><div class="nm">Erling Haaland</div><div class="tm">Manchester City</div><div class="lb">GOALS</div></div>
+        <div class="big">28</div>
+      </div>
+    </div>
+  </div>
+  <!-- ===================== FIN PORTADA MÓVIL ===================== -->
 
   <div class="hero">
     <div class="hero-veil"></div>
