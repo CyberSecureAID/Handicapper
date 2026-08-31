@@ -1,0 +1,90 @@
+/* ============================================================
+   PORTADA MÓVIL (app-preview premium) — solo <= 640px
+   Estructura tipo panel deportivo, colores de marca.
+   ============================================================ */
+.mlp { display: none; }
+
+@media (max-width: 640px) {
+  /* mostrar portada móvil, ocultar hero/why de escritorio */
+  .mlp { display: block; }
+  #landing-screen > .hero { display: none; }
+  #landing-screen > .lsec:first-of-type { display: none; }
+  .particulas { display: none; }
+
+  .mlp-sec { padding: 22px 16px 6px; }
+  .mlp-sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .mlp-sec-head h2 { font-family: var(--display); font-size: 18px; font-weight: 800; color: var(--tinta);
+    letter-spacing: .01em; margin: 0; }
+  .mlp-more { font-size: 13px; font-weight: 700; color: var(--oro); text-decoration: none; }
+
+  /* ---------- HERO ---------- */
+  .mlp-hero { position: relative; overflow: hidden;
+    background: #06090e url('../imagenes/fondos/hero-fondo.webp') 64% center / cover no-repeat;
+    padding: 30px 18px 34px; }
+  .mlp-hero::before { content: ''; position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, rgba(6,9,14,.72) 0%, rgba(6,9,14,.35) 40%, rgba(6,9,14,.96) 100%),
+      radial-gradient(130% 70% at 15% 20%, rgba(232,184,75,.14), transparent 55%); }
+  .mlp-hero-in { position: relative; z-index: 2; }
+  .mlp-h1 { font-family: var(--display); font-weight: 800; font-size: clamp(32px, 9vw, 42px);
+    line-height: 1.02; letter-spacing: -.01em; text-transform: uppercase; margin: 0; color: #fff;
+    text-shadow: 0 2px 0 rgba(0,0,0,.5), 0 10px 26px rgba(0,0,0,.6); }
+  .mlp-h1 .ac {
+    background: linear-gradient(180deg, #ffe39a, var(--oro) 55%, #b9831a);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+    filter: drop-shadow(0 2px 1px rgba(0,0,0,.55)); }
+  .mlp-rule { display: block; width: 54px; height: 4px; border-radius: 3px; margin: 14px 0 16px;
+    background: linear-gradient(90deg, var(--oro), rgba(232,184,75,0)); }
+  .mlp-sub { font-size: 15px; line-height: 1.5; color: #d7dee7; margin: 0 0 22px; max-width: 300px; }
+  .mlp-cta { display: inline-flex; align-items: center; gap: 10px; border: 0; cursor: pointer;
+    height: 52px; padding: 0 24px; border-radius: 999px; font-family: var(--display); font-weight: 800; font-size: 15px;
+    color: #3a2800; background: linear-gradient(180deg, var(--oro), var(--oro-2));
+    box-shadow: 0 12px 28px -8px rgba(232,184,75,.5), inset 0 1px 0 rgba(255,255,255,.35); }
+  .mlp-cta svg { width: 18px; height: 18px; }
+
+  /* ---------- TARJETAS DE PARTIDO ---------- */
+  .mlp-match { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px;
+    background: var(--tarjeta); border: 1px solid var(--linea); border-radius: 14px; padding: 14px 12px; margin-bottom: 10px;
+    box-shadow: var(--sombra-tarjeta); }
+  .mlp-team { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .mlp-team.r { justify-content: flex-end; }
+  .mlp-badge { width: 32px; height: 32px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center;
+    font-family: var(--display); font-weight: 800; font-size: 12px; color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+  .mlp-tname { font-size: 12.5px; font-weight: 700; color: var(--tinta-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mlp-mid { text-align: center; }
+  .mlp-score { font-family: var(--display); font-weight: 800; font-size: 22px; color: #fff; line-height: 1; letter-spacing: .02em; }
+  .mlp-live { display: inline-block; margin-top: 4px; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; }
+  .mlp-live.vivo { color: var(--rojo); }
+  .mlp-live.q { color: var(--azul); }
+  .mlp-live.fin { color: var(--tinta-3); }
+  .mlp-lg { position: absolute; }
+
+  /* ---------- TABS DE DEPORTE ---------- */
+  .mlp-tabs { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px; }
+  .mlp-tab { display: flex; align-items: center; justify-content: center; gap: 6px; height: 44px; border-radius: 12px;
+    background: var(--tarjeta); border: 1px solid var(--linea); color: var(--tinta-2); font-family: var(--display); font-weight: 700; font-size: 13px; cursor: pointer; }
+  .mlp-tab svg { width: 16px; height: 16px; }
+  .mlp-tab.on { background: linear-gradient(180deg, var(--oro), var(--oro-2)); color: #3a2800; border-color: transparent;
+    box-shadow: 0 8px 18px -8px rgba(232,184,75,.5); }
+
+  /* ---------- TARJETAS DE STAT ---------- */
+  .mlp-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mlp-stat { background: var(--tarjeta); border: 1px solid var(--linea); border-radius: 14px; padding: 14px 14px 10px;
+    box-shadow: var(--sombra-tarjeta); }
+  .mlp-stat .k { font-size: 10.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--tinta-3); }
+  .mlp-stat .v { font-family: var(--display); font-weight: 800; font-size: 30px; line-height: 1.1; margin: 2px 0; }
+  .mlp-stat .d { font-size: 11px; color: var(--tinta-3); }
+  .mlp-stat svg { display: block; width: 100%; height: 30px; margin-top: 6px; }
+  .v.oro { color: var(--oro); } .v.azul { color: var(--azul); } .v.rojo { color: var(--rojo); } .v.verde { color: var(--verde); }
+
+  /* ---------- LÍDER ---------- */
+  .mlp-leader { display: flex; align-items: center; gap: 14px; background: var(--tarjeta); border: 1px solid var(--linea);
+    border-radius: 16px; padding: 14px; box-shadow: var(--sombra-tarjeta); }
+  .mlp-leader .ph { width: 58px; height: 58px; border-radius: 50%; flex: none; object-fit: cover;
+    border: 2px solid var(--oro); background: #0b1420; }
+  .mlp-leader .who { flex: 1; min-width: 0; }
+  .mlp-leader .nm { font-family: var(--display); font-weight: 800; font-size: 16px; color: var(--tinta); }
+  .mlp-leader .tm { font-size: 12.5px; color: var(--tinta-2); margin-top: 2px; }
+  .mlp-leader .lb { font-size: 10.5px; font-weight: 800; letter-spacing: .1em; color: var(--oro); margin-top: 3px; }
+  .mlp-leader .big { font-family: var(--display); font-weight: 800; font-size: 34px; color: var(--oro); }
+}
