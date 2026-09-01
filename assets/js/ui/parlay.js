@@ -171,9 +171,13 @@ function inyectarCSS() {
   .ply-panel.hr .ply-c::before{background:linear-gradient(90deg,#9a5cdc,transparent 70%)}
   .ply-panel.hr .ply-rank{background:linear-gradient(135deg,#d3b8f5,#8a5cd8);color:#1a0e2e;box-shadow:0 4px 14px rgba(138,92,216,.42)}
   .ply-panel.hr .ply-fill{background:linear-gradient(90deg,#8a5cd8,#d3b8f5)}
-  .ply-panel.hr .ply-pct{color:#dcc7f7}
+  .ply-panel.hr .ply-pct{background:linear-gradient(180deg,#e5d2fb,#a06fe0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
   .ply-panel.hr .ply-tag.h{color:#dcc7f7;border-color:rgba(151,90,222,.4)}
   .ply-panel.hr .ply-verdict{border-left-color:#9a5cdc}
+  .ply-panel.hr .ply-analyze{background:linear-gradient(90deg,#8a5cd8,#c9a6f0);color:#1a0e2e}
+  .ply-panel.hr .ply-blk.f .ply-blk-t{color:#dcc7f7}
+  .ply-panel.hr .ply-blk.f li::before{background:#9a5cdc}
+  .ply-panel.hr .ply-c:focus-visible{outline-color:#9a5cdc}
   @media(max-width:620px){.ply-hero{aspect-ratio:auto;min-height:330px}.ply-hero-veil{background:linear-gradient(180deg,rgba(6,9,15,.42),rgba(6,9,15,.25) 34%,rgba(6,9,15,.92))}.ply-hero-in{padding:18px 18px}.ply-hero-in .ply-title{font-size:clamp(24px,7vw,32px)}.ply-chips span{font-size:10.5px;padding:5px 9px}.ply-tab{padding:10px 13px;font-size:12.5px}}
   .ply-note{display:flex;gap:9px;align-items:center;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--tx2);font-size:12px;padding:9px 13px;border-radius:10px;margin-bottom:16px}
   .ply-note i{width:6px;height:6px;border-radius:50%;background:var(--oro);flex:0 0 auto}
@@ -250,7 +254,7 @@ const APUESTAS = [
 function betTabsHTML(activo) {
   const act = activo || 'hits';
   return `<div class="ply-tabs">${APUESTAS.map(t =>
-    `<button class="ply-tab ${t.cls}${t.id === act ? ' on' : ''}" data-bet="${t.id}"><span class="ply-tab-l">${t.label()}</span><span class="ply-tab-n">9</span></button>`
+    `<button class="ply-tab ${t.cls}${t.id === act ? ' on' : ''}" data-bet="${t.id}"><span class="ply-tab-l">${t.label()}</span></button>`
   ).join('')}</div>`;
 }
 
@@ -266,7 +270,7 @@ function heroHTML(cfg, meta, cargando, variante) {
       <div class="ply-chips">${chips}</div>
       <div class="ply-title">${cargando ? L('Loading…', 'Cargando…') : cfg.titulo}</div>
       <div class="ply-lead">${esc(cfg.lead)}</div>
-      ${betTabsHTML(variante)}
+      ${cfg._sport === 'mlb' ? betTabsHTML(variante) : ''}
     </div></div>`;
 }
 
@@ -481,8 +485,7 @@ function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
     ${heroHTML(cfg, meta, false, 'hits')}
     ${nota}
     <div class="ply-panel" data-bet-panel="hits"><div class="ply-grid">${jugadores.map(p => cardHTML(p, cfg)).join('')}</div></div>
-    <div class="ply-panel hr" data-bet-panel="hr" hidden><div class="ply-grid" data-hr-grid></div></div>
-    ${soonPanelHTML('tb')}
+    ${cfg._sport === 'mlb' ? `<div class="ply-panel hr" data-bet-panel="hr" hidden><div class="ply-grid" data-hr-grid></div></div>${soonPanelHTML('tb')}` : ''}
     <div class="ply-foot">${esc(cfg.foot)}</div>
   </div>`;
   animar(cont);
