@@ -16,7 +16,7 @@
   .mlp-sec-head h2 { font-family: var(--display); font-size: 18px; font-weight: 800; color: var(--tinta);
     letter-spacing: .01em; margin: 0; }
   .mlp-live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rojo); box-shadow: 0 0 0 4px rgba(226,59,63,.18); }
-  .mlp-crest { width: 44px; height: 44px; border-radius: 9px; object-fit: contain; background: #0b1420; flex: none; padding: 3px; }
+  .mlp-crest { width: 44px; height: 44px; border-radius: 9px; object-fit: contain; background: transparent; flex: none; padding: 2px; }
   .mlp-crest.ph { background: #0b1420; }
   .mlp-empty { padding: 22px; text-align: center; color: var(--tinta-3); font-size: 13px;
     background: var(--tarjeta); border: 1px solid var(--linea); border-radius: 14px; }

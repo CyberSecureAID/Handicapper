@@ -160,3 +160,16 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
   .lnav-acc { gap: 7px; }
   .lbtn { padding: 0 13px; font-size: 12.5px; }
 }
+
+/* ===== ESCRITORIO: Compara los entrantes (pitchers) ===== */
+.dsk-duel { padding: 44px 24px 8px; }
+.dsk-duel .wrap { max-width: 1000px; margin: 0 auto; }
+.dsk-duel-t { font-family: var(--display); font-weight: 800; font-size: clamp(24px,3vw,34px); color: var(--tinta); margin: 0 0 6px; }
+.dsk-duel-sub { color: var(--tinta-2); font-size: 15px; margin: 0 0 26px; }
+.dsk-duel-cards { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: center; max-width: 880px; }
+.dsk-duel-card { border-radius: 20px; overflow: hidden; border: 1px solid var(--linea);
+  box-shadow: 0 26px 54px -18px rgba(0,0,0,.78), 0 4px 10px -4px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06); }
+.dsk-duel-card img { width: 100%; display: block; }
+.dsk-duel-vs { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  width: 92px; height: auto; z-index: 3; filter: drop-shadow(0 6px 16px rgba(0,0,0,.85)) drop-shadow(0 0 4px rgba(0,0,0,.6)); }
+@media (max-width: 640px) { .dsk-duel { display: none; } }
