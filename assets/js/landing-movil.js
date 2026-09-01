@@ -42,7 +42,7 @@ async function pintarPartidos(){
 }
 
 /* ---------- Jugador destacado: ROTA cada hora, RECORTES transparentes de ESPN ---------- */
-function fotoEspn(dep, id){ return 'https://a.espncdn.com/i/headshots/' + dep + '/players/full/' + id + '.png'; }
+function fotoEspn(dep, id){ return 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + dep + '/players/full/' + id + '.png&w=240&h=240&scale=crop&cquality=80'; }
 var DESTACADOS = [
   { nm:'Erling Haaland', tm:'Manchester City',  lb:'SOCCER', img: fotoEspn('soccer', 253989) },
   { nm:'Kylian Mbappe',  tm:'Real Madrid',       lb:'SOCCER', img: fotoEspn('soccer', 231388) },
