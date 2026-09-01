@@ -258,7 +258,7 @@ function heroHTML(cfg, meta, cargando, variante) {
   const noun = String(cfg.metricLabel || '').replace(/<br>/g, ' ').trim();
   const chips = [
     `<span>${L('Date', 'Fecha')} · <b>${esc(meta.fecha)}</b></span>`,
-    `<span><b>9</b> ${L('players', 'jugadores')} · ${esc(noun)}</span>`,
+    `<span class="ply-count-chip"><b>9</b> ${L('players', 'jugadores')} · ${esc(noun)}</span>`,
   ].join('');
   return `<div class="ply-hero" style="background-image:url('${imgURL(cfg)}')">
     <div class="ply-hero-veil"></div>
@@ -427,26 +427,35 @@ function soonPanelHTML(bet) {
 function wireBets(cont) {
   const tabs = cont.querySelectorAll('.ply-tab[data-bet]');
   const panels = cont.querySelectorAll('[data-bet-panel]');
-  let hrCargado = false;
+  let hrCargado = false, hrCount = null;
   tabs.forEach(t => t.addEventListener('click', async () => {
     const bet = t.dataset.bet;
     tabs.forEach(x => x.classList.remove('on')); t.classList.add('on');
     panels.forEach(p => { p.hidden = (p.getAttribute('data-bet-panel') !== bet); });
 
+    const chip = cont.querySelector('.ply-count-chip');
+    if (chip && bet === 'hits') chip.innerHTML = `<b>9</b> ${L('players', 'jugadores')} · ${L('Chance of a hit', 'Opción de hit')}`;
+    if (chip && bet === 'tb') chip.innerHTML = `${L('Total bases', 'Bases totales')} · ${L('coming soon', 'muy pronto')}`;
+    if (chip && bet === 'hr') chip.innerHTML = hrCount != null
+      ? `<b>${hrCount}</b> ${L('players', 'jugadores')} · ${L('Chance of a HR', 'Opción de HR')}`
+      : `${L('Chance of a HR', 'Opción de HR')} · ${L('loading…', 'cargando…')}`;
+
     if (bet === 'hr' && !hrCargado) {
       hrCargado = true;
       const grid = cont.querySelector('[data-hr-grid]'); if (!grid) return;
-      let sk = ''; for (let i = 0; i < 9; i++) sk += '<div class="ply-skel"><b class="w1"></b><b class="w2"></b><b class="w3"></b><b class="w4"></b></div>';
+      let sk = ''; for (let i = 0; i < 6; i++) sk += '<div class="ply-skel"><b class="w1"></b><b class="w2"></b><b class="w3"></b><b class="w4"></b></div>';
       grid.innerHTML = sk;
       try {
         const cached = CACHE.get('mlb:hr');
         let jug;
         if (cached && Date.now() - cached.ts < 120000) jug = cached.jugadores;
         else {
-          const r = await conTimeout(topHomeRuns({ fecha: hoyISO(), n: 9 }), 25000);
+          const r = await conTimeout(topHomeRuns({ fecha: hoyISO(), n: 6 }), 25000);
           jug = (r && r.jugadores) ? curar(r.jugadores, CFG_HR) : [];
           CACHE.set('mlb:hr', { jugadores: jug, ts: Date.now() });
         }
+        hrCount = jug.length;
+        if (chip) chip.innerHTML = `<b>${hrCount}</b> ${L('players', 'jugadores')} · ${L('Chance of a HR', 'Opción de HR')}`;
         grid.innerHTML = jug.length ? jug.map(p => cardHTML(p, CFG_HR)).join('')
           : `<div class="ply-note"><i></i>${L('No games scheduled today.', 'No hay juegos programados hoy.')}</div>`;
         animar(cont);
@@ -522,7 +531,13 @@ export async function pintarParlay(cont, { sport = 'mlb', esPremium = false, abr
         const jug = curar(r.jugadores, cfg);   // regla: solo los buenos, ordenados, máx 9
         CACHE.set(sport, { jugadores: jug, meta: r.meta, ts: Date.now() });
         pintarGrid(cont, cfg, jug, r.meta, false);
+      } else {
+        // Sin datos en vivo -> muestra el respaldo (para no dejar la sección cargando en vacío)
+        pintarGrid(cont, cfg, cfg.demo, { fecha: hoyISO() }, true);
       }
-    } catch (_) { /* se queda la vista preliminar */ }
+    } catch (_) {
+      // Falló/expiró -> respaldo (así goals/points/shots nunca quedan en blanco)
+      pintarGrid(cont, cfg, cfg.demo, { fecha: hoyISO() }, true);
+    }
   }
 }
