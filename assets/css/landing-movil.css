@@ -41,12 +41,11 @@
 
   /* ---------- HERO ---------- */
   .mlp-hero { position: relative; overflow: hidden;
-    background: #06090e url('../imagenes/fondos/hero-fondo.webp') center top / cover no-repeat;
-    min-height: 64vh; display: flex; flex-direction: column; justify-content: flex-end;
+    background: #070b12 url('../imagenes/fondos/hero-movil.webp') center top / cover no-repeat;
+    min-height: 66vh; display: flex; flex-direction: column; justify-content: flex-end;
     padding: 78px 18px 28px; }
   .mlp-hero::before { content: ''; position: absolute; inset: 0;
-    background:
-      linear-gradient(180deg, rgba(6,9,14,.15) 0%, rgba(6,9,14,.08) 38%, rgba(6,9,14,.72) 74%, rgba(6,9,14,.98) 100%); }
+    background: linear-gradient(180deg, rgba(7,11,18,.10) 0%, rgba(7,11,18,0) 34%, rgba(7,11,18,.55) 70%, rgba(7,11,18,1) 100%); }
   .mlp-hero-in { position: relative; z-index: 2; }
   .mlp-h1 { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 8vw, 38px);
     line-height: 1.1; letter-spacing: -.01em; margin: 0 0 20px; padding-bottom: .06em;
