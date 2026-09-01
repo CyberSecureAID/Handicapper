@@ -28,16 +28,18 @@ function matchHtml(m){
   '</div>';
 }
 
+var TODOS = null;
 async function pintarPartidos(){
   var cont = document.getElementById('mlp-matches');
-  if (!cont) return;
   try {
     var mod = await import('./datos/proveedor.js');
-    var todos = await mod.listarPartidos();
-    var lista = (todos || []).filter(function(m){ return m && m.local && m.visita; }).slice(0, 5);
-    cont.innerHTML = lista.length ? lista.map(matchHtml).join('') : '<div class="mlp-empty">No matches scheduled right now.</div>';
+    TODOS = await mod.listarPartidos();
+    var lista = (TODOS || []).filter(function(m){ return m && m.local && m.visita; }).slice(0, 5);
+    if (cont) cont.innerHTML = lista.length ? lista.map(matchHtml).join('') : '<div class="mlp-empty">No matches scheduled right now.</div>';
+    pintarStats();   // conteos reales una vez cargados los datos
   } catch (_) {
-    cont.innerHTML = '<div class="mlp-empty">Could not load matches.</div>';
+    if (cont) cont.innerHTML = '<div class="mlp-empty">Could not load matches.</div>';
+    pintarStats();
   }
 }
 
@@ -60,20 +62,28 @@ function pintarDestacado(){
   img.src = p.img;
 }
 
-/* ---------- Tabs de Key stats (promedios generales de muestra) ---------- */
+/* ---------- Key stats: CONTEOS REALES del feed (en vivo / próximos / finales / total) ---------- */
+var DEPORTES = { soccer:['epl','laliga','seriea','bundes','ucl'], nba:['nba'], mlb:['mlb'], nhl:['nhl'] };
+var SPORT_KEYS = ['soccer','nba','mlb','nhl'];
+var ACTIVO = 'soccer';
+
+function pintarStats(){
+  var cont = document.getElementById('mlp-stats'); if (!cont) return;
+  var set = function(s, v){ var el = cont.querySelector('[data-s="'+s+'"]'); if (el) el.textContent = v; };
+  if (!TODOS) { set('vivo','—'); set('proximo','—'); set('final','—'); set('total','—'); return; }
+  var ligas = DEPORTES[ACTIVO] || [];
+  var m = TODOS.filter(function(x){ return ligas.indexOf(x.ligaId) >= 0; });
+  var c = { vivo:0, proximo:0, final:0 };
+  m.forEach(function(x){ if (c[x.estado] != null) c[x.estado]++; });
+  set('vivo', c.vivo); set('proximo', c.proximo); set('final', c.final); set('total', m.length);
+}
+
 function tabs(){
-  var keys = ['soccer','nba','mlb','nhl'];
-  var data = {
-    soccer: [['Goals','2.45','Avg per match'],['Possession','58%','Avg per match'],['Shots','12.7','Avg per match'],['Passes','87%','Avg accuracy']],
-    nba:    [['Points','112.4','Avg per game'],['FG %','47.2%','Field goals'],['Rebounds','44.1','Avg per game'],['Assists','25.3','Avg per game']],
-    mlb:    [['Runs','4.6','Avg per game'],['AVG','.258','Batting'],['Hits','8.7','Avg per game'],['ERA','3.92','Earned runs']],
-    nhl:    [['Goals','3.1','Avg per game'],['Shots','31.4','Avg per game'],['Save %','90.8%','Goaltending'],['Power play','21%','Conversion']]
-  };
-  var T = document.querySelectorAll('.mlp-tab'), C = document.querySelectorAll('.mlp-stat');
+  var T = document.querySelectorAll('.mlp-tab');
   T.forEach(function(t,i){ t.addEventListener('click', function(){
-    T.forEach(function(x){x.classList.remove('on');}); t.classList.add('on');
-    var d = data[keys[i]] || data.soccer;
-    C.forEach(function(c,j){ if(!d[j]) return; c.querySelector('.k').textContent=d[j][0]; c.querySelector('.v').textContent=d[j][1]; c.querySelector('.d').textContent=d[j][2]; });
+    T.forEach(function(x){ x.classList.remove('on'); }); t.classList.add('on');
+    ACTIVO = SPORT_KEYS[i] || 'soccer';
+    pintarStats();
   }); });
 }
 
