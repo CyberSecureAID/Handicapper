@@ -16,7 +16,11 @@ function crest(eq){
   var logo = eq && eq.logo ? eq.logo : '';
   return logo ? '<img class="mlp-crest" src="' + esc(logo) + '" alt="" loading="lazy">' : '<span class="mlp-crest ph"></span>';
 }
-function nombre(eq){ return esc((eq && (eq.abrev || eq.nombre)) || ''); }
+function nombre(eq){
+  if (!eq) return '';
+  if (eq.abrev) return esc(String(eq.abrev).toUpperCase());
+  return esc(eq.nombre || '');
+}
 
 function matchHtml(m){
   var score = m.marcador ? (m.marcador.local + ' – ' + m.marcador.visita) : '';
@@ -43,13 +47,16 @@ async function pintarPartidos(){
   }
 }
 
-/* ---------- Jugador destacado: ROTA cada hora, RECORTES transparentes de ESPN ---------- */
-function fotoEspn(dep, id){ return 'https://a.espncdn.com/combiner/i?img=/i/headshots/' + dep + '/players/full/' + id + '.png&w=240&h=240&scale=crop&cquality=80'; }
+/* ---------- Jugador destacado: ROTA cada hora, fotos oficiales CDN (NBA/MLB, fiables) ---------- */
+function fotoNBA(id){ return 'https://cdn.nba.com/headshots/nba/latest/1040x760/' + id + '.png'; }
+function fotoMLB(id){ return 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_360,q_auto:best/v1/people/' + id + '/headshot/67/current'; }
 var DESTACADOS = [
-  { nm:'Erling Haaland', tm:'Manchester City',  lb:'SOCCER', img: fotoEspn('soccer', 253989) },
-  { nm:'Kylian Mbappe',  tm:'Real Madrid',       lb:'SOCCER', img: fotoEspn('soccer', 231388) },
-  { nm:'Lamine Yamal',   tm:'FC Barcelona',      lb:'SOCCER', img: fotoEspn('soccer', 362150) },
-  { nm:'Nikola Jokic',   tm:'Denver Nuggets',    lb:'NBA',    img: fotoEspn('nba', 3112335) }
+  { nm:'Shohei Ohtani', tm:'Los Angeles Dodgers',   lb:'MLB', img: fotoMLB(660271) },
+  { nm:'Aaron Judge',   tm:'New York Yankees',        lb:'MLB', img: fotoMLB(592450) },
+  { nm:'LeBron James',  tm:'Los Angeles Lakers',      lb:'NBA', img: fotoNBA(2544)   },
+  { nm:'Nikola Jokic',  tm:'Denver Nuggets',          lb:'NBA', img: fotoNBA(203999) },
+  { nm:'Stephen Curry', tm:'Golden State Warriors',   lb:'NBA', img: fotoNBA(201939) },
+  { nm:'Mike Trout',    tm:'Los Angeles Angels',      lb:'MLB', img: fotoMLB(545361) }
 ];
 function pintarDestacado(){
   var img = document.getElementById('mlp-leader-img'); if (!img) return;
