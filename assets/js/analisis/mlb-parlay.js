@@ -289,3 +289,158 @@ export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 6
     },
   };
 }
+
+/* ============================================================
+   MOTOR DE HOME RUNS — Top N bateadores con mayor P(≥1 HR) hoy.
+   Mismo patrón que hits: modelo (HR/PA + pitcher + parque) +
+   racha real de "juegos con HR (últimos 10)". Datos: MLB Stats API.
+   ============================================================ */
+
+/* Factor de parque para HOME RUNS (1.00 = neutro). Aproximado y editable. */
+const PARK_HR = {
+  'Coors Field': 1.28, 'Great American Ball Park': 1.20, 'Yankee Stadium': 1.18, 'Citizens Bank Park': 1.16,
+  'Globe Life Field': 1.10, 'Fenway Park': 1.06, 'Dodger Stadium': 1.05, 'Wrigley Field': 1.04,
+  'Oracle Park': 0.82, 'T-Mobile Park': 0.86, 'loanDepot park': 0.85, 'Comerica Park': 0.88, 'Kauffman Stadium': 0.90,
+};
+
+/* Roster ordenado por HOME RUNS de temporada (pool de candidatos con poder). */
+async function rosterTopHR(teamId, season, proxy, max = 6) {
+  if (!teamId) return [];
+  try {
+    const url = `${API}/teams/${teamId}/roster?rosterType=active&hydrate=person(stats(type=[season],group=[hitting],season=${season}))`;
+    const d = await pedir(url, proxy);
+    const roster = d?.roster || [];
+    const bats = [];
+    for (const r of roster) {
+      const posT = r?.position?.type || '', posA = r?.position?.abbreviation || '';
+      if (/pitcher/i.test(posT) || posA === 'P') continue;
+      const person = r?.person || {};
+      const st = person?.stats?.[0]?.splits?.[0]?.stat || {};
+      const hr = parseInt(st.homeRuns || 0, 10) || 0;
+      const pa = parseInt(st.plateAppearances || st.atBats || 0, 10) || 0;
+      if (!person.id) continue;
+      bats.push({ id: person.id, nombre: person.fullName, hr, pa });
+    }
+    bats.sort((a, b) => b.hr - a.hr);   // más HR primero
+    return bats.slice(0, max);
+  } catch (_) { return []; }
+}
+
+/* Stats del bateador enfocadas a HR (tasa de HR por aparición). */
+async function statsBateadorHR(id, season, proxy) {
+  if (!id) return null;
+  try {
+    const url = `${API}/people/${id}?hydrate=stats(group=[hitting],type=[season],season=${season})`;
+    const d = await pedir(url, proxy);
+    const p = d?.people?.[0]; if (!p) return null;
+    const st = (p.stats || []).find(s => s.type?.displayName === 'season')?.splits?.[0]?.stat || {};
+    const hr = +st.homeRuns || 0;
+    const pa = +st.plateAppearances || +st.atBats || 0;
+    return { id, nombre: p.fullName, mano: p.batSide?.code || 'R', hr, pa, hrRatePA: pa > 0 ? hr / pa : 0 };
+  } catch (_) { return null; }
+}
+
+/* Racha real: juegos con ≥1 HR en los últimos 10. */
+async function tasaJuegosConHR(id, season, proxy) {
+  try {
+    const d = await pedir(`${API}/people/${id}/stats?stats=gameLog&group=hitting&season=${season}`, proxy);
+    const splits = d?.stats?.[0]?.splits || [];
+    const hrs = splits.slice(-10).map(s => +(s.stat?.homeRuns) || 0);
+    if (!hrs.length) return null;
+    const conHR = hrs.filter(h => h >= 1).length;
+    return { juegos: hrs.length, conHR, tasa: conHR / hrs.length };
+  } catch (_) { return null; }
+}
+
+/* MODELO: P(≥1 HR en el juego). */
+export function estimarHR({ bateador, pitcher, venue }) {
+  const factores = [], riesgos = [];
+  const LIGA_HR_PA = 0.032;   // ~3.2% de las apariciones terminan en HR (media liga)
+  let base = bateador.hrRatePA || 0;
+  if (base <= 0) base = LIGA_HR_PA * 0.4;
+  const nPA = clamp(bateador.pa || 100, 20, 700);
+  base = N.regresarTasa(base, nPA, LIGA_HR_PA, 170);   // regresa a la media según muestra
+
+  let facPit = 1;
+  if (pitcher && pitcher.era != null) { facPit = clamp(0.90 + (pitcher.era - 4.2) * 0.05, 0.82, 1.25); if (pitcher.era >= 4.6) factores.push(`Abridor con ${pitcher.era.toFixed(2)} ERA`); }
+
+  const fpark = PARK_HR[venue] ?? 1.0;
+  if (fpark >= 1.10) factores.push('Parque muy propenso a HR');
+  if (fpark <= 0.90) riesgos.push('Parque que suprime HR');
+
+  const pHR = clamp(base * facPit * fpark, 0.005, 0.16);   // HR por aparición ajustado
+  const pa = 4.1;
+  const prob = clamp(1 - Math.pow(1 - pHR, pa), 0.02, 0.55);
+  if (bateador.hr >= 25) factores.push(`Poder real (${bateador.hr} HR esta temporada)`);
+  else if (bateador.hr >= 15) factores.push(`${bateador.hr} HR esta temporada`);
+  const confianza = prob >= 0.22 ? 'alta' : prob >= 0.14 ? 'media' : prob >= 0.08 ? 'baja' : 'muy baja';
+  return { prob: Math.round(prob * 100), pHR: +pHR.toFixed(4), pa, confianza, factores: factores.slice(0, 4), riesgos: riesgos.slice(0, 3) };
+}
+
+export async function topHomeRuns({ fecha, n = 9, proxy = '', maxPorEquipo = 6 } = {}) {
+  const avisos = [];
+  const season = new Date(fecha + 'T12:00:00').getFullYear();
+  const juegos = await cartelera(fecha, proxy);
+  if (!juegos.length) return { jugadores: [], meta: { fecha, fuente: 'MLB Stats API', avisos: ['No hay juegos para la fecha'] } };
+
+  const pitCache = new Map();
+  const getPit = async (id) => { if (!id) return null; if (!pitCache.has(id)) pitCache.set(id, await statsPitcher(id, season, proxy)); return pitCache.get(id); };
+
+  const porJuego = await Promise.all(juegos.map(async (g) => {
+    const venue = g.venue?.name || '';
+    const home = g.teams?.home, away = g.teams?.away;
+    const lineups = g.lineups || {};
+    const [pitHome, pitAway] = await Promise.all([ getPit(home?.probablePitcher?.id), getPit(away?.probablePitcher?.id) ]);
+    const lados = [
+      { bateadores: lineups.homePlayers, equipo: home?.team, rival: away?.team, pit: pitAway },
+      { bateadores: lineups.awayPlayers, equipo: away?.team, rival: home?.team, pit: pitHome },
+    ];
+    const cands = [];
+    for (const L of lados) {
+      if (!L.pit) L.pit = { nombre: 'TBD', era: null };
+      let ids = [];
+      if (Array.isArray(L.bateadores) && L.bateadores.length) {
+        ids = L.bateadores.slice(0, maxPorEquipo).map(x => x?.id || x).filter(Boolean);
+      } else {
+        const top = await rosterTopHR(L.equipo?.id, season, proxy, maxPorEquipo);
+        ids = top.map(b => b.id);
+      }
+      if (!ids.length) { avisos.push(`Sin datos para ${L.equipo?.name || '—'}`); continue; }
+      const bats = await Promise.all(ids.map(pid => statsBateadorHR(pid, season, proxy)));
+      bats.forEach((bat) => {
+        if (!bat) return;
+        const est = estimarHR({ bateador: bat, pitcher: L.pit, venue });
+        cands.push({
+          id: bat.id, nombre: bat.nombre, equipo: L.equipo?.name, equipoAbrev: L.equipo?.abbreviation,
+          rival: L.rival?.name, rivalAbrev: L.rival?.abbreviation, venue,
+          pitcher: L.pit.nombre, pitcherEra: L.pit.era, mano: bat.mano, hr: bat.hr, slot: 4, ...est,
+        });
+      });
+    }
+    return cands;
+  }));
+
+  const candidatos = porJuego.flat();
+  candidatos.sort((a, b) => b.prob - a.prob);
+
+  // Etapa 2: racha real de "juegos con HR (últimos 10)"
+  const pool = candidatos.slice(0, Math.max(n * 2, 18));
+  const logs = await Promise.all(pool.map(c => tasaJuegosConHR(c.id, season, proxy)));
+  pool.forEach((c, i) => {
+    const gl = logs[i];
+    if (gl) { c.tasaJuegos = gl.tasa; c.rachaHR = `${gl.conHR}/${gl.juegos}`; }
+    const tasa = gl ? gl.tasa : (c.prob / 100);
+    c.score = tasa * 0.55 + (c.prob / 100) * 0.45;   // racha real + modelo (HR es más raro)
+  });
+  pool.sort((a, b) => (b.score - a.score) || (b.prob - a.prob));
+
+  const top = pool.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
+  return {
+    jugadores: top,
+    meta: {
+      fecha, generado: new Date().toISOString(), fuente: 'MLB Stats API (statsapi.mlb.com)',
+      modelo: 'HR/PA (regresado) × pitcher × parque + racha real de juegos-con-HR (últimos 10)',
+      candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)],
+    },
+  };
+}
