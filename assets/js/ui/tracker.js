@@ -17,6 +17,7 @@ const num = (v) => { const n = Number(v); return isFinite(n) ? n : null; };
 /* Config por deporte: nombre del stat, línea de "acierto", texto de la línea. */
 const CFG = {
   mlb:    { stat: () => L('Hits', 'Hits'),   umbral: 1,  hit: (v) => v >= 1,  linea: () => L('Hit line (1+)', 'Línea de hit (1+)'),   logro: () => L('games with a hit', 'partidos con hit') },
+  hr:     { stat: () => L('Home runs', 'Home runs'), umbral: 1, hit: (v) => v >= 1, linea: () => L('HR line (1+)', 'Línea de HR (1+)'), logro: () => L('games with a HR', 'partidos con HR') },
   soccer: { stat: () => L('Goals', 'Goles'), umbral: 1,  hit: (v) => v >= 1,  linea: () => L('Goal line (1+)', 'Línea de gol (1+)'),  logro: () => L('games scoring', 'partidos con gol') },
   nba:    { stat: () => L('Points', 'Puntos'), umbral: 20, hit: (v) => v >= 20, linea: () => L('20-point line', 'Línea de 20 pts'),    logro: () => L('games with 20+', 'partidos con 20+') },
   nhl:    { stat: () => L('Shots', 'Tiros'), umbral: 2, hit: (v) => v >= 2, linea: () => L('Shots line (2+)', 'Línea de tiros (2+)'), logro: () => L('games with 2+ shots', 'partidos con 2+ tiros') },
@@ -33,6 +34,11 @@ async function logMLB(id, season) {
   const d = await pedir(`https://statsapi.mlb.com/api/v1/people/${id}/stats?stats=gameLog&group=hitting&season=${season}`);
   const splits = d?.stats?.[0]?.splits || [];
   return splits.slice(-10).map(s => num(s.stat?.hits) || 0);
+}
+async function logMLB_HR(id, season) {
+  const d = await pedir(`https://statsapi.mlb.com/api/v1/people/${id}/stats?stats=gameLog&group=hitting&season=${season}`);
+  const splits = d?.stats?.[0]?.splits || [];
+  return splits.slice(-10).map(s => num(s.stat?.homeRuns) || 0);
 }
 async function logESPN(sport, id, campo) {
   const d = await pedir(`https://site.web.api.espn.com/apis/common/v3/sports/${sport}/athletes/${id}/gamelog`);
@@ -134,9 +140,10 @@ function chartHTML(vals, cfg) {
     </div><div class="trk-axis">${axis}</div>`;
 }
 
-export async function abrirTracker(jugador, sport) {
+export async function abrirTracker(jugador, sport, bet) {
   inyectarCSS();
-  const cfg = CFG[sport] || CFG.mlb;
+  const esHR = (sport === 'mlb' && bet === 'hr');
+  const cfg = esHR ? CFG.hr : (CFG[sport] || CFG.mlb);
   const bg = document.createElement('div'); bg.className = 'trk-bg';
   bg.innerHTML = `<div class="trk" role="dialog" aria-modal="true">
     <div class="trk-hd"><button class="trk-x" aria-label="Close">×</button>
@@ -156,7 +163,7 @@ export async function abrirTracker(jugador, sport) {
   let vals = null, demo = false;
   const season = new Date().getFullYear();
   try {
-    if (jugador.id && sport === 'mlb') vals = await logMLB(jugador.id, season);
+    if (jugador.id && sport === 'mlb') vals = await (esHR ? logMLB_HR : logMLB)(jugador.id, season);
     else if (jugador.id && sport === 'nba') vals = await logESPN('basketball/nba', jugador.id, 'points|pts');
     else if (jugador.id && sport === 'soccer') vals = await logESPN('soccer', jugador.id, 'goals|goal');
     else if (jugador.id && sport === 'nhl') { const d = new Date(); const sid = d.getMonth() >= 8 ? `${d.getFullYear()}${d.getFullYear() + 1}` : `${d.getFullYear() - 1}${d.getFullYear()}`; vals = await logNHL(jugador.id, sid); }
