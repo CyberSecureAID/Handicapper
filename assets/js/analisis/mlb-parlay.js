@@ -151,8 +151,8 @@ export function estimarHit({ bateador, pitcher, slot, venue, lineupConfirmado })
 
   // Confianza
   let señales = 0;
-  if (lineupConfirmado) señales++; else riesgos.push('Lineup no confirmado (posición proyectada)');
-  if (usadoSplit) señales++; else riesgos.push('Sin muestra de split por mano');
+  if (lineupConfirmado) señales++;
+  if (usadoSplit) señales++;
   if (permit != null) señales++;
   if (usadoForma) factores.push('Forma reciente incorporada');
   if (bateador.avg != null && bateador.avg >= 0.285) factores.push(`Alto contacto (.${String(Math.round(bateador.avg * 1000)).padStart(3, '0')} AVG)`);
@@ -416,24 +416,26 @@ export async function topHomeRuns({ fecha, n = 6, proxy = '', maxPorEquipo = 4 }
   const candidatos = porJuego.flat();
   // Solo bates de PODER real (descarta a los de bajo HR de una vez).
   let poder = candidatos.filter(c => (c.hr || 0) >= 15);
-  if (poder.length < 5) poder = candidatos.filter(c => (c.hr || 0) >= 10);
-  if (poder.length < 3) poder = candidatos.slice();
-  poder.sort((a, b) => b.prob - a.prob);   // por probabilidad de HR (refleja el poder de temporada)
+  if (poder.length < 8) poder = candidatos.filter(c => (c.hr || 0) >= 10);
+  poder.sort((a, b) => b.prob - a.prob);
 
-  // Etapa 2 (ligera): racha real de "juegos con HR (últimos 10)" solo a los mejores
-  const pool = poder.slice(0, 12);
+  // Etapa 2: racha real de "juegos con HR (últimos 10)" a los mejores candidatos
+  const pool = poder.slice(0, 16);
   const logs = await Promise.all(pool.map(c => tasaJuegosConHR(c.id, season, proxy)));
   pool.forEach((c, i) => {
     const gl = logs[i];
+    c.conHR = gl ? gl.conHR : 0;
     if (gl) { c.tasaJuegos = gl.tasa; c.rachaHR = `${gl.conHR}/${gl.juegos}`; }
-    const tasa = gl ? gl.tasa : (c.prob / 100);
-    c.score = (c.prob / 100) * 0.65 + tasa * 0.35;   // el poder de temporada MANDA; la racha modula
+    const tasa = gl ? gl.tasa : 0;
+    c.score = tasa * 0.55 + (c.prob / 100) * 0.45;   // racha real de HR + poder
   });
   pool.sort((a, b) => (b.score - a.score) || (b.prob - a.prob));
 
-  // Calidad > cantidad: solo los de probabilidad realmente alta. Pocos.
-  let elegidos = pool.filter(c => c.prob >= 15);
-  if (elegidos.length < 3) elegidos = pool.slice(0, 3);
+  // CALIDAD, NO cantidad: solo bates de poder que DE VERDAD están pegando HR
+  // (>=2 HR en sus últimos 10 juegos) y con probabilidad alta. Sin relleno.
+  let elegidos = pool.filter(c => (c.hr || 0) >= 20 && c.conHR >= 2 && c.prob >= 16);
+  if (elegidos.length < 2) elegidos = pool.filter(c => (c.hr || 0) >= 15 && c.conHR >= 2 && c.prob >= 14);
+  // Si nadie cumple hoy, se muestran pocos (mejor pocos perfectos que muchos malos).
   const top = elegidos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
   return {
     jugadores: top,
