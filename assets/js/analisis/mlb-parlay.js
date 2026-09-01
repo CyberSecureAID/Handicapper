@@ -198,7 +198,19 @@ async function rosterTopBateadores(teamId, season, proxy, max = 6) {
   } catch (_) { return []; }
 }
 
-export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 8 } = {}) {
+/* Tasa REAL de "juegos con ≥1 hit" en los últimos 10 (lo que juzga el usuario y muestra la tarjeta). */
+async function tasaJuegosConHit(id, season, proxy) {
+  try {
+    const d = await pedir(`${API}/people/${id}/stats?stats=gameLog&group=hitting&season=${season}`, proxy);
+    const splits = d?.stats?.[0]?.splits || [];
+    const hits = splits.slice(-10).map(s => +(s.stat?.hits) || 0);
+    if (!hits.length) return null;
+    const conHit = hits.filter(h => h >= 1).length;
+    return { juegos: hits.length, conHit, tasa: conHit / hits.length };
+  } catch (_) { return null; }
+}
+
+export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 6 } = {}) {
   const avisos = [];
   const season = new Date(fecha + 'T12:00:00').getFullYear();
   const juegos = await cartelera(fecha, proxy);
@@ -254,12 +266,25 @@ export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 8
 
   const candidatos = porJuego.flat();
   candidatos.sort((a, b) => b.prob - a.prob || b.pHit - a.pHit);
-  const top = candidatos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
+
+  // ---- ETAPA 2: re-rankear los mejores por TASA REAL de "juegos con hit" (últimos 10) ----
+  // Así mandan los que de verdad conectan seguido (7/10, 8/10), no los de buen AVG con mala racha.
+  const pool = candidatos.slice(0, Math.max(n * 2, 18));
+  const logs = await Promise.all(pool.map(c => tasaJuegosConHit(c.id, season, proxy)));
+  pool.forEach((c, i) => {
+    const g = logs[i];
+    if (g) { c.tasaJuegos = g.tasa; c.rachaHits = `${g.conHit}/${g.juegos}`; }
+    const tasa = g ? g.tasa : (c.prob / 100) * 0.9;   // sin historial -> usa prob atenuada
+    c.score = tasa * 0.65 + (c.prob / 100) * 0.35;     // la racha real manda; el modelo apoya
+  });
+  pool.sort((a, b) => (b.score - a.score) || (b.prob - a.prob));
+
+  const top = pool.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
   return {
     jugadores: top,
     meta: {
       fecha, generado: new Date().toISOString(), fuente: 'MLB Stats API (statsapi.mlb.com)',
-      modelo: 'log5 (bateador×pitcher×liga) + shrinkage bayesiano + Monte Carlo · estimación del modelo',
+      modelo: 'log5 (bateador×pitcher×liga) + shrinkage + racha real de juegos-con-hit (últimos 10)',
       candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)],
     },
   };
