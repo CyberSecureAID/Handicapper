@@ -320,6 +320,11 @@ const CFG_HR = {
   _sport: 'mlb', _bet: 'hr',
   metric: 'P(1+ HR)',
   metricLabel: L('Chance<br>of a HR', 'Opción<br>de HR'),
+  toCard: (p) => ({ ...p, tags: p.tags || [
+    (p.hr != null ? `${p.hr} HR` : ''),
+    `${L('vs', 'vs')} ${p.pitcher || 'TBD'}${p.pitcherEra != null ? ' · ' + (+p.pitcherEra).toFixed(2) : ''}`,
+    (p.rachaHR ? `${p.rachaHR} ${L('HR games', 'con HR')}` : ''),
+  ].filter(Boolean) }),
   foot: L('Model probability estimates, not betting advice. Home runs are rare and high-variance.',
           'Estimaciones probabilísticas del modelo, no asesoría de apuestas. Los HR son raros y de alta varianza.'),
 };
