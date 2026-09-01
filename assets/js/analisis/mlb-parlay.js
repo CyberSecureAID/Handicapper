@@ -98,7 +98,7 @@ export function estimarHit({ bateador, pitcher, slot, venue, lineupConfirmado })
   let base = avgSeason;
   let usadoSplit = false, usadoForma = false;
   if (avgVs != null) { base = base * 0.6 + avgVs * 0.4; usadoSplit = true; }
-  if (avg15 != null) { base = base * 0.82 + avg15 * 0.18; usadoForma = true; }   // forma pesa, sin dominar
+  if (avg15 != null) { base = base * 0.68 + avg15 * 0.32; usadoForma = true; }   // forma reciente pesa MÁS (racha real manda)
   base = clamp(base, 0.15, 0.38);
 
   // Ajuste por pitcher: compara el AVG que permite (vs la mano del bateador) con la media liga ~.245.
@@ -198,7 +198,7 @@ async function rosterTopBateadores(teamId, season, proxy, max = 6) {
   } catch (_) { return []; }
 }
 
-export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 6 } = {}) {
+export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 8 } = {}) {
   const avisos = [];
   const season = new Date(fecha + 'T12:00:00').getFullYear();
   const juegos = await cartelera(fecha, proxy);
