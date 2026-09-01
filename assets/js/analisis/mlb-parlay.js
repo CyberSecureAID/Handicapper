@@ -414,21 +414,25 @@ export async function topHomeRuns({ fecha, n = 6, proxy = '', maxPorEquipo = 4 }
   }));
 
   const candidatos = porJuego.flat();
-  candidatos.sort((a, b) => b.prob - a.prob);
+  // Solo bates de PODER real (descarta a los de bajo HR de una vez).
+  let poder = candidatos.filter(c => (c.hr || 0) >= 15);
+  if (poder.length < 5) poder = candidatos.filter(c => (c.hr || 0) >= 10);
+  if (poder.length < 3) poder = candidatos.slice();
+  poder.sort((a, b) => b.prob - a.prob);   // por probabilidad de HR (refleja el poder de temporada)
 
   // Etapa 2 (ligera): racha real de "juegos con HR (últimos 10)" solo a los mejores
-  const pool = candidatos.slice(0, 12);
+  const pool = poder.slice(0, 12);
   const logs = await Promise.all(pool.map(c => tasaJuegosConHR(c.id, season, proxy)));
   pool.forEach((c, i) => {
     const gl = logs[i];
     if (gl) { c.tasaJuegos = gl.tasa; c.rachaHR = `${gl.conHR}/${gl.juegos}`; }
     const tasa = gl ? gl.tasa : (c.prob / 100);
-    c.score = tasa * 0.50 + (c.prob / 100) * 0.50;
+    c.score = (c.prob / 100) * 0.65 + tasa * 0.35;   // el poder de temporada MANDA; la racha modula
   });
   pool.sort((a, b) => (b.score - a.score) || (b.prob - a.prob));
 
-  // HR es raro: mostramos SOLO los pocos con probabilidad realmente alta, no un número fijo.
-  let elegidos = pool.filter(c => c.prob >= 12);
+  // Calidad > cantidad: solo los de probabilidad realmente alta. Pocos.
+  let elegidos = pool.filter(c => c.prob >= 15);
   if (elegidos.length < 3) elegidos = pool.slice(0, 3);
   const top = elegidos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
   return {
