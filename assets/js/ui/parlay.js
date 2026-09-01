@@ -133,7 +133,7 @@ function inyectarCSS() {
   .ply *{box-sizing:border-box}
   .ply-hero{position:relative;border-radius:20px;overflow:hidden;margin-bottom:20px;isolation:isolate;border:1px solid var(--line);background-size:cover;background-position:center;background-color:#0a1420;aspect-ratio:1048/271;display:flex}
   .ply-hero-bg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;background-color:#0a1420}
-  .ply-hero-veil{position:absolute;inset:0;z-index:1;background:linear-gradient(100deg,rgba(6,9,15,.92),rgba(6,9,15,.5) 46%,rgba(6,9,15,.06) 72%),linear-gradient(0deg,rgba(6,9,15,.72),transparent 44%)}
+  .ply-hero-veil{position:absolute;inset:0;z-index:1;background:linear-gradient(100deg,rgba(6,9,15,.92),rgba(6,9,15,.5) 46%,rgba(6,9,15,.10) 72%),linear-gradient(0deg,rgba(6,9,15,.74),transparent 46%),radial-gradient(125% 135% at 58% 42%, transparent 52%, rgba(6,9,15,.62))}
   .ply-hero-in{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;padding:20px 28px}
   .ply-eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#efe3c6;border:1px solid rgba(232,196,106,.35);border-radius:999px;padding:6px 13px;background:rgba(0,0,0,.30)}
   .ply-eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--oro);box-shadow:0 0 10px var(--oro)}
@@ -178,7 +178,7 @@ function inyectarCSS() {
   .ply-panel.hr .ply-blk.f .ply-blk-t{color:#dcc7f7}
   .ply-panel.hr .ply-blk.f li::before{background:#9a5cdc}
   .ply-panel.hr .ply-c:focus-visible{outline-color:#9a5cdc}
-  @media(max-width:620px){.ply-hero{aspect-ratio:auto;min-height:330px}.ply-hero-veil{background:linear-gradient(180deg,rgba(6,9,15,.42),rgba(6,9,15,.25) 34%,rgba(6,9,15,.92))}.ply-hero-in{padding:18px 18px}.ply-hero-in .ply-title{font-size:clamp(24px,7vw,32px)}.ply-chips span{font-size:10.5px;padding:5px 9px}.ply-tab{padding:10px 13px;font-size:12.5px}}
+  @media(max-width:620px){.ply-hero{aspect-ratio:auto;min-height:330px}.ply-hero-veil{background:linear-gradient(180deg,rgba(6,9,15,.42),rgba(6,9,15,.25) 34%,rgba(6,9,15,.92)),radial-gradient(130% 120% at 50% 40%, transparent 55%, rgba(6,9,15,.6))}.ply-hero-in{padding:18px 18px}.ply-hero-in .ply-title{font-size:clamp(24px,7vw,32px)}.ply-chips span{font-size:10.5px;padding:5px 9px}.ply-tab{padding:10px 13px;font-size:12.5px}}
   .ply-note{display:flex;gap:9px;align-items:center;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--tx2);font-size:12px;padding:9px 13px;border-radius:10px;margin-bottom:16px}
   .ply-note i{width:6px;height:6px;border-radius:50%;background:var(--oro);flex:0 0 auto}
   .ply-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
@@ -310,7 +310,7 @@ const FRASES = {
     parejo: { es: (pr) => `Poco probable que llegue a 2 tiros (${pr}%).`,           en: (pr) => `Unlikely to reach 2 shots (${pr}%).` },
     flojo:  { es: (pr) => `Pocos partidos para fiarse de este ${pr}%.`,            en: (pr) => `Too few games to trust this ${pr}%.` },
     solido: { es: ' Tirador constante.', en: ' Consistent shooter.' } },
-  'P(1+ HR)': { hi: 20, mid: 13,
+  'P(1+ HR)': { hi: 25, mid: 16,
     alta:   { es: (pr) => `Fuerte candidato a volarla hoy (${pr}%).`,               en: (pr) => `Strong candidate to go deep today (${pr}%).` },
     mod:    { es: (pr) => `Poder real para el cuadrangular (${pr}%), sin garantías.`, en: (pr) => `Real power for a home run (${pr}%), no guarantees.` },
     parejo: { es: (pr) => `HR poco probable hoy (${pr}%): matchup complicado.`,     en: (pr) => `HR unlikely today (${pr}%): tough matchup.` },
@@ -466,7 +466,7 @@ function wireBets(cont) {
         hrCount = jug.length;
         if (chip) chip.innerHTML = `<b>${hrCount}</b> ${L('players', 'jugadores')} · ${L('Chance of a HR', 'Opción de HR')}`;
         grid.innerHTML = jug.length ? jug.map(p => cardHTML(p, CFG_HR)).join('')
-          : `<div class="ply-note"><i></i>${L('No games scheduled today.', 'No hay juegos programados hoy.')}</div>`;
+          : `<div class="ply-note"><i></i>${L('No standout home run picks for today\u2019s games.', 'Hoy no hay bateadores que cumplan el nivel de HR.')}</div>`;
         animar(cont);
         grid.querySelectorAll('.ply-c[data-idx]').forEach(el => el.addEventListener('click', () => { const j = jug[+el.dataset.idx - 1]; if (j) abrirTracker(j, 'mlb', 'hr'); }));
       } catch (_) {
