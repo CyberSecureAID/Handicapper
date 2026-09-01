@@ -143,6 +143,33 @@ function inyectarCSS() {
   .ply-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
   .ply-meta span{font-size:11.5px;color:#d3dbe6;border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 11px;background:rgba(0,0,0,.34)}
   .ply-meta b{color:#fff}
+  /* ---- Banner ajustado a la foto (sin recortar cabeza/pies) ---- */
+  .ply-banner{position:relative;aspect-ratio:1048/271;background-size:cover;background-position:center;background-color:#0a1420;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .ply-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,9,15,.32),rgba(6,9,15,.10) 42%,rgba(6,9,15,.52))}
+  .ply-chips{position:absolute;top:12px;left:12px;z-index:2;display:flex;gap:8px;flex-wrap:wrap}
+  .ply-chips span{font-size:11.5px;color:#eaf0f8;border:1px solid rgba(255,255,255,.18);border-radius:9px;padding:6px 11px;background:rgba(6,10,18,.62);backdrop-filter:blur(4px)}
+  .ply-chips b{color:#fff;font-weight:800}
+  .ply-hero-body{padding:16px 2px 2px}
+  /* ---- Botones de tipo de apuesta (rectangulares, redondeados) ---- */
+  .ply-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .ply-tab{display:inline-flex;align-items:center;gap:9px;padding:11px 16px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--tx2);font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;transition:.15s}
+  .ply-tab:hover{border-color:rgba(255,255,255,.28);color:var(--tx)}
+  .ply-tab-n{font-weight:800;font-size:12px;padding:1px 8px;border-radius:8px;background:rgba(255,255,255,.08)}
+  .ply-tab.on.hits{background:linear-gradient(180deg,rgba(232,196,106,.20),rgba(232,196,106,.05));border-color:var(--oro);color:#f4e6c0}
+  .ply-tab.on.hits .ply-tab-n{background:rgba(232,196,106,.26);color:#f4e6c0}
+  .ply-tab.on.hr{background:linear-gradient(180deg,rgba(151,90,222,.24),rgba(151,90,222,.06));border-color:#9a5cdc;color:#dcc7f7}
+  .ply-tab.on.hr .ply-tab-n{background:rgba(151,90,222,.32);color:#dcc7f7}
+  .ply-tab.on.tb{background:linear-gradient(180deg,rgba(29,155,240,.20),rgba(29,155,240,.05));border-color:#1d9bf0;color:#bfe0fb}
+  .ply-tab.on.tb .ply-tab-n{background:rgba(29,155,240,.30);color:#bfe0fb}
+  .ply-panel{margin-top:16px}
+  /* ---- Panel "muy pronto" (temado por apuesta) ---- */
+  .ply-soon{text-align:center;padding:44px 24px;border:1px dashed var(--line);border-radius:16px;background:rgba(255,255,255,.02)}
+  .ply-soon-badge{display:inline-block;padding:5px 13px;border-radius:999px;border:1px solid var(--line);font-family:"Chakra Petch",sans-serif;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--tx2);margin-bottom:14px}
+  .ply-soon.hr .ply-soon-badge{color:#dcc7f7;border-color:rgba(151,90,222,.5);background:rgba(151,90,222,.10)}
+  .ply-soon.tb .ply-soon-badge{color:#bfe0fb;border-color:rgba(29,155,240,.5);background:rgba(29,155,240,.10)}
+  .ply-soon-t{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:22px;color:#fff;margin-bottom:8px}
+  .ply-soon-d{color:var(--tx2);font-size:14px;max-width:440px;margin:0 auto;line-height:1.55}
+  @media(max-width:620px){.ply-banner{aspect-ratio:auto;min-height:150px}.ply-chips span{font-size:10.5px;padding:5px 9px}.ply-tab{padding:10px 13px;font-size:12.5px}}
   .ply-note{display:flex;gap:9px;align-items:center;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--tx2);font-size:12px;padding:9px 13px;border-radius:10px;margin-bottom:16px}
   .ply-note i{width:6px;height:6px;border-radius:50%;background:var(--oro);flex:0 0 auto}
   .ply-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
@@ -210,18 +237,30 @@ function inyectarCSS() {
 const tagTxt = (t) => (typeof t === 'function' ? t() : t);
 const IC_LUPA = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/></svg>`;
 
-function heroHTML(cfg, meta, cargando) {
+const APUESTAS = [
+  { id: 'hits', cls: 'hits', label: () => L('Hits', 'Hits') },
+  { id: 'hr',   cls: 'hr',   label: () => L('Home runs', 'Home runs') },
+  { id: 'tb',   cls: 'tb',   label: () => L('Total bases', 'Bases totales') },
+];
+function betTabsHTML(activo) {
+  const act = activo || 'hits';
+  return `<div class="ply-tabs">${APUESTAS.map(t =>
+    `<button class="ply-tab ${t.cls}${t.id === act ? ' on' : ''}" data-bet="${t.id}"><span class="ply-tab-l">${t.label()}</span><span class="ply-tab-n">9</span></button>`
+  ).join('')}</div>`;
+}
+
+function heroHTML(cfg, meta, cargando, variante) {
   const noun = String(cfg.metricLabel || '').replace(/<br>/g, ' ').trim();
   const chips = [
     `<span>${L('Date', 'Fecha')} · <b>${esc(meta.fecha)}</b></span>`,
     `<span><b>9</b> ${L('players', 'jugadores')} · ${esc(noun)}</span>`,
   ].join('');
-  return `<div class="ply-hero"><div class="ply-hero-bg" style="background-image:url('${imgURL(cfg)}')"></div><div class="ply-hero-veil"></div>
-    <div class="ply-hero-in">
-      <span class="ply-eyebrow"><i></i>${cargando ? L('Loading…', 'Cargando…') : esc(cfg.eyebrow)}</span>
-      <div class="ply-title">${cfg.titulo}</div>
+  return `<div class="ply-hero">
+    <div class="ply-banner" style="background-image:url('${imgURL(cfg)}')"><div class="ply-chips">${chips}</div></div>
+    <div class="ply-hero-body">
+      <div class="ply-title">${cargando ? L('Loading…', 'Cargando…') : cfg.titulo}</div>
       <div class="ply-lead">${esc(cfg.lead)}</div>
-      <div class="ply-meta">${chips}</div>
+      ${betTabsHTML(variante)}
     </div></div>`;
 }
 
@@ -351,17 +390,43 @@ function animar(cont) {
   cont.querySelectorAll('.ply-fill').forEach(b => io.observe(b));
 }
 
+function soonPanelHTML(bet) {
+  const T = bet === 'hr' ? L('Home runs', 'Home runs') : L('Total bases', 'Bases totales');
+  const D = bet === 'hr'
+    ? L('The players most likely to hit a home run today — the most popular MLB prop. Building it now.',
+        'Los jugadores con mayor probabilidad de pegar un cuadrangular hoy — el prop más popular de la MLB. En construcción.')
+    : L('The players most likely to rack up 2+ total bases today. Building it now.',
+        'Los jugadores con mayor probabilidad de sumar 2+ bases totales hoy. En construcción.');
+  return `<div class="ply-panel ply-soon ${bet}" data-bet-panel="${bet}" hidden>
+    <div class="ply-soon-badge">${T}</div>
+    <div class="ply-soon-t">${L('Coming soon', 'Muy pronto')}</div>
+    <div class="ply-soon-d">${D}</div>
+  </div>`;
+}
+function wireBets(cont) {
+  const tabs = cont.querySelectorAll('.ply-tab[data-bet]');
+  const panels = cont.querySelectorAll('[data-bet-panel]');
+  tabs.forEach(t => t.addEventListener('click', () => {
+    const bet = t.dataset.bet;
+    tabs.forEach(x => x.classList.remove('on')); t.classList.add('on');
+    panels.forEach(p => { p.hidden = (p.getAttribute('data-bet-panel') !== bet); });
+  }));
+}
+
 function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
   const nota = preliminar
     ? `<div class="ply-note"><i></i>${L('Preview — live projections update at game time.', 'Vista preliminar — las proyecciones en vivo se actualizan a la hora del juego.')}</div>`
     : '';
   cont.innerHTML = `<div class="ply">
-    ${heroHTML(cfg, meta, false)}
+    ${heroHTML(cfg, meta, false, 'hits')}
     ${nota}
-    <div class="ply-grid">${jugadores.map(p => cardHTML(p, cfg)).join('')}</div>
+    <div class="ply-panel" data-bet-panel="hits"><div class="ply-grid">${jugadores.map(p => cardHTML(p, cfg)).join('')}</div></div>
+    ${soonPanelHTML('hr')}
+    ${soonPanelHTML('tb')}
     <div class="ply-foot">${esc(cfg.foot)}</div>
   </div>`;
   animar(cont);
+  wireBets(cont);
   const abrir = (idx) => { const j = jugadores[idx - 1]; if (j) abrirTracker(j, cfg._sport); };
   cont.querySelectorAll('.ply-analyze[data-analyze]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); abrir(+b.dataset.analyze); }));
   cont.querySelectorAll('.ply-c[data-idx]').forEach(el => el.addEventListener('click', () => abrir(+el.dataset.idx)));
