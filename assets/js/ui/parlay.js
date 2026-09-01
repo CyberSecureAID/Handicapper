@@ -237,7 +237,7 @@ function comingSoonHTML(cfg) {
    un 50% de gol en fútbol es élite, pero un 50% de hit es flojo. Por eso cada
    mercado tiene sus propios cortes (hi/mid) y su vocabulario natural. */
 const FRASES = {
-  'P(≥1 hit)': { hi: 68, mid: 55,
+  'P(≥1 hit)': { hi: 68, mid: 60,
     alta:   { es: (pr) => `Fuerte candidato a pegar hit hoy (${pr}%).`,           en: (pr) => `Strong candidate to get a hit today (${pr}%).` },
     mod:    { es: (pr) => `Tiene con qué conectar (${pr}%), sin garantías.`,       en: (pr) => `A real shot to connect (${pr}%), no guarantees.` },
     parejo: { es: (pr) => `Duelo parejo al bate (${pr}%): el abridor rival complica.`, en: (pr) => `Even at the plate (${pr}%): the opposing starter makes it tough.` },
