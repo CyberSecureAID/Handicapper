@@ -7,7 +7,7 @@
    Fondo propio por sección, textura en tarjetas, acentos en dorado.
    Bilingüe (inglés por defecto). Sin proxy ni worker.
    ============================================================ */
-import { topParlayHits } from '../analisis/mlb-parlay.js';
+import { topParlayHits, topHomeRuns } from '../analisis/mlb-parlay.js';
 import { topGoalProjection } from '../analisis/soccer-goal.js';
 import { topPointsProjection } from '../analisis/nba-points.js';
 import { topShotsProjection } from '../analisis/nhl-shots.js';
@@ -167,6 +167,13 @@ function inyectarCSS() {
   .ply-soon.tb .ply-soon-badge{color:#bfe0fb;border-color:rgba(29,155,240,.5);background:rgba(29,155,240,.10)}
   .ply-soon-t{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:22px;color:#fff;margin-bottom:8px}
   .ply-soon-d{color:var(--tx2);font-size:14px;max-width:440px;margin:0 auto;line-height:1.55}
+  /* ---- Tarjetas de HR: tema morado ---- */
+  .ply-panel.hr .ply-c::before{background:linear-gradient(90deg,#9a5cdc,transparent 70%)}
+  .ply-panel.hr .ply-rank{background:linear-gradient(135deg,#d3b8f5,#8a5cd8);color:#1a0e2e;box-shadow:0 4px 14px rgba(138,92,216,.42)}
+  .ply-panel.hr .ply-fill{background:linear-gradient(90deg,#8a5cd8,#d3b8f5)}
+  .ply-panel.hr .ply-pct{color:#dcc7f7}
+  .ply-panel.hr .ply-tag.h{color:#dcc7f7;border-color:rgba(151,90,222,.4)}
+  .ply-panel.hr .ply-verdict{border-left-color:#9a5cdc}
   @media(max-width:620px){.ply-hero{aspect-ratio:auto;min-height:330px}.ply-hero-veil{background:linear-gradient(180deg,rgba(6,9,15,.42),rgba(6,9,15,.25) 34%,rgba(6,9,15,.92))}.ply-hero-in{padding:18px 18px}.ply-hero-in .ply-title{font-size:clamp(24px,7vw,32px)}.ply-chips span{font-size:10.5px;padding:5px 9px}.ply-tab{padding:10px 13px;font-size:12.5px}}
   .ply-note{display:flex;gap:9px;align-items:center;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--tx2);font-size:12px;padding:9px 13px;border-radius:10px;margin-bottom:16px}
   .ply-note i{width:6px;height:6px;border-radius:50%;background:var(--oro);flex:0 0 auto}
@@ -299,8 +306,23 @@ const FRASES = {
     parejo: { es: (pr) => `Poco probable que llegue a 2 tiros (${pr}%).`,           en: (pr) => `Unlikely to reach 2 shots (${pr}%).` },
     flojo:  { es: (pr) => `Pocos partidos para fiarse de este ${pr}%.`,            en: (pr) => `Too few games to trust this ${pr}%.` },
     solido: { es: ' Tirador constante.', en: ' Consistent shooter.' } },
+  'P(1+ HR)': { hi: 20, mid: 13,
+    alta:   { es: (pr) => `Fuerte candidato a volarla hoy (${pr}%).`,               en: (pr) => `Strong candidate to go deep today (${pr}%).` },
+    mod:    { es: (pr) => `Poder real para el cuadrangular (${pr}%), sin garantías.`, en: (pr) => `Real power for a home run (${pr}%), no guarantees.` },
+    parejo: { es: (pr) => `HR poco probable hoy (${pr}%): matchup complicado.`,     en: (pr) => `HR unlikely today (${pr}%): tough matchup.` },
+    flojo:  { es: (pr) => `Muestra corta: este ${pr}% es poco fiable.`,            en: (pr) => `Small sample: this ${pr}% isn't reliable.` },
+    solido: { es: ' Bate de poder a seguir.', en: ' A power bat to watch.' } },
 };
 FRASES._def = FRASES['P(≥1 hit)'];
+
+/* Config para renderizar las tarjetas de HOME RUNS (tema morado). */
+const CFG_HR = {
+  _sport: 'mlb', _bet: 'hr',
+  metric: 'P(1+ HR)',
+  metricLabel: L('Chance<br>of a HR', 'Opción<br>de HR'),
+  foot: L('Model probability estimates, not betting advice. Home runs are rare and high-variance.',
+          'Estimaciones probabilísticas del modelo, no asesoría de apuestas. Los HR son raros y de alta varianza.'),
+};
 
 /* Confianza MOSTRADA en base a la probabilidad (no a la muestra de temporada,
    que a inicio de año castiga a todos). Así un 79% se ve "alta", no "media",
@@ -405,10 +427,35 @@ function soonPanelHTML(bet) {
 function wireBets(cont) {
   const tabs = cont.querySelectorAll('.ply-tab[data-bet]');
   const panels = cont.querySelectorAll('[data-bet-panel]');
-  tabs.forEach(t => t.addEventListener('click', () => {
+  let hrCargado = false;
+  tabs.forEach(t => t.addEventListener('click', async () => {
     const bet = t.dataset.bet;
     tabs.forEach(x => x.classList.remove('on')); t.classList.add('on');
     panels.forEach(p => { p.hidden = (p.getAttribute('data-bet-panel') !== bet); });
+
+    if (bet === 'hr' && !hrCargado) {
+      hrCargado = true;
+      const grid = cont.querySelector('[data-hr-grid]'); if (!grid) return;
+      let sk = ''; for (let i = 0; i < 9; i++) sk += '<div class="ply-skel"><b class="w1"></b><b class="w2"></b><b class="w3"></b><b class="w4"></b></div>';
+      grid.innerHTML = sk;
+      try {
+        const cached = CACHE.get('mlb:hr');
+        let jug;
+        if (cached && Date.now() - cached.ts < 120000) jug = cached.jugadores;
+        else {
+          const r = await conTimeout(topHomeRuns({ fecha: hoyISO(), n: 9 }), 25000);
+          jug = (r && r.jugadores) ? curar(r.jugadores, CFG_HR) : [];
+          CACHE.set('mlb:hr', { jugadores: jug, ts: Date.now() });
+        }
+        grid.innerHTML = jug.length ? jug.map(p => cardHTML(p, CFG_HR)).join('')
+          : `<div class="ply-note"><i></i>${L('No games scheduled today.', 'No hay juegos programados hoy.')}</div>`;
+        animar(cont);
+        grid.querySelectorAll('.ply-c[data-idx]').forEach(el => el.addEventListener('click', () => { const j = jug[+el.dataset.idx - 1]; if (j) abrirTracker(j, 'mlb', 'hr'); }));
+      } catch (_) {
+        grid.innerHTML = `<div class="ply-note"><i></i>${L('Could not load home runs.', 'No se pudo cargar home runs.')}</div>`;
+        hrCargado = false;
+      }
+    }
   }));
 }
 
@@ -420,7 +467,7 @@ function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
     ${heroHTML(cfg, meta, false, 'hits')}
     ${nota}
     <div class="ply-panel" data-bet-panel="hits"><div class="ply-grid">${jugadores.map(p => cardHTML(p, cfg)).join('')}</div></div>
-    ${soonPanelHTML('hr')}
+    <div class="ply-panel hr" data-bet-panel="hr" hidden><div class="ply-grid" data-hr-grid></div></div>
     ${soonPanelHTML('tb')}
     <div class="ply-foot">${esc(cfg.foot)}</div>
   </div>`;
