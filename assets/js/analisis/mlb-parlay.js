@@ -198,7 +198,7 @@ async function rosterTopBateadores(teamId, season, proxy, max = 6) {
   } catch (_) { return []; }
 }
 
-export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 3 } = {}) {
+export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 6 } = {}) {
   const avisos = [];
   const season = new Date(fecha + 'T12:00:00').getFullYear();
   const juegos = await cartelera(fecha, proxy);
@@ -208,50 +208,51 @@ export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 3
   const pitCache = new Map();
   const getPit = async (id) => { if (!id) return null; if (!pitCache.has(id)) pitCache.set(id, await statsPitcher(id, season, proxy)); return pitCache.get(id); };
 
-  const candidatos = [];
-  for (const g of juegos) {
+  // ---- Todos los juegos EN PARALELO (antes era secuencial -> lento -> timeout) ----
+  const porJuego = await Promise.all(juegos.map(async (g) => {
     const venue = g.venue?.name || '';
     const home = g.teams?.home, away = g.teams?.away;
     const lineups = g.lineups || {};
-    const probHome = home?.probablePitcher?.id, probAway = away?.probablePitcher?.id;
-    const pitHome = await getPit(probHome);   // enfrenta a los bateadores AWAY
-    const pitAway = await getPit(probAway);   // enfrenta a los bateadores HOME
+    const [pitHome, pitAway] = await Promise.all([ getPit(home?.probablePitcher?.id), getPit(away?.probablePitcher?.id) ]);
 
-    // Para cada lado: lista de bateadores (lineup confirmado si existe)
     const lados = [
       { lado: 'home', bateadores: lineups.homePlayers, equipo: home?.team, rival: away?.team, pit: pitAway, conf: !!lineups.homePlayers },
       { lado: 'away', bateadores: lineups.awayPlayers, equipo: away?.team, rival: home?.team, pit: pitHome, conf: !!lineups.awayPlayers },
     ];
 
+    const cands = [];
     for (const L of lados) {
-      // Sin abridor rival confirmado -> pitcher neutral (liga media), NO se omite el equipo
       if (!L.pit) L.pit = { nombre: 'TBD', mano: null, era: null, avgVL: 0.245, avgVR: 0.245, _neutral: true };
-      let arr = Array.isArray(L.bateadores) ? L.bateadores.slice(0, 9) : [];
+      let ids = [];
       let confLineup = L.conf;
-      if (!arr.length) {
-        // Sin lineup confirmado -> mejores bateadores del roster por AVG (siempre hay candidatos)
-        const top = await rosterTopBateadores(L.equipo?.id, season, proxy, 6);
-        arr = top.map(b => b.id);
+      if (Array.isArray(L.bateadores) && L.bateadores.length) {
+        // Lineup confirmado: los bateadores que realmente juegan (evaluamos más, no solo 3)
+        ids = L.bateadores.slice(0, maxPorEquipo).map(x => x?.id || x).filter(Boolean);
+      } else {
+        // Sin lineup: MEJORES bateadores del roster por AVG (así entran las estrellas)
+        const top = await rosterTopBateadores(L.equipo?.id, season, proxy, maxPorEquipo);
+        ids = top.map(b => b.id);
         confLineup = false;
-        if (!arr.length) { avisos.push(`Sin datos de bateadores para ${L.equipo?.name || '—'}`); continue; }
       }
-      let count = 0;
-      for (let i = 0; i < arr.length; i++) {
-        if (count >= maxPorEquipo) break;
-        const pid = arr[i]?.id || arr[i]; if (!pid) continue;
-        const bat = await statsBateador(pid, season, proxy); if (!bat) continue;
+      if (!ids.length) { avisos.push(`Sin datos de bateadores para ${L.equipo?.name || '—'}`); continue; }
+
+      // Stats de todos los bateadores del lado EN PARALELO
+      const bats = await Promise.all(ids.map(pid => statsBateador(pid, season, proxy)));
+      bats.forEach((bat, i) => {
+        if (!bat) return;
         const est = estimarHit({ bateador: bat, pitcher: L.pit, slot: i + 1, venue, lineupConfirmado: confLineup });
-        candidatos.push({
+        cands.push({
           id: bat.id, nombre: bat.nombre, equipo: L.equipo?.name, equipoAbrev: L.equipo?.abbreviation,
           rival: L.rival?.name, rivalAbrev: L.rival?.abbreviation, venue,
           pitcher: L.pit.nombre, pitcherMano: L.pit.mano, pitcherEra: L.pit.era,
           slot: i + 1, mano: bat.mano, ...est,
         });
-        count++;
-      }
+      });
     }
-  }
+    return cands;
+  }));
 
+  const candidatos = porJuego.flat();
   candidatos.sort((a, b) => b.prob - a.prob || b.pHit - a.pHit);
   const top = candidatos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
   return {
