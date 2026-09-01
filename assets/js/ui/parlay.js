@@ -146,6 +146,11 @@ function inyectarCSS() {
   .ply-note{display:flex;gap:9px;align-items:center;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--tx2);font-size:12px;padding:9px 13px;border-radius:10px;margin-bottom:16px}
   .ply-note i{width:6px;height:6px;border-radius:50%;background:var(--oro);flex:0 0 auto}
   .ply-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+  .ply-skel{border:1px solid var(--line);border-radius:16px;padding:18px;height:190px;position:relative;overflow:hidden;background:rgba(255,255,255,.02)}
+  .ply-skel::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);transform:translateX(-100%);animation:ply-shimmer 1.3s infinite}
+  .ply-skel b{display:block;height:12px;border-radius:6px;background:rgba(255,255,255,.06);margin-bottom:12px}
+  .ply-skel b.w1{width:55%;height:16px}.ply-skel b.w2{width:38%}.ply-skel b.w3{width:80%;margin-top:20px}.ply-skel b.w4{width:70%}
+  @keyframes ply-shimmer{100%{transform:translateX(100%)}}
   .ply-c{position:relative;border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;overflow:hidden;cursor:pointer;
     background:linear-gradient(180deg,rgba(17,25,37,.90),rgba(11,17,25,.95)),url('${TEXTURA}') center/cover;
     transition:transform .16s ease,border-color .16s ease}
@@ -206,10 +211,10 @@ const tagTxt = (t) => (typeof t === 'function' ? t() : t);
 const IC_LUPA = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/></svg>`;
 
 function heroHTML(cfg, meta, cargando) {
+  const noun = String(cfg.metricLabel || '').replace(/<br>/g, ' ').trim();
   const chips = [
     `<span>${L('Date', 'Fecha')} · <b>${esc(meta.fecha)}</b></span>`,
-    `<span>${L('Metric', 'Métrica')} · <b>${esc(cfg.metric)}</b></span>`,
-    `<span>${L('Players', 'Jugadores')} · <b>9</b></span>`,
+    `<span><b>9</b> ${L('players', 'jugadores')} · ${esc(noun)}</span>`,
   ].join('');
   return `<div class="ply-hero"><div class="ply-hero-bg" style="background-image:url('${imgURL(cfg)}')"></div><div class="ply-hero-veil"></div>
     <div class="ply-hero-in">
@@ -359,6 +364,17 @@ function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
 /* Promesa con límite de tiempo (para no colgar la carga) */
 const conTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
 
+/* Esqueleto de carga: 9 tarjetas fantasma (nunca "solo 3") */
+function pintarCargando(cont, cfg) {
+  var cards = '';
+  for (var i = 0; i < 9; i++) cards += '<div class="ply-skel"><b class="w1"></b><b class="w2"></b><b class="w3"></b><b class="w4"></b></div>';
+  cont.innerHTML = `<div class="ply">
+    ${heroHTML(cfg, { fecha: hoyISO() }, true)}
+    <div class="ply-note"><i></i>${L('Loading top picks for today…', 'Cargando los mejores del día…')}</div>
+    <div class="ply-grid">${cards}</div>
+  </div>`;
+}
+
 /* ---------- API pública ---------- */
 export async function pintarParlay(cont, { sport = 'mlb', esPremium = false, abrirPlanes } = {}) {
   inyectarCSS();
@@ -379,12 +395,12 @@ export async function pintarParlay(cont, { sport = 'mlb', esPremium = false, abr
   const cached = CACHE.get(sport);
   const fresco = cached && (Date.now() - cached.ts < 120000);
   if (fresco) pintarGrid(cont, cfg, cached.jugadores, cached.meta, false);
-  else pintarGrid(cont, cfg, cfg.demo, { fecha: hoyISO() }, true);
+  else pintarCargando(cont, cfg);
 
-  // 2) Datos en vivo en 2º plano (con timeout), y se sustituye si llegan
+  // 2) Datos en vivo en 2º plano (con timeout amplio), y se sustituye si llegan
   if (!fresco) {
     try {
-      const r = await conTimeout(cfg.run(), 9000);
+      const r = await conTimeout(cfg.run(), 25000);
       if (r && r.jugadores && r.jugadores.length) {
         const jug = curar(r.jugadores, cfg);   // regla: solo los buenos, ordenados, máx 9
         CACHE.set(sport, { jugadores: jug, meta: r.meta, ts: Date.now() });
