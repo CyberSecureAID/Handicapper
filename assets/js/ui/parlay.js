@@ -279,7 +279,13 @@ function confPorProb(prob, cfg) {
    Nunca deja la vista vacía. Máximo 9. */
 function curar(jugadores, cfg) {
   const S = FRASES[cfg.metric] || FRASES._def;
-  let arr = (jugadores || []).slice().sort((a, b) => (b.prob || 0) - (a.prob || 0));
+  let arr = (jugadores || []).slice();
+  // Si el motor ya trae 'score' (racha real de juegos-con-hit), respeta ese orden.
+  if (arr.some(j => j.score != null)) {
+    arr.sort((a, b) => (b.score || 0) - (a.score || 0));
+    return arr.slice(0, 9).map((j, i) => ({ ...j, rank: i + 1 }));
+  }
+  arr.sort((a, b) => (b.prob || 0) - (a.prob || 0));
   const buenos = arr.filter(j => (j.prob || 0) >= S.mid);
   if (buenos.length >= 5) arr = buenos;
   return arr.slice(0, 9).map((j, i) => ({ ...j, rank: i + 1 }));
