@@ -368,16 +368,16 @@ export function estimarHR({ bateador, pitcher, venue }) {
   if (fpark >= 1.10) factores.push('Parque muy propenso a HR');
   if (fpark <= 0.90) riesgos.push('Parque que suprime HR');
 
-  const pHR = clamp(base * facPit * fpark, 0.005, 0.16);   // HR por aparición ajustado
+  const pHR = clamp(base * facPit * fpark, 0.005, 0.10);   // HR por aparición ajustado (realista)
   const pa = 4.1;
-  const prob = clamp(1 - Math.pow(1 - pHR, pa), 0.02, 0.55);
+  const prob = clamp(1 - Math.pow(1 - pHR, pa), 0.02, 0.32);   // hasta ~32% (élite en buen spot)
   if (bateador.hr >= 25) factores.push(`Poder real (${bateador.hr} HR esta temporada)`);
   else if (bateador.hr >= 15) factores.push(`${bateador.hr} HR esta temporada`);
   const confianza = prob >= 0.22 ? 'alta' : prob >= 0.14 ? 'media' : prob >= 0.08 ? 'baja' : 'muy baja';
   return { prob: Math.round(prob * 100), pHR: +pHR.toFixed(4), pa, confianza, factores: factores.slice(0, 4), riesgos: riesgos.slice(0, 3) };
 }
 
-export async function topHomeRuns({ fecha, n = 9, proxy = '', maxPorEquipo = 6 } = {}) {
+export async function topHomeRuns({ fecha, n = 6, proxy = '', maxPorEquipo = 4 } = {}) {
   const avisos = [];
   const season = new Date(fecha + 'T12:00:00').getFullYear();
   const juegos = await cartelera(fecha, proxy);
@@ -389,29 +389,22 @@ export async function topHomeRuns({ fecha, n = 9, proxy = '', maxPorEquipo = 6 }
   const porJuego = await Promise.all(juegos.map(async (g) => {
     const venue = g.venue?.name || '';
     const home = g.teams?.home, away = g.teams?.away;
-    const lineups = g.lineups || {};
     const [pitHome, pitAway] = await Promise.all([ getPit(home?.probablePitcher?.id), getPit(away?.probablePitcher?.id) ]);
     const lados = [
-      { bateadores: lineups.homePlayers, equipo: home?.team, rival: away?.team, pit: pitAway },
-      { bateadores: lineups.awayPlayers, equipo: away?.team, rival: home?.team, pit: pitHome },
+      { equipo: home?.team, rival: away?.team, pit: pitAway },
+      { equipo: away?.team, rival: home?.team, pit: pitHome },
     ];
     const cands = [];
     for (const L of lados) {
       if (!L.pit) L.pit = { nombre: 'TBD', era: null };
-      let ids = [];
-      if (Array.isArray(L.bateadores) && L.bateadores.length) {
-        ids = L.bateadores.slice(0, maxPorEquipo).map(x => x?.id || x).filter(Boolean);
-      } else {
-        const top = await rosterTopHR(L.equipo?.id, season, proxy, maxPorEquipo);
-        ids = top.map(b => b.id);
-      }
-      if (!ids.length) { avisos.push(`Sin datos para ${L.equipo?.name || '—'}`); continue; }
-      const bats = await Promise.all(ids.map(pid => statsBateadorHR(pid, season, proxy)));
-      bats.forEach((bat) => {
-        if (!bat) return;
+      // El roster ya trae HR y PA de cada bateador -> NO se re-consulta (ligero, evita saturar la API)
+      const top = await rosterTopHR(L.equipo?.id, season, proxy, maxPorEquipo);
+      if (!top.length) { avisos.push(`Sin datos para ${L.equipo?.name || '—'}`); continue; }
+      top.forEach((b) => {
+        const bat = { id: b.id, nombre: b.nombre, hr: b.hr, pa: b.pa, hrRatePA: b.pa > 0 ? b.hr / b.pa : 0 };
         const est = estimarHR({ bateador: bat, pitcher: L.pit, venue });
         cands.push({
-          id: bat.id, nombre: bat.nombre, equipo: L.equipo?.name, equipoAbrev: L.equipo?.abbreviation,
+          id: b.id, nombre: b.nombre, equipo: L.equipo?.name, equipoAbrev: L.equipo?.abbreviation,
           rival: L.rival?.name, rivalAbrev: L.rival?.abbreviation, venue,
           pitcher: L.pit.nombre, pitcherEra: L.pit.era, mano: bat.mano, hr: bat.hr, slot: 4, ...est,
         });
@@ -423,18 +416,21 @@ export async function topHomeRuns({ fecha, n = 9, proxy = '', maxPorEquipo = 6 }
   const candidatos = porJuego.flat();
   candidatos.sort((a, b) => b.prob - a.prob);
 
-  // Etapa 2: racha real de "juegos con HR (últimos 10)"
-  const pool = candidatos.slice(0, Math.max(n * 2, 18));
+  // Etapa 2 (ligera): racha real de "juegos con HR (últimos 10)" solo a los mejores
+  const pool = candidatos.slice(0, 12);
   const logs = await Promise.all(pool.map(c => tasaJuegosConHR(c.id, season, proxy)));
   pool.forEach((c, i) => {
     const gl = logs[i];
     if (gl) { c.tasaJuegos = gl.tasa; c.rachaHR = `${gl.conHR}/${gl.juegos}`; }
     const tasa = gl ? gl.tasa : (c.prob / 100);
-    c.score = tasa * 0.55 + (c.prob / 100) * 0.45;   // racha real + modelo (HR es más raro)
+    c.score = tasa * 0.50 + (c.prob / 100) * 0.50;
   });
   pool.sort((a, b) => (b.score - a.score) || (b.prob - a.prob));
 
-  const top = pool.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
+  // HR es raro: mostramos SOLO los pocos con probabilidad realmente alta, no un número fijo.
+  let elegidos = pool.filter(c => c.prob >= 12);
+  if (elegidos.length < 3) elegidos = pool.slice(0, 3);
+  const top = elegidos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
   return {
     jugadores: top,
     meta: {
