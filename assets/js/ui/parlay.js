@@ -131,10 +131,10 @@ function inyectarCSS() {
   .ply{--az:#4db4f7;--ro:#f4494e;--ok:#41d6a0;--am:#f3b13d;--oro:#e8c46a;--oro2:#c79a3c;
     --card:#0e141e;--line:rgba(255,255,255,.08);--tx:#eef3f9;--tx2:#98a4b4;--tx3:#5c6879;max-width:1120px;margin:0 auto}
   .ply *{box-sizing:border-box}
-  .ply-hero{position:relative;border-radius:20px;overflow:hidden;margin-bottom:20px;isolation:isolate;border:1px solid var(--line)}
+  .ply-hero{position:relative;border-radius:20px;overflow:hidden;margin-bottom:20px;isolation:isolate;border:1px solid var(--line);background-size:cover;background-position:center;background-color:#0a1420;aspect-ratio:1048/271;display:flex}
   .ply-hero-bg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;background-color:#0a1420}
-  .ply-hero-veil{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg,rgba(6,9,15,.55),rgba(6,9,15,.86)),radial-gradient(120% 100% at 50% 0,transparent,rgba(6,9,15,.5))}
-  .ply-hero-in{position:relative;z-index:2;padding:30px 30px 26px}
+  .ply-hero-veil{position:absolute;inset:0;z-index:1;background:linear-gradient(100deg,rgba(6,9,15,.92),rgba(6,9,15,.5) 46%,rgba(6,9,15,.06) 72%),linear-gradient(0deg,rgba(6,9,15,.72),transparent 44%)}
+  .ply-hero-in{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;padding:20px 28px}
   .ply-eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#efe3c6;border:1px solid rgba(232,196,106,.35);border-radius:999px;padding:6px 13px;background:rgba(0,0,0,.30)}
   .ply-eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--oro);box-shadow:0 0 10px var(--oro)}
   .ply-title{font-family:"Chakra Petch",sans-serif;font-weight:800;letter-spacing:-.01em;line-height:1.04;font-size:clamp(26px,5vw,44px);color:#fff;margin:16px 0 8px;text-shadow:0 2px 20px rgba(0,0,0,.6)}
@@ -143,14 +143,12 @@ function inyectarCSS() {
   .ply-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
   .ply-meta span{font-size:11.5px;color:#d3dbe6;border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:6px 11px;background:rgba(0,0,0,.34)}
   .ply-meta b{color:#fff}
-  /* ---- Banner ajustado a la foto (sin recortar cabeza/pies) ---- */
-  .ply-banner{position:relative;aspect-ratio:1048/271;background-size:cover;background-position:center;background-color:#0a1420;border:1px solid var(--line);border-radius:16px;overflow:hidden}
-  .ply-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,9,15,.32),rgba(6,9,15,.10) 42%,rgba(6,9,15,.52))}
-  .ply-chips{position:absolute;top:12px;left:12px;z-index:2;display:flex;gap:8px;flex-wrap:wrap}
-  .ply-chips span{font-size:11.5px;color:#eaf0f8;border:1px solid rgba(255,255,255,.18);border-radius:9px;padding:6px 11px;background:rgba(6,10,18,.62);backdrop-filter:blur(4px)}
+  /* ---- Contenido superpuesto sobre el banner ---- */
+  .ply-chips{display:flex;gap:8px;flex-wrap:wrap}
+  .ply-chips span{font-size:11.5px;color:#eaf0f8;border:1px solid rgba(255,255,255,.18);border-radius:9px;padding:6px 11px;background:rgba(6,10,18,.55);backdrop-filter:blur(4px)}
   .ply-chips b{color:#fff;font-weight:800}
-  .ply-hero-body{padding:16px 2px 2px}
-  /* ---- Botones de tipo de apuesta (rectangulares, redondeados) ---- */
+  .ply-hero-in .ply-title{margin:auto 0 6px}
+  .ply-hero-in .ply-lead{margin:0 0 4px}
   .ply-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
   .ply-tab{display:inline-flex;align-items:center;gap:9px;padding:11px 16px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--tx2);font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;transition:.15s}
   .ply-tab:hover{border-color:rgba(255,255,255,.28);color:var(--tx)}
@@ -169,7 +167,7 @@ function inyectarCSS() {
   .ply-soon.tb .ply-soon-badge{color:#bfe0fb;border-color:rgba(29,155,240,.5);background:rgba(29,155,240,.10)}
   .ply-soon-t{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:22px;color:#fff;margin-bottom:8px}
   .ply-soon-d{color:var(--tx2);font-size:14px;max-width:440px;margin:0 auto;line-height:1.55}
-  @media(max-width:620px){.ply-banner{aspect-ratio:auto;min-height:150px}.ply-chips span{font-size:10.5px;padding:5px 9px}.ply-tab{padding:10px 13px;font-size:12.5px}}
+  @media(max-width:620px){.ply-hero{aspect-ratio:auto;min-height:330px}.ply-hero-veil{background:linear-gradient(180deg,rgba(6,9,15,.42),rgba(6,9,15,.25) 34%,rgba(6,9,15,.92))}.ply-hero-in{padding:18px 18px}.ply-hero-in .ply-title{font-size:clamp(24px,7vw,32px)}.ply-chips span{font-size:10.5px;padding:5px 9px}.ply-tab{padding:10px 13px;font-size:12.5px}}
   .ply-note{display:flex;gap:9px;align-items:center;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--tx2);font-size:12px;padding:9px 13px;border-radius:10px;margin-bottom:16px}
   .ply-note i{width:6px;height:6px;border-radius:50%;background:var(--oro);flex:0 0 auto}
   .ply-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
@@ -255,9 +253,10 @@ function heroHTML(cfg, meta, cargando, variante) {
     `<span>${L('Date', 'Fecha')} · <b>${esc(meta.fecha)}</b></span>`,
     `<span><b>9</b> ${L('players', 'jugadores')} · ${esc(noun)}</span>`,
   ].join('');
-  return `<div class="ply-hero">
-    <div class="ply-banner" style="background-image:url('${imgURL(cfg)}')"><div class="ply-chips">${chips}</div></div>
-    <div class="ply-hero-body">
+  return `<div class="ply-hero" style="background-image:url('${imgURL(cfg)}')">
+    <div class="ply-hero-veil"></div>
+    <div class="ply-hero-in">
+      <div class="ply-chips">${chips}</div>
       <div class="ply-title">${cargando ? L('Loading…', 'Cargando…') : cfg.titulo}</div>
       <div class="ply-lead">${esc(cfg.lead)}</div>
       ${betTabsHTML(variante)}
