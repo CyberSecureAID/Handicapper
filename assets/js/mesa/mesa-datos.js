@@ -5,6 +5,7 @@
    su UID no está en la colección 'admins', Firestore le niega los datos.
    ============================================================ */
 import { _asegurarListo, _obtenerDB, _obtenerStore, usuarioActual } from '../auth/auth.js';
+import { BOTS, FOTOS_BOT } from '../datos/bots.js';
 
 /* ¿El usuario actual es administrador? Se comprueba contra Firestore. */
 export async function esAdmin() {
@@ -117,13 +118,13 @@ export async function esAnalista() {
 
 /* Lista todos los analistas (solo admin por reglas). */
 export async function listarAnalistas() {
-  if (!await _asegurarListo()) return [];
+  if (!await _asegurarListo()) return [...BOTS];
   try {
     const S = _obtenerStore(), db = _obtenerDB();
     const q = await S.getDocs(S.collection(db, 'analistas'));
-    const out = []; q.forEach(d => out.push({ uid: d.id, ...d.data() }));
+    const out = [...BOTS]; q.forEach(d => out.push({ uid: d.id, ...d.data() }));
     return out;
-  } catch (_) { return []; }
+  } catch (_) { return [...BOTS]; }
 }
 
 /* Crea o actualiza un analista (admin). */
@@ -153,14 +154,15 @@ export async function eliminarAnalista(uid) {
 
 /* Mapa { fotoId: uid } de todas las fotos ocupadas. */
 export async function fotosOcupadas() {
-  if (!await _asegurarListo()) return {};
+  const base = {};
+  FOTOS_BOT.forEach(f => { base[String(f).toLowerCase()] = 'bot'; });   // fotos de bots: siempre ocupadas
+  if (!await _asegurarListo()) return base;
   try {
     const S = _obtenerStore(), db = _obtenerDB();
     const q = await S.getDocs(S.collection(db, 'fotos'));
-    const out = {};
-    q.forEach(d => { out[d.id] = (d.data() && d.data().uid) || true; });
-    return out;
-  } catch (_) { return {}; }
+    q.forEach(d => { base[d.id] = (d.data() && d.data().uid) || true; });
+    return base;
+  } catch (_) { return base; }
 }
 
 /* El analista actual reclama una foto libre. Libera antes la que tuviera.
