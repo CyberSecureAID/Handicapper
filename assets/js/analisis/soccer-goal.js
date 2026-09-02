@@ -158,7 +158,7 @@ async function rosterConGoles(ruta, teamId) {
 }
 
 /* --------- Orquestador --------- */
-export async function topGoalProjection({ fecha, n = 9, maxPorEquipo = 3, ligas } = {}) {
+export async function topGoalProjection({ fecha, n = 9, maxPorEquipo = 6, ligas } = {}) {
   const avisos = [];
   const ids = ligas || ['epl', 'laliga', 'seriea', 'bundes', 'ucl', 'ligue1'];
   const candidatos = [];
@@ -207,7 +207,11 @@ export async function topGoalProjection({ fecha, n = 9, maxPorEquipo = 3, ligas 
   }
 
   candidatos.sort((a, b) => b.prob - a.prob || b.lambda - a.lambda);
-  const top = candidatos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
+  // Calidad: prioriza a los goleadores de verdad (con goles de temporada).
+  let elegidos = candidatos.filter(c => (c.goles || 0) >= 5);
+  if (elegidos.length < 4) elegidos = candidatos.filter(c => (c.goles || 0) >= 3);
+  if (elegidos.length < 3) elegidos = candidatos;
+  const top = elegidos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
   return {
     jugadores: top,
     meta: { fecha, fuente: 'ESPN', modelo: 'P(≥1 gol) = 1 − e^(−λ) · estimación propia', candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)] },
