@@ -31,29 +31,29 @@ function medir(m) {
   return { favLocal, prob, fav, dog };
 }
 
-/* Explicación adaptada a los números reales (varía según los datos, no es genérica). */
+/* Explicación adaptada a los datos reales, en tono cualitativo (sin cifras que puedan ser falsas). */
 function explicacion(fav, dog, prob) {
   const partes = [];
-  if (fav.winPct != null && dog.winPct != null) {
-    partes.push(`${fav.nombre} llega con ${pct(fav.winPct)}% de victorias esta temporada, frente al ${pct(dog.winPct)}% de ${dog.nombre}`);
+  const dif = (fav.winPct != null && dog.winPct != null) ? (fav.winPct - dog.winPct) : null;
+  if (dif != null && dif >= 0.28) {
+    partes.push(`${fav.nombre} ha sido muy superior a ${dog.nombre} en rendimiento durante la temporada`);
   } else if (fav.record && dog.record) {
-    partes.push(`${fav.nombre} (${fav.record}) supera con claridad el registro de ${dog.nombre} (${dog.record})`);
+    partes.push(`${fav.nombre} llega con mejor récord (${fav.record}) que ${dog.nombre} (${dog.record})`);
   } else {
-    partes.push(`${fav.nombre} llega en clara ventaja frente a ${dog.nombre}`);
+    partes.push(`${fav.nombre} llega en clara ventaja de forma frente a ${dog.nombre}`);
   }
-  if (fav.posicion != null && dog.posicion != null) {
-    partes.push(`en la tabla van ${fav.posicion}º y ${dog.posicion}º respectivamente`);
+  if (fav.posicion != null && dog.posicion != null && fav.posicion < dog.posicion) {
+    partes.push(`y les separan varios puestos en la tabla (${fav.posicion}º frente a ${dog.posicion}º)`);
   }
-  // cierre según el nivel de probabilidad (humaniza sin repetir)
   const cierres = prob >= 74
-    ? ['La balanza está muy inclinada; de los picks más despejados del día.',
-       'Diferencia grande en todos los frentes: es un favorito muy marcado.',
-       'Salvo sorpresa mayúscula, el rendimiento manda a favor del favorito.']
-    : ['Ventaja consistente por trayectoria y forma reciente.',
-       'El favorito ha sido bastante más regular; los números lo respaldan.',
-       'Sólido a favor por historial y estado actual, sin ser un caso extremo.'];
-  const cierre = cierres[(Math.round((fav.winPct || 0) * 100) + (fav.posicion || 0)) % cierres.length];
-  return partes.join('; ') + '. ' + cierre;
+    ? ['La balanza se inclina con fuerza hacia el favorito; de los partidos más despejados del día.',
+       'Diferencia amplia en los indicadores clave: un favorito muy marcado.',
+       'Salvo sorpresa, el rendimiento manda con claridad a favor del favorito.']
+    : ['Ventaja consistente por trayectoria y estado reciente.',
+       'El favorito ha sido bastante más regular; los datos lo respaldan.',
+       'Sólido a favor por historial y forma actual, sin ser un caso extremo.'];
+  const cierre = cierres[((fav.posicion || 0) + Math.round((fav.winPct || 0) * 10)) % cierres.length];
+  return partes.join(', ') + '. ' + cierre;
 }
 
 async function generar({ guardar, uid, firma, autor, color, deporte, ligas, max = 2 }) {
