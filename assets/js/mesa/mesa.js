@@ -3,7 +3,9 @@
    Secciones: Overview · Users · Analysis.
    Solo visible si esAdmin() (verificado en Firestore).
    ============================================================ */
-import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte } from './mesa-datos.js';
+import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte, asignarFotoAnalista, quitarFotoAnalista } from './mesa-datos.js';
+import { rutaFotoAnalista } from '../datos/fotos-analistas.js';
+import { abrirSelectorFotos } from '../ui/selector-fotos.js';
 import { prepararEstilosSenal, tarjetaMuestra } from '../ui/senales.js';
 import { PALETA, INTENSIDADES, EMBLEMAS, EMBLEMA_NOMBRE, estiloSeguro } from '../ui/estilo-senal.js';
 import { PALABRAS_DEFECTO, terminoProhibido, limpiarLista, detectarPublicidad } from '../datos/moderacion.js';
@@ -748,7 +750,10 @@ function vistaAnalistas() {
   const lista = _analistas.length ? _analistas.map(a => {
     const uu = _usuarios.find(x => x.uid === a.uid); const mail = a.email || (uu && uu.email) || a.uid;
     return `<div class="an-mng-row ${a.activo === false ? 'off' : ''}">
-      <div class="an-mng-who"><b>${esc(mail)}</b><span class="an-mng-dep">${esc(depNombre(a.deporte))}</span></div>
+      <button class="an-mng-foto ${a.foto ? 'tiene' : ''}" data-an-foto="${esc(a.uid)}" title="${ML('Set photo', 'Poner foto')}">
+        ${a.foto ? `<img src="${rutaFotoAnalista(a.foto)}" alt="">` : `<span class="an-mng-foto-mas">+</span>`}
+      </button>
+      <div class="an-mng-who"><b>${esc(mail)}</b><span class="an-mng-dep">${esc(depNombre(a.deporte))}${a.foto ? ` · ${esc(a.foto)}` : ''}</span></div>
       <div class="an-mng-id">
         <input class="an-mng-inp" data-an-nombre="${esc(a.uid)}" placeholder="${ML('Full name', 'Nombre')}" value="${esc(a.nombre || '')}" maxlength="40">
         <input class="an-mng-inp firma" data-an-firma="${esc(a.uid)}" placeholder="${ML('Signature / alias', 'Firma / alias')}" value="${esc(a.firma || a.alias || '')}" maxlength="24">
@@ -795,6 +800,21 @@ function enlazarAnalistas() {
     const uid = b.dataset.anToggle, a = _analistas.find(x => x.uid === uid); if (!a) return;
     b.disabled = true;
     try { await fijarAnalista(uid, { activo: a.activo === false }); _analistas = await listarAnalistas(); pintarTab(); } catch (_) { b.disabled = false; }
+  });
+  _cont.querySelectorAll('[data-an-foto]').forEach(b => b.onclick = () => {
+    const uid = b.dataset.anFoto, a = _analistas.find(x => x.uid === uid); if (!a) return;
+    abrirSelectorFotos({
+      actual: a.foto || null, uidAnalista: uid,
+      titulo: ML('Assign a photo', 'Asignar una foto'),
+      sub: esc(a.email || a.nombre || uid),
+      txtOk: ML('Assign', 'Asignar'), txtCancel: ML('Cancel', 'Cancelar'),
+      secHombres: ML('Men', 'Hombres'), secMujeres: ML('Women', 'Mujeres'),
+      onGuardar: async (foto) => {
+        const ok = await asignarFotoAnalista(uid, foto, a.firma || a.nombre || null);
+        if (ok) { _analistas = await listarAnalistas(); pintarTab(); }
+        return ok;
+      },
+    });
   });
   _cont.querySelectorAll('[data-an-dep]').forEach(sel => sel.onchange = async () => {
     const uid = sel.dataset.anDep;
