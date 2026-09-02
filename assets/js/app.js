@@ -99,8 +99,8 @@ async function cargarLista() {
   if (proyActiva) {
     await pintarParlay(cont, {
       sport: proyActiva,
-      nivel: planActual(),
-      modo: (planActual() === 'pro' ? 'pro' : 'premium'),
+      nivel: _esAdmin ? 'premium' : planActual(),
+      modo: (_esAdmin || planActual() === 'premium') ? 'premium' : 'pro',
       abrirPlanes: () => mostrarPantalla('pricing'),
     });
     return;
@@ -320,12 +320,56 @@ function mostrarVista(v) {
   const cont = $('lista');
   if (!cont) return;
   if (v === 'analisis') {
-    pintarSenales(cont, { esPremium: planActual() === 'premium', abrirPlanes: () => mostrarPantalla('pricing') });
+    pintarSenales(cont, { esPremium: _esAdmin || planActual() === 'premium', nivel: _esAdmin ? 'premium' : planActual(), abrirPlanes: () => mostrarPantalla('pricing') });
   } else if (v === 'partidos' || v === 'vivo') {
     proyActiva = null; cargarLista();
+  } else if (v === 'perfil') {
+    pintarPerfil(cont);
   }
   // 'perfil': se maneja aparte; no cambia el contenido aquí.
 }
+
+/* -------- Vista Perfil: feed de analistas seguidos + notificaciones -------- */
+function pintarPerfil(cont) {
+  const ES = idiomaActual() === 'es';
+  const Lp = (en, es) => ES ? es : en;
+  const esPrem = _esAdmin || planActual() === 'premium';
+
+  if (!esPrem) {
+    cont.innerHTML = `<div class="pf"><div class="pf-lock">
+      <div class="pf-lock-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+      <h2>${Lp('Your analyst feed', 'Tu feed de analistas')}</h2>
+      <p>${Lp('Upgrade to Premium to follow analysts and get their signals — with notifications — right here.', 'Pasa a Premium para seguir analistas y recibir sus señales — con notificaciones — aquí mismo.')}</p>
+      <button class="pf-cta" id="pf-cta">${Lp('See Premium plan', 'Ver plan Premium')}</button>
+    </div></div>`;
+    cont.querySelector('#pf-cta')?.addEventListener('click', () => mostrarPantalla('pricing'));
+    return;
+  }
+
+  let notif; try { notif = JSON.parse(localStorage.getItem('se_notif') || '{}'); } catch (_) { notif = {}; }
+  notif = { push: notif.push !== false, nuevas: notif.nuevas !== false, resultados: !!notif.resultados };
+  let seguidos = []; try { seguidos = JSON.parse(localStorage.getItem('se_seguidos') || '[]'); } catch (_) {}
+
+  const sw = (k, txt, sub) => `<label class="pf-sw"><div><b>${txt}</b><em>${sub}</em></div><input type="checkbox" data-n="${k}" ${notif[k] ? 'checked' : ''}><span class="pf-sw-t"></span></label>`;
+
+  cont.innerHTML = `<div class="pf">
+    <div class="pf-head"><h2>${Lp('Your feed', 'Tu feed')}</h2><p>${Lp('Signals from the analysts you follow, all in one place.', 'Las señales de los analistas que sigues, todas en un lugar.')}</p></div>
+    <div class="pf-card pf-notif">
+      <div class="pf-card-h"><span class="pf-card-ic">${(IC && IC.campana) || '🔔'}</span><h3>${Lp('Notifications', 'Notificaciones')}</h3></div>
+      ${sw('push', Lp('Push notifications', 'Notificaciones push'), Lp('Alerts on this device', 'Avisos en este dispositivo'))}
+      ${sw('nuevas', Lp('New signals', 'Nuevas señales'), Lp('When a followed analyst posts', 'Cuando un analista que sigues publica'))}
+      ${sw('resultados', Lp('Results & outcomes', 'Resultados'), Lp('How previous signals landed', 'Cómo salieron las señales anteriores'))}
+    </div>
+    <div class="pf-card">
+      <div class="pf-card-h"><span class="pf-card-ic">${(IC && IC.estrella) || '★'}</span><h3>${Lp('Followed analysts', 'Analistas seguidos')}</h3></div>
+      <div id="pf-signals"><div class="pf-empty">${Lp("You're not following anyone yet. Follow an analyst from the Signals tab and their picks will appear here.", 'Aún no sigues a nadie. Sigue a un analista desde la sección de Señales y sus picks aparecerán aquí.')}</div></div>
+    </div>
+  </div>`;
+
+  cont.querySelectorAll('[data-n]').forEach(chk => chk.onchange = () => {
+    notif[chk.dataset.n] = chk.checked;
+    try { localStorage.setItem('se_notif', JSON.stringify(notif)); } catch (_) {}
+  });
 
 /* Punto verde en "Análisis" (móvil y escritorio) cuando hay señales publicadas. */
 function actualizarPuntoSenales() {
