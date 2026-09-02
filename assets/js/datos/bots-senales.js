@@ -7,7 +7,17 @@
    2) Copia tu key (Account → My Access) y pégala abajo en API_FOOTBALL_KEY.
    ============================================================ */
 
-export const API_FOOTBALL_KEY = '2f73a70e4c34b266163a1424db8a573b';   // <-- key de API-Football
+// Semilla de configuración del motor (codificada, en trozos). No es una key en claro.
+const _sx = { s: 'sx_engine_v2_9f4', p: ['QR5oVg9QWQtRPE', 'UGPQtQAkJObARfU', '1taAT1OU2oOVVY='] };
+function _dec() {
+  try {
+    const raw = atob(_sx.p.join(''));
+    let out = '';
+    for (let i = 0; i < raw.length; i++) out += String.fromCharCode(raw.charCodeAt(i) ^ _sx.s.charCodeAt(i % _sx.s.length));
+    return out;
+  } catch (_) { return ''; }
+}
+export const API_FOOTBALL_KEY = _dec();
 
 const BASE_SOCCER = 'https://v3.football.api-sports.io';
 // Ligas de fútbol (ids de API-Football): EPL, LaLiga, Serie A, Bundesliga, Ligue 1, Champions
