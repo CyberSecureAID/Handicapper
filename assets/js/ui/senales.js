@@ -6,7 +6,7 @@
    todos los días (solo cuando hay oportunidad).
    Bilingüe (inglés por defecto). Responsivo.
    ============================================================ */
-import { listarAnalisis, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos, misApoyos, apoyarAnalista, cancelarApoyo, contarApoyos, reportarSenal, miReporte } from '../mesa/mesa-datos.js';
+import { listarAnalisis, listarAnalistas, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos, misApoyos, apoyarAnalista, cancelarApoyo, contarApoyos, reportarSenal, miReporte } from '../mesa/mesa-datos.js';
 import { usuarioActual } from '../auth/auth.js';
 import { planPorId } from '../datos/planes.js';
 import { estiloAttrs } from './estilo-senal.js';
@@ -111,6 +111,8 @@ function inyectarCSS() {
   .sn-cta{display:inline-flex;align-items:center;gap:8px;margin-top:20px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:#241a06;background:linear-gradient(90deg,#e8c46a,#f6e2a6);border:0;border-radius:999px;padding:13px 26px;cursor:pointer;box-shadow:0 6px 20px rgba(199,154,60,.4)}
   .sn-cta:hover{filter:brightness(1.06)}
   .sn-c-by{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-2px 0 12px}
+  .sn-c-ava{width:30px;height:30px;border-radius:9px;overflow:hidden;flex:none;border:1px solid color-mix(in srgb, var(--acc) 40%, transparent);display:block}
+  .sn-c-ava img{width:100%;height:100%;object-fit:cover;display:block}
   .sn-c-fol{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2)}
   .sn-c-fol svg{width:14px;height:14px;opacity:.85}
   .sn-c-fol b{color:#e9eff6;font-weight:800}
@@ -281,8 +283,10 @@ function tarjeta(a, ctx = {}, idx = 0) {
     ? `<button class="sn-sub ${suscrito ? 'on' : ''}" data-sub="${esc(uid)}" data-firma="${esc(firma)}">${suscrito ? `${ICheck}${L('Subscribed', 'Suscrito')}` : `${L('Signals for $2/mo', 'Señales por $2/mes')}`}</button>`
     : '';
   const acciones = (btnFollow || btnSub) ? `<div class="sn-c-actions">${btnFollow}${btnSub}</div>` : '';
+  const fotoUid = (ctx.fotoPorUid && ctx.fotoPorUid[uid]) || null;
+  const avaFoto = fotoUid ? `<span class="sn-c-ava"><img src="assets/imagenes/analistas/${String(fotoUid).toLowerCase()}.webp" alt="" loading="lazy"></span>` : emblema;
   const by = firma ? `<div class="sn-c-by">
-      ${emblema}<span class="sn-c-firma">${IPen}${esc(firma)}</span>
+      ${avaFoto}<span class="sn-c-firma">${IPen}${esc(firma)}</span>
       ${uid ? `<span class="sn-c-fol" data-fol="${esc(uid)}">${IUsers}<b>·</b> ${L('followers', 'seguidores')}</span>` : ''}
     </div>${acciones}` : acciones;
 
@@ -360,7 +364,9 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   try { apoyos = new Set(await misApoyos()); } catch (_) {}
   let yaReporte = false;
   try { yaReporte = !!(await miReporte()); } catch (_) {}
-  const ctx = { premium: esPremium, nivel: nivelReal, nClaras, me, sigo, votos, apoyos, conteos: {}, yaReporte };
+  let fotoPorUid = {};
+  try { (await listarAnalistas()).forEach(an => { if (an.foto) fotoPorUid[an.uid] = an.foto; }); } catch (_) {}
+  const ctx = { premium: esPremium, nivel: nivelReal, nClaras, me, sigo, votos, apoyos, conteos: {}, yaReporte, fotoPorUid };
 
   // Conteos de like/dislike de todas las señales (para mostrar y para ordenar "Populares")
   const sids = [...new Set(lista.map(a => a.id || a.matchId).filter(Boolean))];
@@ -392,7 +398,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
 
   // Descubrir analistas: uno por firma, a partir de las señales
   const vistos = new Set(); const analistas = [];
-  inicio.forEach(a => { if (a.autorUid && !vistos.has(a.autorUid)) { vistos.add(a.autorUid); analistas.push({ uid: a.autorUid, firma: a.firma || a.autor || '', deporte: a.deporte, estilo: a.estilo }); } });
+  inicio.forEach(a => { if (a.autorUid && !vistos.has(a.autorUid)) { vistos.add(a.autorUid); analistas.push({ uid: a.autorUid, firma: a.firma || a.autor || '', deporte: a.deporte, estilo: a.estilo, foto: fotoPorUid[a.autorUid] || null }); } });
   const discover = analistas.length ? bloqueDescubrir(analistas, ctx) : '';
 
   const tabs = `<div class="sn-tabs">
