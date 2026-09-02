@@ -30,10 +30,11 @@ let _ingresos = {};
 const U_POR_PAGINA = 8;
 const ML = (en, es) => _mesaLang === 'es' ? es : en;
 const DEPORTES = {
-  beisbol: { en: 'Baseball', es: 'Béisbol', ligas: ['mlb'] },
-  basket:  { en: 'Basketball', es: 'Básquet', ligas: ['nba'] },
-  hockey:  { en: 'Ice hockey', es: 'Hockey', ligas: ['nhl'] },
-  futbol:  { en: 'Soccer', es: 'Fútbol', ligas: ['epl', 'laliga', 'ucl', 'seriea', 'bundes', 'nfl'] },
+  beisbol:   { en: 'Baseball', es: 'Béisbol', ligas: ['mlb'] },
+  basket:    { en: 'Basketball', es: 'Básquet', ligas: ['nba'] },
+  hockey:    { en: 'Ice hockey', es: 'Hockey', ligas: ['nhl'] },
+  americano: { en: 'American football', es: 'Fútbol americano', ligas: ['nfl'] },
+  futbol:    { en: 'Soccer', es: 'Fútbol', ligas: ['epl', 'laliga', 'ucl', 'seriea', 'bundes'] },
 };
 const depNombre = (id) => { const d = DEPORTES[id]; return d ? (_mesaLang === 'es' ? d.es : d.en) : (id || '—'); };
 const ligasDeporte = (id) => (DEPORTES[id] && DEPORTES[id].ligas) || [];
