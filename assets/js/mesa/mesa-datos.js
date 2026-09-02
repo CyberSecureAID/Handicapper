@@ -216,6 +216,34 @@ export async function guardarPerfilAnalista({ nombre, firma, foto }) {
   catch (_) { return false; }
 }
 
+/* ADMIN: asigna (o cambia) la foto de cualquier analista. Libera la anterior. */
+export async function asignarFotoAnalista(uid, fotoId, firma) {
+  const S = _obtenerStore(), db = _obtenerDB();
+  const idNueva = String(fotoId).toLowerCase();
+  try {
+    const ficha = await leerFichaAnalista(uid);
+    if (ficha && ficha.foto && ficha.foto !== idNueva) {
+      try { await S.deleteDoc(S.doc(db, 'fotos', ficha.foto)); } catch (_) {}
+    }
+  } catch (_) {}
+  try {
+    await S.setDoc(S.doc(db, 'fotos', idNueva), { uid, firma: firma || null, fecha: S.serverTimestamp() });
+  } catch (_) { return false; }
+  try { await S.setDoc(S.doc(db, 'analistas', uid), { foto: idNueva }, { merge: true }); return true; }
+  catch (_) { return false; }
+}
+
+/* ADMIN: quita la foto de un analista y la libera. */
+export async function quitarFotoAnalista(uid) {
+  const S = _obtenerStore(), db = _obtenerDB();
+  try {
+    const ficha = await leerFichaAnalista(uid);
+    if (ficha && ficha.foto) { try { await S.deleteDoc(S.doc(db, 'fotos', ficha.foto)); } catch (_) {} }
+  } catch (_) {}
+  try { await S.setDoc(S.doc(db, 'analistas', uid), { foto: null }, { merge: true }); return true; }
+  catch (_) { return false; }
+}
+
 /* ============================================================
    FASE 3 — SEGUIDORES (colección 'seguimientos')
    Doc id = `${seguidorUid}__${analistaUid}` = { seguidorUid, analistaUid, firma, fecha }
