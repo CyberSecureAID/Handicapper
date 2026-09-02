@@ -793,9 +793,9 @@ function enlazarAnalistas() {
   if (btnBots) btnBots.onclick = async () => {
     btnBots.disabled = true; const txt = btnBots.textContent; btnBots.textContent = ML('Publishing…', 'Publicando…');
     try {
-      const { publicarSenalesFutbol, API_FOOTBALL_KEY } = await import('../datos/bots-senales.js');
+      const { publicarTodosLosBots, API_FOOTBALL_KEY } = await import('../datos/bots-senales.js');
       if (!API_FOOTBALL_KEY) { alert(ML('Paste your API-Football key in bots-senales.js first.', 'Primero pega tu key de API-Football en bots-senales.js.')); }
-      else { const r = await publicarSenalesFutbol(guardarAnalisis); alert(r.ok ? ML('Published ', 'Publicadas ') + r.publicadas + ML(' bot signals.', ' señales de bots.') : (r.error || 'Error')); }
+      else { const r = await publicarTodosLosBots(guardarAnalisis); alert(r.ok ? ML('Published ', 'Publicadas ') + r.publicadas + ML(' bot signals.', ' señales de bots.') : (r.error || 'Error')); }
     } catch (e) { alert('Error: ' + ((e && e.message) || e)); }
     btnBots.disabled = false; btnBots.textContent = txt;
   };
