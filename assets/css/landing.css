@@ -7,7 +7,7 @@
   --linea:#242c37; --tinta:#eef2f6; --tinta-2:#aab4c0; --tinta-3:#6b7683;
   --oro-suave:rgba(232,184,75,.14);
   --sombra-tarjeta: inset 0 1px 0 rgba(255,255,255,.06), 0 2px 4px rgba(0,0,0,.5), 0 12px 26px rgba(0,0,0,.5);
-  background: var(--fondo) url('../imagenes/fondos/fondo-pagina.webp') center top / cover no-repeat scroll; color: var(--tinta);
+  background: var(--fondo) url('../imagenes/fondos/fondo-pagina.webp') center / cover fixed no-repeat; color: var(--tinta);
 }
 /* Barra del lobby: transparente y flotante sobre el video (sin franja) */
 #landing-screen .lnav {
@@ -73,20 +73,35 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 
 /* ===================== ADVANCED ANALYTICS ===================== */
 .analytics { max-width: 1200px; margin: 0 auto; padding: 72px 28px; font-family: "Poppins", var(--sans); }
-.an-panel { display: grid; grid-template-columns: 300px 1fr; gap: 44px; align-items: center;
-  background: rgba(13,19,30,.68); border: 1px solid rgba(255,255,255,.07); border-radius: 22px; padding: 46px; backdrop-filter: blur(6px);
-  box-shadow: 0 30px 70px -30px rgba(0,0,0,.7); }
-.an-eyebrow { display: inline-block; font-family: "Poppins", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--oro); margin-bottom: 16px; }
-.an-title { font-family: "Poppins", sans-serif; font-weight: 700; font-size: clamp(24px, 2.3vw, 32px); line-height: 1.16; color: #fff; margin: 0 0 16px; }
-.an-sub { font-family: "Inter", sans-serif; font-size: 15px; line-height: 1.62; color: var(--tinta-2); margin: 0 0 26px; max-width: 320px; }
+.an-panel { display: grid; grid-template-columns: 320px 1fr; gap: 46px; align-items: center;
+  background: linear-gradient(155deg, rgba(16,23,38,.82), rgba(9,13,22,.8)); border: 1px solid rgba(255,255,255,.09); border-radius: 24px; padding: 48px; backdrop-filter: blur(8px);
+  box-shadow: 0 40px 90px -40px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.05); }
+.an-eyebrow { display: flex; align-items: center; gap: 10px; font-family: "Poppins", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--oro); margin-bottom: 18px; }
+.an-eb-mark { width: 15px; height: 15px; flex: none; }
+.an-eb-lines { height: 9px; width: 34px; flex: none; background: repeating-linear-gradient(115deg, rgba(232,196,106,.55) 0 2px, transparent 2px 6px); }
+.an-title { font-family: "Poppins", sans-serif; font-weight: 700; font-size: clamp(26px, 2.5vw, 37px); line-height: 1.12; color: #fff; margin: 0 0 16px; }
+.an-title em { font-style: normal; background: linear-gradient(180deg, #ffe39a, var(--oro)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.an-title-line { display: block; width: 92px; height: 2px; margin-bottom: 22px; background: linear-gradient(90deg, #4a90ff, rgba(74,144,255,0)); }
+.an-sub { font-family: "Inter", sans-serif; font-size: 15px; line-height: 1.62; color: var(--tinta-2); margin: 0 0 26px; max-width: 300px; }
+.an-btn { display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px; border-radius: 12px; cursor: pointer;
+  background: transparent; border: 1.5px solid var(--oro); color: var(--oro); font-family: "Poppins", sans-serif; font-weight: 600; font-size: 14px; transition: all .18s; }
+.an-btn svg { width: 17px; height: 17px; }
+.an-btn:hover { background: rgba(232,196,106,.1); }
 .an-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-.an-card { display: flex; flex-direction: column; background: linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.015)); border: 1px solid rgba(255,255,255,.08); border-radius: 15px; padding: 24px 20px; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
-.an-card:hover { transform: translateY(-4px); border-color: rgba(90,155,255,.42); box-shadow: 0 16px 34px -18px rgba(43,111,255,.5); }
-.an-ic { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px; margin-bottom: 14px; background: rgba(74,144,255,.12); border: 1px solid rgba(74,144,255,.22); color: #5a9bff; }
-.an-ic svg { width: 24px; height: 24px; }
-.an-card h3 { font-family: "Poppins", sans-serif; font-weight: 600; font-size: 15px; color: #fff; margin: 0 0 8px; }
-.an-card p { font-family: "Inter", sans-serif; font-size: 12.5px; line-height: 1.5; color: var(--tinta-2); margin: 0; }
-@media (max-width: 900px) { .an-panel { grid-template-columns: 1fr; gap: 30px; padding: 32px 22px; } .an-cards { grid-template-columns: 1fr 1fr; gap: 16px; } }
+.an-card { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; overflow: hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.008)); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px; padding: 30px 20px 26px; transition: transform .18s ease, border-color .18s ease; }
+.an-card::after { content: ''; position: absolute; left: 14%; right: 14%; bottom: 0; height: 2px; border-radius: 2px; }
+.an-card.b::after { background: linear-gradient(90deg, transparent, #4a90ff, transparent); box-shadow: 0 0 16px 1px rgba(74,144,255,.75); }
+.an-card.r::after { background: linear-gradient(90deg, transparent, #e2474a, transparent); box-shadow: 0 0 16px 1px rgba(226,71,74,.72); }
+.an-card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,.18); }
+.an-ic { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; margin-bottom: 16px;
+  border: 1.5px solid rgba(74,144,255,.5); background: radial-gradient(circle, rgba(74,144,255,.16), transparent 70%); color: #5a9bff; }
+.an-ic svg { width: 26px; height: 26px; }
+.an-card h3 { font-family: "Poppins", sans-serif; font-weight: 600; font-size: 16px; color: #fff; margin: 0 0 10px; }
+.an-cline { display: block; width: 28px; height: 2px; background: rgba(74,144,255,.55); border-radius: 2px; margin-bottom: 13px; }
+.an-card p { font-family: "Inter", sans-serif; font-size: 12.5px; line-height: 1.5; color: var(--tinta-2); margin: 0; max-width: 185px; }
+@media (max-width: 900px) { .an-panel { grid-template-columns: 1fr; gap: 30px; padding: 32px 22px; } .an-cards { grid-template-columns: 1fr 1fr; gap: 14px; } }
 
 /* ===================== COMPARE PLAYERS ===================== */
 .compare { max-width: 1080px; margin: 0 auto; padding: 60px 28px; font-family: "Poppins", var(--sans); }
