@@ -90,11 +90,13 @@ async function generar({ guardar, uid, firma, autor, color, deporte, ligas, max 
   return publicadas;
 }
 
-/* Publica los 3 bots (fútbol, béisbol, básquet). Lo dispara la automatización diaria. */
+/* Publica los 5 bots (uno por categoría). Lo dispara la automatización diaria. */
 export async function publicarTodosLosBots(guardar) {
   let total = 0;
   total += await generar({ guardar, uid: 'bot-alejandro', firma: 'Alejandro R.', autor: 'Alejandro Ruiz', color: '#4a90ff', deporte: 'futbol', ligas: ['epl', 'laliga', 'seriea', 'bundes', 'ucl'], max: 2 }).catch(() => 0);
   total += await generar({ guardar, uid: 'bot-miguel', firma: 'Miguel S.', autor: 'Miguel Santos', color: '#e23b3f', deporte: 'beisbol', ligas: ['mlb'], max: 2 }).catch(() => 0);
   total += await generar({ guardar, uid: 'bot-daniel', firma: 'Daniel V.', autor: 'Daniel Vega', color: '#8a5cf6', deporte: 'basket', ligas: ['nba'], max: 2 }).catch(() => 0);
+  total += await generar({ guardar, uid: 'bot-ivan', firma: 'Iván T.', autor: 'Iván Torres', color: '#22b8c0', deporte: 'hockey', ligas: ['nhl'], max: 2 }).catch(() => 0);
+  total += await generar({ guardar, uid: 'bot-ricardo', firma: 'Ricardo M.', autor: 'Ricardo Méndez', color: '#e08a2a', deporte: 'americano', ligas: ['nfl'], max: 2 }).catch(() => 0);
   return { ok: true, publicadas: total };
 }

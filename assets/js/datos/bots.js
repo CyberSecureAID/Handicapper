@@ -46,6 +46,32 @@ export const BOTS = [
     fuente: 'espn',
     estilo: { color: '#8a5cf6' },
   },
+  {
+    uid: 'bot-ivan',
+    nombre: 'Iván Torres',
+    firma: 'Iván T.',
+    deporte: 'hockey',
+    foto: 'q',                       // assets/imagenes/analistas/q.webp
+    email: 'ivan@sportsexpectations.io',
+    activo: true,
+    configurado: true,
+    esBot: true,
+    fuente: 'espn',
+    estilo: { color: '#22b8c0' },
+  },
+  {
+    uid: 'bot-ricardo',
+    nombre: 'Ricardo Méndez',
+    firma: 'Ricardo M.',
+    deporte: 'americano',
+    foto: 'p',                       // assets/imagenes/analistas/p.webp
+    email: 'ricardo@sportsexpectations.io',
+    activo: true,
+    configurado: true,
+    esBot: true,
+    fuente: 'espn',
+    estilo: { color: '#e08a2a' },
+  },
 ];
 
 /* ids de las fotos que ocupan los bots (para bloquearlas en el selector). */
