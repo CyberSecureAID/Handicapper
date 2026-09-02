@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Help Center · Sports Expectations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#070b12;--panel:rgba(13,19,30,.7);--line:rgba(255,255,255,.08);--tx:#e9eef5;--tx2:#aab4c0;--tx3:#6b7683;--oro:#e8c46a}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--tx);font-family:"Inter",system-ui,sans-serif;line-height:1.65}
+    a{color:var(--oro);text-decoration:none}
+    .lg-nav{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;
+      padding:16px 28px;background:rgba(7,11,18,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+    .lg-brand{display:flex;align-items:center;gap:11px}
+    .lg-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:rgba(232,196,106,.12);border:1px solid rgba(232,196,106,.3);color:var(--oro)}
+    .lg-mark svg{width:21px;height:21px}
+    .lg-brand b{font-family:"Poppins",sans-serif;font-weight:700;font-size:15px;color:#fff}
+    .lg-brand span{display:block;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3)}
+    .lg-back{font-size:13.5px;font-weight:600;padding:9px 16px;border:1px solid var(--line);border-radius:10px;color:var(--tx)}
+    .lg-back:hover{border-color:var(--oro);color:var(--oro)}
+    .lg-wrap{max-width:860px;margin:0 auto;padding:56px 28px 90px}
+    .lg-eyebrow{font-family:"Poppins",sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--oro)}
+    h1{font-family:"Poppins",sans-serif;font-weight:800;font-size:clamp(30px,4vw,44px);color:#fff;margin:12px 0 8px;line-height:1.1}
+    .lg-updated{color:var(--tx3);font-size:13px;margin-bottom:8px}
+    .lg-note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;font-size:13.5px;color:var(--tx2);margin:26px 0 40px}
+    h2{font-family:"Poppins",sans-serif;font-weight:700;font-size:20px;color:#fff;margin:38px 0 12px;scroll-margin-top:80px}
+    h2 .num{color:var(--oro);margin-right:8px}
+    p,li{font-size:15px;color:var(--tx2)}
+    ul{padding-left:20px;margin:10px 0}
+    li{margin-bottom:7px}
+    strong{color:var(--tx)}
+    .lg-toc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 24px;margin-bottom:44px}
+    .lg-toc h3{font-family:"Poppins",sans-serif;font-size:13px;color:#fff;margin:0 0 12px;text-transform:uppercase;letter-spacing:.08em}
+    .lg-toc ol{margin:0;padding-left:20px;columns:2;column-gap:32px}
+    .lg-toc li{font-size:13.5px;margin-bottom:6px}
+    .lg-foot{border-top:1px solid var(--line);padding:26px 28px;text-align:center;font-size:12.5px;color:var(--tx3)}
+    @media(max-width:640px){.lg-toc ol{columns:1}}
+  </style>
+</head>
+<body>
+  <nav class="lg-nav">
+    <a href="index.html" class="lg-brand">
+      <span class="lg-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l5-9 4 5 3-7 6 11z"/><circle cx="18" cy="5" r="2"/></svg></span>
+      <div><b>Sports Expectations</b><span>Data. Stats. Results.</span></div>
+    </a>
+    <a href="index.html" class="lg-back">← Back to home</a>
+  </nav>
+  <style>
+    .hc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin:10px 0 36px}
+    .hc-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
+    .hc-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(232,196,106,.12);border:1px solid rgba(232,196,106,.3);color:var(--oro);margin-bottom:14px}
+    .hc-ic svg{width:22px;height:22px}
+    .hc-card h3{font-family:"Poppins",sans-serif;font-size:16.5px;color:#fff;margin:0 0 6px}
+    .hc-card>p{color:var(--tx3);font-size:13.5px;line-height:1.6;margin:0 0 12px}
+    .hc-card a{display:block;font-size:14px;padding:8px 0;border-top:1px solid var(--line);color:var(--tx2);transition:color .15s}
+    .hc-card a:hover{color:var(--oro)}
+    .hc-contact{background:linear-gradient(180deg,rgba(232,196,106,.09),rgba(232,196,106,.02));border:1px solid rgba(232,196,106,.28);border-radius:16px;padding:30px;text-align:center;margin-top:14px}
+    .hc-contact h3{font-family:"Poppins",sans-serif;font-size:20px;color:#fff;margin:0 0 8px}
+    .hc-contact p{color:var(--tx2);margin:0 0 18px;line-height:1.6}
+    .hc-btn{display:inline-block;background:var(--oro);color:#2a1c00;font-weight:700;padding:12px 24px;border-radius:11px;font-family:"Poppins",sans-serif}
+  </style>
+  <main class="lg-wrap">
+    <span class="lg-eyebrow">Support</span>
+    <h1>Help Center</h1>
+    <p class="lg-updated">Guides and answers to get the most out of Sports Expectations.</p>
+    <div class="lg-note">Looking for a quick answer? Most questions are covered in our <a href="faq.html">FAQ</a>. For anything else, we&rsquo;re one email away.</div>
+    <div class="hc-grid">
+      <div class="hc-card"><div class="hc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l5-9 4 5 3-7 6 11z"/><circle cx="18" cy="5" r="2"/></svg></div><h3>Getting started</h3><p>What Sports Expectations is and how to use it.</p><a href="faq.html">What is this platform?</a><a href="faq.html">How the statistics work</a><a href="index.html">Reading a match comparison</a></div>
+      <div class="hc-card"><div class="hc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></div><h3>Account &amp; billing</h3><p>Subscriptions, cancellations and payments.</p><a href="faq.html">Plans and what they include</a><a href="faq.html">How to cancel</a><a href="terms.html#s7b">Refund policy explained</a><a href="faq.html">Is my payment secure?</a></div>
+      <div class="hc-card"><div class="hc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c0-3.4 2.9-5.3 6.5-5.3s6.5 1.9 6.5 5.3"/></svg></div><h3>Analysts &amp; signals</h3><p>Following analysts and receiving signals.</p><a href="faq.html">What are analyst signals?</a><a href="faq.html">What does following cost?</a><a href="index.html">Your signals inbox</a></div>
+      <div class="hc-card"><div class="hc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg></div><h3>Data &amp; accuracy</h3><p>Where the numbers come from and their limits.</p><a href="faq.html">Our data sources</a><a href="faq.html">Do you guarantee wins?</a><a href="faq.html">Is this gambling advice?</a></div>
+      <div class="hc-card"><div class="hc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div><h3>Privacy &amp; security</h3><p>How we handle and protect your data.</p><a href="privacy.html">Privacy Policy</a><a href="privacy.html">Your data rights</a><a href="terms.html">Terms of Service</a></div>
+      <div class="hc-card"><div class="hc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H5.2L4 18z"/></svg></div><h3>Contact &amp; status</h3><p>Reach us and check the service.</p><a href="mailto:support@sportsexpectations.io">Contact support</a><a href="mailto:legal@sportsexpectations.io">Legal enquiries</a></div>
+    </div>
+    <div class="hc-contact">
+      <h3>Still need help?</h3>
+      <p>Our team reads every message. Tell us what&rsquo;s going on and we&rsquo;ll get back to you as soon as we can.</p>
+      <a class="hc-btn" href="mailto:support@sportsexpectations.io">Contact support</a>
+    </div>
+  </main>
+
+</main>
+
+  <footer class="lg-foot">© 2026 Sports Expectations. All rights reserved. · Informational analysis, not betting advice.</footer>
+</body>
+</html>
