@@ -264,7 +264,8 @@ function heroHTML(cfg, meta, cargando, variante) {
     `<span>${L('Date', 'Fecha')} · <b>${esc(meta.fecha)}</b></span>`,
     `<span class="ply-count-chip"><b>9</b> ${L('players', 'jugadores')} · ${esc(noun)}</span>`,
   ].join('');
-  return `<div class="ply-hero" style="background-image:url('${imgURL(cfg)}')">
+  const posBg = cfg._sport === 'mlb' ? '75%' : '72%';   // móvil: mueve la foto para que salga el atleta
+  return `<div class="ply-hero" style="background-image:url('${imgURL(cfg)}');background-position:${posBg} center">
     <div class="ply-hero-veil"></div>
     <div class="ply-hero-in">
       <div class="ply-chips">${chips}</div>
