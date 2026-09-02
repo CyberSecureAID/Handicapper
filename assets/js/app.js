@@ -446,6 +446,8 @@ function initProyeccion() {
   // Botón Premium (móvil): despliega las proyecciones reusando los handlers de arriba
   const pBtn = document.getElementById('premium-btn');
   const proBtn = document.getElementById('pro-btn');
+  const sigBtn = document.getElementById('signals-btn');
+  if (sigBtn) sigBtn.addEventListener('click', (e) => { e.stopPropagation(); abrirDirectorioSenales(); });
   const pPop = document.getElementById('premium-pop');
   if (pBtn && pPop) {
     pBtn.addEventListener('click', (e) => { e.stopPropagation(); proyModo = 'premium'; const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); });
@@ -532,6 +534,76 @@ async function publicarBotsSiEsNuevoDia() {
     const r = await botMod.publicarTodosLosBots(datosMod.guardarAnalisis);
     if (r && r.ok) { try { localStorage.setItem('bots-dia', hoy); } catch (_) {} }
   } catch (_) {}
+}
+
+/* -------- Directorio de analistas (botón "Signals") -------- */
+async function abrirDirectorioSenales() {
+  const ES = idiomaActual() === 'es';
+  const Lp = (en, es) => ES ? es : en;
+  const DEP = { futbol: Lp('Soccer','Fútbol'), beisbol: Lp('Baseball','Béisbol'), basket: Lp('Basketball','Básquet'), hockey: Lp('Ice hockey','Hockey'), americano: Lp('American football','Fútbol americano') };
+  const ov = document.createElement('div');
+  ov.className = 'sd-ov';
+  ov.innerHTML = `<div class="sd-modal">
+    <div class="sd-head">
+      <div><h2>${Lp('Analyst signals', 'Señales de analistas')}</h2><p>${Lp('Follow an analyst to get their picks in your inbox.', 'Sigue a un analista para recibir sus picks en tu buzón.')}</p></div>
+      <button class="sd-x" id="sd-x" aria-label="Close">✕</button>
+    </div>
+    <div class="sd-note">${Lp('Analysts post when they spot a high-probability edge — they are not required to post every day.', 'Los analistas publican cuando ven una oportunidad de alta probabilidad — no están obligados a publicar todos los días.')}</div>
+    <div id="sd-list"><div class="pf-empty"><div class="sn-spin"></div></div></div>
+  </div>`;
+  document.body.appendChild(ov);
+  const cerrar = () => ov.remove();
+  ov.querySelector('#sd-x').onclick = cerrar;
+  ov.addEventListener('click', e => { if (e.target === ov) cerrar(); });
+
+  let datos, bots, analistas, sigo;
+  try {
+    datos = await import('./mesa/mesa-datos.js');
+    bots = await import('./datos/bots.js');
+    const [an, sg] = await Promise.all([datos.listarAnalistas().catch(() => []), datos.misSeguidos().catch(() => [])]);
+    analistas = an.filter(a => a.activo !== false); sigo = new Set(sg);
+  } catch (_) { ov.querySelector('#sd-list').innerHTML = `<div class="pf-empty">${Lp('Could not load.', 'No se pudo cargar.')}</div>`; return; }
+
+  const rows = await Promise.all(analistas.map(async a => {
+    let f = 0; try { f = await datos.contarSeguidores(a.uid); } catch (_) {}
+    const bot = bots.botPorUid(a.uid);
+    if (bot) f = bots.seguidoresBot(bot, f);
+    const likes = (bot && bot.likes) || 0;
+    const prom = bot ? (a.deporte === 'futbol' || a.deporte === 'beisbol' ? '1–2' : '1') : '—';
+    return { a, f, likes, prom };
+  }));
+  rows.sort((x, y) => y.f - x.f);
+
+  const foto = (id) => id ? `<img src="assets/imagenes/analistas/${String(id).toLowerCase()}.webp" alt="" loading="lazy">` : '<span class="sd-ini">★</span>';
+  const list = rows.map(({ a, f, likes, prom }) => {
+    const sig = sigo.has(a.uid);
+    return `<div class="sd-row" style="--acc:${(a.estilo && a.estilo.color) || '#e8b84b'}">
+      <div class="sd-ava">${foto(a.foto)}</div>
+      <div class="sd-info">
+        <b>${esc(a.firma || a.nombre || '')}</b>
+        <span class="sd-sport">${esc(DEP[a.deporte] || a.deporte || '')}</span>
+        <div class="sd-stats">
+          <span>👥 <b>${f.toLocaleString()}</b> ${Lp('followers','seguidores')}</span>
+          <span>👍 <b>${likes.toLocaleString()}</b></span>
+          <span>📊 <b>${prom}</b> ${Lp('/day','/día')}</span>
+        </div>
+      </div>
+      <button class="sd-follow ${sig ? 'on' : ''}" data-sdfollow="${esc(a.uid)}" data-sdfirma="${esc(a.firma || '')}">${sig ? Lp('Following','Siguiendo') : Lp('Follow','Seguir')}</button>
+    </div>`;
+  }).join('');
+  ov.querySelector('#sd-list').innerHTML = list || `<div class="pf-empty">${Lp('No analysts yet.','Aún no hay analistas.')}</div>`;
+
+  ov.querySelectorAll('[data-sdfollow]').forEach(b => b.onclick = async () => {
+    const uid = b.dataset.sdfollow, firma = b.dataset.sdfirma || null;
+    const seguir = !sigo.has(uid);
+    if (seguir && !confirm(Lp('Follow this analyst for $2/mo? You will get their signals in your inbox.', '¿Seguir a este analista por $2/mes? Recibirás sus señales en tu buzón.'))) return;
+    b.disabled = true;
+    try {
+      if (seguir) { await datos.seguirAnalista(uid, firma); sigo.add(uid); b.classList.add('on'); b.textContent = Lp('Following','Siguiendo'); }
+      else { await datos.dejarDeSeguir(uid); sigo.delete(uid); b.classList.remove('on'); b.textContent = Lp('Follow','Seguir'); }
+    } catch (_) {}
+    b.disabled = false;
+  });
 }
 
 async function onSesion(usuario, extra) {  pintarCuenta(usuario);
