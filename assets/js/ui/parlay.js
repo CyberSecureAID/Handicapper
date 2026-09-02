@@ -28,46 +28,46 @@ const CACHE = new Map();   // sport -> { jugadores, meta, ts }
 const DEMO_MLB = [
   { rank:1, nombre:'CJ Abrams', equipoAbrev:'WSH', rivalAbrev:'COL', prob:79, confianza:'media',
     tags:['RHP','Gabriel Hughes · 6.54', () => L('Slot 1','Turno 1')],
-    factores:['Opponent 6.54 ERA, very hittable','Top of the order','LHB vs RHP'], riesgos:['Lineup not confirmed'] },
+    factores:['Opponent 6.54 ERA, very hittable','Top of the order','LHB vs RHP'], riesgos:[] },
   { rank:2, nombre:'Bobby Witt Jr.', equipoAbrev:'KC', rivalAbrev:'TOR', prob:78, confianza:'media',
     tags:['RHP','Spencer Arrighetti · 4.73', () => L('Slot 2','Turno 2')],
-    factores:['Elite contact and speed','Starter 4.73 ERA','Top of the order'], riesgos:['Night game: lineup TBC'] },
+    factores:['Elite contact and speed','Starter 4.73 ERA','Top of the order'], riesgos:[] },
   { rank:3, nombre:'Gabriel Moreno', equipoAbrev:'ARI', rivalAbrev:'SF', prob:77, confianza:'media',
     tags:['RHP','Landen Roupp · 4.34', () => L('Slot 5','Turno 5')],
-    factores:['.303 AVG (7th in MLB)','Low strikeout rate','Opponent allows contact'], riesgos:['Usually bats 5th–6th'] },
+    factores:['.303 AVG (7th in MLB)','Low strikeout rate','Opponent allows contact'], riesgos:[] },
 ];
 const DEMO_SOCCER = [
   { rank:1, nombre:'Elite Striker', equipoAbrev:'HOME', rivalAbrev:'AWY', prob:64, confianza:'media',
     tags:['ST', () => L('vs AWY · 1.8 GA','vs AWY · 1.8 GC'), '22 G'],
-    factores:[L('Opponent concedes 1.80 goals/game','El rival encaja 1.80 goles/partido'), L('Plays at home','Juega en casa'), L('In form: 4 goals in 5','En forma: 4 goles en 5')], riesgos:[L('Lineup not confirmed','Alineación no confirmada')] },
+    factores:[L('Opponent concedes 1.80 goals/game','El rival encaja 1.80 goles/partido'), L('Plays at home','Juega en casa'), L('In form: 4 goals in 5','En forma: 4 goles en 5')], riesgos:[] },
   { rank:2, nombre:'Second Forward', equipoAbrev:'CLB', rivalAbrev:'OPP', prob:41, confianza:'media',
     tags:['FW', () => L('vs OPP · 1.5 GA','vs OPP · 1.5 GC'), '14 G'],
-    factores:[L('Attacking position','Posición de ataque'), L('14 goals this season','14 goles en la temporada')], riesgos:[L('Away from home','Juega de visita')] },
+    factores:[L('Attacking position','Posición de ataque'), L('14 goals this season','14 goles en la temporada')], riesgos:[] },
   { rank:3, nombre:'Winger', equipoAbrev:'TMX', rivalAbrev:'RVL', prob:33, confianza:'baja',
     tags:['LW', () => L('vs RVL · 1.3 GA','vs RVL · 1.3 GC'), '9 G'],
-    factores:[L('Takes penalties','Cobra penales'), L('Plays at home','Juega en casa')], riesgos:[L('Solid opposing defense','Defensa rival sólida')] },
+    factores:[L('Takes penalties','Cobra penales'), L('Plays at home','Juega en casa')], riesgos:[] },
 ];
 const DEMO_NBA = [
   { rank:1, nombre:'Elite Scorer', equipoAbrev:'HOME', rivalAbrev:'AWY', prob:84, confianza:'media',
     tags:[() => L('31.2 proj','31.2 proy'), () => L('vs AWY · 119 allowed','vs AWY · 119 perm.'), '29.5 PPG'],
-    factores:[L('Opponent allows 119 pts/game','El rival permite 119 pts/partido'), L('High-pace game','Partido de ritmo alto'), L('Plenty of minutes','Muchos minutos')], riesgos:[L('Lineup not confirmed','Alineación no confirmada')] },
+    factores:[L('Opponent allows 119 pts/game','El rival permite 119 pts/partido'), L('High-pace game','Partido de ritmo alto'), L('Plenty of minutes','Muchos minutos')], riesgos:[] },
   { rank:2, nombre:'Primary Option', equipoAbrev:'CLB', rivalAbrev:'OPP', prob:69, confianza:'media',
     tags:[() => L('25.8 proj','25.8 proy'), () => L('vs OPP · 114 allowed','vs OPP · 114 perm.'), '25.0 PPG'],
-    factores:[L('Scorer averaging 25.0','Anotador de 25.0 de promedio'), L('Heavy minutes','Muchos minutos')], riesgos:[L('Away from home','Juega de visita')] },
+    factores:[L('Scorer averaging 25.0','Anotador de 25.0 de promedio'), L('Heavy minutes','Muchos minutos')], riesgos:[] },
   { rank:3, nombre:'Secondary Scorer', equipoAbrev:'TMX', rivalAbrev:'RVL', prob:55, confianza:'baja',
     tags:[() => L('21.4 proj','21.4 proy'), () => L('vs RVL · 116 allowed','vs RVL · 116 perm.'), '20.1 PPG'],
-    factores:[L('Usage up with a starter out','Más protagonismo por una baja')], riesgos:[L('Rotation/minutes risk','Riesgo de minutos')] },
+    factores:[L('Usage up with a starter out','Más protagonismo por una baja')], riesgos:[] },
 ];
 const DEMO_NHL = [
   { rank:1, nombre:'Elite Shooter', equipoAbrev:'HOME', rivalAbrev:'AWY', prob:92, confianza:'media',
     tags:[() => L('4.5 proj','4.5 proy'), () => L('vs AWY · 33 SA','vs AWY · 33 TC'), '4.0 S/G'],
-    factores:[L('Opponent allows 33 shots/game','El rival permite 33 tiros/partido'), L('Plays at home','Juega en casa'), L('High shot volume','Alto volumen de tiro')], riesgos:[L('Lineup not confirmed','Alineación no confirmada')] },
+    factores:[L('Opponent allows 33 shots/game','El rival permite 33 tiros/partido'), L('Plays at home','Juega en casa'), L('High shot volume','Alto volumen de tiro')], riesgos:[] },
   { rank:2, nombre:'Top Winger', equipoAbrev:'CLB', rivalAbrev:'OPP', prob:71, confianza:'media',
     tags:[() => L('2.6 proj','2.6 proy'), () => L('vs OPP · 30 SA','vs OPP · 30 TC'), '2.6 S/G'],
-    factores:[L('Steady shot volume','Volumen de tiro constante'), L('Power-play time','Minutos en power play')], riesgos:[L('Away from home','Juega de visita')] },
+    factores:[L('Steady shot volume','Volumen de tiro constante'), L('Power-play time','Minutos en power play')], riesgos:[] },
   { rank:3, nombre:'Two-way Center', equipoAbrev:'TMX', rivalAbrev:'RVL', prob:58, confianza:'baja',
     tags:[() => L('2.1 proj','2.1 proy'), () => L('vs RVL · 29 SA','vs RVL · 29 TC'), '2.1 S/G'],
-    factores:[L('Plays at home','Juega en casa')], riesgos:[L('Opponent limits shots','El rival limita los tiros')] },
+    factores:[L('Plays at home','Juega en casa')], riesgos:[] },
 ];
 
 /* ---------- Config por deporte ---------- */
@@ -131,9 +131,9 @@ function inyectarCSS() {
   .ply{--az:#4db4f7;--ro:#f4494e;--ok:#41d6a0;--am:#f3b13d;--oro:#e8c46a;--oro2:#c79a3c;
     --card:#0e141e;--line:rgba(255,255,255,.08);--tx:#eef3f9;--tx2:#98a4b4;--tx3:#5c6879;max-width:1120px;margin:0 auto}
   .ply *{box-sizing:border-box}
-  .ply-hero{position:relative;border-radius:20px;overflow:hidden;margin-bottom:20px;isolation:isolate;border:1px solid var(--line);background-size:cover;background-position:center;background-color:#0a1420;aspect-ratio:1048/271;display:flex}
+  .ply-hero{position:relative;border-radius:20px;overflow:hidden;margin-bottom:20px;isolation:isolate;border:1px solid rgba(255,255,255,.04);background-size:cover;background-position:center;background-color:#070b12;aspect-ratio:1048/271;display:flex;box-shadow:inset 0 0 55px 16px rgba(6,9,15,.78)}
   .ply-hero-bg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;background-color:#0a1420}
-  .ply-hero-veil{position:absolute;inset:0;z-index:1;background:linear-gradient(100deg,rgba(6,9,15,.92),rgba(6,9,15,.5) 46%,rgba(6,9,15,.10) 72%),linear-gradient(0deg,rgba(6,9,15,.74),transparent 46%),radial-gradient(125% 135% at 58% 42%, transparent 52%, rgba(6,9,15,.62))}
+  .ply-hero-veil{position:absolute;inset:-1px;z-index:1;box-shadow:inset 0 0 22px 15px #070b12;background:linear-gradient(100deg,rgba(6,9,15,.94),rgba(6,9,15,.55) 46%,rgba(6,9,15,.14) 72%),linear-gradient(0deg,rgba(6,9,15,.78),transparent 48%),radial-gradient(120% 130% at 58% 42%, transparent 42%, rgba(6,9,15,.72) 82%, #070b12)}
   .ply-hero-in{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;padding:20px 28px}
   .ply-eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#efe3c6;border:1px solid rgba(232,196,106,.35);border-radius:999px;padding:6px 13px;background:rgba(0,0,0,.30)}
   .ply-eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--oro);box-shadow:0 0 10px var(--oro)}
@@ -459,7 +459,7 @@ function wireBets(cont) {
         let jug;
         if (cached && Date.now() - cached.ts < 120000) jug = cached.jugadores;
         else {
-          const r = await conTimeout(topHomeRuns({ fecha: hoyISO(), n: 6 }), 25000);
+          const r = await conTimeout(topHomeRuns({ fecha: hoyISO(), n: 5 }), 25000);
           jug = (r && r.jugadores) ? curar(r.jugadores, CFG_HR) : [];
           CACHE.set('mlb:hr', { jugadores: jug, ts: Date.now() });
         }
