@@ -99,7 +99,8 @@ async function cargarLista() {
   if (proyActiva) {
     await pintarParlay(cont, {
       sport: proyActiva,
-      esPremium: planActual() === 'premium',
+      nivel: planActual(),
+      modo: (planActual() === 'pro' ? 'pro' : 'premium'),
       abrirPlanes: () => mostrarPantalla('pricing'),
     });
     return;
@@ -363,6 +364,19 @@ function repintarTodo() {
 }
 
 /* -------- Proyecciones premium (barra superior) -------- */
+function actualizarBotonNivel() {
+  const pb = document.getElementById('premium-btn');
+  if (!pb) return;
+  const plan = planActual();
+  const lbl = pb.querySelector('span:not(.premium-btn-dot)');
+  const nivel = plan === 'pro' ? 'pro' : (plan === 'premium' ? 'premium' : 'premium');
+  pb.classList.remove('nivel-pro', 'nivel-premium');
+  pb.classList.add('nivel-' + nivel);
+  if (lbl) lbl.textContent = nivel === 'pro' ? 'Pro' : 'Premium';
+  const head = document.querySelector('.premium-pop-h');
+  if (head) head.textContent = nivel === 'pro' ? 'Pro projections' : 'Premium projections';
+  document.querySelectorAll('.premium-pop .pi-pro').forEach(t => t.textContent = nivel === 'pro' ? 'PRO' : 'PREMIUM');
+}
 function marcarProyeccion() {
   document.querySelectorAll('.proj-b').forEach(b => b.classList.toggle('on', proyActiva === b.dataset.proj));
   document.querySelectorAll('.premium-item').forEach(it => it.classList.toggle('on', proyActiva === it.dataset.projgoto));
@@ -453,6 +467,7 @@ let _esAnalista = false;
 async function onSesion(usuario, extra) {
   pintarCuenta(usuario);
   fijarSuscripcion(usuario?.suscripcion || null);
+  actualizarBotonNivel();
   if (extra && extra.bloqueado) { mostrarPantalla('landing'); avisarBloqueo(); return; }
   if (!usuario) { _esAdmin = false; _esAnalista = false; mostrarPantalla('landing'); return; }
   // ¿Es administrador? (se comprueba en Firestore; la seguridad real está ahí)
