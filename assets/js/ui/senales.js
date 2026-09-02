@@ -384,8 +384,8 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   try { apoyos = new Set(await misApoyos()); } catch (_) {}
   let yaReporte = false;
   try { yaReporte = !!(await miReporte()); } catch (_) {}
-  let fotoPorUid = {}; let analistasLista = [];
-  try { analistasLista = await listarAnalistas(); analistasLista.forEach(an => { if (an.foto) fotoPorUid[an.uid] = an.foto; }); } catch (_) {}
+  let fotoPorUid = {}; let analistasLista = []; let analistaPorUid = {};
+  try { analistasLista = await listarAnalistas(); analistasLista.forEach(an => { if (an.foto) fotoPorUid[an.uid] = an.foto; analistaPorUid[an.uid] = an; }); } catch (_) {}
   const ctx = { premium: esPremium, nivel: nivelReal, nClaras, me, sigo, votos, apoyos, conteos: {}, yaReporte, fotoPorUid };
 
   // Conteos de like/dislike de todas las señales (para mostrar y para ordenar "Populares")
@@ -456,7 +456,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   const uids = [...new Set([...lista.map(a => a.autorUid), ...BOTS.map(b => b.uid)].filter(Boolean))];
   const pintarSeguidores = async (uid) => {
     let n = 0; try { n = await contarSeguidores(uid); } catch (_) {}
-    const bot = botPorUid(uid); if (bot) n = seguidoresBot(bot, n);   // bots: figurativo + crecimiento + reales
+    n = seguidoresBot(analistaPorUid[uid], n);   // suma base figurativa + ajuste admin + reales (0 si no es analista listado)
     cont.querySelectorAll(`.sn-c-fol[data-fol="${CSS.escape(uid)}"]`).forEach(el => {
       el.innerHTML = `${el.querySelector('svg') ? el.querySelector('svg').outerHTML : ''}<b>${n.toLocaleString()}</b> ${L('followers', 'seguidores')}`;
     });
