@@ -1,6 +1,6 @@
 /* ============================================================
    PORTADA MÓVIL (app-preview premium) — solo <= 640px
-   Estructura tipo panel deportivo, colores de marca
+   Estructura tipo panel deportivo, colores de marca.
    ============================================================ */
 .mlp { display: none; }
 
@@ -45,7 +45,7 @@
     min-height: 66vh; display: flex; flex-direction: column; justify-content: flex-end;
     padding: 78px 18px 28px; }
   .mlp-hero::before { content: ''; position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(7,11,18,.10) 0%, rgba(7,11,18,0) 34%, rgba(7,11,18,.55) 70%, rgba(7,11,18,1) 100%); }
+    background: linear-gradient(180deg, rgba(1,0,6,.10) 0%, rgba(1,0,6,0) 32%, rgba(1,0,6,.6) 72%, #010006 100%); }
   .mlp-hero-in { position: relative; z-index: 2; }
   .mlp-h1 { font-family: var(--display); font-weight: 800; font-size: clamp(28px, 8vw, 38px);
     line-height: 1.1; letter-spacing: -.01em; margin: 0 0 20px; padding-bottom: .06em;
