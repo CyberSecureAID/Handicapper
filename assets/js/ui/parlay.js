@@ -131,7 +131,7 @@ function inyectarCSS() {
   .ply{--az:#4db4f7;--ro:#f4494e;--ok:#41d6a0;--am:#f3b13d;--oro:#e8c46a;--oro2:#c79a3c;
     --card:#0e141e;--line:rgba(255,255,255,.08);--tx:#eef3f9;--tx2:#98a4b4;--tx3:#5c6879;max-width:1120px;margin:0 auto}
   .ply *{box-sizing:border-box}
-  .ply-hero{position:relative;border-radius:20px;overflow:hidden;margin-bottom:20px;isolation:isolate;border:1px solid rgba(255,255,255,.04);background-size:cover;background-position:center;background-color:#070b12;aspect-ratio:1048/271;display:flex;box-shadow:inset 0 0 55px 16px rgba(6,9,15,.78)}
+  .ply-hero{position:relative;border-radius:20px;overflow:hidden;margin-bottom:20px;isolation:isolate;border:1px solid rgba(255,255,255,.04);background-size:cover;background-position:center;background-color:#070b12;aspect-ratio:1048/250;display:flex;box-shadow:inset 0 0 55px 16px rgba(6,9,15,.78)}
   .ply-hero-bg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;background-color:#0a1420}
   .ply-hero-veil{position:absolute;inset:-1px;z-index:1;box-shadow:inset 0 0 22px 15px #070b12;background:linear-gradient(100deg,rgba(6,9,15,.94),rgba(6,9,15,.55) 46%,rgba(6,9,15,.14) 72%),linear-gradient(0deg,rgba(6,9,15,.78),transparent 48%),radial-gradient(120% 130% at 58% 42%, transparent 42%, rgba(6,9,15,.72) 82%, #070b12)}
   .ply-hero-in{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;padding:20px 28px}
