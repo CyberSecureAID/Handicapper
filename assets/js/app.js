@@ -566,9 +566,9 @@ async function abrirDirectorioSenales() {
 
   const rows = await Promise.all(analistas.map(async a => {
     let f = 0; try { f = await datos.contarSeguidores(a.uid); } catch (_) {}
+    f = bots.seguidoresBot(a, f);
+    const likes = bots.likesDe(a);
     const bot = bots.botPorUid(a.uid);
-    if (bot) f = bots.seguidoresBot(bot, f);
-    const likes = (bot && bot.likes) || 0;
     const prom = bot ? (a.deporte === 'futbol' || a.deporte === 'beisbol' ? '1–2' : '1') : '—';
     return { a, f, likes, prom };
   }));
