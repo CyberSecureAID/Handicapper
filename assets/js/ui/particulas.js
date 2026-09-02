@@ -36,7 +36,8 @@ export function parar() { _activo = false; if (_raf) cancelAnimationFrame(_raf);
 
 function redim() {
   if (!_cv) return;
-  const w = window.innerWidth, h = document.getElementById('landing-screen')?.scrollHeight || window.innerHeight;
+  const _ls = document.getElementById('landing-screen');
+  const w = window.innerWidth, h = (_ls ? _ls.offsetHeight : 0) || window.innerHeight;
   _cv.width = Math.round(w * _dpr); _cv.height = Math.round(h * _dpr);
   _cv.style.height = h + 'px';
   _ctx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
