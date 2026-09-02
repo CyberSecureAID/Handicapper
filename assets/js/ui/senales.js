@@ -87,8 +87,17 @@ function inyectarCSS() {
   .sn-c-lock-ic svg{width:28px;height:28px}
   .sn-c-lock b{font-family:"Chakra Petch",sans-serif;font-size:15px;color:#fff}
   .sn-c-lock span{font-size:12.5px;color:#c7d0dc;max-width:250px;line-height:1.5;margin-bottom:8px}
-  .sn-c-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-  .sn-c-match{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:17px;color:#fff}
+  .sn-c-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .sn-c-match{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:16px;color:#fff}
+  .sn-c-teams{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
+  .sn-c-team{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+  .sn-c-team:last-of-type{flex-direction:row-reverse;text-align:right}
+  .sn-c-team span{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:13.5px;color:#c7d0dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+  .sn-c-team.fav span{color:#fff;font-weight:800}
+  .sn-c-team.fav span::after{content:" ★";color:var(--acc);font-size:10px}
+  .sn-c-logo{width:28px;height:28px;flex:none;object-fit:contain}
+  .sn-c-logo.ph{border-radius:50%;background:rgba(255,255,255,.08)}
+  .sn-c-vs2{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:11px;color:#6b7683;flex:none;letter-spacing:.05em}
   .sn-c-conf{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:4px 10px;border-radius:20px}
   .sn-c-conf.alta{color:#48d17e;background:rgba(38,194,129,.14)}.sn-c-conf.media{color:var(--g);background:rgba(232,184,75,.14)}.sn-c-conf.baja{color:#ef9a5a;background:rgba(232,120,60,.14)}
   .sn-c-pick{display:flex;align-items:center;gap:10px;margin:6px 0 10px}
@@ -309,11 +318,19 @@ function tarjeta(a, ctx = {}, idx = 0) {
   const analisis = a.texto ? `<button class="sn-c-toggle" data-an="${esc(sid)}"><span>${L('Read analysis', 'Ver análisis')}</span>${IChev}</button>
     <div class="sn-c-an" id="an-${esc(sid)}" hidden><p>${esc(a.texto)}</p></div>` : '';
 
+  const logoImg = (src) => src ? `<img class="sn-c-logo" src="${esc(src)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : `<span class="sn-c-logo ph"></span>`;
+  const cabezal = (a.local && a.visita)
+    ? `<div class="sn-c-teams">
+        <div class="sn-c-team ${a.favLocal === true ? 'fav' : ''}">${logoImg(a.logoLocal)}<span>${esc(a.local)}</span></div>
+        <span class="sn-c-vs2">VS</span>
+        <div class="sn-c-team ${a.favLocal === false ? 'fav' : ''}">${logoImg(a.logoVisita)}<span>${esc(a.visita)}</span></div>
+      </div>`
+    : `<div class="sn-c-match">${esc(a.equipos || a.matchId || '')}</div>`;
   const overlay = bloqueada ? `<div class="sn-c-lock"><div class="sn-c-lock-ic">${IC.lock || '🔒'}</div><b>${L('Unlock this signal', 'Desbloquea esta señal')}</b><span>${L('Follow this analyst to see the pick and get it in your feed.', 'Sigue a este analista para ver el pick y recibirlo en tu feed.')}</span>${uid ? `<button class="sn-follow" data-follow="${esc(uid)}" data-firma="${esc(firma)}">${L('Follow', 'Seguir')}</button>` : ''}</div>` : '';
   return `<div class="sn-card ${est.cls} ${bloqueada ? 'sn-locked' : ''}" style="${est.varCss}">
     ${overlay}
     <div class="sn-c-inner">
-    <div class="sn-c-top"><div class="sn-c-match">${esc(a.equipos || a.matchId || '')}</div><span class="sn-c-conf ${conf}">${esc(confTx(conf))}</span></div>
+    <div class="sn-c-top">${cabezal}<span class="sn-c-conf ${conf}">${esc(confTx(conf))}</span></div>
     ${by}
     <div class="sn-c-pick"><span class="sn-c-pick-lbl">${L('Pick', 'Pronóstico')}</span><span class="sn-c-team">${pick}</span>${prob != null ? `<span class="sn-c-prob">${prob}%</span>` : ''}</div>
     ${prob != null ? `<div class="sn-c-bar"><i style="width:${prob}%"></i></div>` : ''}
