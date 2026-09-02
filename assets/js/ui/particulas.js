@@ -18,6 +18,15 @@ export function iniciarParticulas(id) {
   _lastScroll = window.scrollY || 0;
   window.addEventListener('resize', redim);
   window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('load', redim);
+  // Re-medir cuando llega contenido async (planes inyectados, imágenes cargando)
+  setTimeout(redim, 400);
+  setTimeout(redim, 1200);
+  setTimeout(redim, 2500);
+  const _ls = document.getElementById('landing-screen');
+  if (_ls && window.ResizeObserver) {
+    try { new ResizeObserver(() => redim()).observe(_ls); } catch (_) {}
+  }
   document.addEventListener('visibilitychange', () => document.hidden ? parar() : arrancar());
   arrancar();
 }
