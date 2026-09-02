@@ -339,8 +339,8 @@ function pintarPerfil(cont) {
   if (!esPrem) {
     cont.innerHTML = `<div class="pf"><div class="pf-lock">
       <div class="pf-lock-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-      <h2>${Lp('Your analyst feed', 'Tu feed de analistas')}</h2>
-      <p>${Lp('Upgrade to Premium to follow analysts and get their signals — with notifications — right here.', 'Pasa a Premium para seguir analistas y recibir sus señales — con notificaciones — aquí mismo.')}</p>
+      <h2>${Lp('Signals inbox', 'Buzón de señales')}</h2>
+      <p>${Lp('Upgrade to Premium to follow analysts and get their signals in your inbox, with notifications.', 'Pasa a Premium para seguir analistas y recibir sus señales en tu buzón, con notificaciones.')}</p>
       <button class="pf-cta" id="pf-cta">${Lp('See Premium plan', 'Ver plan Premium')}</button>
     </div></div>`;
     cont.querySelector('#pf-cta')?.addEventListener('click', () => mostrarPantalla('pricing'));
@@ -353,7 +353,7 @@ function pintarPerfil(cont) {
   const sw = (k, txt, sub) => `<label class="pf-sw"><div><b>${txt}</b><em>${sub}</em></div><input type="checkbox" data-n="${k}" ${notif[k] ? 'checked' : ''}><span class="pf-sw-t"></span></label>`;
 
   cont.innerHTML = `<div class="pf">
-    <div class="pf-head"><h2>${Lp('Your feed', 'Tu feed')}</h2><p>${Lp('Signals from the analysts you follow, all in one place.', 'Las señales de los analistas que sigues, todas en un lugar.')}</p></div>
+    <div class="pf-head"><h2>${(IC && IC.buzon) || ''}${Lp('Signals inbox', 'Buzón de señales')}</h2><p>${Lp('Picks from the analysts you follow arrive here as they publish.', 'Los picks de los analistas que sigues llegan aquí en cuanto publican.')}</p></div>
     <div class="pf-card pf-notif">
       <div class="pf-card-h"><span class="pf-card-ic">${(IC && IC.campana) || '🔔'}</span><h3>${Lp('Notifications', 'Notificaciones')}</h3></div>
       ${sw('push', Lp('Push notifications', 'Notificaciones push'), Lp('Alerts on this device', 'Avisos en este dispositivo'))}
@@ -361,7 +361,7 @@ function pintarPerfil(cont) {
       ${sw('resultados', Lp('Results & outcomes', 'Resultados'), Lp('How previous signals landed', 'Cómo salieron las señales anteriores'))}
     </div>
     <div class="pf-card">
-      <div class="pf-card-h"><span class="pf-card-ic">${(IC && IC.estrella) || '★'}</span><h3>${Lp('Followed analysts', 'Analistas seguidos')}</h3></div>
+      <div class="pf-card-h"><span class="pf-card-ic">${(IC && IC.estrella) || '★'}</span><h3>${Lp('From analysts you follow', 'De los analistas que sigues')}</h3></div>
       <div id="pf-signals"><div class="pf-empty"><div class="sn-spin"></div></div></div>
     </div>
   </div>`;
@@ -599,8 +599,8 @@ async function abrirDirectorioSenales() {
     if (seguir && !confirm(Lp('Follow this analyst for $2/mo? You will get their signals in your inbox.', '¿Seguir a este analista por $2/mes? Recibirás sus señales en tu buzón.'))) return;
     b.disabled = true;
     try {
-      if (seguir) { await datos.seguirAnalista(uid, firma); sigo.add(uid); b.classList.add('on'); b.textContent = Lp('Following','Siguiendo'); }
-      else { await datos.dejarDeSeguir(uid); sigo.delete(uid); b.classList.remove('on'); b.textContent = Lp('Follow','Seguir'); }
+      if (seguir) { await datos.seguirAnalista(uid, firma); try { await datos.apoyarAnalista(uid, firma); } catch (_) {} sigo.add(uid); b.classList.add('on'); b.textContent = Lp('Following','Siguiendo'); }
+      else { await datos.dejarDeSeguir(uid); try { await datos.cancelarApoyo(uid); } catch (_) {} sigo.delete(uid); b.classList.remove('on'); b.textContent = Lp('Follow','Seguir'); }
     } catch (_) {}
     b.disabled = false;
   });
