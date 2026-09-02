@@ -135,6 +135,10 @@ function inyectarCSS() {
   .ply-hero::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:20px;box-shadow:inset 0 0 0 3px #070b12, inset 0 0 11px 3px rgba(7,11,18,.85)}
   .ply-hero-bg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;background-color:#0a1420}
   .ply-hero-veil{position:absolute;inset:0;z-index:1;background:linear-gradient(100deg,rgba(6,9,15,.9),rgba(6,9,15,.5) 46%,rgba(6,9,15,.12) 72%),linear-gradient(0deg,rgba(6,9,15,.7),transparent 46%)}
+  .ply-nivel{position:absolute;top:14px;right:14px;z-index:4;display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:999px;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:12px;letter-spacing:.08em;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+  .ply-nivel svg{width:15px;height:15px}
+  .ply-nivel.pro{background:linear-gradient(180deg,#c6844a,#7a4a26);color:#ffe6c9;border:1px solid rgba(205,140,80,.7);box-shadow:0 3px 10px -3px rgba(120,74,38,.6),inset 0 1px 0 rgba(255,255,255,.2)}
+  .ply-nivel.prem{background:linear-gradient(180deg,#e8c46a,#96661e);color:#3a2800;border:1px solid rgba(232,196,106,.8);box-shadow:0 3px 10px -3px rgba(150,110,30,.5),inset 0 1px 0 rgba(255,255,255,.3)}
   .ply-hero-in{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;padding:20px 28px}
   .ply-eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:#efe3c6;border:1px solid rgba(232,196,106,.35);border-radius:999px;padding:6px 13px;background:rgba(0,0,0,.30)}
   .ply-eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--oro);box-shadow:0 0 10px var(--oro)}
@@ -260,13 +264,19 @@ function betTabsHTML(activo) {
 
 function heroHTML(cfg, meta, cargando, variante) {
   const noun = String(cfg.metricLabel || '').replace(/<br>/g, ' ').trim();
+  const nMostrar = cfg._count != null ? cfg._count : (cfg._modo === 'pro' ? 3 : 9);
   const chips = [
     `<span>${L('Date', 'Fecha')} · <b>${esc(meta.fecha)}</b></span>`,
-    `<span class="ply-count-chip"><b>9</b> ${L('players', 'jugadores')} · ${esc(noun)}</span>`,
+    `<span class="ply-count-chip"><b>${nMostrar}</b> ${L('players', 'jugadores')} · ${esc(noun)}</span>`,
   ].join('');
   const posBg = cfg._sport === 'mlb' ? '75%' : '72%';   // móvil: mueve la foto para que salga el atleta
+  const corona = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18h16l-1.2-8-4.3 3-2.5-5-2.5 5-4.3-3z"/></svg>';
+  const badge = cfg._modo === 'pro'
+    ? `<span class="ply-nivel pro">${corona}PRO</span>`
+    : `<span class="ply-nivel prem">${corona}PREMIUM</span>`;
   return `<div class="ply-hero" style="background-image:url('${imgURL(cfg)}');background-position:${posBg} center">
     <div class="ply-hero-veil"></div>
+    ${badge}
     <div class="ply-hero-in">
       <div class="ply-chips">${chips}</div>
       <div class="ply-title">${cargando ? L('Loading…', 'Cargando…') : cfg.titulo}</div>
@@ -479,6 +489,7 @@ function wireBets(cont) {
 }
 
 function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
+  cfg._count = jugadores.length;
   const nota = preliminar
     ? `<div class="ply-note"><i></i>${L('Preview — live projections update at game time.', 'Vista preliminar — las proyecciones en vivo se actualizan a la hora del juego.')}</div>`
     : '';
@@ -510,42 +521,53 @@ function pintarCargando(cont, cfg) {
 }
 
 /* ---------- API pública ---------- */
-export async function pintarParlay(cont, { sport = 'mlb', esPremium = false, abrirPlanes } = {}) {
+function limitarPro(jug, modo) {
+  if (modo !== 'pro') return jug;
+  const n = Math.max(1, Math.ceil(jug.length / 3));   // Pro: ~1/3 de los picks del Premium
+  return jug.slice(0, n);
+}
+
+export async function pintarParlay(cont, { sport = 'mlb', nivel = 'basic', modo = 'premium', esPremium, abrirPlanes } = {}) {
   inyectarCSS();
   const cfg = VISTA(sport); cfg._sport = sport;
+  if (esPremium === true && nivel === 'basic') nivel = 'premium';   // compat con la llamada vieja
+  cfg._modo = modo;
 
-  if (!esPremium) {
-    cont.innerHTML = `<div class="ply"><div class="ply-lock"><div class="ply-hero-bg" style="background-image:url('${imgURL(cfg)}')"></div><div class="ply-hero-veil"></div>
-      <div class="ply-lock-in"><span class="ply-eyebrow"><i></i>${L('Premium', 'Premium')}</span>
+  const permitido = (modo === 'pro') ? (nivel === 'pro' || nivel === 'premium') : (nivel === 'premium');
+  if (!permitido) {
+    const esPro = (modo === 'pro');
+    const eyeb = esPro ? L('Pro', 'Pro') : L('Premium', 'Premium');
+    const msg = esPro
+      ? L('A daily selection of the top plays. Available on the Pro and Premium plans.', 'Una selección diaria de las mejores jugadas. Disponible en los planes Pro y Premium.')
+      : L('Every day, the full board of highest-probability plays. Premium plan only.', 'Cada día, el tablero completo de jugadas con mayor probabilidad. Exclusivo del plan Premium.');
+    const cta = esPro ? L('See Pro plan', 'Ver plan Pro') : L('See Premium plan', 'Ver plan Premium');
+    cont.innerHTML = `<div class="ply"><div class="ply-lock ${esPro ? 'lock-pro' : 'lock-prem'}"><div class="ply-hero-bg" style="background-image:url('${imgURL(cfg)}')"></div><div class="ply-hero-veil"></div>
+      <div class="ply-lock-in"><span class="ply-eyebrow"><i></i>${eyeb}</span>
         <h3>${esc((cfg.titulo || '').replace(/<[^>]+>/g, ''))}</h3>
-        <p>${L('Every day, the players with the highest probability of the key play. Premium plan only.', 'Cada día, los jugadores con mayor probabilidad de la jugada clave. Exclusivo del plan Premium.')}</p>
-        <button class="ply-cta" id="ply-cta">${L('See Premium plan', 'Ver plan Premium')}</button></div></div></div>`;
+        <p>${msg}</p>
+        <button class="ply-cta" id="ply-cta">${cta}</button></div></div></div>`;
     const b = cont.querySelector('#ply-cta'); if (b && abrirPlanes) b.onclick = abrirPlanes;
     return;
   }
   if (!cfg.activo) { cont.innerHTML = comingSoonHTML(cfg); return; }
 
-  // 1) Pintado INSTANTÁNEO: caché si es reciente, si no, preliminar
   const cached = CACHE.get(sport);
   const fresco = cached && (Date.now() - cached.ts < 120000);
-  if (fresco) pintarGrid(cont, cfg, cached.jugadores, cached.meta, false);
+  if (fresco) pintarGrid(cont, cfg, limitarPro(cached.jugadores, modo), cached.meta, false);
   else pintarCargando(cont, cfg);
 
-  // 2) Datos en vivo en 2º plano (con timeout amplio), y se sustituye si llegan
   if (!fresco) {
     try {
       const r = await conTimeout(cfg.run(), 25000);
       if (r && r.jugadores && r.jugadores.length) {
-        const jug = curar(r.jugadores, cfg);   // regla: solo los buenos, ordenados, máx 9
+        const jug = curar(r.jugadores, cfg);
         CACHE.set(sport, { jugadores: jug, meta: r.meta, ts: Date.now() });
-        pintarGrid(cont, cfg, jug, r.meta, false);
+        pintarGrid(cont, cfg, limitarPro(jug, modo), r.meta, false);
       } else {
-        // Sin datos en vivo -> muestra el respaldo (para no dejar la sección cargando en vacío)
-        pintarGrid(cont, cfg, cfg.demo, { fecha: hoyISO() }, true);
+        pintarGrid(cont, cfg, limitarPro(cfg.demo, modo), { fecha: hoyISO() }, true);
       }
     } catch (_) {
-      // Falló/expiró -> respaldo (así goals/points/shots nunca quedan en blanco)
-      pintarGrid(cont, cfg, cfg.demo, { fecha: hoyISO() }, true);
+      pintarGrid(cont, cfg, limitarPro(cfg.demo, modo), { fecha: hoyISO() }, true);
     }
   }
 }
