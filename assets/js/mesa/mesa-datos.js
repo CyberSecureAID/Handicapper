@@ -34,11 +34,12 @@ export async function listarAdmins() {
 
 /* Lista todos los usuarios registrados (solo admins por reglas) */
 export async function listarUsuarios() {
-  if (!await _asegurarListo()) return [];
+  const bots = BOTS.map(b => ({ uid: b.uid, email: b.email, nombre: b.nombre, suscripcion: null, esBot: true }));
+  if (!await _asegurarListo()) return [...bots];
   const S = _obtenerStore(), db = _obtenerDB();
   const q = await S.getDocs(S.collection(db, 'usuarios'));
-  const out = [];
-  q.forEach(d => out.push({ uid: d.id, ...d.data() }));
+  const out = [...bots];
+  q.forEach(d => { if (!bots.some(x => x.uid === d.id)) out.push({ uid: d.id, ...d.data() }); });
   return out;
 }
 
@@ -118,13 +119,19 @@ export async function esAnalista() {
 
 /* Lista todos los analistas (solo admin por reglas). */
 export async function listarAnalistas() {
-  if (!await _asegurarListo()) return [...BOTS];
+  const base = BOTS.map(b => ({ ...b }));
+  if (!await _asegurarListo()) return base;
   try {
     const S = _obtenerStore(), db = _obtenerDB();
     const q = await S.getDocs(S.collection(db, 'analistas'));
-    const out = [...BOTS]; q.forEach(d => out.push({ uid: d.id, ...d.data() }));
+    const out = base;
+    q.forEach(d => {
+      const b = out.find(x => x.uid === d.id);
+      if (b) Object.assign(b, d.data());          // override sobre el bot (ej. foto asignada por admin)
+      else out.push({ uid: d.id, ...d.data() });
+    });
     return out;
-  } catch (_) { return [...BOTS]; }
+  } catch (_) { return base; }
 }
 
 /* Crea o actualiza un analista (admin). */
