@@ -749,18 +749,18 @@ function vistaAnalistas() {
   const chips = filtros.map(([k, l]) => `<button data-anf="${k}" class="u-chip ${_anFiltro === k ? 'on' : ''}">${esc(l)}</button>`).join('');
   const lista = _analistas.length ? _analistas.map(a => {
     const uu = _usuarios.find(x => x.uid === a.uid); const mail = a.email || (uu && uu.email) || a.uid;
-    return `<div class="an-mng-row ${a.activo === false ? 'off' : ''}">
+    return `<div class="an-mng-row ${a.activo === false ? 'off' : ''}${a.esBot ? ' es-bot' : ''}">
       <button class="an-mng-foto ${a.foto ? 'tiene' : ''}" data-an-foto="${esc(a.uid)}" title="${ML('Set photo', 'Poner foto')}">
         ${a.foto ? `<img src="${rutaFotoAnalista(a.foto)}" alt="">` : `<span class="an-mng-foto-mas">+</span>`}
       </button>
-      <div class="an-mng-who"><b>${esc(mail)}</b><span class="an-mng-dep">${esc(depNombre(a.deporte))}${a.foto ? ` · ${esc(a.foto)}` : ''}</span></div>
+      <div class="an-mng-who"><b>${esc(mail)}${a.esBot ? ` <span class="an-mng-bot">BOT</span>` : ''}</b><span class="an-mng-dep">${esc(depNombre(a.deporte))}${a.foto ? ` · ${esc(a.foto)}` : ''}</span></div>
       <div class="an-mng-id">
         <input class="an-mng-inp" data-an-nombre="${esc(a.uid)}" placeholder="${ML('Full name', 'Nombre')}" value="${esc(a.nombre || '')}" maxlength="40">
         <input class="an-mng-inp firma" data-an-firma="${esc(a.uid)}" placeholder="${ML('Signature / alias', 'Firma / alias')}" value="${esc(a.firma || a.alias || '')}" maxlength="24">
       </div>
       <select data-an-dep="${esc(a.uid)}" class="u-select an-mng-sel">${Object.keys(DEPORTES).map(k => `<option value="${k}" ${a.deporte === k ? 'selected' : ''}>${esc(depNombre(k))}</option>`).join('')}</select>
-      <button class="an-mng-toggle ${a.activo === false ? '' : 'on'}" data-an-toggle="${esc(a.uid)}">${a.activo === false ? ML('Blocked', 'Bloqueado') : ML('Active', 'Activo')}</button>
-      <button class="an-mng-del" data-an-del="${esc(a.uid)}">${ML('Remove', 'Quitar')}</button>
+      <button class="an-mng-toggle ${a.activo === false ? '' : 'on'}" data-an-toggle="${esc(a.uid)}">${a.esBot ? (a.activo === false ? ML('Paused', 'Pausado') : ML('Pause', 'Pausar')) : (a.activo === false ? ML('Blocked', 'Bloqueado') : ML('Active', 'Activo'))}</button>
+      ${a.esBot ? '' : `<button class="an-mng-del" data-an-del="${esc(a.uid)}">${ML('Remove', 'Quitar')}</button>`}
     </div>`;
   }).join('') : `<div class="an-mng-empty">${ML('No analysts yet.', 'Aún no hay analistas.')}</div>`;
   return `
@@ -813,7 +813,7 @@ function enlazarAnalistas() {
     const nuevoActivo = a.activo === false;   // estado tras el toggle
     try {
       await fijarAnalista(uid, { activo: nuevoActivo });
-      if (!nuevoActivo) { try { await quitarFotoAnalista(uid); } catch (_) {} }   // suspendido → libera su foto
+      if (!nuevoActivo && !(a && a.esBot)) { try { await quitarFotoAnalista(uid); } catch (_) {} }   // suspendido (no bot) → libera su foto
       _analistas = await listarAnalistas(); pintarTab();
     } catch (_) { b.disabled = false; }
   });
