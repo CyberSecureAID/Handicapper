@@ -73,3 +73,63 @@ export async function publicarSenalesFutbol(guardar, { max = 3, minProb = 55 } =
   }
   return { ok: true, publicadas };
 }
+
+/* ---- Béisbol (Miguel): usa la MISMA key. Sin /predictions → tabla real (win%). ---- */
+const BASE_BEISBOL = 'https://v1.baseball.api-sports.io';
+const MLB_LIGA = 1;   // MLB en API-Baseball
+
+export async function publicarSenalesBeisbol(guardar, { max = 3, minProb = 55 } = {}) {
+  if (!API_FOOTBALL_KEY) return { ok: false, error: 'Falta la API key.' };
+  const fecha = hoyISO(); const anio = new Date().getFullYear();
+  let games = [], tabla = [];
+  try { games = await apiGet(`${BASE_BEISBOL}/games?date=${fecha}&league=${MLB_LIGA}&season=${anio}`); } catch (_) {}
+  try { tabla = await apiGet(`${BASE_BEISBOL}/standings?league=${MLB_LIGA}&season=${anio}`); } catch (_) {}
+
+  // Mapa teamId -> win% desde la tabla (estructura anidada; se recorre en profundidad)
+  const wp = {};
+  const recorrer = (n) => {
+    if (!n || typeof n !== 'object') return;
+    if (n.team && n.team.id != null) {
+      const g = n.games || {};
+      const w = (g.win && (g.win.total ?? g.win)) ?? null;
+      const l = (g.lose && (g.lose.total ?? g.lose)) ?? null;
+      if (w != null && l != null && (w + l) > 0) wp[n.team.id] = w / (w + l);
+    }
+    for (const k in n) { const v = n[k]; if (Array.isArray(v)) v.forEach(recorrer); else if (v && typeof v === 'object') recorrer(v); }
+  };
+  tabla.forEach(recorrer);
+
+  const señales = [];
+  for (const g of games) {
+    if (señales.length >= max) break;
+    const gid = g.id; if (!gid) continue;
+    const hid = g.teams && g.teams.home && g.teams.home.id, aid = g.teams && g.teams.away && g.teams.away.id;
+    const local = (g.teams && g.teams.home && g.teams.home.name) || 'Home';
+    const visita = (g.teams && g.teams.away && g.teams.away.name) || 'Away';
+    const wl = wp[hid], wv = wp[aid];
+    if (wl == null || wv == null) continue;
+    const favLocal = wl >= wv;
+    const favorito = favLocal ? local : visita;
+    // prob = 50 + ventaja de récord (acotada), estilo mercado
+    const prob = Math.round(Math.max(minProb, Math.min(75, 50 + Math.abs(wl - wv) * 100 + 6)));
+    señales.push({
+      matchId: `botmi:${gid}`,
+      autorUid: 'bot-miguel', firma: 'Miguel S.', autor: 'Miguel Santos', deporte: 'beisbol',
+      equipos: `${local} vs ${visita}`, favorito, prob, mercado: 'ml',
+      confianza: prob >= 65 ? 'alta' : 'media',
+      analisis: `${favorito} llega con mejor récord de temporada.`,
+      estilo: { color: '#e23b3f' },
+    });
+  }
+
+  let publicadas = 0;
+  for (const s of señales) { try { await guardar(s.matchId, s); publicadas++; } catch (_) {} }
+  return { ok: true, publicadas };
+}
+
+/* Publica TODOS los bots (fútbol + béisbol) — lo llama el botón del panel. */
+export async function publicarTodosLosBots(guardar) {
+  const a = await publicarSenalesFutbol(guardar).catch(() => ({ publicadas: 0 }));
+  const b = await publicarSenalesBeisbol(guardar).catch(() => ({ publicadas: 0 }));
+  return { ok: true, publicadas: (a.publicadas || 0) + (b.publicadas || 0) };
+}
