@@ -7,6 +7,7 @@
    Bilingüe (inglés por defecto). Responsivo.
    ============================================================ */
 import { listarAnalisis, listarAnalistas, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos, misApoyos, apoyarAnalista, cancelarApoyo, contarApoyos, reportarSenal, miReporte } from '../mesa/mesa-datos.js';
+import { BOTS, botPorUid, seguidoresBot } from '../datos/bots.js';
 import { usuarioActual } from '../auth/auth.js';
 import { planPorId } from '../datos/planes.js';
 import { estiloAttrs } from './estilo-senal.js';
@@ -284,10 +285,7 @@ function tarjeta(a, ctx = {}, idx = 0) {
   const btnFollow = puede
     ? `<button class="sn-follow ${sigo ? 'on' : ''}" data-follow="${esc(uid)}" data-firma="${esc(firma)}">${sigo ? L('Following', 'Siguiendo') : L('Follow', 'Seguir')}</button>`
     : '';
-  const btnSub = puede
-    ? `<button class="sn-sub ${suscrito ? 'on' : ''}" data-sub="${esc(uid)}" data-firma="${esc(firma)}">${suscrito ? `${ICheck}${L('Subscribed', 'Suscrito')}` : `${L('Signals for $2/mo', 'Señales por $2/mes')}`}</button>`
-    : '';
-  const acciones = (btnFollow || btnSub) ? `<div class="sn-c-actions">${btnFollow}${btnSub}</div>` : '';
+  const acciones = btnFollow ? `<div class="sn-c-actions">${btnFollow}</div>` : '';
   const fotoUid = (ctx.fotoPorUid && ctx.fotoPorUid[uid]) || null;
   const avaFoto = fotoUid ? `<span class="sn-c-ava"><img src="assets/imagenes/analistas/${String(fotoUid).toLowerCase()}.webp" alt="" loading="lazy"></span>` : emblema;
   const by = firma ? `<div class="sn-c-by">
@@ -311,7 +309,7 @@ function tarjeta(a, ctx = {}, idx = 0) {
   const analisis = a.texto ? `<button class="sn-c-toggle" data-an="${esc(sid)}"><span>${L('Read analysis', 'Ver análisis')}</span>${IChev}</button>
     <div class="sn-c-an" id="an-${esc(sid)}" hidden><p>${esc(a.texto)}</p></div>` : '';
 
-  const overlay = bloqueada ? `<div class="sn-c-lock"><div class="sn-c-lock-ic">${IC.lock || '🔒'}</div><b>${L('Unlock this signal', 'Desbloquea esta señal')}</b><span>${L('Follow this analyst to see the pick and get it in your feed.', 'Sigue a este analista para ver el pick y recibirlo en tu feed.')}</span>${uid ? `<button class="sn-follow" data-follow="${esc(uid)}" data-firma="${esc(firma)}">${L('Follow · $2/mo', 'Seguir · $2/mes')}</button>` : ''}</div>` : '';
+  const overlay = bloqueada ? `<div class="sn-c-lock"><div class="sn-c-lock-ic">${IC.lock || '🔒'}</div><b>${L('Unlock this signal', 'Desbloquea esta señal')}</b><span>${L('Follow this analyst to see the pick and get it in your feed.', 'Sigue a este analista para ver el pick y recibirlo en tu feed.')}</span>${uid ? `<button class="sn-follow" data-follow="${esc(uid)}" data-firma="${esc(firma)}">${L('Follow', 'Seguir')}</button>` : ''}</div>` : '';
   return `<div class="sn-card ${est.cls} ${bloqueada ? 'sn-locked' : ''}" style="${est.varCss}">
     ${overlay}
     <div class="sn-c-inner">
@@ -438,9 +436,10 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   } catch (_) {}
 
   // Hidratar nº de seguidores (tarjetas + franja de descubrir)
-  const uids = [...new Set(lista.map(a => a.autorUid).filter(Boolean))];
+  const uids = [...new Set([...lista.map(a => a.autorUid), ...BOTS.map(b => b.uid)].filter(Boolean))];
   const pintarSeguidores = async (uid) => {
     let n = 0; try { n = await contarSeguidores(uid); } catch (_) {}
+    const bot = botPorUid(uid); if (bot) n = seguidoresBot(bot, n);   // bots: figurativo + crecimiento + reales
     cont.querySelectorAll(`.sn-c-fol[data-fol="${CSS.escape(uid)}"]`).forEach(el => {
       el.innerHTML = `${el.querySelector('svg') ? el.querySelector('svg').outerHTML : ''}<b>${n.toLocaleString()}</b> ${L('followers', 'seguidores')}`;
     });
@@ -456,6 +455,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   cont.querySelectorAll('[data-follow]').forEach(btn => btn.onclick = async () => {
     const uid = btn.dataset.follow, firma = btn.dataset.firma || null;
     const seguir = !ctx.sigo.has(uid);
+    if (seguir && !confirm(L('Follow this analyst for $2/mo? You will get their signals in your inbox.', '¿Seguir a este analista por $2/mes? Recibirás sus señales en tu buzón.'))) return;
     const grupo = cont.querySelectorAll(`[data-follow="${CSS.escape(uid)}"]`);
     grupo.forEach(b => b.disabled = true);
     try {
