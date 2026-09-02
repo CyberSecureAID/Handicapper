@@ -221,10 +221,10 @@ function aMatch(ev, ligaId, ligaNombre) {
   // Completa con la tabla REAL (récord + posición); reemplaza el rank basura (99).
   const aplicarTabla = (eq) => {
     const s = standingDe(ligaId, eq.id);
-    if (!s) { eq.posicion = null; return; }
+    if (!s) return;                                   // sin tabla: conserva lo del scoreboard (posición/récord)
     if (s.record) eq.record = s.record;
-    eq.posicion = s.rank || null;
-    eq.winPct = (s.winPct != null ? s.winPct : null);
+    if (s.rank) eq.posicion = s.rank;
+    if (s.winPct != null) eq.winPct = s.winPct;
     if (s.div && !eq.division) eq.division = s.div;
   };
   aplicarTabla(local); aplicarTabla(visita);
