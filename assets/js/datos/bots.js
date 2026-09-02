@@ -12,7 +12,7 @@ export const BOTS = [
     nombre: 'Alejandro Ruiz',
     firma: 'Alejandro R.',
     deporte: 'futbol',
-    foto: 'a',                       // assets/imagenes/analistas/a.webp
+    foto: 's',                       // assets/imagenes/analistas/s.webp
     email: 'alejandro@sportsexpectations.io',
     activo: true,
     configurado: true,
@@ -25,7 +25,7 @@ export const BOTS = [
     nombre: 'Miguel Santos',
     firma: 'Miguel S.',
     deporte: 'beisbol',
-    foto: 'b',                       // assets/imagenes/analistas/b.webp
+    foto: 't',                       // assets/imagenes/analistas/t.webp
     email: 'miguel@sportsexpectations.io',
     activo: true,
     configurado: true,
