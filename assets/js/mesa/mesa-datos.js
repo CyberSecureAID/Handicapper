@@ -253,6 +253,21 @@ export async function quitarFotoAnalista(uid) {
   catch (_) { return false; }
 }
 
+/* ADMIN: ajusta un contador figurativo (+/-). campo: followersExtra | likesExtra | dislikesExtra. */
+export async function ajustarContadorAnalista(uid, campo, delta) {
+  const permitidos = ['followersExtra', 'likesExtra', 'dislikesExtra'];
+  if (!permitidos.includes(campo)) return null;
+  const S = _obtenerStore(), db = _obtenerDB();
+  const ref = S.doc(db, 'analistas', uid);
+  try {
+    const snap = await S.getDoc(ref);
+    const actual = (snap.exists() && Number(snap.data()[campo])) || 0;
+    const nuevo = Math.max(0, actual + delta);
+    await S.setDoc(ref, { [campo]: nuevo }, { merge: true });
+    return nuevo;
+  } catch (_) { return null; }
+}
+
 /* ============================================================
    FASE 3 — SEGUIDORES (colección 'seguimientos')
    Doc id = `${seguidorUid}__${analistaUid}` = { seguidorUid, analistaUid, firma, fecha }

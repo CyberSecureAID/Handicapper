@@ -3,8 +3,9 @@
    Secciones: Overview · Users · Analysis.
    Solo visible si esAdmin() (verificado en Firestore).
    ============================================================ */
-import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte, asignarFotoAnalista, quitarFotoAnalista } from './mesa-datos.js';
+import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte, asignarFotoAnalista, quitarFotoAnalista, ajustarContadorAnalista } from './mesa-datos.js';
 import { rutaFotoAnalista } from '../datos/fotos-analistas.js';
+import { seguidoresBot, likesDe, dislikesDe } from '../datos/bots.js';
 import { abrirSelectorFotos } from '../ui/selector-fotos.js';
 import { prepararEstilosSenal, tarjetaMuestra } from '../ui/senales.js';
 import { PALETA, INTENSIDADES, EMBLEMAS, EMBLEMA_NOMBRE, estiloSeguro } from '../ui/estilo-senal.js';
@@ -39,6 +40,10 @@ const DEPORTES = {
 const depNombre = (id) => { const d = DEPORTES[id]; return d ? (_mesaLang === 'es' ? d.es : d.en) : (id || '—'); };
 const ligasDeporte = (id) => (DEPORTES[id] && DEPORTES[id].ligas) || [];
 const deporteDeLiga = (ligaId) => { for (const k in DEPORTES) if (DEPORTES[k].ligas.includes(ligaId)) return k; return 'futbol'; };
+const segMostrar = (a) => seguidoresBot(a, 0);
+const likesMostrar = (a) => likesDe(a);
+const dislikesMostrar = (a) => dislikesDe(a);
+const counterUI = (uid, campo, label, valor) => `<div class="anc"><span class="anc-lbl">${label}</span><button type="button" class="anc-b" data-anc="${campo}" data-ancuid="${uid}" data-d="-1">−</button><b class="anc-v" data-ancv="${campo}-${uid}">${(valor || 0).toLocaleString()}</b><button type="button" class="anc-b" data-anc="${campo}" data-ancuid="${uid}" data-d="1">+</button></div>`;
 
 export async function abrirMesa() {
   _cont = document.getElementById('mesa-screen');
@@ -762,6 +767,11 @@ function vistaAnalistas() {
       <select data-an-dep="${esc(a.uid)}" class="u-select an-mng-sel">${Object.keys(DEPORTES).map(k => `<option value="${k}" ${a.deporte === k ? 'selected' : ''}>${esc(depNombre(k))}</option>`).join('')}</select>
       <button class="an-mng-toggle ${a.activo === false ? '' : 'on'}" data-an-toggle="${esc(a.uid)}">${a.esBot ? (a.activo === false ? ML('Paused', 'Pausado') : ML('Pause', 'Pausar')) : (a.activo === false ? ML('Blocked', 'Bloqueado') : ML('Active', 'Activo'))}</button>
       ${a.esBot ? '' : `<button class="an-mng-del" data-an-del="${esc(a.uid)}">${ML('Remove', 'Quitar')}</button>`}
+      <div class="an-mng-counters">
+        ${counterUI(a.uid, 'followersExtra', ML('Followers', 'Seguidores'), segMostrar(a))}
+        ${counterUI(a.uid, 'likesExtra', ML('Likes', 'Likes'), likesMostrar(a))}
+        ${counterUI(a.uid, 'dislikesExtra', ML('Dislikes', 'Dislikes'), dislikesMostrar(a))}
+      </div>
     </div>`;
   }).join('') : `<div class="an-mng-empty">${ML('No analysts yet.', 'Aún no hay analistas.')}</div>`;
   return `
@@ -817,6 +827,16 @@ function enlazarAnalistas() {
       if (!nuevoActivo && !(a && a.esBot)) { try { await quitarFotoAnalista(uid); } catch (_) {} }   // suspendido (no bot) → libera su foto
       _analistas = await listarAnalistas(); pintarTab();
     } catch (_) { b.disabled = false; }
+  });
+  _cont.querySelectorAll('[data-anc]').forEach(b => b.onclick = async () => {
+    const uid = b.dataset.ancuid, campo = b.dataset.anc, d = Number(b.dataset.d);
+    b.disabled = true;
+    const nuevo = await ajustarContadorAnalista(uid, campo, d);
+    b.disabled = false;
+    if (nuevo == null) return;
+    const a = _analistas.find(x => x.uid === uid); if (a) a[campo] = nuevo;
+    const val = campo === 'followersExtra' ? segMostrar(a) : campo === 'likesExtra' ? likesMostrar(a) : dislikesMostrar(a);
+    _cont.querySelectorAll(`[data-ancv="${campo}-${uid}"]`).forEach(el => el.textContent = (val || 0).toLocaleString());
   });
   _cont.querySelectorAll('[data-an-foto]').forEach(b => b.onclick = () => {
     const uid = b.dataset.anFoto, a = _analistas.find(x => x.uid === uid); if (!a) return;
