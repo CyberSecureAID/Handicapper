@@ -799,7 +799,12 @@ function enlazarAnalistas() {
   _cont.querySelectorAll('[data-an-toggle]').forEach(b => b.onclick = async () => {
     const uid = b.dataset.anToggle, a = _analistas.find(x => x.uid === uid); if (!a) return;
     b.disabled = true;
-    try { await fijarAnalista(uid, { activo: a.activo === false }); _analistas = await listarAnalistas(); pintarTab(); } catch (_) { b.disabled = false; }
+    const nuevoActivo = a.activo === false;   // estado tras el toggle
+    try {
+      await fijarAnalista(uid, { activo: nuevoActivo });
+      if (!nuevoActivo) { try { await quitarFotoAnalista(uid); } catch (_) {} }   // suspendido → libera su foto
+      _analistas = await listarAnalistas(); pintarTab();
+    } catch (_) { b.disabled = false; }
   });
   _cont.querySelectorAll('[data-an-foto]').forEach(b => b.onclick = () => {
     const uid = b.dataset.anFoto, a = _analistas.find(x => x.uid === uid); if (!a) return;
@@ -841,7 +846,7 @@ function enlazarAnalistas() {
     const uid = b.dataset.anDel, a = _analistas.find(x => x.uid === uid), mail = (a && a.email) || uid;
     if (!confirm(ML('Remove ' + mail + ' as analyst? This is permanent. They lose the role and access.', '¿Quitar a ' + mail + ' como analista? Es permanente: pierde el rol y el acceso.'))) return;
     b.disabled = true;
-    try { await eliminarAnalista(uid); _analistas = await listarAnalistas(); pintarTab(); } catch (_) { b.disabled = false; }
+    try { await quitarFotoAnalista(uid); await eliminarAnalista(uid); _analistas = await listarAnalistas(); pintarTab(); } catch (_) { b.disabled = false; }
   });
 }
 
