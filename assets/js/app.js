@@ -544,12 +544,9 @@ async function abrirDirectorioSenales() {
   const ov = document.createElement('div');
   ov.className = 'sd-ov';
   ov.innerHTML = `<div class="sd-modal">
-    <div class="sd-head">
-      <div><h2>${Lp('Analyst signals', 'Señales de analistas')}</h2><p>${Lp('Follow an analyst to get their picks in your inbox.', 'Sigue a un analista para recibir sus picks en tu buzón.')}</p></div>
-      <button class="sd-x" id="sd-x" aria-label="Close">✕</button>
-    </div>
-    <div class="sd-note">${Lp('Analysts post when they spot a high-probability edge — they are not required to post every day.', 'Los analistas publican cuando ven una oportunidad de alta probabilidad — no están obligados a publicar todos los días.')}</div>
-    <div id="sd-list"><div class="pf-empty"><div class="sn-spin"></div></div></div>
+    <button class="sd-x" id="sd-x" aria-label="Close">✕</button>
+    <div class="sd-head"><h2>${Lp('Analyst signals', 'Señales de analistas')}</h2><p>${Lp('Follow an analyst to get their picks in your inbox.', 'Sigue a un analista para recibir sus picks en tu buzón.')}</p></div>
+    <div id="sd-list"><div class="sd-loading"><div class="sn-spin"></div></div></div>
   </div>`;
   document.body.appendChild(ov);
   const cerrar = () => ov.remove();
@@ -562,7 +559,7 @@ async function abrirDirectorioSenales() {
     bots = await import('./datos/bots.js');
     const [an, sg] = await Promise.all([datos.listarAnalistas().catch(() => []), datos.misSeguidos().catch(() => [])]);
     analistas = an.filter(a => a.activo !== false); sigo = new Set(sg);
-  } catch (_) { ov.querySelector('#sd-list').innerHTML = `<div class="pf-empty">${Lp('Could not load.', 'No se pudo cargar.')}</div>`; return; }
+  } catch (_) { ov.querySelector('#sd-list').innerHTML = `<div class="sd-loading">${Lp('Could not load.', 'No se pudo cargar.')}</div>`; return; }
 
   const rows = await Promise.all(analistas.map(async a => {
     let f = 0; try { f = await datos.contarSeguidores(a.uid); } catch (_) {}
@@ -574,36 +571,63 @@ async function abrirDirectorioSenales() {
   }));
   rows.sort((x, y) => y.f - x.f);
 
-  const foto = (id) => id ? `<img src="assets/imagenes/analistas/${String(id).toLowerCase()}.webp" alt="" loading="lazy">` : '<span class="sd-ini">★</span>';
-  const list = rows.map(({ a, f, likes, prom }) => {
+  const iPer = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c0-3.4 2.9-5.3 6.5-5.3s6.5 1.9 6.5 5.3"/></svg>`;
+  const foto = (id) => id ? `<img src="assets/imagenes/analistas/${String(id).toLowerCase()}.webp" alt="" loading="lazy">` : `<span class="sd-ini">${iPer}</span>`;
+  const cards = rows.map(({ a, f, likes, prom }) => {
     const sig = sigo.has(a.uid);
-    return `<div class="sd-row" style="--acc:${(a.estilo && a.estilo.color) || '#e8b84b'}">
+    return `<div class="sd-card" style="--acc:${(a.estilo && a.estilo.color) || '#e8b84b'}">
       <div class="sd-ava">${foto(a.foto)}</div>
-      <div class="sd-info">
-        <b>${esc(a.firma || a.nombre || '')}</b>
-        <span class="sd-sport">${esc(DEP[a.deporte] || a.deporte || '')}</span>
-        <div class="sd-stats">
-          <span>👥 <b>${f.toLocaleString()}</b> ${Lp('followers','seguidores')}</span>
-          <span>👍 <b>${likes.toLocaleString()}</b></span>
-          <span>📊 <b>${prom}</b> ${Lp('/day','/día')}</span>
-        </div>
+      <b class="sd-nom">${esc(a.firma || a.nombre || '')}</b>
+      <span class="sd-sport">${esc(DEP[a.deporte] || a.deporte || '')}</span>
+      <div class="sd-stats">
+        <div><b>${f.toLocaleString()}</b><em>${Lp('Followers','Seguidores')}</em></div>
+        <div><b>${likes.toLocaleString()}</b><em>${Lp('Likes','Likes')}</em></div>
+        <div><b>${prom}</b><em>${Lp('Per day','Por día')}</em></div>
       </div>
       <button class="sd-follow ${sig ? 'on' : ''}" data-sdfollow="${esc(a.uid)}" data-sdfirma="${esc(a.firma || '')}">${sig ? Lp('Following','Siguiendo') : Lp('Follow','Seguir')}</button>
     </div>`;
   }).join('');
-  ov.querySelector('#sd-list').innerHTML = list || `<div class="pf-empty">${Lp('No analysts yet.','Aún no hay analistas.')}</div>`;
+  ov.querySelector('#sd-list').innerHTML = cards ? `<div class="sd-grid">${cards}</div>` : `<div class="sd-loading">${Lp('No analysts yet.','Aún no hay analistas.')}</div>`;
 
   ov.querySelectorAll('[data-sdfollow]').forEach(b => b.onclick = async () => {
     const uid = b.dataset.sdfollow, firma = b.dataset.sdfirma || null;
     const seguir = !sigo.has(uid);
-    if (seguir && !confirm(Lp('Follow this analyst for $2/mo? You will get their signals in your inbox.', '¿Seguir a este analista por $2/mes? Recibirás sus señales en tu buzón.'))) return;
-    b.disabled = true;
-    try {
-      if (seguir) { await datos.seguirAnalista(uid, firma); try { await datos.apoyarAnalista(uid, firma); } catch (_) {} sigo.add(uid); b.classList.add('on'); b.textContent = Lp('Following','Siguiendo'); }
-      else { await datos.dejarDeSeguir(uid); try { await datos.cancelarApoyo(uid); } catch (_) {} sigo.delete(uid); b.classList.remove('on'); b.textContent = Lp('Follow','Seguir'); }
-    } catch (_) {}
-    b.disabled = false;
+    const aplicar = async (activar) => {
+      b.disabled = true;
+      try {
+        if (activar) { await datos.seguirAnalista(uid, firma); try { await datos.apoyarAnalista(uid, firma); } catch (_) {} sigo.add(uid); b.classList.add('on'); b.textContent = Lp('Following','Siguiendo'); }
+        else { await datos.dejarDeSeguir(uid); try { await datos.cancelarApoyo(uid); } catch (_) {} sigo.delete(uid); b.classList.remove('on'); b.textContent = Lp('Follow','Seguir'); }
+      } catch (_) {}
+      b.disabled = false;
+    };
+    if (!seguir) return aplicar(false);
+    if (_esAdmin) return aplicar(true);                 // el admin sigue sin pagar (acceso total)
+    abrirPagoAnalista(firma, () => aplicar(true));       // usuarios: ventana de cobro
   });
+}
+
+/* Ventana de cobro (para vincular con Stripe). Requiere aceptar los términos. */
+function abrirPagoAnalista(firma, onPagar) {
+  const ES = idiomaActual() === 'es';
+  const Lp = (en, es) => ES ? es : en;
+  const ov = document.createElement('div');
+  ov.className = 'pay-ov';
+  ov.innerHTML = `<div class="pay-modal">
+    <button class="pay-x" id="pay-x" aria-label="Close">✕</button>
+    <div class="pay-price">$2<span>/${Lp('mo','mes')}</span></div>
+    <h3>${Lp('Follow', 'Seguir a')} ${esc(firma || '')}</h3>
+    <p>${Lp('You will get this analyst\\u2019s signals in your inbox, with notifications.', 'Recibirás las señales de este analista en tu buzón, con notificaciones.')}</p>
+    <div class="pay-note">${Lp('Analysts publish only when they see a high probability opportunity. They are not required to post every day.', 'Los analistas publican solo cuando ven una oportunidad de alta probabilidad. No están obligados a publicar todos los días.')}</div>
+    <label class="pay-agree"><input type="checkbox" id="pay-ok"><span>${Lp('I understand and agree.', 'Entiendo y estoy de acuerdo.')}</span></label>
+    <button class="pay-btn" id="pay-btn" disabled>${Lp('Pay $2/mo and follow', 'Pagar $2/mes y seguir')}</button>
+  </div>`;
+  document.body.appendChild(ov);
+  const cerrar = () => ov.remove();
+  ov.querySelector('#pay-x').onclick = cerrar;
+  ov.addEventListener('click', e => { if (e.target === ov) cerrar(); });
+  const chk = ov.querySelector('#pay-ok'), btn = ov.querySelector('#pay-btn');
+  chk.onchange = () => { btn.disabled = !chk.checked; };
+  btn.onclick = async () => { btn.disabled = true; try { await onPagar(); } catch (_) {} cerrar(); };
 }
 
 async function onSesion(usuario, extra) {  pintarCuenta(usuario);
