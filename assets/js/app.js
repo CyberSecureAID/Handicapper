@@ -19,6 +19,7 @@ const $ = (id) => document.getElementById(id);
 
 let ligaActiva = null;
 let proyActiva = null;   // 'mlb' | 'soccer' | 'nba' | null (proyecciones premium)
+let proyModo = 'premium';   // 'pro' | 'premium' — según el botón usado
 let partidoSel = null;
 
 /* -------- Logo con respaldo -------- */
@@ -100,7 +101,7 @@ async function cargarLista() {
     await pintarParlay(cont, {
       sport: proyActiva,
       nivel: _esAdmin ? 'premium' : planActual(),
-      modo: (_esAdmin || planActual() === 'premium') ? 'premium' : 'pro',
+      modo: proyModo,
       abrirPlanes: () => mostrarPantalla('pricing'),
     });
     return;
@@ -427,14 +428,8 @@ function actualizarBotonNivel() {
   const pb = document.getElementById('premium-btn');
   if (!pb) return;
   const plan = planActual();
-  const lbl = pb.querySelector('span:not(.premium-btn-dot)');
-  const nivel = plan === 'pro' ? 'pro' : (plan === 'premium' ? 'premium' : 'premium');
   pb.classList.remove('nivel-pro', 'nivel-premium');
-  pb.classList.add('nivel-' + nivel);
-  if (lbl) lbl.textContent = nivel === 'pro' ? 'Pro' : 'Premium';
-  const head = document.querySelector('.premium-pop-h');
-  if (head) head.textContent = nivel === 'pro' ? 'Pro projections' : 'Premium projections';
-  document.querySelectorAll('.premium-pop .pi-pro').forEach(t => t.textContent = nivel === 'pro' ? 'PRO' : 'PREMIUM');
+  pb.classList.add(plan === 'pro' ? 'nivel-pro' : 'nivel-premium');
 }
 function marcarProyeccion() {
   document.querySelectorAll('.proj-b').forEach(b => b.classList.toggle('on', proyActiva === b.dataset.proj));
@@ -450,9 +445,11 @@ function initProyeccion() {
   }));
   // Botón Premium (móvil): despliega las proyecciones reusando los handlers de arriba
   const pBtn = document.getElementById('premium-btn');
+  const proBtn = document.getElementById('pro-btn');
   const pPop = document.getElementById('premium-pop');
   if (pBtn && pPop) {
-    pBtn.addEventListener('click', (e) => { e.stopPropagation(); const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); });
+    pBtn.addEventListener('click', (e) => { e.stopPropagation(); proyModo = 'premium'; const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); });
+    if (proBtn) proBtn.addEventListener('click', (e) => { e.stopPropagation(); proyModo = 'pro'; const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); proBtn.classList.toggle('open', o); });
     const pAn = document.getElementById('premium-analisis');
     if (pAn) pAn.addEventListener('click', () => {
       pPop.classList.remove('open'); pBtn.classList.remove('open');
