@@ -131,7 +131,8 @@ function inyectarCSS() {
   .sn-disc-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
   .sn-disc-row::-webkit-scrollbar{height:6px}.sn-disc-row::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:99px}
   .sn-disc-card{--acc:#e8b84b;flex:0 0 auto;width:148px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;background:linear-gradient(180deg,rgba(20,27,38,.9),rgba(13,18,26,.95));border:1px solid var(--line);border-radius:14px;padding:15px 12px 13px}
-  .sn-disc-ava{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:19px;color:var(--acc);background:color-mix(in srgb, var(--acc) 15%, transparent);border:1px solid color-mix(in srgb, var(--acc) 34%, transparent);margin-bottom:4px}
+  .sn-disc-ava{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:19px;color:var(--acc);background:color-mix(in srgb, var(--acc) 15%, transparent);border:1px solid color-mix(in srgb, var(--acc) 34%, transparent);margin-bottom:4px;overflow:hidden}
+  .sn-disc-ava img{width:100%;height:100%;object-fit:cover;display:block}
   .sn-disc-ava svg{width:23px;height:23px}
   .sn-disc-firma{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:14px;color:var(--acc);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sn-disc-sport{font-size:11px;color:var(--tx2)}
@@ -234,8 +235,11 @@ function bloqueDescubrir(analistas, ctx) {
     const sigo = ctx.sigo && ctx.sigo.has(an.uid);
     const ini = (an.firma || '?').trim().charAt(0).toUpperCase();
     const puede = ctx.premium && an.uid && an.uid !== ctx.me;
-    return `<div class="sn-disc-card" style="${est.varCss}">
-      <div class="sn-disc-ava">${est.emblemaSVG || ini}</div>
+    const ava = an.foto
+      ? `<img src="assets/imagenes/analistas/${String(an.foto).toLowerCase()}.webp" alt="" loading="lazy">`
+      : (est.emblemaSVG || ini);
+    return `<div class="sn-disc-card${an.foto ? ' con-foto' : ''}" style="${est.varCss}">
+      <div class="sn-disc-ava">${ava}</div>
       <div class="sn-disc-firma">${esc(an.firma || '')}</div>
       <div class="sn-disc-sport">${esc(depenNombre(an.deporte))}</div>
       <div class="sn-disc-fol" data-discfol="${esc(an.uid)}">…</div>
