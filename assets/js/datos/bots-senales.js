@@ -7,7 +7,7 @@
    2) Copia tu key (Account → My Access) y pégala abajo en API_FOOTBALL_KEY.
    ============================================================ */
 
-export const API_FOOTBALL_KEY = '';   // <-- PEGA AQUÍ TU KEY
+export const API_FOOTBALL_KEY = '2f73a70e4c34b266163a1424db8a573b';   // <-- key de API-Football
 
 const BASE_SOCCER = 'https://v3.football.api-sports.io';
 // Ligas de fútbol (ids de API-Football): EPL, LaLiga, Serie A, Bundesliga, Ligue 1, Champions
