@@ -546,6 +546,17 @@ async function abrirDirectorioSenales() {
   ov.innerHTML = `<div class="sd-modal">
     <button class="sd-x" id="sd-x" aria-label="Close">✕</button>
     <div class="sd-head"><h2>${Lp('Analyst signals', 'Señales de analistas')}</h2><p>${Lp('Follow an analyst to get their picks in your inbox.', 'Sigue a un analista para recibir sus picks en tu buzón.')}</p></div>
+    <div class="sd-tools">
+      <div class="sd-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="sd-q" type="text" placeholder="${Lp('Search analysts…', 'Buscar analistas…')}"></div>
+      <div class="sd-chips" id="sd-chips">
+        <button class="sd-chip on" data-cat="">${Lp('All','Todos')}</button>
+        <button class="sd-chip" data-cat="futbol">${Lp('Soccer','Fútbol')}</button>
+        <button class="sd-chip" data-cat="basket">${Lp('Basketball','Básquet')}</button>
+        <button class="sd-chip" data-cat="hockey">${Lp('Ice hockey','Hockey')}</button>
+        <button class="sd-chip" data-cat="beisbol">${Lp('Baseball','Béisbol')}</button>
+        <button class="sd-chip" data-cat="americano">${Lp('Am. football','F. americano')}</button>
+      </div>
+    </div>
     <div id="sd-list"><div class="sd-loading"><div class="sn-spin"></div></div></div>
   </div>`;
   document.body.appendChild(ov);
@@ -573,7 +584,7 @@ async function abrirDirectorioSenales() {
 
   const iPer = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c0-3.4 2.9-5.3 6.5-5.3s6.5 1.9 6.5 5.3"/></svg>`;
   const foto = (id) => id ? `<img src="assets/imagenes/analistas/${String(id).toLowerCase()}.webp" alt="" loading="lazy">` : `<span class="sd-ini">${iPer}</span>`;
-  const cards = rows.map(({ a, f, likes, prom }) => {
+  const cardHTML = ({ a, f, likes, prom }) => {
     const sig = sigo.has(a.uid);
     return `<div class="sd-card" style="--acc:${(a.estilo && a.estilo.color) || '#e8b84b'}">
       <div class="sd-ava">${foto(a.foto)}</div>
@@ -586,10 +597,9 @@ async function abrirDirectorioSenales() {
       </div>
       <button class="sd-follow ${sig ? 'on' : ''}" data-sdfollow="${esc(a.uid)}" data-sdfirma="${esc(a.firma || '')}">${sig ? Lp('Following','Siguiendo') : Lp('Follow','Seguir')}</button>
     </div>`;
-  }).join('');
-  ov.querySelector('#sd-list').innerHTML = cards ? `<div class="sd-grid">${cards}</div>` : `<div class="sd-loading">${Lp('No analysts yet.','Aún no hay analistas.')}</div>`;
+  };
 
-  ov.querySelectorAll('[data-sdfollow]').forEach(b => b.onclick = async () => {
+  const wireFollow = () => ov.querySelectorAll('[data-sdfollow]').forEach(b => b.onclick = async () => {
     const uid = b.dataset.sdfollow, firma = b.dataset.sdfirma || null;
     const seguir = !sigo.has(uid);
     const aplicar = async (activar) => {
@@ -601,9 +611,19 @@ async function abrirDirectorioSenales() {
       b.disabled = false;
     };
     if (!seguir) return aplicar(false);
-    if (_esAdmin) return aplicar(true);                 // el admin sigue sin pagar (acceso total)
-    abrirPagoAnalista(firma, () => aplicar(true));       // usuarios: ventana de cobro
+    if (_esAdmin) return aplicar(true);
+    abrirPagoAnalista(firma, () => aplicar(true));
   });
+
+  let cat = '', q = '';
+  const render = () => {
+    const filt = rows.filter(r => (!cat || r.a.deporte === cat) && (!q || String(r.a.firma || r.a.nombre || '').toLowerCase().includes(q)));
+    ov.querySelector('#sd-list').innerHTML = filt.length ? `<div class="sd-grid">${filt.map(cardHTML).join('')}</div>` : `<div class="sd-loading">${Lp('No analysts found.','No se encontraron analistas.')}</div>`;
+    wireFollow();
+  };
+  render();
+  const inp = ov.querySelector('#sd-q'); if (inp) inp.oninput = () => { q = inp.value.trim().toLowerCase(); render(); };
+  ov.querySelectorAll('.sd-chip').forEach(c => c.onclick = () => { cat = c.dataset.cat; ov.querySelectorAll('.sd-chip').forEach(x => x.classList.toggle('on', x === c)); render(); });
 }
 
 /* Ventana de cobro (para vincular con Stripe). Requiere aceptar los términos. */
@@ -642,6 +662,15 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   if ((location.hash || '').toLowerCase() === '#mesa') { try { history.replaceState(null, '', location.pathname); } catch (_) {} }
   if (_esAdmin) marcarVistaPrevia('premium');   // el admin tiene acceso total cuando entre
   if (_esAdmin) publicarBotsSiEsNuevoDia();     // señales de bots automáticas (1 vez al día)
+  // Foto de perfil (de la ficha de analista) en el avatar de la esquina superior derecha
+  try {
+    const { leerFichaAnalista } = await import('./mesa/mesa-datos.js');
+    const ficha = await leerFichaAnalista();
+    if (ficha && ficha.foto) {
+      const btn = $('cuenta-btn');
+      if (btn) { btn.classList.add('logueado'); btn.innerHTML = `<img class="av-img" src="assets/imagenes/analistas/${String(ficha.foto).toLowerCase()}.webp" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`; }
+    }
+  } catch (_) {}
   // NO entramos automáticamente al cargar: el usuario llega al lobby y entra por su elección.
   // Solo entramos directo si el login fue una acción intencional (tocó "Entrar"/"Registrarse").
   if (extra && extra.intencional) { entrarSegunAcceso(); return; }
