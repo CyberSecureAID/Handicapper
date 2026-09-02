@@ -896,3 +896,10 @@ body.en-mesa { overflow: hidden; }
   .rep-row-acts { flex-direction: row; width: 100%; }
   .rep-row-acts .rep-act { flex: 1; }
 }
+
+/* Foto del analista en la gestión (Staff) */
+.an-mng-foto { width: 46px; height: 46px; flex: none; border-radius: 11px; overflow: hidden; border: 1px solid var(--m-linea, rgba(255,255,255,.1)); background: rgba(255,255,255,.04); cursor: pointer; padding: 0; display: grid; place-items: center; transition: border-color .15s; }
+.an-mng-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.an-mng-foto-mas { color: #7a8695; font-size: 24px; font-weight: 300; line-height: 1; }
+.an-mng-foto:hover { border-color: #e8b84b; }
+.an-mng-foto.tiene { border-color: rgba(232,184,75,.5); }
