@@ -7,7 +7,7 @@
   --linea:#242c37; --tinta:#eef2f6; --tinta-2:#aab4c0; --tinta-3:#6b7683;
   --oro-suave:rgba(232,184,75,.14);
   --sombra-tarjeta: inset 0 1px 0 rgba(255,255,255,.06), 0 2px 4px rgba(0,0,0,.5), 0 12px 26px rgba(0,0,0,.5);
-  background: var(--fondo) url('../imagenes/fondos/fondo-pagina.webp') center / cover fixed no-repeat; color: var(--tinta);
+  background: var(--fondo) url('../imagenes/fondos/fondo-pagina.webp') center top / cover no-repeat scroll; color: var(--tinta);
 }
 /* Barra del lobby: transparente y flotante sobre el video (sin franja) */
 #landing-screen .lnav {
@@ -42,6 +42,8 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
   background: #070b16 url('../imagenes/fondos/hero-fondo.webp') 78% center / cover no-repeat; font-family: "Poppins", var(--sans); }
 .hero-glow { position: absolute; top: -8%; right: 4%; width: 52%; height: 88%; z-index: 0; pointer-events: none;
   background: radial-gradient(closest-side, rgba(43,111,255,.26), transparent 72%); }
+.hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 200px; z-index: 2; pointer-events: none;
+  background: linear-gradient(180deg, transparent, #000006 96%); }
 .hero-veil { position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background:
     linear-gradient(90deg, #070b16 0%, rgba(7,11,22,.94) 32%, rgba(7,11,22,.55) 54%, rgba(7,11,22,.15) 74%, rgba(7,11,22,0) 100%),
@@ -71,19 +73,19 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 
 /* ===================== ADVANCED ANALYTICS ===================== */
 .analytics { max-width: 1200px; margin: 0 auto; padding: 72px 28px; font-family: "Poppins", var(--sans); }
-.an-panel { display: grid; grid-template-columns: 340px 1fr; gap: 50px; align-items: start;
+.an-panel { display: grid; grid-template-columns: 300px 1fr; gap: 44px; align-items: center;
   background: rgba(13,19,30,.68); border: 1px solid rgba(255,255,255,.07); border-radius: 22px; padding: 46px; backdrop-filter: blur(6px);
   box-shadow: 0 30px 70px -30px rgba(0,0,0,.7); }
 .an-eyebrow { display: inline-block; font-family: "Poppins", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--oro); margin-bottom: 16px; }
 .an-title { font-family: "Poppins", sans-serif; font-weight: 700; font-size: clamp(24px, 2.3vw, 32px); line-height: 1.16; color: #fff; margin: 0 0 16px; }
 .an-sub { font-family: "Inter", sans-serif; font-size: 15px; line-height: 1.62; color: var(--tinta-2); margin: 0 0 26px; max-width: 320px; }
-.an-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px 30px; }
-.an-card { display: flex; flex-direction: column; }
-.an-ic { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 14px; color: #4a90ff; }
-.an-ic svg { width: 30px; height: 30px; }
+.an-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.an-card { display: flex; flex-direction: column; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 14px; padding: 22px 18px; }
+.an-ic { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px; margin-bottom: 14px; background: rgba(74,144,255,.12); border: 1px solid rgba(74,144,255,.22); color: #5a9bff; }
+.an-ic svg { width: 24px; height: 24px; }
 .an-card h3 { font-family: "Poppins", sans-serif; font-weight: 600; font-size: 15px; color: #fff; margin: 0 0 8px; }
-.an-card p { font-family: "Inter", sans-serif; font-size: 13px; line-height: 1.55; color: var(--tinta-2); margin: 0; }
-@media (max-width: 900px) { .an-panel { grid-template-columns: 1fr; gap: 32px; padding: 34px 24px; } .an-grid { grid-template-columns: 1fr 1fr; gap: 28px 22px; } }
+.an-card p { font-family: "Inter", sans-serif; font-size: 12.5px; line-height: 1.5; color: var(--tinta-2); margin: 0; }
+@media (max-width: 900px) { .an-panel { grid-template-columns: 1fr; gap: 30px; padding: 32px 22px; } .an-cards { grid-template-columns: 1fr 1fr; gap: 16px; } }
 
 /* ===================== COMPARE PLAYERS ===================== */
 .compare { max-width: 1080px; margin: 0 auto; padding: 60px 28px; font-family: "Poppins", var(--sans); }
