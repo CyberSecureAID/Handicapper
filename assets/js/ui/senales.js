@@ -476,8 +476,8 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
     const grupo = cont.querySelectorAll(`[data-follow="${CSS.escape(uid)}"]`);
     grupo.forEach(b => b.disabled = true);
     try {
-      if (seguir) { await seguirAnalista(uid, firma); ctx.sigo.add(uid); }
-      else { await dejarDeSeguir(uid); ctx.sigo.delete(uid); }
+      if (seguir) { await seguirAnalista(uid, firma); try { await apoyarAnalista(uid, firma); } catch (_) {} ctx.sigo.add(uid); }
+      else { await dejarDeSeguir(uid); try { await cancelarApoyo(uid); } catch (_) {} ctx.sigo.delete(uid); }
       syncFollow(uid, seguir);
       await pintarSeguidores(uid);
     } catch (_) {}
