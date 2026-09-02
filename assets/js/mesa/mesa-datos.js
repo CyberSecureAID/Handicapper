@@ -145,6 +145,78 @@ export async function eliminarAnalista(uid) {
 }
 
 /* ============================================================
+   FASE 1 — FOTOS DE ANALISTA (colección 'fotos')
+   Doc id = id de la foto ('a', 'aa', …). Data = { uid, firma, fecha }.
+   Una foto ocupada = existe su doc. Se libera borrándolo.
+   La regla de Firestore impide crear una foto que ya existe (foto única).
+   ============================================================ */
+
+/* Mapa { fotoId: uid } de todas las fotos ocupadas. */
+export async function fotosOcupadas() {
+  if (!await _asegurarListo()) return {};
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const q = await S.getDocs(S.collection(db, 'fotos'));
+    const out = {};
+    q.forEach(d => { out[d.id] = (d.data() && d.data().uid) || true; });
+    return out;
+  } catch (_) { return {}; }
+}
+
+/* El analista actual reclama una foto libre. Libera antes la que tuviera.
+   Devuelve true si la reclamó; false si ya estaba ocupada por otro. */
+export async function reclamarFoto(fotoId, firma) {
+  const S = _obtenerStore(), db = _obtenerDB();
+  const u = usuarioActual(); if (!u) return false;
+  const idNueva = String(fotoId).toLowerCase();
+  // Liberar la anterior (si el analista tenía otra)
+  try {
+    const ficha = await leerFichaAnalista(u.uid);
+    if (ficha && ficha.foto && ficha.foto !== idNueva) {
+      try { await S.deleteDoc(S.doc(db, 'fotos', ficha.foto)); } catch (_) {}
+    }
+  } catch (_) {}
+  // Reclamar la nueva (create falla si ya existe → foto única, garantizado por reglas)
+  try {
+    await S.setDoc(S.doc(db, 'fotos', idNueva), { uid: u.uid, firma: firma || null, fecha: S.serverTimestamp() });
+    return true;
+  } catch (_) { return false; }
+}
+
+/* Libera una foto (admin al suspender, o el propio analista). */
+export async function liberarFoto(fotoId) {
+  const S = _obtenerStore(), db = _obtenerDB();
+  try { await S.deleteDoc(S.doc(db, 'fotos', String(fotoId).toLowerCase())); return true; }
+  catch (_) { return false; }
+}
+
+/* Lee la ficha de un analista (para saber su foto/config). */
+export async function leerFichaAnalista(uid) {
+  if (!await _asegurarListo()) return null;
+  const u = usuarioActual();
+  const id = uid || (u && u.uid);
+  if (!id) return null;
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const snap = await S.getDoc(S.doc(db, 'analistas', id));
+    return snap.exists() ? { uid: id, ...snap.data() } : null;
+  } catch (_) { return null; }
+}
+
+/* El analista guarda su propia config (nombre/firma/foto/configurado).
+   Las reglas permiten al analista editar SU ficha sin tocar deporte/activo/email. */
+export async function guardarPerfilAnalista({ nombre, firma, foto }) {
+  const S = _obtenerStore(), db = _obtenerDB();
+  const u = usuarioActual(); if (!u) return false;
+  const patch = { configurado: true };
+  if (nombre != null) patch.nombre = nombre;
+  if (firma != null) patch.firma = firma;
+  if (foto != null) patch.foto = String(foto).toLowerCase();
+  try { await S.setDoc(S.doc(db, 'analistas', u.uid), patch, { merge: true }); return true; }
+  catch (_) { return false; }
+}
+
+/* ============================================================
    FASE 3 — SEGUIDORES (colección 'seguimientos')
    Doc id = `${seguidorUid}__${analistaUid}` = { seguidorUid, analistaUid, firma, fecha }
    Premium sigue a analistas. El conteo se hace por agregación (getCountFromServer).
