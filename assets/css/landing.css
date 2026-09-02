@@ -131,8 +131,8 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .cmp-unlock { display: flex; align-items: center; gap: 16px; margin: 30px auto 0; max-width: 940px;
   background: rgba(13,19,30,.72); border: 1px solid rgba(255,255,255,.09); border-radius: 16px; padding: 16px 24px; backdrop-filter: blur(6px);
   box-shadow: 0 20px 50px -26px rgba(0,0,0,.7); }
-.cmp-lock { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 11px; color: var(--oro);
-  background: rgba(232,196,106,.10); border: 1px solid rgba(232,196,106,.28); }
+.cmp-lock { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 11px; color: #6aa8ff;
+  background: rgba(74,144,255,.14); border: 1px solid rgba(74,144,255,.4); }
 .cmp-lock svg { width: 20px; height: 20px; }
 .cmp-unlock-t { flex: 1; font-family: "Inter", sans-serif; font-size: 14px; color: var(--tinta-2); }
 .cmp-unlock-t b { color: var(--oro); font-weight: 700; }
