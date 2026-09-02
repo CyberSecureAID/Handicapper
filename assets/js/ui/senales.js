@@ -112,6 +112,8 @@ function inyectarCSS() {
   .sn-c-arrow svg{width:18px;height:18px}
   .sn-c-verdict .sn-c-team{flex:1;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:15px;color:#fff;min-width:0}
   .sn-c-verdict .sn-c-prob{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:23px;color:var(--acc)}
+  .sn-c-pick-lbl{font-family:"Chakra Petch",sans-serif;font-size:10px;font-weight:800;letter-spacing:.08em;color:#6b7683;text-transform:uppercase;flex:none}
+  .sn-c-note{font-size:13px;color:#c3ccd8;line-height:1.55;margin:0 0 13px}
   .sn-c-conf{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:4px 10px;border-radius:20px}
   .sn-c-conf.alta{color:#48d17e;background:rgba(38,194,129,.14)}.sn-c-conf.media{color:var(--g);background:rgba(232,184,75,.14)}.sn-c-conf.baja{color:#ef9a5a;background:rgba(232,120,60,.14)}
   .sn-c-pick{display:flex;align-items:center;gap:10px;margin:6px 0 10px}
@@ -121,7 +123,7 @@ function inyectarCSS() {
   .sn-c-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden;margin-bottom:12px}
   .sn-c-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg, color-mix(in srgb, var(--acc) 80%, #000 8%), var(--acc))}
   .sn-c-txt{font-size:13px;color:#c3ccd6;line-height:1.55;margin:0 0 12px;white-space:pre-wrap}
-  .sn-c-vote{display:inline-flex;align-items:center;gap:8px;margin-left:auto}
+  .sn-c-vote{display:inline-flex;align-items:center;gap:8px}
   .sn-v{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 10px;color:var(--tx2);font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:12.5px;cursor:pointer;transition:border-color .14s,color .14s,background .14s}
   .sn-v svg{width:15px;height:15px}
   .sn-v-n{color:#e9eff6;font-weight:800;min-width:8px;text-align:left}
@@ -145,8 +147,8 @@ function inyectarCSS() {
   .sn-c-fol{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--tx2)}
   .sn-c-fol svg{width:14px;height:14px;opacity:.85}
   .sn-c-fol b{color:#e9eff6;font-weight:800}
-  .sn-c-actions{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 12px}
-  .sn-follow{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:11.5px;letter-spacing:.02em;color:#0a0e15;background:linear-gradient(90deg,#38a9f0,#5cc0ff);border:0;border-radius:999px;padding:7px 16px;cursor:pointer;transition:filter .14s,transform .1s}
+  .sn-c-actions{display:flex;gap:8px}
+  .sn-follow{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:12px;letter-spacing:.02em;color:#0a0e15;background:linear-gradient(90deg,#38a9f0,#5cc0ff);border:0;border-radius:10px;padding:8px 16px;cursor:pointer;transition:filter .14s,transform .1s}
   .sn-follow:hover{filter:brightness(1.08)} .sn-follow:active{transform:scale(.97)}
   .sn-follow.on{color:#cfe0ee;background:transparent;border:1px solid rgba(120,150,180,.5)}
   /* Suscripción al servicio del analista (profesional, sin corazón/rosa) */
@@ -329,21 +331,25 @@ function tarjeta(a, ctx = {}, idx = 0) {
   const votos = sid ? `<div class="sn-c-vote" data-sid="${esc(sid)}">
       <button class="sn-v like ${miV === 1 ? 'on' : ''}" data-v="1" title="${L('Like', 'Me gusta')}">${IUp}<b class="sn-v-n" data-likes>${(cVot.likes || 0).toLocaleString()}</b></button>
       <button class="sn-v dis ${miV === -1 ? 'on' : ''}" data-v="-1" title="${L('Dislike', 'No me gusta')}">${IDown}<b class="sn-v-n" data-dis>${(cVot.dislikes || 0).toLocaleString()}</b></button>
-      <button class="sn-report" data-report="${esc(sid)}" data-rfirma="${esc(a.firma || '')}" data-rautor="${esc(a.autorUid || '')}" title="${L('Report', 'Reportar')}">${IFlag}<span>${L('Report', 'Reportar')}</span></button>
     </div>` : '';
 
   // Análisis largo (hasta ~1000 palabras): desplegable centrado y responsivo
   const IArrow = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>`;
   const IChev = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
+  const explica = (a.analisis && String(a.analisis).trim()) ? `<p class="sn-c-note">${esc(a.analisis)}</p>` : '';
   const analisis = a.texto ? `<button class="sn-c-toggle" data-an="${esc(sid)}"><span>${L('Read analysis', 'Ver análisis')}</span>${IChev}</button>
     <div class="sn-c-an" id="an-${esc(sid)}" hidden><p>${esc(a.texto)}</p></div>` : '';
 
+  const _eq = String(a.equipos || '').split(/\s+vs\.?\s+/i);
+  const _local = a.local || _eq[0] || '';
+  const _visita = a.visita || _eq[1] || '';
+  const _favLocal = a.favLocal != null ? a.favLocal : (a.favorito ? String(a.favorito).toLowerCase() === String(_local).toLowerCase() : null);
   const logoImg = (src) => src ? `<img class="sn-c-logo" src="${esc(src)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : `<span class="sn-c-logo ph"></span>`;
-  const cabezal = (a.local && a.visita)
+  const cabezal = (_local && _visita)
     ? `<div class="sn-c-teams">
-        <div class="sn-c-team ${a.favLocal === true ? 'fav' : ''}">${logoImg(a.logoLocal)}<span>${esc(a.local)}</span></div>
+        <div class="sn-c-team ${_favLocal === true ? 'fav' : ''}">${logoImg(a.logoLocal)}<span>${esc(_local)}</span></div>
         <span class="sn-c-vs2">VS</span>
-        <div class="sn-c-team ${a.favLocal === false ? 'fav' : ''}">${logoImg(a.logoVisita)}<span>${esc(a.visita)}</span></div>
+        <div class="sn-c-team ${_favLocal === false ? 'fav' : ''}">${logoImg(a.logoVisita)}<span>${esc(_visita)}</span></div>
       </div>`
     : `<div class="sn-c-match">${esc(a.equipos || a.matchId || '')}</div>`;
   const overlay = bloqueada ? `<div class="sn-c-lock"><div class="sn-c-lock-ic">${IC.lock || '🔒'}</div><b>${L('Unlock this signal', 'Desbloquea esta señal')}</b><span>${L('Follow this analyst to see the pick and get it in your feed.', 'Sigue a este analista para ver el pick y recibirlo en tu feed.')}</span>${uid ? `<button class="sn-follow" data-follow="${esc(uid)}" data-firma="${esc(firma)}">${L('Follow', 'Seguir')}</button>` : ''}</div>` : '';
@@ -352,8 +358,9 @@ function tarjeta(a, ctx = {}, idx = 0) {
     <div class="sn-c-inner">
     ${header}
     ${cabezal}
-    <div class="sn-c-verdict"><span class="sn-c-arrow">${IArrow}</span><span class="sn-c-team">${pick}</span>${prob != null ? `<span class="sn-c-prob">${prob}%</span>` : ''}</div>
+    <div class="sn-c-verdict"><span class="sn-c-pick-lbl">${L('Pick', 'Pronóstico')}</span><span class="sn-c-team">${pick}</span>${prob != null ? `<span class="sn-c-prob">${prob}%</span>` : ''}</div>
     ${prob != null ? `<div class="sn-c-bar"><i style="width:${prob}%"></i></div>` : ''}
+    ${explica}
     ${analisis}
     <div class="sn-c-foot">${votos}${acciones}</div>
     </div>
