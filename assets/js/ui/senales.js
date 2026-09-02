@@ -411,10 +411,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   const deSeguidos = inicio.filter(a => sigo.has(a.autorUid));
   const populares = lista.slice().sort((x, y) => (score(y) - score(x)) || porFecha(x, y));
 
-  const permitidas = ['inicio', 'siguiendo', 'populares'];
-  let tab = permitidas.includes(_snTab) ? _snTab : 'inicio';
-  if (tab === 'siguiendo' && !deSeguidos.length) tab = 'inicio';
-  const visibles = tab === 'siguiendo' ? deSeguidos : tab === 'populares' ? populares : inicio;
+  const visibles = inicio;   // una sola vista (se quitaron Following/Popular)
   // Premium ve solo el 50% de las señales del día (el resto, siguiendo a analistas).
   if (nivelReal === 'premium') ctx.nClaras = Math.max(1, Math.ceil(visibles.length / 2));
 
@@ -425,11 +422,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   analistasLista.forEach(an => { if (an.uid && an.activo !== false && !vistos.has(an.uid)) { vistos.add(an.uid); analistas.push({ uid: an.uid, firma: an.firma || an.nombre || '', deporte: an.deporte, estilo: an.estilo, foto: an.foto || null }); } });
   const discover = analistas.length ? bloqueDescubrir(analistas, ctx) : '';
 
-  const tabs = `<div class="sn-tabs">
-      <button class="sn-tab ${tab === 'inicio' ? 'on' : ''}" data-sntab="inicio">${L('Home', 'Inicio')}</button>
-      <button class="sn-tab ${tab === 'siguiendo' ? 'on' : ''}" data-sntab="siguiendo">${L('Following', 'Siguiendo')}${deSeguidos.length ? `<b>${deSeguidos.length}</b>` : ''}</button>
-      <button class="sn-tab ${tab === 'populares' ? 'on' : ''}" data-sntab="populares">${L('Popular', 'Populares')}</button>
-    </div>`;
+  const tabs = '';   // sin pestañas
 
   const grid = visibles.length
     ? `<div class="sn-grid">${visibles.map((a, i) => tarjeta(a, ctx, i)).join('')}</div>`
@@ -472,7 +465,6 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   cont.querySelectorAll('[data-follow]').forEach(btn => btn.onclick = async () => {
     const uid = btn.dataset.follow, firma = btn.dataset.firma || null;
     const seguir = !ctx.sigo.has(uid);
-    if (seguir && !confirm(L('Follow this analyst for $2/mo? You will get their signals in your inbox.', '¿Seguir a este analista por $2/mes? Recibirás sus señales en tu buzón.'))) return;
     const grupo = cont.querySelectorAll(`[data-follow="${CSS.escape(uid)}"]`);
     grupo.forEach(b => b.disabled = true);
     try {
