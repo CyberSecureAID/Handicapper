@@ -156,7 +156,7 @@ async function rosterConPuntos(teamId) {
 }
 
 /* --------- Orquestador --------- */
-export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 3 } = {}) {
+export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}) {
   const avisos = [];
   const candidatos = [];
   let data;
@@ -196,7 +196,11 @@ export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 3 } = {
   }
 
   candidatos.sort((a, b) => b.prob - a.prob || b.proj - a.proj);
-  const top = candidatos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
+  // Calidad: prioriza a los anotadores de verdad (evita relleno de bajo promedio).
+  let elegidos = candidatos.filter(c => (c.ppg || 0) >= 15);
+  if (elegidos.length < 4) elegidos = candidatos.filter(c => (c.ppg || 0) >= 12);
+  if (elegidos.length < 3) elegidos = candidatos;
+  const top = elegidos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
   return {
     jugadores: top,
     meta: { fecha, fuente: 'ESPN', modelo: `P(${UMBRAL}+ pts) = Φ((μ − ${UMBRAL})/σ) · estimación propia`, candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)] },

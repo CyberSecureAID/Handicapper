@@ -134,7 +134,7 @@ async function tiradoresPorEquipo(sid) {
 }
 
 /* --------- Orquestador --------- */
-export async function topShotsProjection({ fecha, n = 9, maxPorEquipo = 3 } = {}) {
+export async function topShotsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}) {
   const avisos = [];
   const sid = seasonId(fecha);
   let sched;
@@ -176,7 +176,11 @@ export async function topShotsProjection({ fecha, n = 9, maxPorEquipo = 3 } = {}
   }
 
   candidatos.sort((a, b) => b.prob - a.prob || b.proj - a.proj);
-  const top = candidatos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
+  // Calidad: prioriza a los tiradores de volumen (evita relleno de bajo tiro).
+  let elegidos = candidatos.filter(c => (c.spg || 0) >= 2.5);
+  if (elegidos.length < 4) elegidos = candidatos.filter(c => (c.spg || 0) >= 2);
+  if (elegidos.length < 3) elegidos = candidatos;
+  const top = elegidos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
   return {
     jugadores: top,
     meta: { fecha, fuente: 'NHL', modelo: `P(${UMBRAL}+ tiros) = 1 − e^(−λ)(1+λ) · estimación propia`, candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)] },
