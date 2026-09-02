@@ -193,6 +193,12 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .plan.destacado .plan-nom { color: var(--oro); }
 .plan:nth-child(3) .plan-nom { color: #a879e6; }
 .plan-resumen { font-family: "Inter", sans-serif; font-size: 13px; color: var(--tinta-2); margin: 4px 0 18px; min-height: 34px; line-height: 1.5; }
+.plan-acceso { display: inline-flex; align-items: center; gap: 6px; margin: 10px 0 4px; padding: 5px 12px; border-radius: 999px;
+  font-family: "Poppins", sans-serif; font-weight: 700; font-size: 11px; letter-spacing: .02em; }
+.plan-acceso .pa-crown { width: 14px; height: 14px; }
+.plan-acceso.basic { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); color: var(--tinta-2); }
+.plan-acceso.pro { background: linear-gradient(180deg, rgba(198,132,74,.2), rgba(120,74,38,.28)); border: 1px solid rgba(205,140,80,.55); color: #e8b98a; box-shadow: inset 0 1px 0 rgba(255,255,255,.15); }
+.plan-acceso.premium { background: linear-gradient(180deg, rgba(232,196,106,.2), rgba(150,110,30,.26)); border: 1px solid rgba(232,196,106,.55); color: var(--oro); box-shadow: inset 0 1px 0 rgba(255,255,255,.16); }
 .plan-precio { display: flex; align-items: baseline; gap: 4px; }
 .pp-num { font-family: "Poppins", sans-serif; font-weight: 800; font-size: 40px; color: #fff; }
 .pp-suf { font-family: "Inter", sans-serif; font-size: 14px; color: var(--tinta-3); font-weight: 600; }
