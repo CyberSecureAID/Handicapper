@@ -88,11 +88,14 @@ export function pintarPlanes() {
   const cardHTML = (p, conBoton) => {
     const et = p.etiqueta ? `<div class="plan-etq">${Lg(p.etiqueta)}</div>` : '';
     const feats = p.incluye.map(f => `<li>${IC_CHECK}${Lg(f)}</li>`).join('');
+    const corona = '<svg class="pa-crown" viewBox="0 0 24 24" fill="currentColor"><path d="M4 18h16l-1.2-8-4.3 3-2.5-5-2.5 5-4.3-3z"/></svg>';
+    const acceso = p.acceso ? `<div class="plan-acceso ${p.acceso.nivel}">${p.acceso.nivel !== 'basic' ? corona : ''}${Lg(p.acceso)}</div>` : '';
     const ahorro = '';
     return `
       <div class="plan ${p.destacado ? 'destacado' : ''}">
         ${et}
         <div class="plan-nom">${p.nombre}</div>
+        ${acceso}
         <div class="plan-resumen">${Lg(p.resumen)}</div>
         <div class="plan-precio"><span class="pp-num">$${precio(p).toFixed(2)}</span><span class="pp-suf">${sufijo}</span></div>
         ${ahorro}
