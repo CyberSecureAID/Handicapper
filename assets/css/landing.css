@@ -168,6 +168,53 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .plan-btn.oro { background: linear-gradient(180deg, var(--oro), var(--oro-2)); color: #3a2800; border: 0;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
 
+/* ===================== CTA BANNER ===================== */
+.cta-wrap { max-width: 1080px; margin: 0 auto; padding: 14px 28px 62px; font-family: "Poppins", var(--sans); }
+.cta { display: flex; align-items: center; gap: 24px; padding: 28px 34px; border-radius: 20px;
+  background: linear-gradient(120deg, rgba(30,58,110,.55), rgba(18,30,58,.6)); border: 1px solid rgba(74,144,255,.28);
+  box-shadow: 0 30px 70px -32px rgba(43,111,255,.45); backdrop-filter: blur(6px); }
+.cta-ic { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; flex: none;
+  background: rgba(74,144,255,.16); border: 1px solid rgba(74,144,255,.42); color: #6aa8ff; }
+.cta-ic svg { width: 27px; height: 27px; }
+.cta-txt { flex: 1; }
+.cta-txt h3 { font-family: "Poppins", sans-serif; font-weight: 700; font-size: clamp(18px, 1.7vw, 23px); color: #fff; margin: 0 0 4px; }
+.cta-txt p { font-family: "Inter", sans-serif; font-size: 14px; color: var(--tinta-2); margin: 0; }
+.cta .lbtn { flex: none; }
+
+/* ===================== FOOTER ===================== */
+.site-foot { position: relative; z-index: 6; border-top: 1px solid rgba(255,255,255,.07);
+  background: rgba(7,10,16,.55); backdrop-filter: blur(6px); font-family: "Inter", var(--sans); }
+.foot-in { max-width: 1200px; margin: 0 auto; padding: 54px 28px 34px;
+  display: grid; grid-template-columns: 1.7fr 1fr 1fr 1fr 1.5fr; gap: 40px; }
+.foot-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.foot-logo-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 11px; flex: none;
+  background: rgba(232,196,106,.12); border: 1px solid rgba(232,196,106,.3); color: var(--oro); }
+.foot-logo-mark svg { width: 22px; height: 22px; }
+.foot-logo-img { height: 32px; width: auto; }
+.foot-logo > div { display: flex; flex-direction: column; line-height: 1.18; }
+.foot-logo b { font-family: "Poppins", sans-serif; font-weight: 700; font-size: 15px; color: #fff; letter-spacing: .01em; }
+.foot-logo span { font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--tinta-3); }
+.foot-about { font-size: 13px; color: var(--tinta-2); line-height: 1.6; margin: 0 0 18px; max-width: 250px; }
+.foot-social { display: flex; gap: 10px; }
+.foot-social a { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; color: var(--tinta-2);
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); transition: all .15s; }
+.foot-social a:hover { color: var(--oro); border-color: rgba(232,196,106,.4); }
+.foot-social svg { width: 17px; height: 17px; }
+.foot-col h4 { font-family: "Poppins", sans-serif; font-weight: 600; font-size: 13px; color: #fff; margin: 0 0 16px; }
+.foot-col a { display: block; font-size: 13.5px; color: var(--tinta-2); text-decoration: none; margin-bottom: 11px; transition: color .15s; }
+.foot-col a:hover { color: var(--oro); }
+.foot-news p { font-size: 13px; color: var(--tinta-2); line-height: 1.55; margin: 0 0 14px; }
+.foot-email { display: flex; gap: 8px; }
+.foot-email input { flex: 1; height: 42px; padding: 0 14px; border-radius: 11px; border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.03); color: var(--tinta); font-family: "Inter", sans-serif; font-size: 13.5px; }
+.foot-email input::placeholder { color: var(--tinta-3); }
+.foot-email button { width: 44px; height: 42px; border-radius: 11px; border: 0; flex: none; cursor: pointer;
+  background: linear-gradient(180deg, var(--oro), var(--oro-2)); color: #3a2800; display: grid; place-items: center; }
+.foot-email button svg { width: 18px; height: 18px; }
+.foot-bottom { max-width: 1200px; margin: 0 auto; padding: 22px 28px; border-top: 1px solid rgba(255,255,255,.06);
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--tinta-3); }
+@media (max-width: 900px) { .foot-in { grid-template-columns: 1fr 1fr; gap: 30px; } .cta { flex-direction: column; text-align: center; } }
+
 /* Pantalla de pricing */
 .pricing-wrap { max-width: 1040px; margin: 0 auto; padding: 50px 28px 70px; }
 .pricing-head { text-align: center; margin-bottom: 36px; }
