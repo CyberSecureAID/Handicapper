@@ -41,12 +41,12 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .hero { position: relative; overflow: hidden; min-height: 92vh; display: flex; flex-direction: column;
   background: #070b16 url('../imagenes/fondos/hero-fondo.webp') 78% center / cover no-repeat; font-family: "Poppins", var(--sans); }
 .hero-glow { position: absolute; top: -8%; right: 4%; width: 52%; height: 88%; z-index: 0; pointer-events: none;
-  background: radial-gradient(closest-side, rgba(43,111,255,.26), transparent 72%); }
-.hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 200px; z-index: 2; pointer-events: none;
-  background: linear-gradient(180deg, transparent, #000006 96%); }
+  background: radial-gradient(closest-side, rgba(43,111,255,.16), transparent 72%); }
+.hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 300px; z-index: 2; pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(0,0,4,.65) 55%, #000006 90%); }
 .hero-veil { position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background:
-    linear-gradient(90deg, #070b16 0%, rgba(7,11,22,.94) 32%, rgba(7,11,22,.55) 54%, rgba(7,11,22,.15) 74%, rgba(7,11,22,0) 100%),
+    linear-gradient(90deg, #070b16 0%, rgba(7,11,22,.97) 40%, rgba(7,11,22,.7) 58%, rgba(7,11,22,.2) 78%, rgba(7,11,22,0) 100%),
     linear-gradient(180deg, rgba(7,11,22,.55), transparent 26%, transparent 68%, rgba(7,11,22,.9)); }
 .hero-in { position: relative; z-index: 3; max-width: 1200px; margin: 0 auto; width: 100%; flex: 1;
   display: flex; align-items: center; padding: 104px 28px 16px; }
@@ -54,7 +54,7 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .hero-eyebrow { display: inline-block; font-family: "Poppins", sans-serif; font-size: 11px; font-weight: 700;
   letter-spacing: .16em; text-transform: uppercase; color: var(--oro); padding: 7px 15px; border-radius: 999px;
   background: rgba(232,196,106,.10); border: 1px solid rgba(232,196,106,.35); margin-bottom: 22px; }
-.hero-h1 { font-family: "Poppins", sans-serif; font-weight: 800; font-size: clamp(32px, 4.4vw, 56px);
+.hero-h1 { font-family: "Poppins", sans-serif; font-weight: 800; font-size: clamp(28px, 3.5vw, 46px);
   line-height: 1.08; letter-spacing: -.01em; text-transform: uppercase; color: #fff; margin: 0 0 20px; }
 .hero-h1 em { font-style: normal; background: linear-gradient(180deg, #ffe39a, var(--oro) 55%, #c58f22);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
@@ -80,7 +80,8 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .an-title { font-family: "Poppins", sans-serif; font-weight: 700; font-size: clamp(24px, 2.3vw, 32px); line-height: 1.16; color: #fff; margin: 0 0 16px; }
 .an-sub { font-family: "Inter", sans-serif; font-size: 15px; line-height: 1.62; color: var(--tinta-2); margin: 0 0 26px; max-width: 320px; }
 .an-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-.an-card { display: flex; flex-direction: column; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 14px; padding: 22px 18px; }
+.an-card { display: flex; flex-direction: column; background: linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.015)); border: 1px solid rgba(255,255,255,.08); border-radius: 15px; padding: 24px 20px; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.an-card:hover { transform: translateY(-4px); border-color: rgba(90,155,255,.42); box-shadow: 0 16px 34px -18px rgba(43,111,255,.5); }
 .an-ic { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 12px; margin-bottom: 14px; background: rgba(74,144,255,.12); border: 1px solid rgba(74,144,255,.22); color: #5a9bff; }
 .an-ic svg { width: 24px; height: 24px; }
 .an-card h3 { font-family: "Poppins", sans-serif; font-weight: 600; font-size: 15px; color: #fff; margin: 0 0 8px; }
@@ -195,9 +196,9 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
   background: rgba(232,196,106,.12); border: 1px solid rgba(232,196,106,.3); color: var(--oro); }
 .foot-logo-mark svg { width: 22px; height: 22px; }
 .foot-logo-img { height: 32px; width: auto; }
-.foot-logo > div { display: flex; flex-direction: column; line-height: 1.18; }
-.foot-logo b { font-family: "Poppins", sans-serif; font-weight: 700; font-size: 15px; color: #fff; letter-spacing: .01em; }
-.foot-logo span { font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--tinta-3); }
+.foot-logo > div { display: flex; flex-direction: column; gap: 4px; }
+.foot-logo b { font-family: "Poppins", sans-serif; font-weight: 700; font-size: 15px; color: #fff; letter-spacing: .01em; line-height: 1.2; }
+.foot-logo span { font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--tinta-3); line-height: 1; }
 .foot-about { font-size: 13px; color: var(--tinta-2); line-height: 1.6; margin: 0 0 18px; max-width: 250px; }
 .foot-social { display: flex; gap: 10px; }
 .foot-social a { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; color: var(--tinta-2);
