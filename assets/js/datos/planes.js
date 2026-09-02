@@ -13,9 +13,7 @@ export const PLANES = [
     incluye: [
       { en: 'All leagues & categories', es: 'Todas las ligas y categorías' },
       { en: 'Team & player stat comparison', es: 'Comparativa de equipos y jugadores' },
-      { en: 'Honest win probability + confidence', es: 'Probabilidad de victoria honesta + confianza' },
-      { en: 'Featured matches & season leaders', es: 'Partidos destacados y líderes de temporada' },
-      { en: 'Analyst signals available as an add-on', es: 'Señales de analistas como servicio adicional' },
+      { en: 'Honest win probability with confidence', es: 'Probabilidad de victoria honesta con confianza' },
     ],
   },
   {
@@ -30,7 +28,8 @@ export const PLANES = [
       { en: 'Everything in Basic', es: 'Todo lo de Basic' },
       { en: 'Pro picks: hits, goals, points & shots', es: 'Picks Pro: hits, goals, points y shots' },
       { en: 'Starter comparison & detailed match view', es: 'Comparativa de abridores y detalle del partido' },
-      { en: 'Preview a couple of analyst signals', es: 'Vista de una o dos señales de analistas' },
+      { en: 'Featured matches & season leaders', es: 'Partidos destacados y líderes de temporada' },
+      { en: 'Preview a couple of analyst signals', es: 'Ver una o dos señales de analistas' },
     ],
   },
   {
@@ -42,9 +41,12 @@ export const PLANES = [
     resumen: { en: 'The complete toolkit, maximum depth.', es: 'La herramienta completa, máxima profundidad.' },
     incluye: [
       { en: 'Everything in Pro', es: 'Todo lo de Pro' },
-      { en: 'Full daily picks — no limits', es: 'Picks completos del día — sin límites' },
+      { en: 'Full daily picks, no limits', es: 'Picks completos del día, sin límites' },
       { en: 'View every analyst signal', es: 'Ver todas las señales de analistas' },
-      { en: 'Follow analysts → picks in your feed', es: 'Sigue analistas → sus picks en tu feed' },
+      { en: 'Follow analysts to get their picks', es: 'Sigue analistas y recibe sus picks' },
+      { en: 'Signals feed in your profile', es: 'Feed de señales en tu perfil' },
+      { en: 'Push notifications & alerts', es: 'Notificaciones push y avisos' },
+      { en: 'Advanced indicators & full depth', es: 'Indicadores avanzados y profundidad total' },
     ],
   },
 ];
