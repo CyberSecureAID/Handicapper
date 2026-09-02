@@ -767,6 +767,7 @@ function vistaAnalistas() {
     <div class="mesa-head an-head">
       <div><h1>${ML('Staff', 'Personal')}</h1><p>${ML('Hire analysts and assign each one a sport. They only access the Analysis Hub for their sport.', 'Contrata analistas y asigna a cada uno un deporte. Solo acceden al Analysis Hub de su deporte.')}</p></div>
       <button class="mesa-btn ghost" id="an-go-users">${IC.users} ${ML('Go to Users', 'Ir a Usuarios')}</button>
+      <button class="mesa-btn" id="an-bots-pub">🤖 ${ML('Publish today\\u2019s bot signals', 'Publicar señales de bots (hoy)')}</button>
     </div>
     <div class="mesa-card an-mng">
       <div class="mc-t">${IC.contrato} ${ML('Add analyst', 'Agregar analista')}</div>
@@ -788,6 +789,16 @@ function enlazarAnalistas() {
     _cont.querySelectorAll('.mesa-nav button[data-tab]').forEach(x => x.classList.toggle('on', x.dataset.tab === 'usuarios'));
     pintarTab();
   });
+  const btnBots = _cont.querySelector('#an-bots-pub');
+  if (btnBots) btnBots.onclick = async () => {
+    btnBots.disabled = true; const txt = btnBots.textContent; btnBots.textContent = ML('Publishing…', 'Publicando…');
+    try {
+      const { publicarSenalesFutbol, API_FOOTBALL_KEY } = await import('../datos/bots-senales.js');
+      if (!API_FOOTBALL_KEY) { alert(ML('Paste your API-Football key in bots-senales.js first.', 'Primero pega tu key de API-Football en bots-senales.js.')); }
+      else { const r = await publicarSenalesFutbol(guardarAnalisis); alert(r.ok ? ML('Published ', 'Publicadas ') + r.publicadas + ML(' bot signals.', ' señales de bots.') : (r.error || 'Error')); }
+    } catch (e) { alert('Error: ' + ((e && e.message) || e)); }
+    btnBots.disabled = false; btnBots.textContent = txt;
+  };
   const buscar = _cont.querySelector('#an-buscar');
   if (buscar) buscar.oninput = () => { _anBusqueda = buscar.value; pintarCandidatos(); };
   _cont.querySelectorAll('#an-chips [data-anf]').forEach(b => b.onclick = () => {
