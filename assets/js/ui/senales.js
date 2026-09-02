@@ -353,8 +353,8 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   const topbar = `<div class="sn-topbar"><button class="sn-about" id="sn-about">${IHelp}<span>${L('What is this section?', '¿Qué es esta sección?')}</span></button></div>`;
 
   // Cuántas señales se ven CLARAS sin seguir: Basic 0, Pro 2, Premium/admin todas.
-  const nivelReal = esPremium ? 'premium' : nivel;
-  const nClaras = nivelReal === 'premium' ? Infinity : (nivelReal === 'pro' ? 2 : 0);
+  const nivelReal = nivel === 'admin' ? 'admin' : (esPremium ? 'premium' : nivel);
+  const nClaras = (nivelReal === 'admin' || nivelReal === 'premium') ? Infinity : (nivelReal === 'pro' ? 1 : 0);
 
   cont.innerHTML = `<div class="sn">${topbar}<div class="sn-empty"><div class="sn-spin"></div>${L('Loading signals…', 'Cargando señales…')}</div></div>`;
   const lista = await cargarSenales();
@@ -400,6 +400,8 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   let tab = permitidas.includes(_snTab) ? _snTab : 'inicio';
   if (tab === 'siguiendo' && !deSeguidos.length) tab = 'inicio';
   const visibles = tab === 'siguiendo' ? deSeguidos : tab === 'populares' ? populares : inicio;
+  // Premium ve solo el 50% de las señales del día (el resto, siguiendo a analistas).
+  if (nivelReal === 'premium') ctx.nClaras = Math.max(1, Math.ceil(visibles.length / 2));
 
   // Descubrir analistas: uno por firma, a partir de las señales
   const vistos = new Set(); const analistas = [];
