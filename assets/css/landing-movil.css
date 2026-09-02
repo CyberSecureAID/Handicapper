@@ -56,10 +56,10 @@
   .mlp-rule { display: block; width: 54px; height: 4px; border-radius: 3px; margin: 14px 0 16px;
     background: linear-gradient(90deg, var(--oro), rgba(232,184,75,0)); }
   .mlp-sub { font-size: 15px; line-height: 1.5; color: #d7dee7; margin: 0 0 22px; max-width: 300px; }
-  .mlp-cta { display: inline-flex; align-items: center; gap: 10px; border: 0; cursor: pointer;
-    height: 52px; padding: 0 24px; border-radius: 999px; font-family: var(--display); font-weight: 800; font-size: 15px;
-    color: #3a2800; background: linear-gradient(180deg, var(--oro), var(--oro-2));
-    box-shadow: 0 6px 16px -8px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.25); }
+  .mlp-cta { display: inline-flex; align-items: center; gap: 10px; cursor: pointer;
+    height: 52px; padding: 0 26px; border-radius: 14px; font-family: var(--display); font-weight: 800; font-size: 15px;
+    color: #ffe6c4; background: linear-gradient(180deg, #9a2530, #5e141c); border: 1px solid rgba(232,184,75,.55);
+    box-shadow: 0 6px 16px -6px rgba(120,20,30,.5), inset 0 1px 0 rgba(255,255,255,.16), inset 0 -2px 6px rgba(0,0,0,.35); text-shadow: 0 1px 2px rgba(0,0,0,.5); }
   .mlp-cta svg { width: 18px; height: 18px; }
 
   /* ---------- ENFRENTAMIENTOS (VS) ---------- */
