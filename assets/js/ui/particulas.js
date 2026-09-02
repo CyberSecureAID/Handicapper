@@ -1,9 +1,10 @@
 /* ============================================================
-   PARTÍCULAS — polvo flotante sutil sobre toda la landing (y el
-   video). Cada partícula va a su propio ritmo, con deriva leve hacia
-   la derecha, para que no se vea un patrón uniforme.
+   PARTÍCULAS — brasas/chispas rojo y azul sobre toda la landing.
+   Colores de la marca (fuego rojo + azul eléctrico), con vida propia
+   y REACCIÓN AL SCROLL: al desplazarse, las chispas se estiran/mueven.
    ============================================================ */
 let _raf = null, _cv = null, _ctx = null, _dpr = 1, _ps = [], _activo = false, _t = 0;
+let _scrollBoost = 0, _lastScroll = 0;
 
 export function iniciarParticulas(id) {
   _cv = document.getElementById(id);
@@ -14,9 +15,19 @@ export function iniciarParticulas(id) {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
   redim();
+  _lastScroll = window.scrollY || 0;
   window.addEventListener('resize', redim);
+  window.addEventListener('scroll', onScroll, { passive: true });
   document.addEventListener('visibilitychange', () => document.hidden ? parar() : arrancar());
   arrancar();
+}
+
+function onScroll() {
+  const y = window.scrollY || 0;
+  const d = y - _lastScroll; _lastScroll = y;
+  _scrollBoost += d * 0.18;
+  if (_scrollBoost > 46) _scrollBoost = 46;
+  if (_scrollBoost < -46) _scrollBoost = -46;
 }
 
 export function arrancar() {
@@ -45,20 +56,21 @@ function redim() {
 }
 
 function generar(w, h) {
-  // Pocas partículas para que sea sutil (densidad por área)
-  const n = Math.min(140, Math.round((w * h) / 24000));
+  const n = Math.min(170, Math.round((w * h) / 20000));
   _ps = [];
   for (let i = 0; i < n; i++) {
+    const rojo = Math.random() < 0.5;
     _ps.push({
       x: Math.random() * w,
       y: Math.random() * h,
-      r: 0.6 + Math.random() * 2.4,                 // tamaños variados
-      vx: -(0.06 + Math.random() * 0.5),            // deriva a la IZQUIERDA, ritmos distintos
-      vy: (Math.random() - 0.5) * 0.25,             // vaivén vertical suave
-      a: 0.06 + Math.random() * 0.22,               // opacidad
-      f: Math.random() * Math.PI * 2,               // fase para el parpadeo
-      fv: 0.4 + Math.random() * 0.8,                // velocidad de parpadeo
-      calida: Math.random() < 0.4,
+      r: 0.7 + Math.random() * 2.6,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: -(0.08 + Math.random() * 0.4),
+      a: 0.10 + Math.random() * 0.30,
+      f: Math.random() * Math.PI * 2,
+      fv: 0.5 + Math.random() * 1.1,
+      rojo,
+      par: 0.5 + Math.random() * Math.random(),
     });
   }
 }
@@ -69,18 +81,31 @@ function paso(dt) {
   g.clearRect(0, 0, w, h);
   g.globalCompositeOperation = 'lighter';
   const s = dt / 16;
+
+  _scrollBoost *= 0.90;
+  const boost = _scrollBoost;
+
   for (const p of _ps) {
     p.x += p.vx * s;
-    p.y += p.vy * s + Math.sin((_t / 1000) * p.fv + p.f) * 0.15;
-    if (p.x < -5) { p.x = w + 5; p.y = Math.random() * h; }
-    if (p.y < -5) p.y = h + 5; if (p.y > h + 5) p.y = -5;
-    const tw = p.a * (0.6 + 0.4 * Math.sin((_t / 1000) * p.fv + p.f));
-    const c = p.calida ? '232,200,140' : '210,225,245';
-    const grad = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 2.4);
+    p.y += p.vy * s + Math.sin((_t / 1000) * p.fv + p.f) * 0.18 - boost * (0.25 + p.r * 0.16) * p.par * s;
+
+    if (p.x < -6) p.x = w + 6; else if (p.x > w + 6) p.x = -6;
+    if (p.y < -8) p.y = h + 8; else if (p.y > h + 8) p.y = -8;
+
+    const tw = p.a * (0.55 + 0.45 * Math.sin((_t / 1000) * p.fv + p.f));
+    const estira = 1 + Math.min(2.4, Math.abs(boost) * 0.05) * p.par;
+    const rad = p.r * 2.5;
+    const c = p.rojo ? '255,86,64' : '74,150,255';
+
+    const grad = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad);
     grad.addColorStop(0, `rgba(${c},${tw})`);
     grad.addColorStop(1, `rgba(${c},0)`);
     g.fillStyle = grad;
-    g.beginPath(); g.arc(p.x, p.y, p.r * 2.4, 0, Math.PI * 2); g.fill();
+    g.save();
+    g.translate(p.x, p.y);
+    g.scale(1, estira);
+    g.beginPath(); g.arc(0, 0, rad, 0, Math.PI * 2); g.fill();
+    g.restore();
   }
   g.globalCompositeOperation = 'source-over';
 }
