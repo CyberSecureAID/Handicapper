@@ -163,16 +163,16 @@ function inyectarCSS() {
   .sn-disc-head svg{width:16px;height:16px;color:var(--g)}
   .sn-disc-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
   .sn-disc-row::-webkit-scrollbar{height:6px}.sn-disc-row::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:99px}
-  .sn-disc-card{--acc:#e8b84b;flex:0 0 auto;width:164px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;background:rgba(8,12,20,.5);border:0;border-radius:0;padding:28px 20px 26px;position:relative}
+  .sn-disc-card{--acc:#e8b84b;flex:0 0 auto;width:166px;min-height:208px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;background:linear-gradient(180deg,rgba(10,14,20,.8),rgba(6,9,14,.9)),url('assets/imagenes/textura-tarjeta.jpg') center/cover no-repeat;border:0;border-radius:0;padding:28px 20px 26px;position:relative}
   .sn-disc-card::before{content:'';position:absolute;inset:0;z-index:0;background:url('assets/imagenes/marco.webp') center/100% 100% no-repeat;pointer-events:none}
   .sn-disc-card>*{position:relative;z-index:1}
-  .sn-disc-ava{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:19px;color:var(--acc);background:color-mix(in srgb, var(--acc) 15%, transparent);border:1px solid color-mix(in srgb, var(--acc) 34%, transparent);margin-bottom:4px;overflow:hidden}
+  .sn-disc-ava{width:50px;height:50px;border-radius:13px;display:grid;place-items:center;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:19px;color:var(--acc);background:color-mix(in srgb, var(--acc) 15%, transparent);border:1px solid color-mix(in srgb, var(--acc) 34%, transparent);margin-bottom:5px;overflow:hidden;box-shadow:0 5px 12px -2px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.12)}
   .sn-disc-ava img{width:100%;height:100%;object-fit:cover;display:block}
   .sn-disc-ava svg{width:23px;height:23px}
-  .sn-disc-firma{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:14px;color:var(--acc);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sn-disc-firma{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:13.5px;color:var(--acc);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 5px rgba(0,0,0,.7)}
   .sn-disc-sport{font-size:11px;color:var(--tx2)}
   .sn-disc-fol{font-size:11px;color:var(--tx3);margin-bottom:8px}
-  .sn-disc-follow{width:100%;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:11.5px;color:#0a0e15;background:linear-gradient(90deg,#38a9f0,#5cc0ff);border:0;border-radius:999px;padding:8px 12px;cursor:pointer;transition:filter .14s}
+  .sn-disc-follow{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:10.5px;color:#0a0e15;background:linear-gradient(90deg,#38a9f0,#5cc0ff);border:0;border-radius:8px;padding:6px 16px;cursor:pointer;transition:filter .14s;margin-top:2px}
   .sn-disc-follow:hover{filter:brightness(1.08)}
   .sn-disc-follow.on{color:#cfe0ee;background:transparent;border:1px solid rgba(120,150,180,.5)}
   .sn-tabs{display:flex;gap:6px;margin:0 0 16px;border-bottom:1px solid var(--line);padding-bottom:0}
