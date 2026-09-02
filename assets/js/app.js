@@ -348,7 +348,6 @@ function pintarPerfil(cont) {
 
   let notif; try { notif = JSON.parse(localStorage.getItem('se_notif') || '{}'); } catch (_) { notif = {}; }
   notif = { push: notif.push !== false, nuevas: notif.nuevas !== false, resultados: !!notif.resultados };
-  let seguidos = []; try { seguidos = JSON.parse(localStorage.getItem('se_seguidos') || '[]'); } catch (_) {}
 
   const sw = (k, txt, sub) => `<label class="pf-sw"><div><b>${txt}</b><em>${sub}</em></div><input type="checkbox" data-n="${k}" ${notif[k] ? 'checked' : ''}><span class="pf-sw-t"></span></label>`;
 
@@ -362,7 +361,7 @@ function pintarPerfil(cont) {
     </div>
     <div class="pf-card">
       <div class="pf-card-h"><span class="pf-card-ic">${(IC && IC.estrella) || '★'}</span><h3>${Lp('Followed analysts', 'Analistas seguidos')}</h3></div>
-      <div id="pf-signals"><div class="pf-empty">${Lp("You're not following anyone yet. Follow an analyst from the Signals tab and their picks will appear here.", 'Aún no sigues a nadie. Sigue a un analista desde la sección de Señales y sus picks aparecerán aquí.')}</div></div>
+      <div id="pf-signals"><div class="pf-empty"><div class="sn-spin"></div></div></div>
     </div>
   </div>`;
 
@@ -370,6 +369,21 @@ function pintarPerfil(cont) {
     notif[chk.dataset.n] = chk.checked;
     try { localStorage.setItem('se_notif', JSON.stringify(notif)); } catch (_) {}
   });
+
+  // Cargar el feed real: señales de los analistas que sigo
+  (async () => {
+    const cSig = cont.querySelector('#pf-signals');
+    if (!cSig) return;
+    try {
+      const { feedSeguidosHTML } = await import('./ui/senales.js');
+      const r = await feedSeguidosHTML();
+      cSig.innerHTML = r.total
+        ? `<div class="sn-grid">${r.html}</div>`
+        : `<div class="pf-empty">${Lp("You're not following anyone yet. Follow an analyst from the Signals tab and their picks will appear here.", 'Aún no sigues a nadie. Sigue a un analista desde la sección de Señales y sus picks aparecerán aquí.')}</div>`;
+    } catch (_) {
+      cSig.innerHTML = `<div class="pf-empty">${Lp('Could not load your feed. Try again.', 'No se pudo cargar tu feed. Inténtalo de nuevo.')}</div>`;
+    }
+  })();
 
 /* Punto verde en "Análisis" (móvil y escritorio) cuando hay señales publicadas. */
 function actualizarPuntoSenales() {
