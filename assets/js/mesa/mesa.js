@@ -3,7 +3,7 @@
    Secciones: Overview · Users · Analysis.
    Solo visible si esAdmin() (verificado en Firestore).
    ============================================================ */
-import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte, asignarFotoAnalista, quitarFotoAnalista, ajustarContadorAnalista } from './mesa-datos.js';
+import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte, asignarFotoAnalista, quitarFotoAnalista, ajustarContadorAnalista, leerFichaAnalista, guardarPerfilAnalista } from './mesa-datos.js';
 import { rutaFotoAnalista } from '../datos/fotos-analistas.js';
 import { seguidoresBot, likesDe, dislikesDe } from '../datos/bots.js';
 import { abrirSelectorFotos } from '../ui/selector-fotos.js';
@@ -19,7 +19,7 @@ import { idiomaActual } from '../ui/idioma.js';
 let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = [];
 let _ligaSel = null, _partidos = [], _cargandoPart = false;
 let _rol = 'admin', _deporteAnalista = null, _analistas = [];
-let _miFirma = null, _miNombre = null, _miUid = null, _miEstilo = null, _estiloAuto = false;
+let _miFirma = null, _miNombre = null, _miUid = null, _miEstilo = null, _estiloAuto = false, _miFoto = null;
 let _mesaLang = 'es';
 let _uBusqueda = '', _uFiltro = 'todos', _uPagina = 1;
 let _anBusqueda = '', _anFiltro = 'todos';
@@ -58,7 +58,12 @@ export async function abrirMesa() {
     _cont.querySelector('#mesa-volver')?.addEventListener('click', () => { location.hash = ''; location.reload(); });
     return;
   }
-  if (admin) { _rol = 'admin'; _deporteAnalista = null; }
+  if (admin) {
+    _rol = 'admin'; _deporteAnalista = null;
+    const _u = usuarioActual(); _miUid = _u && _u.uid;
+    _miFirma = _miFirma || (_u && (_u.nombre || _u.email)) || 'Admin';
+    try { const _f = await leerFichaAnalista(_miUid); if (_f) { if (_f.firma) _miFirma = _f.firma; if (_f.nombre) _miNombre = _f.nombre; if (_f.estilo) _miEstilo = estiloSeguro(_f.estilo); _miFoto = _f.foto || null; } } catch (_) {}
+  }
   else { _rol = 'analista'; _deporteAnalista = analista.deporte || null; _miFirma = analista.firma || analista.alias || null; _miNombre = analista.nombre || null; _miUid = analista.uid || null; _miEstilo = estiloSeguro(analista.estilo); _estiloAuto = analista.estiloAuto === true; _tab = 'analisis'; }
   render();
   cargarDatos();
@@ -433,7 +438,8 @@ function editorEstilo() {
         <div class="est-controls">
           <div class="est-field"><label>${L('Accent color', 'Color de acento')}</label><div class="est-sws">${swatches}</div></div>
           <div class="est-field"><label>${L('Intensity', 'Intensidad')}</label><div class="est-seg">${inten}</div></div>
-          <div class="est-field"><label>${L('Emblem', 'Emblema')}</label><div class="est-embs">${embs}</div></div>
+          <div class="est-field"><label>${L('Profile photo', 'Foto de perfil')}</label>
+            <button type="button" class="est-foto-btn" id="est-foto">${_miFoto ? `<img src="${rutaFotoAnalista(_miFoto)}" alt="">` : `<span class="est-foto-mas">+</span>`}<span>${_miFoto ? L('Change photo', 'Cambiar foto') : L('Choose photo', 'Elegir foto')}</span></button></div>
         </div>
         <div class="est-preview">
           <label>${L('Live preview', 'Vista previa en tiempo real')}</label>
@@ -450,7 +456,12 @@ function editorEstilo() {
 
 function _renderPreview() {
   const box = _cont.querySelector('#est-prev'); if (!box) return;
-  box.innerHTML = tarjetaMuestra(_estiloDraft, _miFirma);
+  box.innerHTML = tarjetaMuestra(_estiloDraft, _miFirma, {
+    foto: _miFoto, local: 'Los Angeles Lakers', visita: 'Boston Celtics',
+    logoLocal: 'https://a.espncdn.com/i/teamlogos/nba/500/lal.png',
+    logoVisita: 'https://a.espncdn.com/i/teamlogos/nba/500/bos.png',
+    favLocal: true, favorito: 'Los Angeles Lakers', prob: 72,
+  });
 }
 function enlazarEditorEstilo() {
   prepararEstilosSenal();               // inyecta el CSS de señales para el preview
@@ -462,6 +473,19 @@ function enlazarEditorEstilo() {
   _cont.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { _estiloDraft.color = b.dataset.color; _estiloDraft = estiloSeguro(_estiloDraft); setSel('[data-color]', _estiloDraft.color, 'color'); _renderPreview(); marcarSucio(); });
   _cont.querySelectorAll('[data-inten]').forEach(b => b.onclick = () => { _estiloDraft.intensidad = b.dataset.inten; _estiloDraft = estiloSeguro(_estiloDraft); setSel('[data-inten]', _estiloDraft.intensidad, 'inten'); _renderPreview(); marcarSucio(); });
   _cont.querySelectorAll('[data-emb]').forEach(b => b.onclick = () => { _estiloDraft.emblema = b.dataset.emb; _estiloDraft = estiloSeguro(_estiloDraft); setSel('[data-emb]', _estiloDraft.emblema, 'emb'); _renderPreview(); marcarSucio(); });
+  _cont.querySelector('#est-foto') && (_cont.querySelector('#est-foto').onclick = () => {
+    if (!_miUid) return;
+    abrirSelectorFotos({
+      actual: _miFoto, uidAnalista: _miUid,
+      titulo: ML('Your profile photo', 'Tu foto de perfil'), sub: ML('This becomes your permanent photo on every signal.', 'Será tu foto permanente en cada señal.'),
+      txtOk: ML('Set photo', 'Poner foto'), txtCancel: ML('Cancel', 'Cancelar'), secHombres: ML('Men', 'Hombres'), secMujeres: ML('Women', 'Mujeres'),
+      onGuardar: async (foto) => {
+        const ok = await asignarFotoAnalista(_miUid, foto, _miFirma);
+        if (ok) { _miFoto = foto; const bb = _cont.querySelector('#est-foto'); if (bb) bb.innerHTML = `<img src="${rutaFotoAnalista(foto)}" alt=""><span>${ML('Change photo', 'Cambiar foto')}</span>`; _renderPreview(); }
+        return ok;
+      },
+    });
+  });
   const apply = _cont.querySelector('#est-apply');
   if (apply) apply.onclick = async () => {
     apply.disabled = true; const txt = apply.textContent; apply.textContent = '…';
@@ -1391,15 +1415,20 @@ async function abrirModalSenal(matchId) {
     const probLocal = Number(slL.value);
     const favAb = fav === 'local' ? p.local.abrev : p.visita.abrev;
     const analisis = {
-      equipos: `${p.local.abrev} vs ${p.visita.abrev}`,
-      veredicto: `${favAb} ${L('to win', 'gana')}`,
+      equipos: `${p.local.nombre} vs ${p.visita.nombre}`,
+      local: p.local.nombre, visita: p.visita.nombre,
+      logoLocal: p.local.logo || null, logoVisita: p.visita.logo || null,
+      favLocal: fav === 'local',
+      veredicto: `${fav === 'local' ? p.local.nombre : p.visita.nombre} ${L('to win', 'gana')}`,
       texto: ta.value.trim(),
       ajustar: bg.querySelector('#anm-adj').checked,
-      prob: probLocal, favorito: favAb, confianza: conf,
+      prob: probLocal, favorito: fav === 'local' ? p.local.nombre : p.visita.nombre, confianza: conf,
       mercado: bg.querySelector('#anm-mkt').value, estado,
       deporte: deporteDeLiga(p.ligaId),
+      autorUid: _miUid || null,
       firma: _miFirma || null,
-      autor: _miNombre || null,
+      autor: _miNombre || _miFirma || null,
+      foto: _miFoto || null,
       estilo: _miEstilo ? { color: _miEstilo.color, intensidad: _miEstilo.intensidad, emblema: _miEstilo.emblema } : null,
     };
     const btn = bg.querySelector(estado === 'borrador' ? '#anm-draft' : '#anm-guardar');
