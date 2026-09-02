@@ -85,9 +85,14 @@ export const FOTOS_BOT = BOTS.map(b => b.foto).filter(Boolean);
 export function esBot(uid) { return BOTS.some(b => b.uid === uid); }
 export function botPorUid(uid) { return BOTS.find(b => b.uid === uid) || null; }
 
-/* Seguidores mostrados de un bot = base figurativa + 1 por semana + seguidores REALES. */
-export function seguidoresBot(bot, real = 0) {
-  if (!bot) return real || 0;
-  const semanas = Math.max(0, Math.floor((Date.now() - new Date(bot.desde || '2026-09-02').getTime()) / (7 * 864e5)));
-  return (bot.followers || 0) + semanas + (real || 0);
+/* Seguidores mostrados = base figurativa + 1/semana + ajuste admin + seguidores REALES.
+   Funciona con un bot (tiene 'followers'/'desde') o con un analista real (solo ajuste + reales). */
+export function seguidoresBot(a, real = 0) {
+  const base = (a && a.followers) || 0;
+  const extra = (a && a.followersExtra) || 0;
+  let semanas = 0;
+  if (a && a.desde) semanas = Math.max(0, Math.floor((Date.now() - new Date(a.desde).getTime()) / (7 * 864e5)));
+  return base + semanas + extra + (real || 0);
 }
+export function likesDe(a) { return ((a && a.likes) || 0) + ((a && a.likesExtra) || 0); }
+export function dislikesDe(a) { return ((a && a.dislikes) || 0) + ((a && a.dislikesExtra) || 0); }
