@@ -313,7 +313,7 @@ function tarjeta(a, ctx = {}, idx = 0) {
     ? `<button class="sn-follow ${sigo ? 'on' : ''}" data-follow="${esc(uid)}" data-firma="${esc(firma)}">${sigo ? L('Following', 'Siguiendo') : L('Follow', 'Seguir')}</button>`
     : '';
   const acciones = btnFollow ? `<div class="sn-c-actions">${btnFollow}</div>` : '';
-  const fotoUid = (ctx.fotoPorUid && ctx.fotoPorUid[uid]) || null;
+  const fotoUid = a.foto || (ctx.fotoPorUid && ctx.fotoPorUid[uid]) || null;
   const avaHdr = fotoUid ? `<img src="assets/imagenes/analistas/${String(fotoUid).toLowerCase()}.webp" alt="" loading="lazy">` : (est.emblemaSVG || IPen);
   const header = `<div class="sn-c-hdr">
       <div class="sn-c-analyst"><span class="sn-c-ava2">${avaHdr}</span>
@@ -374,12 +374,16 @@ function tarjeta(a, ctx = {}, idx = 0) {
 export function prepararEstilosSenal() { inyectarCSS(); }
 export function tarjetaMuestra(estilo, firma, datos = {}) {
   return tarjeta({
-    equipos: datos.equipos || 'Lakers vs Celtics', firma: firma || 'Falcón', autorUid: '',
-    favorito: datos.favorito || 'Lakers',
-    prob: datos.prob != null ? datos.prob : 68,
+    equipos: datos.equipos || 'Lakers vs Celtics',
+    local: datos.local || 'Lakers', visita: datos.visita || 'Celtics',
+    logoLocal: datos.logoLocal || null, logoVisita: datos.logoVisita || null,
+    favLocal: datos.favLocal != null ? datos.favLocal : true,
+    firma: firma || 'Falcón', autorUid: '', foto: datos.foto || null,
+    favorito: datos.favorito || datos.local || 'Lakers',
+    prob: datos.prob != null ? datos.prob : 72,
     confianza: datos.confianza || 'alta',
     mercado: datos.mercado || 'ml',
-    texto: datos.texto != null ? datos.texto : L('Better recent form and home edge. High chance of winning.', 'Mejor forma reciente y ventaja de local. Alta probabilidad de ganar.'),
+    analisis: datos.analisis != null ? datos.analisis : L('Better recent form and home edge. High chance of winning.', 'Mejor forma reciente y ventaja de local. Alta probabilidad de ganar.'),
     estilo,
   }, {});
 }
