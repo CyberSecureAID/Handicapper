@@ -364,8 +364,8 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   try { apoyos = new Set(await misApoyos()); } catch (_) {}
   let yaReporte = false;
   try { yaReporte = !!(await miReporte()); } catch (_) {}
-  let fotoPorUid = {};
-  try { (await listarAnalistas()).forEach(an => { if (an.foto) fotoPorUid[an.uid] = an.foto; }); } catch (_) {}
+  let fotoPorUid = {}; let analistasLista = [];
+  try { analistasLista = await listarAnalistas(); analistasLista.forEach(an => { if (an.foto) fotoPorUid[an.uid] = an.foto; }); } catch (_) {}
   const ctx = { premium: esPremium, nivel: nivelReal, nClaras, me, sigo, votos, apoyos, conteos: {}, yaReporte, fotoPorUid };
 
   // Conteos de like/dislike de todas las señales (para mostrar y para ordenar "Populares")
@@ -399,6 +399,8 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   // Descubrir analistas: uno por firma, a partir de las señales
   const vistos = new Set(); const analistas = [];
   inicio.forEach(a => { if (a.autorUid && !vistos.has(a.autorUid)) { vistos.add(a.autorUid); analistas.push({ uid: a.autorUid, firma: a.firma || a.autor || '', deporte: a.deporte, estilo: a.estilo, foto: fotoPorUid[a.autorUid] || null }); } });
+  // Incluir también analistas/bots registrados aunque aún no tengan señales publicadas
+  analistasLista.forEach(an => { if (an.uid && an.activo !== false && !vistos.has(an.uid)) { vistos.add(an.uid); analistas.push({ uid: an.uid, firma: an.firma || an.nombre || '', deporte: an.deporte, estilo: an.estilo, foto: an.foto || null }); } });
   const discover = analistas.length ? bloqueDescubrir(analistas, ctx) : '';
 
   const tabs = `<div class="sn-tabs">
