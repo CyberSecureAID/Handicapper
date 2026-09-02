@@ -37,6 +37,19 @@ export async function cargarSenales() {
 }
 export function contarSenales() { return _cache ? _cache.length : 0; }
 
+/* Fase 3 — feed del perfil: señales de los analistas que sigo (siempre claras, ya pagué) */
+export async function feedSeguidosHTML() {
+  inyectarCSS();
+  const lista = await cargarSenales();
+  let sigo = new Set();
+  try { sigo = new Set(await misSeguidos()); } catch (_) {}
+  const mias = lista
+    .filter(a => a.autorUid && sigo.has(a.autorUid))
+    .sort((x, y) => _tsMs(y.actualizado) - _tsMs(x.actualizado));
+  const ctx = { premium: true, nivel: 'premium', nClaras: Infinity, me: null, sigo, votos: {}, apoyos: new Set(), conteos: {} };
+  return { total: mias.length, html: mias.map((a, i) => tarjeta(a, ctx, i)).join('') };
+}
+
 let _css = false;
 function inyectarCSS() {
   if (_css) return; _css = true;
