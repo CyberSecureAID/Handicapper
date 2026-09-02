@@ -321,7 +321,7 @@ function mostrarVista(v) {
   const cont = $('lista');
   if (!cont) return;
   if (v === 'analisis') {
-    pintarSenales(cont, { esPremium: _esAdmin || planActual() === 'premium', nivel: _esAdmin ? 'premium' : planActual(), abrirPlanes: () => mostrarPantalla('pricing') });
+    pintarSenales(cont, { esPremium: _esAdmin || planActual() === 'premium', nivel: _esAdmin ? 'admin' : planActual(), abrirPlanes: () => mostrarPantalla('pricing') });
   } else if (v === 'partidos' || v === 'vivo') {
     proyActiva = null; cargarLista();
   } else if (v === 'perfil') {
