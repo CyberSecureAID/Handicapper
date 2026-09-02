@@ -74,7 +74,7 @@ function inyectarCSS() {
   .sn-note p{color:var(--tx2);font-size:12.5px;line-height:1.55;margin:0}
   .sn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
   .sn-card{position:relative;background:linear-gradient(180deg,rgba(20,27,38,.9),rgba(13,18,26,.95));border:1px solid var(--line);border-radius:16px;padding:18px;overflow:hidden}
-  .sn-card{--acc:#e8b84b}
+  .sn-card{--acc:#38a9f0}
   .sn-card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--acc),transparent 75%)}
   .sn-c-emblema{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:7px;color:var(--acc);background:color-mix(in srgb, var(--acc) 12%, transparent);flex:0 0 auto}
   .sn-c-emblema svg{width:19px;height:19px}
@@ -97,7 +97,7 @@ function inyectarCSS() {
   .sn-c-team.fav span::after{content:" ★";color:var(--acc);font-size:10px}
   .sn-c-logo{width:28px;height:28px;flex:none;object-fit:contain}
   .sn-c-logo.ph{border-radius:50%;background:rgba(255,255,255,.08)}
-  .sn-c-vs2{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:11px;color:#6b7683;flex:none;letter-spacing:.05em}
+  .sn-c-vs-img{width:34px;height:34px;object-fit:contain;flex:none}
   .sn-c-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
   .sn-c-analyst{display:flex;align-items:center;gap:11px;min-width:0}
   .sn-c-ava2{width:44px;height:44px;border-radius:12px;overflow:hidden;flex:none;background:rgba(255,255,255,.06);display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--acc) 35%,transparent)}
@@ -211,7 +211,7 @@ function inyectarCSS() {
   .sn-c-firma svg{width:13px;height:13px}
   .sn-c-name{font-size:11.5px;color:var(--tx3,#7a8593);font-weight:600}
   /* Fase 2: barra superior con botón "What is this section?" + disclaimer del modal */
-  .sn-topbar{display:flex;justify-content:flex-end;margin:-6px 0 8px}
+  .sn-topbar{display:none}
   .sn-about{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--tx2);border-radius:999px;padding:7px 13px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;transition:color .14s,border-color .14s,background .14s}
   .sn-about:hover{color:#fff;border-color:rgba(232,184,75,.42);background:rgba(232,184,75,.08)}
   .sn-about svg{width:14px;height:14px;flex:0 0 auto}
@@ -350,7 +350,7 @@ function tarjeta(a, ctx = {}, idx = 0) {
   const cabezal = (_local && _visita)
     ? `<div class="sn-c-teams">
         <div class="sn-c-team ${_favLocal === true ? 'fav' : ''}">${logoImg(a.logoLocal)}<span>${esc(_local)}</span></div>
-        <span class="sn-c-vs2">VS</span>
+        <img class="sn-c-vs-img" src="assets/imagenes/vs.png" alt="VS">
         <div class="sn-c-team ${_favLocal === false ? 'fav' : ''}">${logoImg(a.logoVisita)}<span>${esc(_visita)}</span></div>
       </div>`
     : `<div class="sn-c-match">${esc(a.equipos || a.matchId || '')}</div>`;
