@@ -520,8 +520,21 @@ let _appArrancada = false;
 let _esAdmin = false;
 let _esAnalista = false;
 
-async function onSesion(usuario, extra) {
-  pintarCuenta(usuario);
+/* Publica las señales de los bots una vez al día (lo dispara el admin al entrar). */
+async function publicarBotsSiEsNuevoDia() {
+  const hoy = new Date().toISOString().slice(0, 10);
+  try { if (localStorage.getItem('bots-dia') === hoy) return; } catch (_) {}
+  try {
+    const [botMod, datosMod] = await Promise.all([
+      import('./datos/bots-senales.js'),
+      import('./mesa/mesa-datos.js'),
+    ]);
+    const r = await botMod.publicarTodosLosBots(datosMod.guardarAnalisis);
+    if (r && r.ok) { try { localStorage.setItem('bots-dia', hoy); } catch (_) {} }
+  } catch (_) {}
+}
+
+async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   fijarSuscripcion(usuario?.suscripcion || null);
   actualizarBotonNivel();
   if (extra && extra.bloqueado) { mostrarPantalla('landing'); avisarBloqueo(); return; }
@@ -532,6 +545,7 @@ async function onSesion(usuario, extra) {
   pintarCuenta(usuario);   // repinta para mostrar la opción de panel si es admin
   if ((location.hash || '').toLowerCase() === '#mesa') { try { history.replaceState(null, '', location.pathname); } catch (_) {} }
   if (_esAdmin) marcarVistaPrevia('premium');   // el admin tiene acceso total cuando entre
+  if (_esAdmin) publicarBotsSiEsNuevoDia();     // señales de bots automáticas (1 vez al día)
   // NO entramos automáticamente al cargar: el usuario llega al lobby y entra por su elección.
   // Solo entramos directo si el login fue una acción intencional (tocó "Entrar"/"Registrarse").
   if (extra && extra.intencional) { entrarSegunAcceso(); return; }
