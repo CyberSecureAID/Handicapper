@@ -732,6 +732,7 @@
 .premium-btn:hover { filter: brightness(1.025); box-shadow: 0 4px 13px rgba(201,165,60,.28), inset 0 1px 0 rgba(255,255,255,.3); }
 .premium-btn:active { transform: translateY(1px); }
 .premium-btn.nivel-pro { background: linear-gradient(110deg, #7a4a26 0%, #b17a45 20%, #d8a066 36%, #c68a4f 54%, #a86a38 74%, #7a4a26 100%); background-size: 200% 100%; color: #fff2e2; border-color: rgba(210,150,90,.5); box-shadow: 0 3px 11px rgba(120,74,38,.3), inset 0 1px 0 rgba(255,255,255,.2); }
+.pro-btn { margin-right: 8px; animation: none; background: linear-gradient(110deg, #7a4a26 0%, #b17a45 20%, #d8a066 36%, #c68a4f 54%, #a86a38 74%, #7a4a26 100%); background-size: 200% 100%; color: #fff2e2; border-color: rgba(210,150,90,.5); box-shadow: 0 3px 11px rgba(120,74,38,.3), inset 0 1px 0 rgba(255,255,255,.2); }
 .premium-btn.open, .premium-btn.activo { box-shadow: 0 0 0 1.5px rgba(255,240,200,.4), 0 4px 13px rgba(201,165,60,.26); }
 @keyframes premTornasol { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
 .premium-btn svg { width: 16px; height: 16px; flex: 0 0 auto; }
