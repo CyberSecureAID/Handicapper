@@ -163,7 +163,7 @@ export function analizar(match) {
   const posL = Number(match.local.posicion), posV = Number(match.visita.posicion);
   if (isFinite(posL) && isFinite(posV) && posL > 0 && posV > 0 && posL !== posV) {
     // Menor número = mejor. Diferencia de puestos -> ventaja (con tope).
-    const posEdge = clamp((posV - posL) * 0.05, -0.6, 0.6);
+    const posEdge = clamp((posV - posL) * 0.075, -0.8, 0.8);
     L += posEdge; factoresUsados.push('posicion');
   }
 
