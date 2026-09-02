@@ -163,7 +163,9 @@ function inyectarCSS() {
   .sn-disc-head svg{width:16px;height:16px;color:var(--g)}
   .sn-disc-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
   .sn-disc-row::-webkit-scrollbar{height:6px}.sn-disc-row::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:99px}
-  .sn-disc-card{--acc:#e8b84b;flex:0 0 auto;width:148px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;background:linear-gradient(180deg,rgba(20,27,38,.9),rgba(13,18,26,.95));border:1px solid var(--line);border-radius:14px;padding:15px 12px 13px}
+  .sn-disc-card{--acc:#e8b84b;flex:0 0 auto;width:164px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;background:rgba(8,12,20,.5);border:0;border-radius:0;padding:28px 20px 26px;position:relative}
+  .sn-disc-card::before{content:'';position:absolute;inset:0;z-index:0;background:url('assets/imagenes/marco.webp') center/100% 100% no-repeat;pointer-events:none}
+  .sn-disc-card>*{position:relative;z-index:1}
   .sn-disc-ava{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:19px;color:var(--acc);background:color-mix(in srgb, var(--acc) 15%, transparent);border:1px solid color-mix(in srgb, var(--acc) 34%, transparent);margin-bottom:4px;overflow:hidden}
   .sn-disc-ava img{width:100%;height:100%;object-fit:cover;display:block}
   .sn-disc-ava svg{width:23px;height:23px}
