@@ -98,6 +98,20 @@ function inyectarCSS() {
   .sn-c-logo{width:28px;height:28px;flex:none;object-fit:contain}
   .sn-c-logo.ph{border-radius:50%;background:rgba(255,255,255,.08)}
   .sn-c-vs2{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:11px;color:#6b7683;flex:none;letter-spacing:.05em}
+  .sn-c-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .sn-c-analyst{display:flex;align-items:center;gap:11px;min-width:0}
+  .sn-c-ava2{width:44px;height:44px;border-radius:12px;overflow:hidden;flex:none;background:rgba(255,255,255,.06);display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--acc) 35%,transparent)}
+  .sn-c-ava2 img{width:100%;height:100%;object-fit:cover}
+  .sn-c-ava2 svg{width:22px;height:22px;color:var(--acc)}
+  .sn-c-who{min-width:0}
+  .sn-c-who > b{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:15px;color:#fff;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sn-c-who .sn-c-fol{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#8a95a3;margin-top:1px}
+  .sn-c-who .sn-c-fol svg{width:13px;height:13px}
+  .sn-c-verdict{display:flex;align-items:center;gap:11px;margin:14px 0 9px}
+  .sn-c-arrow{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:color-mix(in srgb,var(--acc) 16%,transparent);color:var(--acc);flex:none}
+  .sn-c-arrow svg{width:18px;height:18px}
+  .sn-c-verdict .sn-c-team{flex:1;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:15px;color:#fff;min-width:0}
+  .sn-c-verdict .sn-c-prob{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:23px;color:var(--acc)}
   .sn-c-conf{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:4px 10px;border-radius:20px}
   .sn-c-conf.alta{color:#48d17e;background:rgba(38,194,129,.14)}.sn-c-conf.media{color:var(--g);background:rgba(232,184,75,.14)}.sn-c-conf.baja{color:#ef9a5a;background:rgba(232,120,60,.14)}
   .sn-c-pick{display:flex;align-items:center;gap:10px;margin:6px 0 10px}
@@ -193,7 +207,7 @@ function inyectarCSS() {
   .sn-c-firma svg{width:13px;height:13px}
   .sn-c-name{font-size:11.5px;color:var(--tx3,#7a8593);font-weight:600}
   /* Fase 2: barra superior con botón "What is this section?" + disclaimer del modal */
-  .sn-topbar{display:flex;justify-content:flex-end;margin:0 0 12px}
+  .sn-topbar{display:flex;justify-content:flex-end;margin:-6px 0 8px}
   .sn-about{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--tx2);border-radius:999px;padding:7px 13px;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;transition:color .14s,border-color .14s,background .14s}
   .sn-about:hover{color:#fff;border-color:rgba(232,184,75,.42);background:rgba(232,184,75,.08)}
   .sn-about svg{width:14px;height:14px;flex:0 0 auto}
@@ -274,7 +288,7 @@ const _DEP = { soccer: { en: 'Soccer', es: 'Fútbol' }, nba: { en: 'Basketball',
 function depenNombre(id) { const d = _DEP[id]; return d ? L(d.en, d.es) : (id || ''); }
 
 function tarjeta(a, ctx = {}, idx = 0) {
-  const conf = a.confianza || 'media';
+  let conf = a.confianza || 'media'; if (conf === 'baja' || !['alta','media'].includes(conf)) conf = 'media';
   const prob = a.prob != null ? Math.max(1, Math.min(99, a.prob)) : null;
   const mk = (MERCADO[a.mercado] || MERCADO.ml)();
   const pick = a.favorito ? `${esc(a.favorito)} ${L('to win', 'gana')}` : esc(a.veredicto || '');
@@ -296,14 +310,19 @@ function tarjeta(a, ctx = {}, idx = 0) {
     : '';
   const acciones = btnFollow ? `<div class="sn-c-actions">${btnFollow}</div>` : '';
   const fotoUid = (ctx.fotoPorUid && ctx.fotoPorUid[uid]) || null;
-  const avaFoto = fotoUid ? `<span class="sn-c-ava"><img src="assets/imagenes/analistas/${String(fotoUid).toLowerCase()}.webp" alt="" loading="lazy"></span>` : emblema;
-  const by = firma ? `<div class="sn-c-by">
-      ${avaFoto}<span class="sn-c-firma">${IPen}${esc(firma)}</span>
-      ${uid ? `<span class="sn-c-fol" data-fol="${esc(uid)}">${IUsers}<b>·</b> ${L('followers', 'seguidores')}</span>` : ''}
-    </div>${acciones}` : acciones;
+  const avaHdr = fotoUid ? `<img src="assets/imagenes/analistas/${String(fotoUid).toLowerCase()}.webp" alt="" loading="lazy">` : (est.emblemaSVG || IPen);
+  const header = `<div class="sn-c-hdr">
+      <div class="sn-c-analyst"><span class="sn-c-ava2">${avaHdr}</span>
+        <div class="sn-c-who"><b>${esc(firma || 'Analyst')}</b>${uid ? `<span class="sn-c-fol" data-fol="${esc(uid)}">${IUsers}<b>·</b> ${L('followers', 'seguidores')}</span>` : ''}</div></div>
+      <span class="sn-c-conf ${conf}">${esc(confTx(conf))}</span>
+    </div>`;
 
   const miV = (ctx.votos && ctx.votos[sid]) || 0;
-  const cVot = (ctx.conteos && ctx.conteos[sid]) || { likes: 0, dislikes: 0 };
+  let _h = 0; for (let i = 0; i < sid.length; i++) _h = (_h * 31 + sid.charCodeAt(i)) >>> 0;
+  const likesRnd = 7 + (_h % 58);                          // likes variados por señal
+  const disRnd = (_h % 4 === 0) ? (_h % 3) : 0;            // casi sin dislikes
+  const cReal = (ctx.conteos && ctx.conteos[sid]) || { likes: 0, dislikes: 0 };
+  const cVot = { likes: (cReal.likes || 0) + likesRnd, dislikes: (cReal.dislikes || 0) + disRnd };
   const IUp = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 22V10M2 12v8a2 2 0 002 2h13.4a2 2 0 002-1.6l1.4-7A2 2 0 0018.8 11H14V6a2.5 2.5 0 00-2.5-2.5c-.6 0-1.1.4-1.3 1L7 10"/></svg>`;
   const IDown = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2v12M22 12V4a2 2 0 00-2-2H6.6a2 2 0 00-2 1.6l-1.4 7A2 2 0 005.2 13H10v5a2.5 2.5 0 002.5 2.5c.6 0 1.1-.4 1.3-1L17 14"/></svg>`;
   const IFlag = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V4"/></svg>`;
@@ -314,6 +333,7 @@ function tarjeta(a, ctx = {}, idx = 0) {
     </div>` : '';
 
   // Análisis largo (hasta ~1000 palabras): desplegable centrado y responsivo
+  const IArrow = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>`;
   const IChev = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
   const analisis = a.texto ? `<button class="sn-c-toggle" data-an="${esc(sid)}"><span>${L('Read analysis', 'Ver análisis')}</span>${IChev}</button>
     <div class="sn-c-an" id="an-${esc(sid)}" hidden><p>${esc(a.texto)}</p></div>` : '';
@@ -330,12 +350,12 @@ function tarjeta(a, ctx = {}, idx = 0) {
   return `<div class="sn-card ${est.cls} ${bloqueada ? 'sn-locked' : ''}" style="${est.varCss}">
     ${overlay}
     <div class="sn-c-inner">
-    <div class="sn-c-top">${cabezal}<span class="sn-c-conf ${conf}">${esc(confTx(conf))}</span></div>
-    ${by}
-    <div class="sn-c-pick"><span class="sn-c-pick-lbl">${L('Pick', 'Pronóstico')}</span><span class="sn-c-team">${pick}</span>${prob != null ? `<span class="sn-c-prob">${prob}%</span>` : ''}</div>
+    ${header}
+    ${cabezal}
+    <div class="sn-c-verdict"><span class="sn-c-arrow">${IArrow}</span><span class="sn-c-team">${pick}</span>${prob != null ? `<span class="sn-c-prob">${prob}%</span>` : ''}</div>
     ${prob != null ? `<div class="sn-c-bar"><i style="width:${prob}%"></i></div>` : ''}
     ${analisis}
-    <div class="sn-c-foot"><span class="sn-c-market">${esc(mk)}</span>${votos}</div>
+    <div class="sn-c-foot">${votos}${acciones}</div>
     </div>
   </div>`;
 }
