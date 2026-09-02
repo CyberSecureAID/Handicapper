@@ -88,7 +88,7 @@ export function pintarPlanes() {
   const cardHTML = (p, conBoton) => {
     const et = p.etiqueta ? `<div class="plan-etq">${Lg(p.etiqueta)}</div>` : '';
     const feats = p.incluye.map(f => `<li>${IC_CHECK}${Lg(f)}</li>`).join('');
-    const ahorro = _ciclo === 'anual' ? `<div class="plan-ahorro">${t('pl.save2')}</div>` : '';
+    const ahorro = '';
     return `
       <div class="plan ${p.destacado ? 'destacado' : ''}">
         ${et}
