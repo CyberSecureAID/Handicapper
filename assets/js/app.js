@@ -546,6 +546,97 @@ function entrarSegunAcceso() {
 /* El lobby llama a esto cuando el usuario ya tiene sesión y toca "Entrar" */
 if (typeof window !== 'undefined') window.__handiEntrar = () => { if (_sesion) { entrarSegunAcceso(); return true; } return false; };
 
+/* -------- Configuración obligatoria del analista (una sola vez) -------- */
+async function abrirConfigAnalista() {
+  const ES = idiomaActual() === 'es';
+  const Lc = (en, es) => ES ? es : en;
+  let mods;
+  try {
+    mods = {
+      fotos: await import('./datos/fotos-analistas.js'),
+      datos: await import('./mesa/mesa-datos.js'),
+    };
+  } catch (_) { abrirPanelMesa(); return; }
+  const { FOTOS_HOMBRE, FOTOS_MUJER, rutaFotoAnalista } = mods.fotos;
+  const [ficha, ocupadas] = await Promise.all([
+    mods.datos.leerFichaAnalista().catch(() => null),
+    mods.datos.fotosOcupadas().catch(() => ({})),
+  ]);
+  const miUid = _sesion && _sesion.uid;
+  let fotoSel = (ficha && ficha.foto) || null;
+
+  const celda = (id) => {
+    const dueno = ocupadas[id];
+    const bloq = dueno && dueno !== miUid;
+    return `<button type="button" class="ca-foto${fotoSel === id ? ' sel' : ''}${bloq ? ' bloq' : ''}" data-foto="${id}" ${bloq ? 'disabled' : ''}>
+      <img src="${rutaFotoAnalista(id)}" alt="" loading="lazy">
+      ${bloq ? '<span class="ca-lock">🔒</span>' : ''}
+      <span class="ca-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+    </button>`;
+  };
+
+  const ov = document.createElement('div');
+  ov.className = 'ca-ov';
+  ov.innerHTML = `<div class="ca-modal">
+    <div class="ca-head">
+      <h2>${Lc('Set up your analyst profile', 'Configura tu perfil de analista')}</h2>
+      <p>${Lc('Do this once to start publishing signals. Both fields are required.', 'Hazlo una vez para empezar a publicar señales. Ambos campos son obligatorios.')}</p>
+    </div>
+    <label class="ca-field">
+      <span>${Lc('Analyst name', 'Nombre de analista')}</span>
+      <input id="ca-nombre" type="text" maxlength="28" placeholder="${Lc('e.g. Carlos M.', 'ej. Carlos M.')}" value="${esc((ficha && (ficha.firma || ficha.nombre)) || '')}">
+    </label>
+    <div class="ca-pick">
+      <div class="ca-pick-h">${Lc('Choose your photo', 'Elige tu foto')} <em id="ca-elegida"></em></div>
+      <div class="ca-sec-t">${Lc('Men', 'Hombres')}</div>
+      <div class="ca-grid">${FOTOS_HOMBRE.map(celda).join('')}</div>
+      <div class="ca-sec-t">${Lc('Women', 'Mujeres')}</div>
+      <div class="ca-grid">${FOTOS_MUJER.map(celda).join('')}</div>
+    </div>
+    <div class="ca-foot">
+      <button type="button" class="ca-cancel" id="ca-cancel">${Lc('Cancel', 'Cancelar')}</button>
+      <button type="button" class="ca-save" id="ca-save" disabled>${Lc('Save & continue', 'Guardar y continuar')}</button>
+    </div>
+    <div class="ca-err" id="ca-err"></div>
+  </div>`;
+  document.body.appendChild(ov);
+
+  const inp = ov.querySelector('#ca-nombre');
+  const btn = ov.querySelector('#ca-save');
+  const err = ov.querySelector('#ca-err');
+  const eleg = ov.querySelector('#ca-elegida');
+
+  const revisar = () => {
+    const nombreOk = inp.value.trim().length >= 2;
+    btn.disabled = !(nombreOk && fotoSel);
+    eleg.textContent = fotoSel ? '· ' + fotoSel : '';
+  };
+  inp.addEventListener('input', revisar);
+
+  ov.querySelectorAll('.ca-foto').forEach(b => b.addEventListener('click', () => {
+    if (b.classList.contains('bloq')) return;
+    ov.querySelectorAll('.ca-foto.sel').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel'); fotoSel = b.dataset.foto; revisar();
+  }));
+
+  const cerrar = () => ov.remove();
+  ov.querySelector('#ca-cancel').addEventListener('click', cerrar);
+  ov.addEventListener('click', e => { if (e.target === ov) cerrar(); });
+
+  btn.addEventListener('click', async () => {
+    const nombre = inp.value.trim();
+    if (nombre.length < 2 || !fotoSel) return;
+    btn.disabled = true; err.textContent = '';
+    const ok = await mods.datos.reclamarFoto(fotoSel, nombre);
+    if (!ok) { err.textContent = Lc('That photo was just taken. Pick another.', 'Esa foto se acaba de ocupar. Elige otra.'); btn.disabled = false; return; }
+    await mods.datos.guardarPerfilAnalista({ nombre, firma: nombre, foto: fotoSel });
+    cerrar();
+    abrirPanelMesa();
+  });
+
+  revisar();
+}
+
 async function abrirPanelMesa() {
   try { const m = await import('./mesa/mesa.js'); m.abrirMesa(); }
   catch (_) { mostrarPantalla('landing'); }
@@ -624,7 +715,17 @@ function toggleCuentaMenu() {
     <button id="cm-idioma">${icIdioma} ${ES ? 'Idioma' : 'Language'} · ${idiomaActual().toUpperCase()}</button>
     <button id="cm-salir">${IC.salir || ''} ${t('auth.salir')}</button>`;
   document.body.appendChild(menu);
-  menu.querySelector('#cm-panel')?.addEventListener('click', () => { cerrarCuentaMenu(); abrirPanelMesa(); });
+  menu.querySelector('#cm-panel')?.addEventListener('click', async () => {
+    cerrarCuentaMenu();
+    if (_esAnalista && !_esAdmin) {
+      try {
+        const { leerFichaAnalista } = await import('./mesa/mesa-datos.js');
+        const ficha = await leerFichaAnalista();
+        if (!ficha || !ficha.configurado) { abrirConfigAnalista(); return; }
+      } catch (_) {}
+    }
+    abrirPanelMesa();
+  });
   menu.querySelector('#cm-perfil')?.addEventListener('click', () => { cerrarCuentaMenu(); abrirAjustesPerfil(); });
   menu.querySelector('#cm-idioma')?.addEventListener('click', () => { fijarIdioma(idiomaActual() === 'en' ? 'es' : 'en'); cerrarCuentaMenu(); });
   menu.querySelector('#cm-salir').addEventListener('click', async () => { limpiarVistaPrevia(); await salir(); cerrarCuentaMenu(); });
