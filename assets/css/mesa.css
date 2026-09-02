@@ -903,3 +903,10 @@ body.en-mesa { overflow: hidden; }
 .an-mng-foto-mas { color: #7a8695; font-size: 24px; font-weight: 300; line-height: 1; }
 .an-mng-foto:hover { border-color: #e8b84b; }
 .an-mng-foto.tiene { border-color: rgba(232,184,75,.5); }
+
+/* Badge BOT + fila de bot en Staff */
+.an-mng-bot { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: .08em; padding: 1px 6px; border-radius: 5px; background: rgba(74,144,255,.2); color: #7fb0ff; border: 1px solid rgba(74,144,255,.4); vertical-align: middle; margin-left: 5px; }
+.an-mng-row.es-bot { border-left: 2px solid rgba(74,144,255,.5); }
+/* Botones del header de Staff en una sola línea (no apilados) */
+.an-head .mesa-btn { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.an-head .mesa-btn svg { width: 16px; height: 16px; flex: none; }
