@@ -56,17 +56,17 @@ function redim() {
 }
 
 function generar(w, h) {
-  const n = Math.min(170, Math.round((w * h) / 20000));
+  const n = Math.min(230, Math.round((w * h) / 15000));
   _ps = [];
   for (let i = 0; i < n; i++) {
     const rojo = Math.random() < 0.5;
     _ps.push({
       x: Math.random() * w,
       y: Math.random() * h,
-      r: 0.7 + Math.random() * 2.6,
+      r: 0.8 + Math.random() * 3.0,
       vx: (Math.random() - 0.5) * 0.4,
       vy: -(0.08 + Math.random() * 0.4),
-      a: 0.10 + Math.random() * 0.30,
+      a: 0.22 + Math.random() * 0.45,
       f: Math.random() * Math.PI * 2,
       fv: 0.5 + Math.random() * 1.1,
       rojo,
@@ -97,13 +97,13 @@ function paso(dt) {
     const rad = p.r * 2.5;
     const c = p.rojo ? '255,86,64' : '74,150,255';
 
-    const grad = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad);
-    grad.addColorStop(0, `rgba(${c},${tw})`);
-    grad.addColorStop(1, `rgba(${c},0)`);
-    g.fillStyle = grad;
     g.save();
     g.translate(p.x, p.y);
     g.scale(1, estira);
+    const grad = g.createRadialGradient(0, 0, 0, 0, 0, rad);
+    grad.addColorStop(0, `rgba(${c},${tw})`);
+    grad.addColorStop(1, `rgba(${c},0)`);
+    g.fillStyle = grad;
     g.beginPath(); g.arc(0, 0, rad, 0, Math.PI * 2); g.fill();
     g.restore();
   }

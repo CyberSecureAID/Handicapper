@@ -17,6 +17,9 @@ export function initNavegacion(callbacks) {
   bind('btn-register', () => { if (!(window.__handiEntrar && window.__handiEntrar())) _cb.abrirAuth?.('registrar'); });
   bind('btn-hero', () => { if (!(window.__handiEntrar && window.__handiEntrar())) _cb.abrirAuth?.('registrar'); });
   bind('btn-hero-2', () => document.getElementById('landing-planes')?.scrollIntoView({ behavior: 'smooth' }));
+  bind('btn-cta', () => { if (!(window.__handiEntrar && window.__handiEntrar())) _cb.abrirAuth?.('registrar'); });
+  bind('btn-explore', () => document.querySelector('.compare')?.scrollIntoView({ behavior: 'smooth' }));
+  bind('btn-unlock', () => document.getElementById('landing-planes')?.scrollIntoView({ behavior: 'smooth' }));
   bind('btn-salir-planes', () => _cb.salir?.());
   // Idioma en landing y pricing
   ['idioma-btn-l', 'idioma-btn-p'].forEach(id => bind(id, () => fijarIdioma(idiomaActual() === 'en' ? 'es' : 'en')));
