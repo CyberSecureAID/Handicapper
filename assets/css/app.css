@@ -942,3 +942,29 @@
 .sd-card::before { content: ''; position: absolute; inset: 0; z-index: 0; background: url('../imagenes/marco.webp') center / 100% 100% no-repeat; pointer-events: none; }
 .sd-card > * { position: relative; z-index: 1; }
 .sd-follow { position: relative; z-index: 1; }
+
+/* ===== FIX ventana Signals: marco con proporción + compacto + responsive ===== */
+.sd-modal { max-width: 960px; max-height: 90vh; overflow-y: auto; }
+.sd-grid { grid-template-columns: repeat(auto-fit, 170px); justify-content: center; gap: 12px; }
+.sd-card { width: 170px; min-height: 214px; padding: 30px 22px 26px; gap: 2px; }
+.sd-ava { width: 50px; height: 50px; border-radius: 13px; margin-bottom: 2px; }
+.sd-nom { font-size: 13px; }
+.sd-sport { font-size: 9px; margin-bottom: 7px; }
+.sd-stats { gap: 8px; margin-bottom: 10px; padding-top: 9px; }
+.sd-stats b { font-size: 13.5px; }
+.sd-stats em { font-size: 8px; }
+.sd-follow { height: 32px; font-size: 11px; padding: 0 14px; border-radius: 9px; }
+@media (max-width: 600px) {
+  .sd-ov { align-items: flex-start; padding: 10px; }
+  .sd-modal { max-height: 94vh; padding: 42px 12px 16px; }
+  .sd-x { top: 12px; right: 12px; }
+  .sd-grid { grid-template-columns: repeat(auto-fit, 152px); gap: 8px; }
+  .sd-card { width: 152px; min-height: 196px; padding: 26px 18px 22px; }
+  .sd-ava { width: 44px; height: 44px; }
+}
+/* Nav móvil: que Signals/Pro/Premium quepan (solo iconos) */
+@media (max-width: 620px) {
+  .signals-btn span, .pro-btn span, #premium-btn > span:not(.premium-btn-dot) { display: none; }
+  .signals-btn, .pro-btn, #premium-btn { padding: 0 11px; gap: 0; }
+  .premium-chev { display: none; }
+}
