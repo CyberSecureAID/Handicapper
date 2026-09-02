@@ -249,9 +249,9 @@ const IC_LUPA = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 
 const APUESTAS = [
   { id: 'hits', cls: 'hits', label: () => L('Hits', 'Hits') },
-  { id: 'tb',   cls: 'tb',   label: () => L('Total bases', 'Bases totales') },
 ];
 function betTabsHTML(activo) {
+  if (APUESTAS.length < 2) return '';   // con una sola apuesta no hace falta barra de pestañas
   const act = activo || 'hits';
   return `<div class="ply-tabs">${APUESTAS.map(t =>
     `<button class="ply-tab ${t.cls}${t.id === act ? ' on' : ''}" data-bet="${t.id}"><span class="ply-tab-l">${t.label()}</span></button>`
@@ -485,7 +485,6 @@ function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
     ${heroHTML(cfg, meta, false, 'hits')}
     ${nota}
     <div class="ply-panel" data-bet-panel="hits"><div class="ply-grid">${jugadores.map(p => cardHTML(p, cfg)).join('')}</div></div>
-    ${cfg._sport === 'mlb' ? `<div class="ply-panel hr" data-bet-panel="hr" hidden><div class="ply-grid" data-hr-grid></div></div>${soonPanelHTML('tb')}` : ''}
     <div class="ply-foot">${esc(cfg.foot)}</div>
   </div>`;
   animar(cont);
