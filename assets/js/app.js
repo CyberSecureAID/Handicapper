@@ -384,6 +384,7 @@ function pintarPerfil(cont) {
       cSig.innerHTML = `<div class="pf-empty">${Lp('Could not load your feed. Try again.', 'No se pudo cargar tu feed. Inténtalo de nuevo.')}</div>`;
     }
   })();
+}
 
 /* Punto verde en "Análisis" (móvil y escritorio) cuando hay señales publicadas. */
 function actualizarPuntoSenales() {
