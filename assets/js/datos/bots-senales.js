@@ -62,8 +62,10 @@ async function generar({ guardar, uid, firma, autor, color, deporte, ligas, max 
     try { const ps = await listarPartidos(lg); if (Array.isArray(ps)) partidos.push(...ps); } catch (_) {}
   }
   const cand = [];
+  const hoyStr = new Date().toDateString();
   for (const m of partidos) {
-    if (m.estado !== 'proximo') continue;            // solo partidos por jugarse (hoy/próximos)
+    if (m.estado !== 'proximo') continue;            // solo partidos por jugarse
+    if (!m.cuando || new Date(m.cuando).toDateString() !== hoyStr) continue;   // SOLO HOY
     const d = medir(m);
     if (!d) continue;
     cand.push({ m, ...d });
