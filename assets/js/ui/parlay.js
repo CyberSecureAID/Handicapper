@@ -135,7 +135,7 @@ function inyectarCSS() {
   .ply-hero::after{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:20px;box-shadow:inset 0 0 0 3px #070b12, inset 0 0 11px 3px rgba(7,11,18,.85)}
   .ply-hero-bg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;background-color:#0a1420}
   .ply-hero-veil{position:absolute;inset:0;z-index:1;background:linear-gradient(100deg,rgba(6,9,15,.9),rgba(6,9,15,.5) 46%,rgba(6,9,15,.12) 72%),linear-gradient(0deg,rgba(6,9,15,.7),transparent 46%)}
-  .ply-nivel{position:absolute;top:14px;right:14px;z-index:4;display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:999px;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:12px;letter-spacing:.08em;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+  .ply-nivel{position:absolute;top:14px;right:14px;z-index:4;display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:11px;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:12px;letter-spacing:.06em;text-shadow:0 1px 2px rgba(0,0,0,.4)}
   .ply-nivel svg{width:15px;height:15px}
   .ply-nivel.pro{background:linear-gradient(180deg,#c6844a,#7a4a26);color:#ffe6c9;border:1px solid rgba(205,140,80,.7);box-shadow:0 3px 10px -3px rgba(120,74,38,.6),inset 0 1px 0 rgba(255,255,255,.2)}
   .ply-nivel.prem{background:linear-gradient(180deg,#e8c46a,#96661e);color:#3a2800;border:1px solid rgba(232,196,106,.8);box-shadow:0 3px 10px -3px rgba(150,110,30,.5),inset 0 1px 0 rgba(255,255,255,.3)}
@@ -491,7 +491,7 @@ function wireBets(cont) {
 function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
   cfg._count = jugadores.length;
   const nota = preliminar
-    ? `<div class="ply-note"><i></i>${L('Preview — live projections update at game time.', 'Vista preliminar — las proyecciones en vivo se actualizan a la hora del juego.')}</div>`
+    ? ``
     : '';
   cont.innerHTML = `<div class="ply">
     ${heroHTML(cfg, meta, false, 'hits')}
