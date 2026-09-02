@@ -5,7 +5,7 @@
    su UID no está en la colección 'admins', Firestore le niega los datos.
    ============================================================ */
 import { _asegurarListo, _obtenerDB, _obtenerStore, usuarioActual } from '../auth/auth.js';
-import { BOTS, FOTOS_BOT } from '../datos/bots.js';
+import { BOTS, FOTOS_BOT, esBot } from '../datos/bots.js';
 
 /* ¿El usuario actual es administrador? Se comprueba contra Firestore. */
 export async function esAdmin() {
@@ -458,10 +458,11 @@ export async function apoyarAnalista(analistaUid, firma, metodo = 'preview') {
   if (!await _asegurarListo()) return false;
   const u = usuarioActual(); if (!u || !analistaUid) return false;
   const S = _obtenerStore(), db = _obtenerDB();
+  const bot = esBot(analistaUid);                 // los bots son de la casa: $2 completos para la plataforma
   const vence = new Date(); vence.setMonth(vence.getMonth() + 1);
   await S.setDoc(S.doc(db, 'apoyos', _idApoyo(u.uid, analistaUid)), {
     uid: u.uid, analistaUid, firma: firma || null, activo: true,
-    precio: 2, corteAnalista: 1, cortePlataforma: 1,
+    precio: 2, corteAnalista: bot ? 0 : 1, cortePlataforma: bot ? 2 : 1, esBot: bot,
     inicio: S.serverTimestamp(), vence: vence.toISOString(), metodo,
   }, { merge: true });
   return true;
