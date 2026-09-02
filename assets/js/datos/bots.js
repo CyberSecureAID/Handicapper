@@ -17,7 +17,7 @@ export const BOTS = [
     activo: true,
     configurado: true,
     esBot: true,
-    fuente: 'apifootball',           // Fase 2: de dónde saca sus señales
+    fuente: 'espn',
     estilo: { color: '#4a90ff' },
   },
   {
@@ -30,8 +30,21 @@ export const BOTS = [
     activo: true,
     configurado: true,
     esBot: true,
-    fuente: 'apifootball',
+    fuente: 'espn',
     estilo: { color: '#e23b3f' },
+  },
+  {
+    uid: 'bot-daniel',
+    nombre: 'Daniel Vega',
+    firma: 'Daniel V.',
+    deporte: 'basket',
+    foto: 'r',                       // assets/imagenes/analistas/r.webp
+    email: 'daniel@sportsexpectations.io',
+    activo: true,
+    configurado: true,
+    esBot: true,
+    fuente: 'espn',
+    estilo: { color: '#8a5cf6' },
   },
 ];
 
