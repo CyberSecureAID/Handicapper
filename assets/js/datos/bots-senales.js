@@ -1,135 +1,95 @@
 /* ============================================================
-   SEÑALES DE BOTS — el admin dispara esto UNA VEZ AL DÍA (botón en el panel).
-   Llama a API-Football, arma las señales del día y las guarda en Firebase.
-   Todos los usuarios luego las leen desde Firebase (sin gastar más llamadas).
-   ------------------------------------------------------------
-   1) Crea tu cuenta gratis en https://dashboard.api-football.com (sin tarjeta).
-   2) Copia tu key (Account → My Access) y pégala abajo en API_FOOTBALL_KEY.
+   SEÑALES DE BOTS — generadas con los datos GRATIS de ESPN (misma fuente
+   que ya usa la web, funciona desde el navegador, sin proxy ni key).
+   NO usa el motor: solo elige los partidos MÁS DISPAREJOS del día
+   (favorito claro) → picks obvios, de alta probabilidad.
+   Cada señal lleva 'caducidad' = hora del partido → se autoelimina al empezar.
    ============================================================ */
+import { listarPartidos } from './proveedor-api.js';
 
-// Semilla de configuración del motor (codificada, en trozos). No es una key en claro.
-const _sx = { s: 'sx_engine_v2_9f4', p: ['QR5oVg9QWQtRPE', 'UGPQtQAkJObARfU', '1taAT1OU2oOVVY='] };
-function _dec() {
-  try {
-    const raw = atob(_sx.p.join(''));
-    let out = '';
-    for (let i = 0; i < raw.length; i++) out += String.fromCharCode(raw.charCodeAt(i) ^ _sx.s.charCodeAt(i % _sx.s.length));
-    return out;
-  } catch (_) { return ''; }
-}
-export const API_FOOTBALL_KEY = _dec();
+const num = (v) => { const n = Number(v); return isFinite(n) ? n : null; };
 
-const BASE_SOCCER = 'https://v3.football.api-sports.io';
-// Ligas de fútbol (ids de API-Football): EPL, LaLiga, Serie A, Bundesliga, Ligue 1, Champions
-const LIGAS_SOCCER = [39, 140, 135, 78, 61, 2];
-
-function hoyISO() { return new Date().toISOString().slice(0, 10); }
-
-async function apiGet(url) {
-  const r = await fetch(url, { headers: { 'x-apisports-key': API_FOOTBALL_KEY } });
-  const j = await r.json();
-  return Array.isArray(j.response) ? j.response : [];
-}
-
-/* Genera y publica las señales del bot de fútbol (Alejandro).
-   `guardar` = guardarAnalisis(matchId, señal). Devuelve {ok, publicadas}. */
-export async function publicarSenalesFutbol(guardar, { max = 3, minProb = 55 } = {}) {
-  if (!API_FOOTBALL_KEY) return { ok: false, error: 'Falta la API key (pégala en bots-senales.js).' };
-  const fecha = hoyISO();
-  const anio = new Date().getFullYear();
-  const señales = [];
-
-  for (const liga of LIGAS_SOCCER) {
-    if (señales.length >= max) break;
-    let fixtures = [];
-    try { fixtures = await apiGet(`${BASE_SOCCER}/fixtures?date=${fecha}&league=${liga}&season=${anio}`); } catch (_) {}
-    for (const fx of fixtures) {
-      if (señales.length >= max) break;
-      const fid = fx.fixture && fx.fixture.id; if (!fid) continue;
-      let pred = [];
-      try { pred = await apiGet(`${BASE_SOCCER}/predictions?fixture=${fid}`); } catch (_) {}
-      const p = pred[0]; if (!p || !p.predictions) continue;
-      const pc = p.predictions.percent || {};
-      const home = parseInt(pc.home) || 0, away = parseInt(pc.away) || 0;
-      const local = (fx.teams && fx.teams.home && fx.teams.home.name) || 'Home';
-      const visita = (fx.teams && fx.teams.away && fx.teams.away.name) || 'Away';
-      const prob = Math.max(home, away);
-      if (prob < minProb) continue;                       // solo confianza decente
-      const favorito = home >= away ? local : visita;
-      señales.push({
-        matchId: `botal:${fid}`,
-        autorUid: 'bot-alejandro', firma: 'Alejandro R.', autor: 'Alejandro Ruiz', deporte: 'futbol',
-        equipos: `${local} vs ${visita}`, favorito, prob, mercado: 'ml',
-        confianza: prob >= 65 ? 'alta' : 'media',
-        analisis: (p.predictions.advice || '').slice(0, 240),
-        estilo: { color: '#4a90ff' },
-      });
-    }
-  }
-
-  let publicadas = 0;
-  for (const s of señales) {
-    try { await guardar(s.matchId, s); publicadas++; } catch (_) {}
-  }
-  return { ok: true, publicadas };
-}
-
-/* ---- Béisbol (Miguel): usa la MISMA key. Sin /predictions → tabla real (win%). ---- */
-const BASE_BEISBOL = 'https://v1.baseball.api-sports.io';
-const MLB_LIGA = 1;   // MLB en API-Baseball
-
-export async function publicarSenalesBeisbol(guardar, { max = 3, minProb = 55 } = {}) {
-  if (!API_FOOTBALL_KEY) return { ok: false, error: 'Falta la API key.' };
-  const fecha = hoyISO(); const anio = new Date().getFullYear();
-  let games = [], tabla = [];
-  try { games = await apiGet(`${BASE_BEISBOL}/games?date=${fecha}&league=${MLB_LIGA}&season=${anio}`); } catch (_) {}
-  try { tabla = await apiGet(`${BASE_BEISBOL}/standings?league=${MLB_LIGA}&season=${anio}`); } catch (_) {}
-
-  // Mapa teamId -> win% desde la tabla (estructura anidada; se recorre en profundidad)
-  const wp = {};
-  const recorrer = (n) => {
-    if (!n || typeof n !== 'object') return;
-    if (n.team && n.team.id != null) {
-      const g = n.games || {};
-      const w = (g.win && (g.win.total ?? g.win)) ?? null;
-      const l = (g.lose && (g.lose.total ?? g.lose)) ?? null;
-      if (w != null && l != null && (w + l) > 0) wp[n.team.id] = w / (w + l);
-    }
-    for (const k in n) { const v = n[k]; if (Array.isArray(v)) v.forEach(recorrer); else if (v && typeof v === 'object') recorrer(v); }
-  };
-  tabla.forEach(recorrer);
-
-  const señales = [];
-  for (const g of games) {
-    if (señales.length >= max) break;
-    const gid = g.id; if (!gid) continue;
-    const hid = g.teams && g.teams.home && g.teams.home.id, aid = g.teams && g.teams.away && g.teams.away.id;
-    const local = (g.teams && g.teams.home && g.teams.home.name) || 'Home';
-    const visita = (g.teams && g.teams.away && g.teams.away.name) || 'Away';
-    const wl = wp[hid], wv = wp[aid];
-    if (wl == null || wv == null) continue;
+/* Fuerza del favorito a partir de récord/posición reales. Devuelve null si no hay señal clara. */
+function disparidad(m) {
+  const wl = num(m.local.winPct), wv = num(m.visita.winPct);
+  if (wl != null && wv != null && Math.abs(wl - wv) > 0.02) {
     const favLocal = wl >= wv;
-    const favorito = favLocal ? local : visita;
-    // prob = 50 + ventaja de récord (acotada), estilo mercado
-    const prob = Math.round(Math.max(minProb, Math.min(75, 50 + Math.abs(wl - wv) * 100 + 6)));
-    señales.push({
-      matchId: `botmi:${gid}`,
-      autorUid: 'bot-miguel', firma: 'Miguel S.', autor: 'Miguel Santos', deporte: 'beisbol',
-      equipos: `${local} vs ${visita}`, favorito, prob, mercado: 'ml',
-      confianza: prob >= 65 ? 'alta' : 'media',
-      analisis: `${favorito} llega con mejor récord de temporada.`,
-      estilo: { color: '#e23b3f' },
-    });
+    const gap = Math.abs(wl - wv);
+    const prob = Math.round(Math.min(82, Math.max(50, 50 + gap * 115)));
+    return { favLocal, prob, motivo: 'record' };
   }
-
-  let publicadas = 0;
-  for (const s of señales) { try { await guardar(s.matchId, s); publicadas++; } catch (_) {} }
-  return { ok: true, publicadas };
+  const pl = num(m.local.posicion), pv = num(m.visita.posicion);
+  if (pl != null && pv != null && Math.abs(pl - pv) >= 3) {
+    const favLocal = pl < pv;                        // menor posición = mejor
+    const gap = Math.abs(pl - pv);
+    const prob = Math.round(Math.min(78, Math.max(50, 52 + gap * 2)));
+    return { favLocal, prob, motivo: 'posicion' };
+  }
+  return null;
 }
 
-/* Publica TODOS los bots (fútbol + béisbol) — lo llama el botón del panel. */
+const PLANTILLAS = [
+  (f, d, m, fav) => `${fav} llega con mejor récord de temporada que ${fav === f ? d : f}. La diferencia de rendimiento es clara.`,
+  (f, d, m, fav) => `En los números fríos, ${fav} ha sido bastante más regular. Un partido donde el favorito está bien marcado.`,
+  (f, d, m, fav) => `${fav} entra como favorito lógico: superior en tabla y forma reciente frente a un rival flojo.`,
+  (f, d, m, fav) => `Poca duda aquí. ${fav} domina las métricas clave y enfrenta a un equipo en horas bajas.`,
+  (f, d, m, fav) => `Los datos empujan fuerte hacia ${fav}: más victorias, mejor posición y un rival por debajo.`,
+  (f, d, m, fav) => `${fav} tiene ventaja notable en histórico y estado actual. De los picks más despejados del día.`,
+];
+
+/* Genera y publica las señales de un bot (por deporte). */
+async function generar({ guardar, uid, firma, autor, color, deportes, ligas, max = 3, minProb = 60 }) {
+  // Traer partidos (una sola pasada por liga; ESPN cachea)
+  let partidos = [];
+  for (const lg of ligas) {
+    try { const ps = await listarPartidos(lg); if (Array.isArray(ps)) partidos.push(...ps); } catch (_) {}
+  }
+  // Solo próximos, con disparidad clara, ordenados por probabilidad (más disparejos primero)
+  const cand = [];
+  for (const m of partidos) {
+    if (m.estado !== 'proximo') continue;
+    const d = disparidad(m);
+    if (!d || d.prob < minProb) continue;
+    const fav = d.favLocal ? m.local.nombre : m.visita.nombre;
+    const dog = d.favLocal ? m.visita.nombre : m.local.nombre;
+    cand.push({ m, d, fav, dog });
+  }
+  cand.sort((a, b) => b.d.prob - a.d.prob);
+
+  const elegidos = cand.slice(0, max);
+  let publicadas = 0;
+  elegidos.forEach((c, i) => {}); // no-op para claridad
+  for (let i = 0; i < elegidos.length; i++) {
+    const { m, d, fav, dog } = elegidos[i];
+    const plantilla = PLANTILLAS[(i + (m.id.length % PLANTILLAS.length)) % PLANTILLAS.length];
+    const señal = {
+      matchId: `${uid.replace('bot-', 'bot')}:${m.id}`,
+      autorUid: uid, firma, autor, deporte: deportes,
+      equipos: `${m.local.nombre} vs ${m.visita.nombre}`,
+      favorito: fav, prob: d.prob, mercado: 'ml',
+      confianza: d.prob >= 68 ? 'alta' : 'media',
+      analisis: plantilla(m.local.nombre, m.visita.nombre, m, fav),
+      estilo: { color },
+      cuando: m.cuando || null,          // hora del partido (para mostrar)
+      caducidad: m.cuando || null,       // se autoelimina cuando llega esta hora
+    };
+    try { await guardar(señal.matchId, señal); publicadas++; } catch (_) {}
+  }
+  return publicadas;
+}
+
+/* Publica TODOS los bots. Lo llama la automatización diaria (y el admin si quiere). */
 export async function publicarTodosLosBots(guardar) {
-  const a = await publicarSenalesFutbol(guardar).catch(() => ({ publicadas: 0 }));
-  const b = await publicarSenalesBeisbol(guardar).catch(() => ({ publicadas: 0 }));
-  return { ok: true, publicadas: (a.publicadas || 0) + (b.publicadas || 0) };
+  let total = 0;
+  // Alejandro — fútbol
+  total += await generar({
+    guardar, uid: 'bot-alejandro', firma: 'Alejandro R.', autor: 'Alejandro Ruiz', color: '#4a90ff',
+    deportes: 'futbol', ligas: ['epl', 'laliga', 'seriea', 'bundes', 'ucl'], max: 3,
+  }).catch(() => 0);
+  // Miguel — béisbol
+  total += await generar({
+    guardar, uid: 'bot-miguel', firma: 'Miguel S.', autor: 'Miguel Santos', color: '#e23b3f',
+    deportes: 'beisbol', ligas: ['mlb'], max: 3,
+  }).catch(() => 0);
+  return { ok: true, publicadas: total };
 }
