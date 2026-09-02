@@ -62,6 +62,12 @@ function inyectarCSS() {
   .sn-i-subtle.sn-card::before{height:2px;opacity:.6}
   .sn-i-strong.sn-card::before{height:4px}
   .sn-i-strong.sn-card{box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--acc) 34%, transparent)}
+  .sn-locked .sn-c-inner{filter:blur(7px);pointer-events:none;user-select:none;opacity:.85}
+  .sn-c-lock{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px;gap:5px;background:rgba(8,12,18,.5);backdrop-filter:blur(1px);border-radius:16px}
+  .sn-c-lock-ic{color:#e8b84b;margin-bottom:2px}
+  .sn-c-lock-ic svg{width:28px;height:28px}
+  .sn-c-lock b{font-family:"Chakra Petch",sans-serif;font-size:15px;color:#fff}
+  .sn-c-lock span{font-size:12.5px;color:#c7d0dc;max-width:250px;line-height:1.5;margin-bottom:8px}
   .sn-c-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
   .sn-c-match{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:17px;color:#fff}
   .sn-c-conf{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:4px 10px;border-radius:20px}
@@ -233,7 +239,7 @@ function bloqueDescubrir(analistas, ctx) {
 const _DEP = { soccer: { en: 'Soccer', es: 'Fútbol' }, nba: { en: 'Basketball', es: 'Básquet' }, basketball: { en: 'Basketball', es: 'Básquet' }, mlb: { en: 'Baseball', es: 'Béisbol' }, baseball: { en: 'Baseball', es: 'Béisbol' }, nhl: { en: 'Hockey', es: 'Hockey' }, hockey: { en: 'Hockey', es: 'Hockey' }, nfl: { en: 'Football', es: 'Fútbol Am.' } };
 function depenNombre(id) { const d = _DEP[id]; return d ? L(d.en, d.es) : (id || ''); }
 
-function tarjeta(a, ctx = {}) {
+function tarjeta(a, ctx = {}, idx = 0) {
   const conf = a.confianza || 'media';
   const prob = a.prob != null ? Math.max(1, Math.min(99, a.prob)) : null;
   const mk = (MERCADO[a.mercado] || MERCADO.ml)();
@@ -247,8 +253,9 @@ function tarjeta(a, ctx = {}) {
   const IUsers = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3.2 2.7-5 5.5-5s5.5 1.8 5.5 5"/><path d="M16 6.5a3 3 0 010 6M18.5 20c0-2.4-1-3.9-2.5-4.7"/></svg>`;
   const ICheck = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`;
 
-  const puede = ctx.premium && uid && uid !== ctx.me;
+  const puede = uid && uid !== ctx.me;   // seguir/suscribir disponible en todos los planes (pagar para recibir)
   const sigo = ctx.sigo && ctx.sigo.has(uid);
+  const bloqueada = !sigo && uid !== ctx.me && idx >= (ctx.nClaras != null ? ctx.nClaras : Infinity);
   const suscrito = ctx.apoyos && ctx.apoyos.has(uid);
   const btnFollow = puede
     ? `<button class="sn-follow ${sigo ? 'on' : ''}" data-follow="${esc(uid)}" data-firma="${esc(firma)}">${sigo ? L('Following', 'Siguiendo') : L('Follow', 'Seguir')}</button>`
@@ -278,13 +285,17 @@ function tarjeta(a, ctx = {}) {
   const analisis = a.texto ? `<button class="sn-c-toggle" data-an="${esc(sid)}"><span>${L('Read analysis', 'Ver análisis')}</span>${IChev}</button>
     <div class="sn-c-an" id="an-${esc(sid)}" hidden><p>${esc(a.texto)}</p></div>` : '';
 
-  return `<div class="sn-card ${est.cls}" style="${est.varCss}">
+  const overlay = bloqueada ? `<div class="sn-c-lock"><div class="sn-c-lock-ic">${IC.lock || '🔒'}</div><b>${L('Unlock this signal', 'Desbloquea esta señal')}</b><span>${L('Follow this analyst to see the pick and get it in your feed.', 'Sigue a este analista para ver el pick y recibirlo en tu feed.')}</span>${uid ? `<button class="sn-follow" data-follow="${esc(uid)}" data-firma="${esc(firma)}">${L('Follow · $2/mo', 'Seguir · $2/mes')}</button>` : ''}</div>` : '';
+  return `<div class="sn-card ${est.cls} ${bloqueada ? 'sn-locked' : ''}" style="${est.varCss}">
+    ${overlay}
+    <div class="sn-c-inner">
     <div class="sn-c-top"><div class="sn-c-match">${esc(a.equipos || a.matchId || '')}</div><span class="sn-c-conf ${conf}">${esc(confTx(conf))}</span></div>
     ${by}
     <div class="sn-c-pick"><span class="sn-c-pick-lbl">${L('Pick', 'Pronóstico')}</span><span class="sn-c-team">${pick}</span>${prob != null ? `<span class="sn-c-prob">${prob}%</span>` : ''}</div>
     ${prob != null ? `<div class="sn-c-bar"><i style="width:${prob}%"></i></div>` : ''}
     ${analisis}
     <div class="sn-c-foot"><span class="sn-c-market">${esc(mk)}</span>${votos}</div>
+    </div>
   </div>`;
 }
 
@@ -310,23 +321,14 @@ function _tsMs(ts) {  if (!ts) return 0;
   const d = new Date(ts); return isNaN(d.getTime()) ? 0 : d.getTime();
 }
 
-export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {}) {
+export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', abrirPlanes } = {}) {
   inyectarCSS();
   const IHelp = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.5a2.4 2.4 0 013.6-1.6c1.3.8 1.2 2.4 0 3.1-.7.4-1.2.9-1.2 1.8M12 17h.01"/></svg>`;
   const topbar = `<div class="sn-topbar"><button class="sn-about" id="sn-about">${IHelp}<span>${L('What is this section?', '¿Qué es esta sección?')}</span></button></div>`;
 
-  if (!esPremium) {
-    const pr = planPorId('premium');
-    const precio = pr ? `$${pr.mensual}/${L('mo', 'mes')}` : `$8.99/${L('mo', 'mes')}`;
-    cont.innerHTML = `<div class="sn">
-      <div class="sn-lock">${IC.lock}
-        <span class="sn-lock-badge">${L('Premium', 'Premium')} · ${precio}</span>
-        <b>${L('Analyst signals are Premium', 'Las señales son Premium')}</b>
-        <span>${L('Following analysts and seeing every published call with the full reasoning is included in the Premium plan only. Lower plans don\u2019t have access to signals.', 'Seguir analistas y ver cada pronóstico publicado con el análisis completo está incluido solo en el plan Premium. Los planes inferiores no tienen acceso a las señales.')}</span>
-        <button class="sn-cta" id="sn-cta">${L('Get Premium', 'Obtener Premium')} · ${precio}</button></div></div>`;
-    const b = cont.querySelector('#sn-cta'); if (b && abrirPlanes) b.onclick = abrirPlanes;
-    return;
-  }
+  // Cuántas señales se ven CLARAS sin seguir: Basic 0, Pro 2, Premium/admin todas.
+  const nivelReal = esPremium ? 'premium' : nivel;
+  const nClaras = nivelReal === 'premium' ? Infinity : (nivelReal === 'pro' ? 2 : 0);
 
   cont.innerHTML = `<div class="sn">${topbar}<div class="sn-empty"><div class="sn-spin"></div>${L('Loading signals…', 'Cargando señales…')}</div></div>`;
   const lista = await cargarSenales();
@@ -341,7 +343,7 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
   try { apoyos = new Set(await misApoyos()); } catch (_) {}
   let yaReporte = false;
   try { yaReporte = !!(await miReporte()); } catch (_) {}
-  const ctx = { premium: esPremium, me, sigo, votos, apoyos, conteos: {}, yaReporte };
+  const ctx = { premium: esPremium, nivel: nivelReal, nClaras, me, sigo, votos, apoyos, conteos: {}, yaReporte };
 
   // Conteos de like/dislike de todas las señales (para mostrar y para ordenar "Populares")
   const sids = [...new Set(lista.map(a => a.id || a.matchId).filter(Boolean))];
@@ -383,7 +385,7 @@ export async function pintarSenales(cont, { esPremium = false, abrirPlanes } = {
     </div>`;
 
   const grid = visibles.length
-    ? `<div class="sn-grid">${visibles.map(a => tarjeta(a, ctx)).join('')}</div>`
+    ? `<div class="sn-grid">${visibles.map((a, i) => tarjeta(a, ctx, i)).join('')}</div>`
     : `<div class="sn-empty">${IC.flag}<b>${L('Nothing here yet', 'Nada aquí todavía')}</b><span>${tab === 'siguiendo' ? L('Follow analysts to see their signals gathered here.', 'Sigue analistas para ver sus señales reunidas aquí.') : L('No signals right now. New calls appear only when there is a clear opportunity.', 'No hay señales ahora. Los nuevos pronósticos aparecen solo cuando hay una oportunidad clara.')}</span></div>`;
 
   const cuerpo = lista.length
