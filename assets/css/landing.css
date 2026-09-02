@@ -7,7 +7,7 @@
   --linea:#242c37; --tinta:#eef2f6; --tinta-2:#aab4c0; --tinta-3:#6b7683;
   --oro-suave:rgba(232,184,75,.14);
   --sombra-tarjeta: inset 0 1px 0 rgba(255,255,255,.06), 0 2px 4px rgba(0,0,0,.5), 0 12px 26px rgba(0,0,0,.5);
-  background: var(--fondo); color: var(--tinta);
+  background: var(--fondo) url('../imagenes/fondos/fondo-pagina.webp') center / cover fixed no-repeat; color: var(--tinta);
 }
 /* Barra del lobby: transparente y flotante sobre el video (sin franja) */
 #landing-screen .lnav {
@@ -68,6 +68,22 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .hero-chip > div { display: flex; flex-direction: column; line-height: 1.25; }
 .hero-chip b { font-family: "Poppins", sans-serif; font-weight: 700; font-size: 14px; color: #fff; }
 .hero-chip span { font-family: "Inter", sans-serif; font-size: 12px; color: #8b97a8; }
+
+/* ===================== ADVANCED ANALYTICS ===================== */
+.analytics { max-width: 1200px; margin: 0 auto; padding: 72px 28px; font-family: "Poppins", var(--sans); }
+.an-panel { display: grid; grid-template-columns: 340px 1fr; gap: 50px; align-items: start;
+  background: rgba(13,19,30,.68); border: 1px solid rgba(255,255,255,.07); border-radius: 22px; padding: 46px; backdrop-filter: blur(6px);
+  box-shadow: 0 30px 70px -30px rgba(0,0,0,.7); }
+.an-eyebrow { display: inline-block; font-family: "Poppins", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--oro); margin-bottom: 16px; }
+.an-title { font-family: "Poppins", sans-serif; font-weight: 700; font-size: clamp(24px, 2.3vw, 32px); line-height: 1.16; color: #fff; margin: 0 0 16px; }
+.an-sub { font-family: "Inter", sans-serif; font-size: 15px; line-height: 1.62; color: var(--tinta-2); margin: 0 0 26px; max-width: 320px; }
+.an-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px 30px; }
+.an-card { display: flex; flex-direction: column; }
+.an-ic { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 14px; color: #4a90ff; }
+.an-ic svg { width: 30px; height: 30px; }
+.an-card h3 { font-family: "Poppins", sans-serif; font-weight: 600; font-size: 15px; color: #fff; margin: 0 0 8px; }
+.an-card p { font-family: "Inter", sans-serif; font-size: 13px; line-height: 1.55; color: var(--tinta-2); margin: 0; }
+@media (max-width: 900px) { .an-panel { grid-template-columns: 1fr; gap: 32px; padding: 34px 24px; } .an-grid { grid-template-columns: 1fr 1fr; gap: 28px 22px; } }
 
 /* Secciones */
 .lsec { max-width: 1200px; margin: 0 auto; padding: 60px 28px; }
