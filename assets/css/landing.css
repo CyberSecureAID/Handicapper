@@ -50,8 +50,8 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 220px; z-index: 2;
   pointer-events: none; background: linear-gradient(180deg, transparent, var(--fondo) 92%); }
 .hero-in { position: relative; z-index: 3; max-width: 1200px; margin: 0 auto; width: 100%;
-  padding: 70px 28px 120px; }
-.hero-txt { max-width: 640px; }
+  padding: 24px 28px 52px; }
+.hero-txt { max-width: 760px; }
 .hero-badge { display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
   text-transform: uppercase; color: var(--oro); padding: 8px 15px; border-radius: 999px;
   background: rgba(232,184,75,.12); border: 1px solid rgba(232,184,75,.35); margin-bottom: 22px;
