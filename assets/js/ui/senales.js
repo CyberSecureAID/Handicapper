@@ -31,7 +31,12 @@ const confTx = (c) => ({ alta: L('High', 'Alta'), media: L('Medium', 'Media'), b
 export async function cargarSenales() {
   try {
     const todas = await listarAnalisis();
-    _cache = (todas || []).filter(a => a && (a.estado == null || a.estado === 'publicado') && (a.texto || a.favorito || a.veredicto));
+    const ahora = Date.now();
+    const caducada = (a) => a.caducidad && new Date(a.caducidad).getTime() <= ahora;   // el partido ya empezó
+    _cache = (todas || []).filter(a => a && (a.estado == null || a.estado === 'publicado') && (a.texto || a.favorito || a.veredicto) && !caducada(a));
+    // Limpieza en 2º plano: borra las caducadas (solo el admin tiene permiso; para otros falla en silencio)
+    const viejas = (todas || []).filter(caducada);
+    if (viejas.length) { import('../mesa/mesa-datos.js').then(m => { viejas.forEach(a => { try { m.borrarAnalisis(a.matchId || a.id); } catch (_) {} }); }).catch(() => {}); }
   } catch (_) { _cache = []; }
   return _cache;
 }
