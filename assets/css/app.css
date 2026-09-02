@@ -936,3 +936,9 @@
 .sd-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .sd-chip { height: 32px; padding: 0 13px; border-radius: 10px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: var(--tinta-2); font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
 .sd-chip.on { background: linear-gradient(180deg,#2a6be0,#143c94); border-color: rgba(120,170,255,.5); color: #fff; }
+
+/* Marco sci-fi en las tarjetas de analista (ventana Signals) */
+.sd-card { position: relative; border: 0 !important; border-top: 0 !important; background: rgba(8,12,20,.5); padding: 34px 24px 30px; }
+.sd-card::before { content: ''; position: absolute; inset: 0; z-index: 0; background: url('../imagenes/marco.webp') center / 100% 100% no-repeat; pointer-events: none; }
+.sd-card > * { position: relative; z-index: 1; }
+.sd-follow { position: relative; z-index: 1; }
