@@ -413,9 +413,9 @@ body.en-mesa { overflow: hidden; }
 .ah2-metric.gold b { color: var(--g); }
 
 .ah2-lgs { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 20px; }
-.ah2-lg { justify-content: center; text-align: center; }
-.ah2-lg { flex: 0 0 auto; display: flex; align-items: center; gap: 9px; padding: 11px 16px; border-radius: 12px; border: 1px solid var(--m-linea); background: var(--m-tarjeta); color: #c3ccd6; font-weight: 700; font-size: 13px; cursor: pointer; transition: all .14s; }
-.ah2-lg img { height: 22px; width: auto; object-fit: contain; }
+.ah2-lg { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 18px 12px; border-radius: 14px; border: 1px solid var(--m-linea); background: var(--m-tarjeta); color: #c3ccd6; font-weight: 700; font-size: 12.5px; text-align: center; cursor: pointer; transition: all .14s; }
+.ah2-lg img { height: 44px; width: auto; max-width: 60px; object-fit: contain; filter: drop-shadow(0 3px 6px rgba(0,0,0,.5)); }
+.ah2-lg span { line-height: 1.1; }
 .ah2-lg:hover { border-color: rgba(232,184,75,.4); color: #fff; }
 .ah2-lg.on { border-color: var(--g); background: rgba(232,184,75,.12); color: var(--g); box-shadow: 0 0 0 1px rgba(232,184,75,.35); }
 
