@@ -593,7 +593,6 @@ async function abrirDirectorioSenales() {
       <span class="sd-sport">${esc(DEP[a.deporte] || a.deporte || '')}</span>
       <div class="sd-stats">
         <div><b>${f.toLocaleString()}</b><em>${Lp('Followers','Seguidores')}</em></div>
-        <div><b>${likes.toLocaleString()}</b><em>${Lp('Likes','Likes')}</em></div>
         <div><b>${prom}</b><em>${Lp('Per day','Por día')}</em></div>
       </div>
       <button class="sd-follow ${sig ? 'on' : ''}" data-sdfollow="${esc(a.uid)}" data-sdfirma="${esc(a.firma || '')}">${sig ? Lp('Following','Siguiendo') : Lp('Follow','Seguir')}</button>
@@ -669,7 +668,7 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
     const ficha = await leerFichaAnalista();
     if (ficha && ficha.foto) {
       const btn = $('cuenta-btn');
-      if (btn) { btn.classList.add('logueado'); btn.innerHTML = `<img class="av-img" src="assets/imagenes/analistas/${String(ficha.foto).toLowerCase()}.webp" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`; }
+      if (btn) { btn.classList.add('logueado'); btn.innerHTML = `<img class="av-img" src="assets/imagenes/analistas/${String(ficha.foto).toLowerCase()}.webp" alt="">`; }
     }
   } catch (_) {}
   // NO entramos automáticamente al cargar: el usuario llega al lobby y entra por su elección.
@@ -825,7 +824,7 @@ function pintarCuenta(usuario) {
     btn.classList.add('logueado');
     btn.title = usuario.nombre || usuario.email;
     btn.innerHTML = usuario.foto
-      ? `<img class="av-img" src="${usuario.foto}" alt="" style="width:22px;height:22px;border-radius:50%">`
+      ? `<img class="av-img" src="${usuario.foto}" alt="">`
       : `<span class="av-ini">${inicial}</span>`;
   } else {
     btn.classList.remove('logueado');
