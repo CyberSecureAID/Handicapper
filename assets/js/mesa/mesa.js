@@ -374,8 +374,7 @@ async function toggleBloqueo(uid, btn) {
 function candidatosAnalista() {
   const q = _anBusqueda.trim().toLowerCase();
   return _usuarios.filter(u => {
-    if (rolAdmin(u)) return false;
-    if (_analistas.some(a => a.uid === u.uid)) return false;
+    if (_analistas.some(a => a.uid === u.uid)) return false;   // ya es analista/bot -> se gestiona arriba
     const sub = u.suscripcion || {};
     if (_anFiltro === 'con' && !sub.activo) return false;
     if (_anFiltro === 'sin' && sub.activo) return false;
@@ -393,18 +392,20 @@ function pintarCandidatos() {
     const st = u.bloqueado ? `<span class="pill red">${ML('Blocked', 'Bloqueado')}</span>`
       : (sub.activo ? `<span class="pill on">${planPorId(sub.plan)?.nombre || ML('Active', 'Activo')}</span>` : `<span class="pill">${ML('No plan', 'Sin plan')}</span>`);
     return `<div class="an-cand">
-      <div class="an-cand-who"><b>${esc(u.nombre || (u.email || '').split('@')[0] || '—')}</b><span>${esc(correoCorto(u.email || ''))}</span></div>
-      <div class="an-cand-st">${st}</div>
+      <div class="an-cand-who"><b>${esc(u.nombre || (u.email || '').split('@')[0] || '—')}</b><span>${esc(correoCorto(u.email || ''))}</span>${st}</div>
+      <input class="an-mng-inp" data-cand-nombre="${esc(u.uid)}" placeholder="${ML('Analyst name', 'Nombre de analista')}" value="${esc(u.nombre || (u.email || '').split('@')[0] || '')}" maxlength="28">
       <select class="u-select" data-cand-dep="${esc(u.uid)}">${deps.map(k => `<option value="${k}">${esc(depNombre(k))}</option>`).join('')}</select>
-      <button class="mesa-btn oro sm" data-cand-add="${esc(u.uid)}" data-mail="${esc(u.email || '')}">${ML('Add', 'Agregar')}</button>
+      <button class="mesa-btn oro sm" data-cand-add="${esc(u.uid)}" data-mail="${esc(u.email || '')}">${ML('Make analyst', 'Hacer analista')}</button>
     </div>`;
   }).join('') + (lista.length > MAX ? `<div class="an-cand-more">${ML('Showing', 'Mostrando')} ${MAX} ${ML('of', 'de')} ${lista.length}. ${ML('Refine your search.', 'Afina la búsqueda.')}</div>` : ''))
     : `<div class="an-mng-empty">${ML('No matching users.', 'Sin usuarios que coincidan.')}</div>`;
   cont.querySelectorAll('[data-cand-add]').forEach(b => b.onclick = async () => {
     const uid = b.dataset.candAdd, mail = b.dataset.mail || '';
     const sel = cont.querySelector(`[data-cand-dep="${uid}"]`), dep = sel ? sel.value : deps[0];
+    const nomI = cont.querySelector(`[data-cand-nombre="${uid}"]`);
+    const nombre = (nomI && nomI.value.trim()) || (mail.split('@')[0]) || 'Analyst';
     b.disabled = true;
-    try { await guardarAnalista(uid, { email: mail, deporte: dep, activo: true }); _analistas = await listarAnalistas(); pintarTab(); }
+    try { await guardarAnalista(uid, { email: mail, deporte: dep, activo: true, nombre, firma: nombre, configurado: false }); _analistas = await listarAnalistas(); pintarTab(); }
     catch (_) { b.disabled = false; }
   });
 }
