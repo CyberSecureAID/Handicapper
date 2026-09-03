@@ -1005,3 +1005,14 @@
 .sd-modal { position: relative; isolation: isolate; overflow: hidden; background: linear-gradient(180deg, rgba(14,19,30,.86), rgba(9,13,20,.92)) !important; }
 .sd-modal::before { content: ''; position: absolute; inset: 0; z-index: -1; background: url('../imagenes/fondos/fondo-pagina.webp') center / cover no-repeat; filter: blur(9px) brightness(.5); transform: scale(1.08); }
 .sd-ava { border: 2px solid var(--oro, #e8c46a) !important; box-shadow: 0 5px 14px -3px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.2), 0 0 0 1px rgba(232,196,106,.3) !important; }
+
+/* Avatar del usuario: cuadrado perfecto 40x40 (igual altura que Premium/Pro/Signals) */
+.cuenta-btn.logueado { padding: 0 !important; width: 40px !important; height: 40px !important; min-width: 40px !important; border-radius: 11px !important; overflow: hidden; flex: 0 0 auto; }
+.cuenta-btn.logueado .av-img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; border: 1.5px solid var(--oro, #e8c46a); box-shadow: 0 2px 7px -1px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.15); display: block; }
+
+/* Ventana Signals: barra fija arriba, SOLO los analistas hacen scroll */
+.sd-modal { display: flex; flex-direction: column; }
+.sd-modal .sd-x, .sd-modal .sd-head, .sd-modal .sd-tools { flex: 0 0 auto; }
+.sd-modal #sd-list { flex: 1 1 auto; overflow-y: auto; min-height: 0; padding-right: 4px; }
+.sd-modal #sd-list::-webkit-scrollbar { width: 7px; }
+.sd-modal #sd-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 99px; }
