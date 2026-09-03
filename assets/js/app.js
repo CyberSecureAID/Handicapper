@@ -320,6 +320,7 @@ function initTabbar() {
 function mostrarVista(v) {
   const cont = $('lista');
   if (!cont) return;
+  try { if (v) localStorage.setItem('se-vista', v); } catch (_) {}
   if (v === 'analisis') {
     pintarSenales(cont, { esPremium: _esAdmin || planActual() === 'premium', nivel: _esAdmin ? 'admin' : planActual(), abrirPlanes: () => mostrarPantalla('pricing') });
   } else if (v === 'partidos' || v === 'vivo') {
@@ -509,7 +510,7 @@ function init() {
   // Router de pantallas (landing / planes / plataforma)
   initNavegacion({
     abrirAuth: (modo) => abrirAuth(modo),
-    salir: async () => { limpiarVistaPrevia(); await salir(); },
+    salir: async () => { try { localStorage.removeItem('se-en-app'); localStorage.removeItem('se-vista'); } catch (_) {} limpiarVistaPrevia(); await salir(); },
     alEntrarApp: () => entrarPlataforma(),
   });
 
@@ -674,6 +675,14 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   // NO entramos automáticamente al cargar: el usuario llega al lobby y entra por su elección.
   // Solo entramos directo si el login fue una acción intencional (tocó "Entrar"/"Registrarse").
   if (extra && extra.intencional) { entrarSegunAcceso(); return; }
+  // Refresco: si el usuario estaba DENTRO de la app, devolverlo ahí (a su misma vista)
+  let _restaurar = false; try { _restaurar = localStorage.getItem('se-en-app') === '1'; } catch (_) {}
+  if (_restaurar && (_esAdmin || tieneAcceso())) {
+    entrarPlataforma();
+    let _v = null; try { _v = localStorage.getItem('se-vista'); } catch (_) {}
+    if (_v && _v !== 'partidos') setTimeout(() => { const tb = document.querySelector(`#tabbar .t[data-vista="${_v}"]`); if (tb) tb.click(); }, 80);
+    return;
+  }
   mostrarPantalla('landing');
 }
 
@@ -787,6 +796,7 @@ function avisarBloqueo() {
 
 /* Entra a la plataforma (y arranca la app la primera vez) */
 function entrarPlataforma() {
+  try { localStorage.setItem('se-en-app', '1'); } catch (_) {}
   mostrarPantalla('app');
   if (!_appArrancada) {
     _appArrancada = true;
@@ -867,7 +877,7 @@ function toggleCuentaMenu() {
   });
   menu.querySelector('#cm-perfil')?.addEventListener('click', () => { cerrarCuentaMenu(); abrirAjustesPerfil(); });
   menu.querySelector('#cm-idioma')?.addEventListener('click', () => { fijarIdioma(idiomaActual() === 'en' ? 'es' : 'en'); cerrarCuentaMenu(); });
-  menu.querySelector('#cm-salir').addEventListener('click', async () => { limpiarVistaPrevia(); await salir(); cerrarCuentaMenu(); });
+  menu.querySelector('#cm-salir').addEventListener('click', async () => { try { localStorage.removeItem('se-en-app'); localStorage.removeItem('se-vista'); } catch (_) {} limpiarVistaPrevia(); await salir(); cerrarCuentaMenu(); });
   setTimeout(() => document.addEventListener('click', cerrarSiFuera), 0);
 }
 function cerrarCuentaMenu() { $('cuenta-menu')?.remove(); document.removeEventListener('click', cerrarSiFuera); }
