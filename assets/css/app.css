@@ -1027,3 +1027,15 @@
 
 /* Follow del directorio: mismo azul brillante que el de Discover/Analyst Signals */
 .sd-follow { background: linear-gradient(90deg, #38a9f0, #5cc0ff) !important; color: #0a0e15 !important; border: 0 !important; }
+
+/* ===== Botones de imagen del nav: Premium / Pro / Signals ===== */
+.btn-img { background: none !important; border: 0 !important; padding: 0 !important; box-shadow: none !important; animation: none !important; cursor: pointer; display: inline-flex; align-items: center; position: relative; flex: 0 0 auto; }
+.btn-img-desk { height: 38px; width: auto; display: block; filter: drop-shadow(0 2px 5px rgba(0,0,0,.55)); transition: filter .16s, transform .1s; }
+.btn-img-mob { display: none; height: 40px; width: 40px; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,.55)); transition: filter .16s, transform .1s; }
+.btn-img:hover .btn-img-desk, .btn-img:hover .btn-img-mob { filter: drop-shadow(0 3px 8px rgba(0,0,0,.5)) brightness(1.07); transform: translateY(-1px); }
+.btn-img:active .btn-img-desk, .btn-img:active .btn-img-mob { transform: translateY(0) scale(.97); }
+.btn-img .premium-btn-dot { position: absolute; top: 0; right: 2px; z-index: 2; }
+@media (max-width: 900px) {
+  .btn-img-desk { display: none; }
+  .btn-img-mob { display: block; }
+}
