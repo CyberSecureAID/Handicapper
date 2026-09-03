@@ -72,10 +72,12 @@ async function generar({ guardar, uid, firma, autor, color, deporte, ligas, foto
   }
   const cand = [];
   const ahora = Date.now(), fin = ahora + 48 * 3600 * 1000;   // próximas 48 horas
+  let enVentana = 0;
   for (const m of partidos) {
     if (m.estado !== 'proximo') continue;            // solo partidos por jugarse
     const t = m.cuando ? new Date(m.cuando).getTime() : null;
     if (!t || t < ahora - 3600 * 1000 || t > fin) continue;   // dentro de la ventana
+    enVentana++;
     const d = medir(m);
     if (!d) continue;
     cand.push({ m, ...d });
@@ -102,16 +104,24 @@ async function generar({ guardar, uid, firma, autor, color, deporte, ligas, foto
     };
     try { await guardar(señal.matchId, señal); publicadas++; } catch (_) {}
   }
-  return publicadas;
+  return { publicadas, fetched: partidos.length, enVentana, califican: cand.length };
 }
 
 /* Publica los 5 bots (uno por categoría). Lo dispara la automatización diaria. */
 export async function publicarTodosLosBots(guardar) {
-  let total = 0;
-  total += await generar({ guardar, uid: 'bot-alejandro', firma: 'Alejandro R.', autor: 'Alejandro Ruiz', color: '#4a90ff', deporte: 'futbol', ligas: ['epl', 'laliga', 'seriea', 'bundes', 'ucl'], foto: 's', max: 2 }).catch(() => 0);
-  total += await generar({ guardar, uid: 'bot-miguel', firma: 'Miguel S.', autor: 'Miguel Santos', color: '#e23b3f', deporte: 'beisbol', ligas: ['mlb'], foto: 't', max: 2 }).catch(() => 0);
-  total += await generar({ guardar, uid: 'bot-daniel', firma: 'Daniel V.', autor: 'Daniel Vega', color: '#8a5cf6', deporte: 'basket', ligas: ['nba'], foto: 'r', max: 2 }).catch(() => 0);
-  total += await generar({ guardar, uid: 'bot-ivan', firma: 'Iván T.', autor: 'Iván Torres', color: '#22b8c0', deporte: 'hockey', ligas: ['nhl'], foto: 'q', max: 2 }).catch(() => 0);
-  total += await generar({ guardar, uid: 'bot-ricardo', firma: 'Ricardo M.', autor: 'Ricardo Méndez', color: '#e08a2a', deporte: 'americano', ligas: ['nfl'], foto: 'p', max: 2 }).catch(() => 0);
-  return { ok: true, publicadas: total };
+  const BOTS = [
+    { uid: 'bot-alejandro', firma: 'Alejandro R.', autor: 'Alejandro Ruiz', color: '#4a90ff', deporte: 'futbol', ligas: ['epl', 'laliga', 'seriea', 'bundes', 'ucl'], foto: 's', max: 2 },
+    { uid: 'bot-miguel', firma: 'Miguel S.', autor: 'Miguel Santos', color: '#e23b3f', deporte: 'beisbol', ligas: ['mlb'], foto: 't', max: 2 },
+    { uid: 'bot-daniel', firma: 'Daniel V.', autor: 'Daniel Vega', color: '#8a5cf6', deporte: 'basket', ligas: ['nba'], foto: 'r', max: 2 },
+    { uid: 'bot-ivan', firma: 'Iván T.', autor: 'Iván Torres', color: '#22b8c0', deporte: 'hockey', ligas: ['nhl'], foto: 'q', max: 2 },
+    { uid: 'bot-ricardo', firma: 'Ricardo M.', autor: 'Ricardo Méndez', color: '#e08a2a', deporte: 'americano', ligas: ['nfl'], foto: 'p', max: 2 },
+  ];
+  let total = 0, fetched = 0, enVentana = 0, califican = 0;
+  const porDeporte = {};
+  for (const cfg of BOTS) {
+    const r = await generar({ guardar, ...cfg }).catch(() => ({}));
+    total += r.publicadas || 0; fetched += r.fetched || 0; enVentana += r.enVentana || 0; califican += r.califican || 0;
+    porDeporte[cfg.deporte] = { fetched: r.fetched || 0, enVentana: r.enVentana || 0, califican: r.califican || 0, publicadas: r.publicadas || 0 };
+  }
+  return { ok: true, publicadas: total, fetched, enVentana, califican, porDeporte };
 }
