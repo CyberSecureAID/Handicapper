@@ -168,6 +168,12 @@ function inyectarCSS() {
   .sn-disc-chip{height:30px;padding:0 12px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
   .sn-disc-chip.on{background:linear-gradient(180deg,#2a6be0,#143c94);border-color:rgba(120,170,255,.5);color:#fff}
   .sn-disc-empty{padding:22px;text-align:center;color:var(--tx2);font-size:13px}
+  .sn-fs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 16px}
+  .sn-fs-search{display:flex;align-items:center;gap:8px;flex:1;min-width:190px;height:40px;padding:0 14px;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)}
+  .sn-fs-search svg{width:15px;height:15px;color:#6b7683;flex:none}
+  .sn-fs-search input{flex:1;background:none;border:0;outline:none;color:var(--tx);font-size:13.5px;font-family:inherit}
+  .sn-fs-sel{height:40px;padding:0 10px;border-radius:11px;background:rgba(18,25,36,.95);border:1px solid rgba(255,255,255,.12);color:var(--tx2);font-size:12.5px;font-family:inherit;cursor:pointer}
+  @media(max-width:560px){.sn-fs-search{min-width:100%}.sn-fs-sel{flex:1;min-width:0}}
   .sn-disc-card{transition:opacity .34s ease}
   .sn-disc-row.disc-fade .sn-disc-card{opacity:0}
   @media(max-width:640px){
@@ -388,7 +394,7 @@ function tarjeta(a, ctx = {}, idx = 0) {
       </div>`
     : `<div class="sn-c-match">${esc(a.equipos || a.matchId || '')}</div>`;
   const overlay = bloqueada ? `<div class="sn-c-lock"><div class="sn-c-lock-ic">${IC.lock || '🔒'}</div><b>${L('Unlock this signal', 'Desbloquea esta señal')}</b><span>${L('Follow this analyst to see the pick and get it in your feed.', 'Sigue a este analista para ver el pick y recibirlo en tu feed.')}</span>${uid ? `<button class="sn-follow" data-follow="${esc(uid)}" data-firma="${esc(firma)}">${L('Follow', 'Seguir')}</button>` : ''}</div>` : '';
-  return `<div class="sn-card ${est.cls} ${bloqueada ? 'sn-locked' : ''}" style="${est.varCss}">
+  return `<div class="sn-card ${est.cls} ${bloqueada ? 'sn-locked' : ''}" data-sdep="${_catDisc(a.deporte)}" data-sprob="${prob || 0}" data-steams="${esc(String(a.equipos || '').toLowerCase())}" style="${est.varCss}">
     ${overlay}
     <div class="sn-c-inner">
     ${header}
@@ -490,15 +496,50 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
 
   const tabs = '';   // sin pestañas
 
+  const ILup2 = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`;
+  const filtroSenales = visibles.length ? `<div class="sn-fs">
+      <div class="sn-fs-search">${ILup2}<input id="sn-fs-q" type="text" placeholder="${L('Search signals by team…', 'Buscar señales por equipo…')}"></div>
+      <select id="sn-fs-cat" class="sn-fs-sel" aria-label="${L('Sport', 'Deporte')}">
+        <option value="">${L('All sports', 'Todos')}</option>
+        <option value="futbol">${L('Soccer', 'Fútbol')}</option>
+        <option value="basket">${L('Basketball', 'Básquet')}</option>
+        <option value="hockey">${L('Ice hockey', 'Hockey')}</option>
+        <option value="beisbol">${L('Baseball', 'Béisbol')}</option>
+        <option value="americano">${L('Am. football', 'F. am.')}</option>
+      </select>
+      <select id="sn-fs-sort" class="sn-fs-sel" aria-label="${L('Sort', 'Orden')}">
+        <option value="recent">${L('Most recent', 'Recientes')}</option>
+        <option value="prob">${L('Highest probability', 'Mayor probabilidad')}</option>
+      </select>
+    </div>` : '';
   const grid = visibles.length
     ? `<div class="sn-grid">${visibles.map((a, i) => tarjeta(a, ctx, i)).join('')}</div>`
     : `<div class="sn-empty">${IC.flag}<b>${L('Nothing here yet', 'Nada aquí todavía')}</b><span>${tab === 'siguiendo' ? L('Follow analysts to see their signals gathered here.', 'Sigue analistas para ver sus señales reunidas aquí.') : L('No signals right now. New calls appear only when there is a clear opportunity.', 'No hay señales ahora. Los nuevos pronósticos aparecen solo cuando hay una oportunidad clara.')}</span></div>`;
 
   const cuerpo = lista.length
-    ? `${topbar}${discover}${banner}${tabs}${grid}`
+    ? `${topbar}${discover}${banner}${tabs}${filtroSenales}${grid}`
     : `${topbar}<div class="sn-empty">${IC.flag}<b>${L('No signals right now', 'No hay señales ahora')}</b><span>${L('The analyst hasn\u2019t published today. New calls appear here only when there is a clear opportunity. Check back later.', 'El analista no ha publicado hoy. Los nuevos pronósticos aparecen aquí solo cuando hay una oportunidad clara. Vuelve más tarde.')}</span></div>`;
   cont.innerHTML = `<div class="sn">${cuerpo}</div>`;
 
+  // Filtro de SEÑALES (búsqueda + categoría + orden por probabilidad)
+  const _sgrid = cont.querySelector('.sn-grid');
+  if (_sgrid) {
+    const _scards = [..._sgrid.querySelectorAll('.sn-card')];
+    const _fsQ = cont.querySelector('#sn-fs-q'), _fsCat = cont.querySelector('#sn-fs-cat'), _fsSort = cont.querySelector('#sn-fs-sort');
+    const _aplicarFS = () => {
+      const q = (_fsQ && _fsQ.value || '').trim().toLowerCase();
+      const cat = (_fsCat && _fsCat.value) || '';
+      const sort = (_fsSort && _fsSort.value) || 'recent';
+      _scards.forEach(c => {
+        const ok = (!cat || c.dataset.sdep === cat) && (!q || (c.dataset.steams || '').includes(q));
+        c.style.display = ok ? '' : 'none';
+        c.style.order = sort === 'prob' ? String(100 - Number(c.dataset.sprob || 0)) : '0';
+      });
+    };
+    if (_fsQ) _fsQ.oninput = _aplicarFS;
+    if (_fsCat) _fsCat.onchange = _aplicarFS;
+    if (_fsSort) _fsSort.onchange = _aplicarFS;
+  }
   cont.querySelector('#sn-about')?.addEventListener('click', () => abrirModalInfoSenales());
   // Aviso (descargo de responsabilidad) emergente la primera vez, se puede cerrar
   try { if (!localStorage.getItem('sn_info_visto')) { abrirModalInfoSenales(); localStorage.setItem('sn_info_visto', '1'); } } catch (_) {}
