@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function esAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function esAnalista() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/analistas/$(request.auth.uid))
+        && get(/databases/$(database)/documents/analistas/$(request.auth.uid)).data.activo == true;
+    }
+    function deporteAnalista() {
+      return get(/databases/$(database)/documents/analistas/$(request.auth.uid)).data.deporte;
+    }
+    function esPremium() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid))
+        && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.suscripcion != null
+        && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.suscripcion.activo == true
+        && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.suscripcion.plan == 'premium';
+    }
+    match /admins/{uid} {
+      allow read: if esAdmin();
+      allow write: if false;
+    }
+    match /analistas/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || esAdmin());
+      allow create, delete: if esAdmin();
+      // Admin edita todo; el analista puede editar SU config (nombre/firma/foto/configurado)
+      // sin poder cambiar su deporte, su estado activo ni su email (eso es solo del admin).
+      allow update: if esAdmin()
+        || (request.auth != null && request.auth.uid == uid
+            && request.resource.data.deporte == resource.data.deporte
+            && request.resource.data.activo  == resource.data.activo
+            && request.resource.data.email   == resource.data.email);
+    }
+    match /usuarios/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || esAdmin());
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null && (request.auth.uid == uid || esAdmin());
+      allow delete: if esAdmin();
+    }
+    // FOTOS DE ANALISTA — foto única. Doc id = id de la foto ('a', 'aa', …).
+    // create solo si la foto NO existe (Firestore) => nadie puede repetir foto.
+    match /fotos/{fotoId} {
+      allow read:   if request.auth != null;
+      allow create: if esAdmin() || (esAnalista() && request.resource.data.uid == request.auth.uid);
+      allow delete: if esAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
+      allow update: if false;
+    }
+    match /analisis/{id} {
+      allow read: if esAdmin() || esAnalista() || esPremium();
+      allow create: if esAdmin() || (esAnalista() && request.resource.data.deporte == deporteAnalista());
+      allow update: if esAdmin() || (esAnalista() && resource.data.deporte == deporteAnalista());
+      allow delete: if esAdmin() || (esAnalista() && resource.data.deporte == deporteAnalista());
+    }
+    match /seguimientos/{id} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.seguidorUid == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.seguidorUid == request.auth.uid;
+      allow update: if false;
+    }
+    match /config/contacto {
+      allow read: if true;              // página pública de contacto: cualquiera puede leer
+      allow write: if esAdmin();        // solo el admin edita
+    }
+    match /config/{doc} {
+      allow read: if esAdmin() || esAnalista();
+      allow write: if esAdmin();
+    }
+    match /votos/{id} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && (request.resource.data.valor == 1 || request.resource.data.valor == -1);
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+    match /apoyos/{id} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+    match /reportes/{uid} {
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow read:   if request.auth != null && (request.auth.uid == uid || esAdmin());
+      allow update, delete: if esAdmin();
+    }
+  }
+}

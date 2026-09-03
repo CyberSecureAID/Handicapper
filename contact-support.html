@@ -71,7 +71,7 @@
     <div class="lg-note">Get help, report a problem or send a suggestion.</div>
     <p>The fastest way to get help, report an issue or send a suggestion is our dedicated support channel on Telegram. Join it and tell us what you need, we read every message.</p>
     <div style="text-align:center;margin:34px 0">
-      <a class="ct-cta" href="https://t.me/TradeRecord" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 3L2 10.5l6 2.2L18 6l-7.5 8.5.3 5L14 15l4.5 3.3z"/></svg><span>Open our support channel</span></a>
+      <a class="ct-cta" id="ct-support-link" href="https://t.me/TradeRecord" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 3L2 10.5l6 2.2L18 6l-7.5 8.5.3 5L14 15l4.5 3.3z"/></svg><span>Open our support channel</span></a>
     </div>
     <p style="color:var(--tx3);text-align:center">Telegram · t.me/TradeRecord</p>
   </main>
@@ -89,6 +89,16 @@
 function rs(){W=c.width=innerWidth;H=c.height=innerHeight;}rs();addEventListener('resize',rs);
 for(var i=0;i<44;i++)P.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.4,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,a:Math.random()*.35+.08});
 function loop(){x.clearRect(0,0,W,H);for(var i=0;i<P.length;i++){var p=P[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;x.beginPath();x.arc(p.x,p.y,p.r,0,6.283);x.fillStyle='rgba(232,196,106,'+p.a+')';x.fill();}requestAnimationFrame(loop);}loop();})();
+</script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+try{
+  const app=initializeApp({apiKey:"AIzaSyAbJ9RBm-91N4TRg02Wjv4RzsaUAO1LdsA",authDomain:"handicappper.firebaseapp.com",projectId:"handicappper",storageBucket:"handicappper.firebasestorage.app",messagingSenderId:"279849310534",appId:"1:279849310534:web:94cde85a27b336b8632d47"});const db=getFirestore(app);
+  const snap=await getDoc(doc(db,'config','contacto'));
+  if(snap.exists()){const d=snap.data();const a=document.getElementById('ct-support-link');
+    if(a&&d.supportLink){a.href=d.supportLink;}}
+}catch(e){}
 </script>
 </body>
 </html>
