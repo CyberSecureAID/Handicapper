@@ -161,7 +161,9 @@ function inyectarCSS() {
   /* Descubre analistas */
   .sn-disc{margin:0 0 18px}
   .sn-disc-tools{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:14px}
-  .sn-disc-search{display:flex;align-items:center;gap:8px;width:100%;max-width:520px;height:44px;padding:0 16px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)}
+  .sn-disc-search{display:flex;align-items:center;gap:8px;width:100%;max-width:520px;height:44px;padding:0 16px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);cursor:pointer;transition:border-color .15s}
+  .sn-disc-search:hover{border-color:rgba(120,170,255,.45)}
+  .sn-disc-search input[readonly]{cursor:pointer}
   .sn-disc-search svg{width:15px;height:15px;color:#6b7683;flex:none}
   .sn-disc-search input{flex:1;background:none;border:0;outline:none;color:var(--tx);font-size:13.5px;font-family:inherit}
   .sn-disc-chips{display:flex;flex-wrap:wrap;gap:7px}
@@ -584,7 +586,13 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
       });
       if (em) em.hidden = !(activo && vis === 0);
     };
-    const _dqi = cont.querySelector('#sn-disc-q'); if (_dqi) _dqi.oninput = () => { _dq = _dqi.value.trim().toLowerCase(); _filtrarDisc(); };
+    const _dqi = cont.querySelector('#sn-disc-q');
+    if (_dqi) {
+      _dqi.readOnly = true;   // no se escribe aquí: abre la ventana Signals con sus filtros
+      const _abrirDir = () => { _dqi.blur(); const sb = document.getElementById('signals-btn'); if (sb) sb.click(); };
+      _dqi.addEventListener('click', _abrirDir);
+      _dqi.addEventListener('focus', _abrirDir);
+    }
     cont.querySelectorAll('[data-disccat]').forEach(b => b.onclick = () => { _dcat = b.dataset.disccat; cont.querySelectorAll('[data-disccat]').forEach(x => x.classList.toggle('on', x === b)); _filtrarDisc(); });
     _filtrarDisc();
     // Rotación fluida de las 2 tarjetas (solo móvil, solo sin filtro)
