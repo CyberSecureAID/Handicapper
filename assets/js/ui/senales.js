@@ -94,7 +94,7 @@ function inyectarCSS() {
   .sn-c-team:last-of-type{flex-direction:row-reverse;text-align:right}
   .sn-c-team span{font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:13.5px;color:#c7d0dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
   .sn-c-team.fav span{color:#fff;font-weight:800}
-  .sn-c-team.fav span::after{content:" ★";color:var(--acc);font-size:10px}
+
   .sn-c-logo{width:28px;height:28px;flex:none;object-fit:contain}
   .sn-c-logo.ph{border-radius:50%;background:rgba(255,255,255,.08)}
   .sn-c-vs-img{width:34px;height:34px;object-fit:contain;flex:none}
