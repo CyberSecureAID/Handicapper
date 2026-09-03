@@ -179,19 +179,9 @@ export function analizar(match) {
     L += eraEdge; factoresUsados.push('abridor');
   }
 
-  // 3d-bis) Diferencia de ESTADÍSTICAS de equipo (comparativa) — señal fuerte
-  // disponible en el detalle. Promedia la ventaja relativa por categoría.
-  if (Array.isArray(match.comparativa) && match.comparativa.length) {
-    let suma = 0, n = 0;
-    match.comparativa.forEach(c => {
-      const a = numDe(c.local), b = numDe(c.visita);
-      if (a == null || b == null || (Math.abs(a) + Math.abs(b)) === 0) return;
-      let adv = (a - b) / (Math.abs(a) + Math.abs(b));   // -1..1 (local mejor si +)
-      if (c.inv || /era|whip|contra|against|conceded|error|turnover|foul|penal|giveaway/i.test(c.k || c.es || '')) adv = -adv;
-      suma += adv; n++;
-    });
-    if (n) { L += clamp((suma / n) * 1.5, -0.9, 0.9); factoresUsados.push('stats'); }
-  }
+  // 3d-bis) NOTA: la 'comparativa' (estadísticas del detalle) NO entra en la probabilidad,
+  // porque solo existe dentro de la bandeja y haría que el número del detalle no coincida
+  // con el del lobby. La comparativa se sigue MOSTRANDO en la tabla, pero no mueve el %.
 
   // 3e) Lesionados clave
   const iL = cuentaLesionados(match, 'local'), iV = cuentaLesionados(match, 'visita');
@@ -250,6 +240,21 @@ export function analizar(match) {
   pLocal = clamp(pLocal, W.clampLo, W.clampHi);
 
   // 5) Salida
+  // --- DIAGNÓSTICO (activable): en la consola escribe  _MOTOR_DEBUG = true  y recarga.
+  //     Muestra, por partido, qué datos llegan realmente (récord, winPct, posición, fuente). ---
+  try {
+    if (typeof window !== 'undefined' && window._MOTOR_DEBUG) {
+      console.log('[MOTOR]',
+        (match.local.nombre || '?').slice(0, 16), 'vs', (match.visita.nombre || '?').slice(0, 16),
+        '| rec:', (match.local.record || '—') + ' / ' + (match.visita.record || '—'),
+        '| wp:', match.local.winPct, '/', match.visita.winPct,
+        '| pos:', match.local.posicion, '/', match.visita.posicion,
+        '| fuente:', match._fuenteProb || 'modelo',
+        '| factores:', factoresUsados.join(',') || 'ninguno',
+        '| pLocal:', Math.round(pLocal * 100) + '%');
+    }
+  } catch (_) {}
+
   let out;
   if (futbol) {
     const eDraw = 0.26, r = 1 - eDraw;
