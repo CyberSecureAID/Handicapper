@@ -1,6 +1,8 @@
 /* ============================================================
    PLANES — definición central de los 3 niveles y precios.
    Un solo lugar para cambiar precios/funciones sin tocar la UI.
+   Redacción auditada: fiel a lo que ofrece la plataforma, sin
+   prometer resultados y sin lenguaje de apuestas.
    ============================================================ */
 export const PLANES = [
   {
@@ -9,11 +11,13 @@ export const PLANES = [
     destacado: false,
     mensual: 1.99,
     anual: 19.90,
-    resumen: { en: 'Everything to explore the platform.', es: 'Todo para explorar la plataforma.' },
+    resumen: { en: 'General access to the platform.', es: 'Acceso general a la plataforma.' },
     incluye: [
       { en: 'All leagues & categories', es: 'Todas las ligas y categorías' },
-      { en: 'Team & player stat comparison', es: 'Comparativa de equipos y jugadores' },
-      { en: 'Honest win probability with confidence', es: 'Probabilidad de victoria honesta con confianza' },
+      { en: 'Team & player comparison', es: 'Comparación de equipos y jugadores' },
+      { en: 'Advanced stat comparison table', es: 'Tabla de comparación de estadísticas avanzadas' },
+      { en: 'Access to the available stat windows', es: 'Acceso a las ventanas de estadísticas disponibles' },
+      { en: 'Option to hire specialized analyst signal services', es: 'Posibilidad de contratar servicios de señales de analistas especializados' },
     ],
   },
   {
@@ -23,13 +27,13 @@ export const PLANES = [
     etiqueta: { en: 'Most popular', es: 'Más popular' },
     mensual: 3.99,
     anual: 39.90,
-    resumen: { en: 'For those who follow the games closely.', es: 'Para quien sigue los partidos de cerca.' },
+    resumen: { en: 'Intermediate access, a step deeper.', es: 'Acceso intermedio, un paso más a fondo.' },
     incluye: [
       { en: 'Everything in Basic', es: 'Todo lo de Basic' },
-      { en: 'Pro picks: hits, goals, points & shots', es: 'Picks Pro: hits, goals, points y shots' },
-      { en: 'Starter comparison & detailed match view', es: 'Comparativa de abridores y detalle del partido' },
-      { en: 'Featured matches & season leaders', es: 'Partidos destacados y líderes de temporada' },
-      { en: 'Preview a couple of analyst signals', es: 'Ver una o dos señales de analistas' },
+      { en: 'Limited access to Hits, Goals, Points & Shots', es: 'Acceso limitado a Hits, Goals, Points y Shots' },
+      { en: 'Limited access to Fútbol Rubio', es: 'Acceso limitado a Fútbol Rubio' },
+      { en: 'A reduced selection of advanced content', es: 'Una selección reducida del contenido avanzado' },
+      { en: 'Limited access to specialized analyst signals', es: 'Acceso limitado a señales de analistas especializados' },
     ],
   },
   {
@@ -38,15 +42,16 @@ export const PLANES = [
     destacado: false,
     mensual: 8.99,
     anual: 89.90,
-    resumen: { en: 'The complete toolkit, maximum depth.', es: 'La herramienta completa, máxima profundidad.' },
+    resumen: { en: 'The most complete access on the platform.', es: 'El acceso más completo de la plataforma.' },
     incluye: [
       { en: 'Everything in Pro', es: 'Todo lo de Pro' },
-      { en: 'Full daily picks, no limits', es: 'Picks completos del día, sin límites' },
-      { en: 'View every analyst signal', es: 'Ver todas las señales de analistas' },
-      { en: 'Follow analysts to get their picks', es: 'Sigue analistas y recibe sus picks' },
-      { en: 'Signals feed in your profile', es: 'Feed de señales en tu perfil' },
+      { en: 'Full access to Hits, Goals, Points & Shots', es: 'Acceso completo a Hits, Goals, Points y Shots' },
+      { en: 'Full Fútbol Rubio', es: 'Fútbol Rubio completo' },
+      { en: 'Advanced comparisons & all stat categories', es: 'Comparaciones avanzadas y todas las categorías estadísticas' },
+      { en: 'Full daily shared picks', es: 'Picks compartidos del día completos' },
+      { en: 'Broad access to analyst signals (about 50% of what is available)', es: 'Acceso amplio a señales de analistas (aprox. el 50% de lo disponible)' },
       { en: 'Push notifications & alerts', es: 'Notificaciones push y avisos' },
-      { en: 'Advanced indicators & full depth', es: 'Indicadores avanzados y profundidad total' },
+      { en: 'Option to hire additional analyst services for higher access', es: 'Posibilidad de contratar servicios adicionales de analistas para mayor acceso' },
     ],
   },
 ];
