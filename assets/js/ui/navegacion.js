@@ -129,6 +129,7 @@ function elegirPlan(planId) {
 
 /* ---- Cambio de pantalla ---- */
 export function mostrarPantalla(nombre) {
+  try { document.documentElement.classList.remove('restaurando'); } catch (_) {}
   const pantallas = { landing: 'landing-screen', pricing: 'pricing-screen', app: 'app-screen' };
   Object.entries(pantallas).forEach(([n, id]) => {
     const el = document.getElementById(id);
