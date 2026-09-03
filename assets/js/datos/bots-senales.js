@@ -10,22 +10,31 @@ const num = (v) => { const n = Number(v); return isFinite(n) ? n : null; };
 const pct = (w) => Math.round(w * 100);
 
 /* Mide qué tan disparejo es un partido. Devuelve datos del favorito/underdog o null. */
+function tasaRecord(rec) {
+  if (!rec) return null;
+  const ns = String(rec).match(/\d+/g);
+  if (!ns || ns.length < 2) return null;
+  const w = +ns[0], l = +ns[1], t = ns[2] ? +ns[2] : 0, tot = w + l + t;
+  return tot > 0 ? w / tot : null;
+}
 function medir(m) {
-  const wl = num(m.local.winPct), wv = num(m.visita.winPct);
+  let wl = num(m.local.winPct), wv = num(m.visita.winPct);
+  if (wl == null) wl = tasaRecord(m.local.record);          // fallback: usar el récord
+  if (wv == null) wv = tasaRecord(m.visita.record);
   const pl = num(m.local.posicion), pv = num(m.visita.posicion);
   let favLocal, prob, gap;
   if (wl != null && wv != null) {
     gap = Math.abs(wl - wv);
-    if (gap < 0.14) return null;                    // no es lo bastante disparejo (~14+ pts de win%)
+    if (gap < 0.12) return null;                    // ~12+ pts de win%
     favLocal = wl >= wv;
     prob = Math.round(Math.min(85, 52 + gap * 120));
   } else if (pl != null && pv != null) {
     gap = Math.abs(pl - pv);
-    if (gap < 5) return null;                        // diferencia de tabla pequeña -> se descarta
+    if (gap < 4) return null;                        // diferencia de tabla
     favLocal = pl < pv;
     prob = Math.round(Math.min(80, 54 + gap * 2.2));
   } else return null;
-  if (prob < 64) return null;                        // umbral de "obvio"
+  if (prob < 62) return null;                        // umbral de "obvio"
   const fav = favLocal ? m.local : m.visita;
   const dog = favLocal ? m.visita : m.local;
   return { favLocal, prob, fav, dog };
@@ -62,10 +71,11 @@ async function generar({ guardar, uid, firma, autor, color, deporte, ligas, foto
     try { const ps = await listarPartidos(lg); if (Array.isArray(ps)) partidos.push(...ps); } catch (_) {}
   }
   const cand = [];
-  const hoyStr = new Date().toDateString();
+  const ahora = Date.now(), fin = ahora + 48 * 3600 * 1000;   // próximas 48 horas
   for (const m of partidos) {
     if (m.estado !== 'proximo') continue;            // solo partidos por jugarse
-    if (!m.cuando || new Date(m.cuando).toDateString() !== hoyStr) continue;   // SOLO HOY
+    const t = m.cuando ? new Date(m.cuando).getTime() : null;
+    if (!t || t < ahora - 3600 * 1000 || t > fin) continue;   // dentro de la ventana
     const d = medir(m);
     if (!d) continue;
     cand.push({ m, ...d });
