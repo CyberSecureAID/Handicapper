@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live updates · Sports Expectations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#070b12;--panel:rgba(15,22,34,.62);--line:rgba(255,255,255,.09);--tx:#eef2f8;--tx2:#b6c0cd;--tx3:#7c8797;--oro:#e8c46a}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--tx);font-family:"Inter",system-ui,sans-serif;line-height:1.7;position:relative;min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;z-index:-3;background:url('assets/imagenes/fondos/fondo-pagina.webp') center/cover no-repeat;filter:blur(7px) brightness(.42);transform:scale(1.08)}
+    body::after{content:'';position:fixed;inset:0;z-index:-2;background:linear-gradient(180deg,rgba(7,11,18,.8),rgba(7,11,18,.9))}
+    #lg-particles{position:fixed;inset:0;z-index:-1;pointer-events:none}
+    a{color:var(--oro);text-decoration:none;transition:color .15s}
+    a:hover{color:#f3d488}
+    .lg-nav{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 28px;background:rgba(7,11,18,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+    .lg-brand{display:flex;align-items:center;gap:11px}
+    .lg-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:rgba(232,196,106,.14);border:1px solid rgba(232,196,106,.32);color:var(--oro)}
+    .lg-mark svg{width:21px;height:21px}
+    .lg-brand b{font-family:"Poppins",sans-serif;font-weight:700;font-size:15px;color:#fff}
+    .lg-brand span{display:block;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3)}
+    .lg-back{font-size:13.5px;font-weight:600;padding:9px 16px;border:1px solid var(--line);border-radius:10px;color:var(--tx);background:rgba(255,255,255,.03)}
+    .lg-back:hover{border-color:var(--oro);color:var(--oro)}
+    .lg-wrap{max-width:860px;margin:0 auto;padding:56px 28px 90px;position:relative;z-index:1}
+    .lg-eyebrow{font-family:"Poppins",sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--oro)}
+    h1{font-family:"Poppins",sans-serif;font-weight:800;font-size:clamp(30px,4vw,44px);color:#fff;margin:12px 0 8px;line-height:1.1;text-shadow:0 2px 24px rgba(0,0,0,.5)}
+    .lg-updated{color:var(--tx3);font-size:13px;margin-bottom:8px}
+    .lg-note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;font-size:14px;color:var(--tx2);margin:26px 0 40px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 10px 34px -14px rgba(0,0,0,.6)}
+    .lg-note strong{color:var(--tx)}
+    h2{font-family:"Poppins",sans-serif;font-weight:700;font-size:20px;color:#fff;margin:38px 0 12px;scroll-margin-top:80px}
+    h2 .num{color:var(--oro);margin-right:8px}
+    p,li{font-size:15px;color:var(--tx2)}
+    ul{padding-left:20px;margin:10px 0}
+    li{margin-bottom:7px}
+    strong{color:var(--tx)}
+    .lg-toc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 26px;margin-bottom:44px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 10px 34px -14px rgba(0,0,0,.6)}
+    .lg-toc h3{font-family:"Poppins",sans-serif;font-size:13px;color:#fff;margin:0 0 12px;text-transform:uppercase;letter-spacing:.08em}
+    .lg-toc ol{margin:0;padding-left:20px;columns:2;column-gap:32px}
+    .lg-toc li{font-size:13.5px;margin-bottom:6px}
+    .lg-foot{border-top:1px solid var(--line);padding:26px 28px;text-align:center;font-size:12.5px;color:var(--tx3);position:relative;z-index:1;background:rgba(7,11,18,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+    @media(max-width:640px){.lg-toc ol{columns:1}}
+  </style>
+</head>
+<body>
+  <canvas id="lg-particles"></canvas>
+  <nav class="lg-nav">
+    <a href="index.html" class="lg-brand">
+      <span class="lg-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l5-9 4 5 3-7 6 11z"/><circle cx="18" cy="5" r="2"/></svg></span>
+      <div><b>Sports Expectations</b><span>Data. Stats. Results.</span></div>
+    </a>
+    <a href="index.html" class="lg-back">← Back to home</a>
+  </nav>
+
+  <main class="lg-wrap">
+    <span class="lg-eyebrow">Product</span>
+    <h1>Live updates</h1>
+    <div class="lg-note">How Sports Expectations stays current, in real time, all day.</div>
+    <p>Keeping thousands of numbers current, every day, across multiple leagues, is not something a single person does by hand. Behind the clean board you see is a system, and a team, working continuously in the background.</p>
+    <h2><span class="num">·</span>Trusted data providers</h2>
+    <p>We rely on established, reputable sports-data sources and connect to them through professional interfaces (APIs). This is how the platform stays synchronized with real games as schedules change, lineups shift and results come in.</p>
+    <h2><span class="num">·</span>A team behind the numbers</h2>
+    <p>Beyond the automated pipeline, real people contribute to what you see. We work with analysts and collaborators who follow the sports closely and help enrich the information, so the data is not just fast, but meaningful.</p>
+    <h2><span class="num">·</span>Real-time monitoring</h2>
+    <p>Our system continuously monitors statistics as events approach and unfold, refreshing the board so your information reflects the latest available picture rather than a stale snapshot.</p>
+    <h2><span class="num">·</span>Accurate, never invented</h2>
+    <p>We never fabricate data. Everything you see is built from real, publicly available information, organized and analyzed. When something cannot be verified, we would rather show less than show something false.</p>
+    <p style="color:var(--tx3)">Out of respect for our partners and our own work, we do not disclose the specific identity of every source or the internal details of our system, the same way any serious company protects its methods.</p>
+  </main>
+
+</main>
+
+  <footer class="lg-foot">
+    <div style="max-width:900px;margin:0 auto 14px;display:flex;flex-wrap:wrap;justify-content:center;gap:9px 8px;font-size:13px">
+      <a href="index.html">Home</a><span style="color:var(--tx3)">·</span><a href="terms.html">Terms</a><span style="color:var(--tx3)">·</span><a href="privacy.html">Privacy</a><span style="color:var(--tx3)">·</span><a href="disclaimer.html">Disclaimer</a><span style="color:var(--tx3)">·</span><a href="cookies.html">Cookies</a><span style="color:var(--tx3)">·</span><a href="acceptable-use.html">Acceptable use</a><span style="color:var(--tx3)">·</span><a href="dmca.html">DMCA</a><span style="color:var(--tx3)">·</span><a href="responsible.html">Responsible gaming</a><span style="color:var(--tx3)">·</span><a href="faq.html">FAQ</a><span style="color:var(--tx3)">·</span><a href="help.html">Help</a>
+    </div>
+    <div style="text-align:center">© 2026 Sports Expectations. All rights reserved. Informational analysis, not betting advice.</div>
+  </footer>
+<script>
+(function(){var c=document.getElementById('lg-particles');if(!c)return;var x=c.getContext('2d'),P=[],W,H;
+function rs(){W=c.width=innerWidth;H=c.height=innerHeight;}rs();addEventListener('resize',rs);
+for(var i=0;i<44;i++)P.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.4,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,a:Math.random()*.35+.08});
+function loop(){x.clearRect(0,0,W,H);for(var i=0;i<P.length;i++){var p=P[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;x.beginPath();x.arc(p.x,p.y,p.r,0,6.283);x.fillStyle='rgba(232,196,106,'+p.a+')';x.fill();}requestAnimationFrame(loop);}loop();})();
+</script>
+</body>
+</html>
