@@ -1016,3 +1016,14 @@
 .sd-modal #sd-list { flex: 1 1 auto; overflow-y: auto; min-height: 0; padding-right: 4px; }
 .sd-modal #sd-list::-webkit-scrollbar { width: 7px; }
 .sd-modal #sd-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 99px; }
+
+/* Ventana Signals: línea divisoria + fade tipo cristal arriba/abajo del scroll */
+.sd-modal .sd-tools { border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 15px; margin-bottom: 6px; }
+.sd-modal #sd-list {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
+  padding-top: 8px; padding-bottom: 8px;
+}
+
+/* Follow del directorio: mismo azul brillante que el de Discover/Analyst Signals */
+.sd-follow { background: linear-gradient(90deg, #38a9f0, #5cc0ff) !important; color: #0a0e15 !important; border: 0 !important; }
