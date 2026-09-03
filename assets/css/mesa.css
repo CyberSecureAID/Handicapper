@@ -937,3 +937,12 @@ body.en-mesa { overflow: hidden; }
 
 /* Confirmación de dos clics al remover analista (sin popup del navegador) */
 .an-mng-del-cfm { background: rgba(240,82,90,.25) !important; border-color: rgba(240,82,90,.6) !important; color: #ffb4ba !important; }
+
+/* Botón "Mi foto de perfil" del admin (en el nav del panel) */
+.mesa-yo { width: 100%; background: none; border: 0; cursor: pointer; text-align: left; font-family: inherit; display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 10px; transition: background .14s; }
+.mesa-yo:hover { background: rgba(255,255,255,.04); }
+.mesa-yo-av { position: relative; overflow: visible; }
+.mesa-yo-av img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.mesa-yo:hover .mesa-yo-av { box-shadow: 0 0 0 2px rgba(232,184,75,.5); }
+.mesa-yo-cam { position: absolute; right: -3px; bottom: -3px; width: 16px; height: 16px; background: var(--g, #e8b84b); color: #1a1200; border-radius: 50%; display: grid; place-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+.mesa-yo-cam svg { width: 9px; height: 9px; }
