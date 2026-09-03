@@ -65,7 +65,7 @@ export async function compartirPartido(p) {
     if (tpl) g.drawImage(tpl, 0, 0, N, N); else { g.fillStyle='#0a0d11'; g.fillRect(0,0,N,N); }
 
     // Marca
-    C(g, 'HANDICAPPER', 627, 74, '800 42px "Chakra Petch", sans-serif', ORO);
+    C(g, 'SPORTS EXPECTATIONS', 627, 74, '800 42px "Chakra Petch", sans-serif', ORO);
 
     // Logos grandes + VS grande
     logoCirc(g, conLogos?ll:null, EQ.izq, EQ.logoY, EQ.logoR, p.local.abrev);
@@ -124,7 +124,7 @@ export async function compartirPartido(p) {
       if (!blob) return;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = `handicapper-${p.local.abrev}-vs-${p.visita.abrev}.png`;
+      a.href = url; a.download = `sports-expectations-${p.local.abrev}-vs-${p.visita.abrev}.png`;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }, 'image/png');

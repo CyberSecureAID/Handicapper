@@ -504,7 +504,7 @@ export function detalle(p, opciones = {}) {
   const panes = [];
   // Resumen: probabilidad + veredicto + factores.
   panes.push({ id: 'resumen', txt: ES ? 'Resumen' : 'Overview',
-    html: `${donutsHTML()}${analistaHTML()}${factoresHTML() || `<div class="hd-an-txt" style="text-align:center;color:var(--tinta-3);padding:8px 0">${ES ? 'Probabilidad del modelo Handicapper con las señales del partido.' : 'Handicapper model probability from the match signals.'}</div>`}${gaugeHTML()}` });
+    html: `${donutsHTML()}${analistaHTML()}${factoresHTML() || `<div class="hd-an-txt" style="text-align:center;color:var(--tinta-3);padding:8px 0">${ES ? 'Probabilidad del modelo con las señales del partido.' : 'Model probability from the match signals.'}</div>`}${gaugeHTML()}` });
   // Comparación (por defecto): barras + enfrentamientos (idéntico a la referencia, sin donuts).
   panes.push({ id: 'comparacion', txt: ES ? 'Comparación' : 'Comparison', on: true, html: `${cmpHTML}${tieneSerie ? h2hHTML() : ''}` });
   // Equipos: roster COMPLETO de ambos.
