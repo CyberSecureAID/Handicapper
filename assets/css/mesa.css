@@ -934,3 +934,6 @@ body.en-mesa { overflow: hidden; }
   .an-cand-who { grid-column: 1 / -1; }
   .an-cand .an-mng-inp { grid-column: 1 / -1; }
 }
+
+/* Confirmación de dos clics al remover analista (sin popup del navegador) */
+.an-mng-del-cfm { background: rgba(240,82,90,.25) !important; border-color: rgba(240,82,90,.6) !important; color: #ffb4ba !important; }
