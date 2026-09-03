@@ -970,7 +970,7 @@
 }
 
 /* ===== Tarjetas de analista: textura de fondo + Follow pequeño + 3D ===== */
-.sd-card { background: linear-gradient(180deg, rgba(10,14,20,.8), rgba(6,9,14,.9)), url('../imagenes/textura-tarjeta.jpg') center / cover no-repeat !important; }
+
 .sd-follow { height: 29px; font-size: 10.5px; padding: 0 13px; border-radius: 8px; }
 .sd-ava { box-shadow: 0 5px 12px -2px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.12); }
 .sd-nom { text-shadow: 0 2px 5px rgba(0,0,0,.7); }
@@ -986,8 +986,13 @@
 .ca-ov { z-index: 1200 !important; }
 .pay-ov { z-index: 1100 !important; }
 
-/* FIX textura que se desbordaba del marco: la meto DENTRO del marco (inset) */
-.sd-card { background: rgba(6,9,14,.55) !important; }
-.sd-card::after { content: ''; position: absolute; inset: 12% 13%; background: linear-gradient(180deg, rgba(10,14,20,.55), rgba(6,9,14,.7)), url('../imagenes/textura-tarjeta.jpg') center / cover no-repeat; z-index: 0; border-radius: 3px; }
+/* Marco: fondo transparente (sin borde negro afuera) + textura que llena el interior */
+.sd-card { background: transparent !important; }
+.sd-card::after { content: ''; position: absolute; inset: 8% 9%; background: linear-gradient(180deg, rgba(10,14,20,.5), rgba(6,9,14,.62)), url('../imagenes/textura-tarjeta.jpg') center / cover no-repeat; z-index: 0; }
 .sd-card::before { z-index: 1 !important; }
 .sd-card > * { z-index: 2 !important; position: relative; }
+/* Follow del directorio: pequeño y centrado, no gigante */
+.sd-follow { height: 28px !important; font-size: 10.5px !important; padding: 0 18px !important; width: auto !important; align-self: center; }
+
+/* Botón Signals: hover azul (no dorado heredado del premium) */
+.signals-btn:hover { box-shadow: 0 4px 13px rgba(40,60,120,.45), inset 0 1px 0 rgba(255,255,255,.28) !important; filter: brightness(1.05); }
