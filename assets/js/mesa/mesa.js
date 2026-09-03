@@ -898,8 +898,12 @@ function enlazarAnalistas() {
     try { await fijarAnalista(uid, { firma: val }); const a = _analistas.find(x => x.uid === uid); if (a) a.firma = val; } catch (_) {}
   });
   _cont.querySelectorAll('[data-an-del]').forEach(b => b.onclick = async () => {
-    const uid = b.dataset.anDel, a = _analistas.find(x => x.uid === uid), mail = (a && a.email) || uid;
-    if (!confirm(ML('Remove ' + mail + ' as analyst? This is permanent. They lose the role and access.', '¿Quitar a ' + mail + ' como analista? Es permanente: pierde el rol y el acceso.'))) return;
+    const uid = b.dataset.anDel;
+    if (b.dataset.cfm !== '1') {
+      const orig = b.textContent; b.dataset.cfm = '1'; b.textContent = ML('Confirm?', '¿Seguro?'); b.classList.add('an-mng-del-cfm');
+      setTimeout(() => { if (b.dataset.cfm === '1') { b.dataset.cfm = ''; b.textContent = orig; b.classList.remove('an-mng-del-cfm'); } }, 3000);
+      return;
+    }
     b.disabled = true;
     try { await quitarFotoAnalista(uid); await eliminarAnalista(uid); _analistas = await listarAnalistas(); pintarTab(); } catch (_) { b.disabled = false; }
   });
