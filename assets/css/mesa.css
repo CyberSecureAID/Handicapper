@@ -924,3 +924,13 @@ body.en-mesa { overflow: hidden; }
 .est-foto-btn { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 7px 14px 7px 7px; cursor: pointer; color: #e9eef5; font-family: inherit; font-weight: 600; font-size: 13px; }
 .est-foto-btn img { width: 42px; height: 42px; border-radius: 10px; object-fit: cover; }
 .est-foto-mas { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; background: rgba(255,255,255,.06); color: #7a8695; font-size: 24px; }
+
+/* Fila de candidato a analista: nombre + deporte + botón */
+.an-cand { grid-template-columns: minmax(0,1.1fr) minmax(110px,1fr) auto auto !important; }
+.an-cand .an-mng-inp { width: 100%; height: 34px; }
+.an-cand-who .pill { margin-left: 6px; }
+@media (max-width: 680px) {
+  .an-cand { grid-template-columns: 1fr 1fr !important; }
+  .an-cand-who { grid-column: 1 / -1; }
+  .an-cand .an-mng-inp { grid-column: 1 / -1; }
+}
