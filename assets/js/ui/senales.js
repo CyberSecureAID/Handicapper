@@ -19,6 +19,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&
 
 let _cache = null;   // señales cacheadas para el punto indicador
 let _snTab = 'inicio';   // Fase 9: pestaña activa del feed (inicio | siguiendo | populares)
+let _discRotIv = null;   // intervalo de rotación de las tarjetas de Discover (móvil)
 
 const MERCADO = {
   ml: () => L('Match winner', 'Ganador del partido'),
@@ -167,6 +168,8 @@ function inyectarCSS() {
   .sn-disc-chip{height:30px;padding:0 12px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
   .sn-disc-chip.on{background:linear-gradient(180deg,#2a6be0,#143c94);border-color:rgba(120,170,255,.5);color:#fff}
   .sn-disc-empty{padding:22px;text-align:center;color:var(--tx2);font-size:13px}
+  .sn-disc-card{transition:opacity .34s ease}
+  .sn-disc-row.disc-fade .sn-disc-card{opacity:0}
   @media(max-width:640px){
     .sn-disc-tools{padding:0 4px}
     .sn-disc-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;overflow:visible;padding:0 4px}
@@ -524,18 +527,38 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   const _discRow = cont.querySelector('#sn-disc-row');
   if (_discRow) {
     let _dcat = '', _dq = '';
+    const _cards = [..._discRow.querySelectorAll('.sn-disc-card')];
+    const _esMovil = () => window.matchMedia('(max-width:640px)').matches;
+    let _start = 0;
+    const _mostrarPar = (s) => { _cards.forEach((c, i) => { c.style.display = (i === s % _cards.length || i === (s + 1) % _cards.length) ? 'flex' : 'none'; }); };
     const _filtrarDisc = () => {
       const activo = !!(_dcat || _dq);
+      const em = cont.querySelector('#sn-disc-empty');
+      if (!activo && _esMovil() && _cards.length > 2) { _mostrarPar(_start); if (em) em.hidden = true; return; }
       let vis = 0;
-      _discRow.querySelectorAll('.sn-disc-card').forEach(c => {
-        if (!activo) { c.style.display = ''; return; }   // sin filtro: el CSS decide (2 en móvil)
+      _cards.forEach(c => {
+        if (!activo) { c.style.display = ''; return; }
         const ok = (!_dcat || c.dataset.cat === _dcat) && (!_dq || (c.dataset.nom || '').includes(_dq));
         c.style.display = ok ? 'flex' : 'none'; if (ok) vis++;
       });
-      const em = cont.querySelector('#sn-disc-empty'); if (em) em.hidden = !(activo && vis === 0);
+      if (em) em.hidden = !(activo && vis === 0);
     };
     const _dqi = cont.querySelector('#sn-disc-q'); if (_dqi) _dqi.oninput = () => { _dq = _dqi.value.trim().toLowerCase(); _filtrarDisc(); };
     cont.querySelectorAll('[data-disccat]').forEach(b => b.onclick = () => { _dcat = b.dataset.disccat; cont.querySelectorAll('[data-disccat]').forEach(x => x.classList.toggle('on', x === b)); _filtrarDisc(); });
+    _filtrarDisc();
+    // Rotación fluida de las 2 tarjetas (solo móvil, solo sin filtro)
+    if (_discRotIv) { clearInterval(_discRotIv); _discRotIv = null; }
+    if (_cards.length > 2) {
+      _discRotIv = setInterval(() => {
+        if (_dcat || _dq || !_esMovil() || !document.body.contains(_discRow)) return;
+        _discRow.classList.add('disc-fade');                       // fade out
+        setTimeout(() => {
+          _start = (_start + 2) % _cards.length; _mostrarPar(_start); // cambia el par
+          void _discRow.offsetWidth;                                // reflow
+          _discRow.classList.remove('disc-fade');                   // fade in
+        }, 340);
+      }, 12000);
+    }
   }
 
   // Seguir / Siguiendo: sincroniza TODOS los botones del mismo analista (tarjeta + descubrir)
