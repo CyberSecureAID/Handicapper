@@ -264,7 +264,7 @@ function betTabsHTML(activo) {
 
 function heroHTML(cfg, meta, cargando, variante) {
   const noun = String(cfg.metricLabel || '').replace(/<br>/g, ' ').trim();
-  const nMostrar = cfg._count != null ? cfg._count : (cfg._modo === 'pro' ? 3 : 9);
+  const nMostrar = cfg._count != null ? cfg._count : (cfg._modo === 'pro' ? 1 : 9);
   const chips = [
     `<span>${L('Date', 'Fecha')} · <b>${esc(meta.fecha)}</b></span>`,
     `<span class="ply-count-chip"><b>${nMostrar}</b> ${L('players', 'jugadores')} · ${esc(noun)}</span>`,
@@ -523,8 +523,7 @@ function pintarCargando(cont, cfg) {
 /* ---------- API pública ---------- */
 function limitarPro(jug, modo) {
   if (modo !== 'pro') return jug;
-  const n = Math.max(1, Math.ceil(jug.length / 3));   // Pro: ~1/3 de los picks del Premium
-  return jug.slice(0, n);
+  return jug.slice(0, 1);   // Pro: SOLO 1 pick (el de mayor probabilidad/average)
 }
 
 export async function pintarParlay(cont, { sport = 'mlb', nivel = 'basic', modo = 'premium', esPremium, abrirPlanes } = {}) {
