@@ -159,8 +159,8 @@ function inyectarCSS() {
   /* Tabs del feed (Todas / Siguiendo) */
   /* Descubre analistas */
   .sn-disc{margin:0 0 18px}
-  .sn-disc-tools{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
-  .sn-disc-search{display:flex;align-items:center;gap:8px;max-width:340px;height:38px;padding:0 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)}
+  .sn-disc-tools{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:14px}
+  .sn-disc-search{display:flex;align-items:center;gap:8px;width:100%;max-width:520px;height:44px;padding:0 16px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)}
   .sn-disc-search svg{width:15px;height:15px;color:#6b7683;flex:none}
   .sn-disc-search input{flex:1;background:none;border:0;outline:none;color:var(--tx);font-size:13.5px;font-family:inherit}
   .sn-disc-chips{display:flex;flex-wrap:wrap;gap:7px}
@@ -168,7 +168,8 @@ function inyectarCSS() {
   .sn-disc-chip.on{background:linear-gradient(180deg,#2a6be0,#143c94);border-color:rgba(120,170,255,.5);color:#fff}
   .sn-disc-empty{padding:22px;text-align:center;color:var(--tx2);font-size:13px}
   @media(max-width:640px){
-    .sn-disc-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;overflow:visible}
+    .sn-disc-tools{padding:0 4px}
+    .sn-disc-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;overflow:visible;padding:0 4px}
     .sn-disc-card{width:auto;min-height:0}
     .sn-disc-card:nth-child(n+3){display:none}
   }
@@ -176,9 +177,10 @@ function inyectarCSS() {
   .sn-disc-head svg{width:16px;height:16px;color:var(--g)}
   .sn-disc-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
   .sn-disc-row::-webkit-scrollbar{height:6px}.sn-disc-row::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:99px}
-  .sn-disc-card{--acc:#e8b84b;flex:0 0 auto;width:166px;min-height:208px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;background:linear-gradient(180deg,rgba(10,14,20,.8),rgba(6,9,14,.9)),url('assets/imagenes/textura-tarjeta.jpg') center/cover no-repeat;border:0;border-radius:0;padding:28px 20px 26px;position:relative}
-  .sn-disc-card::before{content:'';position:absolute;inset:0;z-index:0;background:url('assets/imagenes/marco.webp') center/100% 100% no-repeat;pointer-events:none}
-  .sn-disc-card>*{position:relative;z-index:1}
+  .sn-disc-card{--acc:#e8b84b;flex:0 0 auto;width:166px;min-height:208px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;background:rgba(6,9,14,.55);border:0;border-radius:0;padding:28px 20px 26px;position:relative}
+  .sn-disc-card::after{content:'';position:absolute;inset:12% 13%;z-index:0;background:linear-gradient(180deg,rgba(10,14,20,.55),rgba(6,9,14,.7)),url('assets/imagenes/textura-tarjeta.jpg') center/cover no-repeat;border-radius:3px}
+  .sn-disc-card::before{content:'';position:absolute;inset:0;z-index:1;background:url('assets/imagenes/marco.webp') center/100% 100% no-repeat;pointer-events:none}
+  .sn-disc-card>*{position:relative;z-index:2}
   .sn-disc-ava{width:50px;height:50px;border-radius:13px;display:grid;place-items:center;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:19px;color:var(--acc);background:color-mix(in srgb, var(--acc) 15%, transparent);border:1px solid color-mix(in srgb, var(--acc) 34%, transparent);margin-bottom:5px;overflow:hidden;box-shadow:0 5px 12px -2px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.12)}
   .sn-disc-ava img{width:100%;height:100%;object-fit:cover;display:block}
   .sn-disc-ava svg{width:23px;height:23px}
@@ -295,15 +297,9 @@ function bloqueDescubrir(analistas, ctx) {
     </div>`;
   }).join('');
   const ILupa = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`;
-  const chip = (c, l) => `<button class="sn-disc-chip" data-disccat="${c}">${l}</button>`;
   return `<div class="sn-disc">
-    <div class="sn-disc-head">${IComp}<span>${L('Discover analysts', 'Descubre analistas')}</span></div>
     <div class="sn-disc-tools">
-      <div class="sn-disc-search">${ILupa}<input id="sn-disc-q" type="text" placeholder="${L('Search analysts…', 'Buscar analistas…')}"></div>
-      <div class="sn-disc-chips">
-        <button class="sn-disc-chip on" data-disccat="">${L('All', 'Todos')}</button>
-        ${chip('futbol', L('Soccer', 'Fútbol'))}${chip('basket', L('Basketball', 'Básquet'))}${chip('hockey', L('Ice hockey', 'Hockey'))}${chip('beisbol', L('Baseball', 'Béisbol'))}${chip('americano', L('Am. football', 'F. am.'))}
-      </div>
+      <div class="sn-disc-search"><input id="sn-disc-q" type="text" placeholder="${L('Search analysts by name…', 'Buscar analistas por nombre…')}">${ILupa}</div>
     </div>
     <div class="sn-disc-row" id="sn-disc-row">${cards}</div>
     <div class="sn-disc-empty" id="sn-disc-empty" hidden>${L('No analysts found.', 'No se encontraron analistas.')}</div>
