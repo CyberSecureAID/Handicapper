@@ -98,6 +98,7 @@ function construirModal() {
 export function abrirAuth(modo) {
   const el = document.getElementById('auth-modal');
   if (!el) return;
+  if (!modo) modo = 'entrar';
   if (modo === 'registrar' || modo === 'entrar') {
     const tab = el.querySelector(`.auth-tab[data-modo="${modo}"]`);
     if (tab) tab.click();
