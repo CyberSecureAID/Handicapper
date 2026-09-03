@@ -525,15 +525,16 @@ let _esAnalista = false;
 
 /* Publica las señales de los bots una vez al día (lo dispara el admin al entrar). */
 async function publicarBotsSiEsNuevoDia() {
-  const hoy = new Date().toISOString().slice(0, 10);
-  try { if (localStorage.getItem('bots-dia') === hoy) return; } catch (_) {}
+  // Se re-publica el mismo día. Solo throttle de 45 min entre corridas EXITOSAS (evita spam de API).
+  // Si una corrida publica 0 (aún no hay oportunidades), NO se marca el throttle -> reintenta al próximo login.
+  try { const ult = Number(localStorage.getItem('bots-ts') || 0); if (Date.now() - ult < 45 * 60 * 1000) return; } catch (_) {}
   try {
     const [botMod, datosMod] = await Promise.all([
       import('./datos/bots-senales.js'),
       import('./mesa/mesa-datos.js'),
     ]);
     const r = await botMod.publicarTodosLosBots(datosMod.guardarAnalisis);
-    if (r && r.ok && r.publicadas > 0) { try { localStorage.setItem('bots-dia', hoy); } catch (_) {} }
+    if (r && r.ok && r.publicadas > 0) { try { localStorage.setItem('bots-ts', String(Date.now())); } catch (_) {} }
   } catch (_) {}
 }
 
