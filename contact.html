@@ -54,35 +54,27 @@
     <a href="index.html" class="lg-back">← Back to home</a>
   </nav>
   <style>
-    .ct-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:10px 0 30px}
+    .ct-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:10px 0 30px}
     .ct-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 10px 34px -16px rgba(0,0,0,.6)}
     .ct-name{font-family:"Poppins",sans-serif;font-size:19px;color:#fff;margin:0 0 3px}
-    .ct-role{color:var(--oro);font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:16px}
-    .ct-btn{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--tx);font-weight:600;font-size:14px;margin-bottom:9px;transition:all .15s}
+    .ct-role{color:var(--oro);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:12px}
+    .ct-estado{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;margin-bottom:14px}
+    .ct-estado.on{color:#3ecf8e}.ct-estado.off{color:#ff8a90}
+    .ct-estado .dot{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+    .ct-btn{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--tx);font-weight:600;font-size:14px;margin-bottom:9px;transition:all .15s;text-decoration:none}
     .ct-btn:hover{border-color:var(--oro);color:#fff;transform:translateY(-1px)}
     .ct-btn svg{width:20px;height:20px;flex:none}
     .ct-btn.tg svg{color:#2aabee}.ct-btn.wa svg{color:#25d366}
-    .ct-cta{display:inline-flex;align-items:center;gap:10px;background:#2aabee;color:#fff;font-weight:700;padding:14px 26px;border-radius:12px;font-family:"Poppins",sans-serif;margin-top:6px}
-    .ct-cta svg{width:22px;height:22px}
+    .ct-btn.bloq{opacity:.5;cursor:not-allowed;pointer-events:none;color:var(--tx3)}
+    .ct-btn.bloq svg{color:var(--tx3)!important}
+    .ct-horario{font-size:12.5px;color:var(--tx3);line-height:1.7;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+    .ct-horario b{color:var(--tx2)}
   </style>
   <main class="lg-wrap">
     <span class="lg-eyebrow">Company</span>
     <h1>Contact us</h1>
-    <div class="lg-note">Reach the team behind Sports Expectations directly.</div>
-    <div class="ct-grid" id="ct-list">
-      <div class="ct-card">
-        <div class="ct-name">Jesús Pérez</div>
-        <div class="ct-role">Founder · Developer</div>
-        <a class="ct-btn tg" href="https://t.me/JesusDevTrader" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 3L2 10.5l6 2.2L18 6l-7.5 8.5.3 5L14 15l4.5 3.3z"/></svg><span>Telegram · @JesusDevTrader</span></a>
-        <a class="ct-btn wa" href="https://wa.me/5358648458" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15l-1.4 5 5.1-1.3A10 10 0 1012 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .3-3.4-.7s-3.9-3.5-4-3.7c-.1-.2-1-1.3-1-2.5s.6-1.8.8-2c.2-.3.5-.3.6-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.5c-.2.2-.3.4-.1.7.2.3.9 1.4 1.9 2 .8.5 1.2.6 1.4.5l.6-.7c.2-.3.4-.2.6-.1l1.9.9c.2.1.4.2.4.3v1.4z"/></svg><span>WhatsApp · +53 5864 8458</span></a>
-      </div>
-      <div class="ct-card">
-        <div class="ct-name">Oscar Luis</div>
-        <div class="ct-role">CEO · Data Analyst</div>
-        <a class="ct-btn wa" href="https://wa.me/16892786155" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15l-1.4 5 5.1-1.3A10 10 0 1012 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .3-3.4-.7s-3.9-3.5-4-3.7c-.1-.2-1-1.3-1-2.5s.6-1.8.8-2c.2-.3.5-.3.6-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.5c-.2.2-.3.4-.1.7.2.3.9 1.4 1.9 2 .8.5 1.2.6 1.4.5l.6-.7c.2-.3.4-.2.6-.1l1.9.9c.2.1.4.2.4.3v1.4z"/></svg><span>WhatsApp · +1 689 278 6155</span></a>
-      </div>
-    </div>
-    <p style="color:var(--tx3)">For customer support and questions about the service, please use our <a href="contact-support.html">support channel</a> so we can help you faster.</p>
+    <div class="lg-note"><strong>We are the founders and owners of Sports Expectations.</strong> These lines are for meaningful matters, partnerships or serious enquiries only. For everyday questions, refunds or help, please use our <a href="contact-support.html">support channel</a>. Contact buttons are active only during the hours shown on each card &mdash; outside those hours they are disabled.</div>
+    <div class="ct-grid" id="ct-list"></div>
   </main>
 
 </main>
@@ -100,22 +92,53 @@ for(var i=0;i<44;i++)P.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()
 function loop(){x.clearRect(0,0,W,H);for(var i=0;i<P.length;i++){var p=P[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;x.beginPath();x.arc(p.x,p.y,p.r,0,6.283);x.fillStyle='rgba(232,196,106,'+p.a+')';x.fill();}requestAnimationFrame(loop);}loop();})();
 </script>
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-const TG=`<svg viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M22 3L2 10.5l6 2.2L18 6l-7.5 8.5.3 5L14 15l4.5 3.3z\"/></svg>`, WA=`<svg viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M12 2a10 10 0 00-8.6 15l-1.4 5 5.1-1.3A10 10 0 1012 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .3-3.4-.7s-3.9-3.5-4-3.7c-.1-.2-1-1.3-1-2.5s.6-1.8.8-2c.2-.3.5-.3.6-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.5c-.2.2-.3.4-.1.7.2.3.9 1.4 1.9 2 .8.5 1.2.6 1.4.5l.6-.7c.2-.3.4-.2.6-.1l1.9.9c.2.1.4.2.4.3v1.4z\"/></svg>`;
+
+const TG=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 3L2 10.5l6 2.2L18 6l-7.5 8.5.3 5L14 15l4.5 3.3z"/></svg>`;
+const WA=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15l-1.4 5 5.1-1.3A10 10 0 1012 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .3-3.4-.7s-3.9-3.5-4-3.7c-.1-.2-1-1.3-1-2.5s.6-1.8.8-2c.2-.3.5-.3.6-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.5c-.2.2-.3.4-.1.7.2.3.9 1.4 1.9 2 .8.5 1.2.6 1.4.5l.6-.7c.2-.3.4-.2.6-.1l1.9.9c.2.1.4.2.4.3v1.4z"/></svg>`;
 const esc=s=>String(s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-try{
+
+// Horarios (hora del Este US/Cuba). rango [inicio, fin) en 24h. día 0=Dom..6=Sáb.
+const HORARIOS = {
+  jesus: { rangos:{1:[[8,23]],2:[[8,23]],3:[[8,23]],4:[[8,23]],5:[[8,23]],6:[[7,12]],0:[]}, texto:'Mon–Fri 8:00 AM – 11:00 PM · Sat 7:00 AM – 12:00 PM · Sun closed' },
+  oscar: { rangos:{1:[[18,24]],2:[[18,24]],3:[[18,24]],4:[[18,24]],5:[[18,24]],6:[],0:[]}, texto:'Mon–Fri 6:00 PM – 12:00 AM · Sat & Sun closed' },
+};
+const DEFAULT = [
+  { clave:'jesus', nombre:'Jesús Pérez', cargo:'Founder · CEO', whatsapp:'https://wa.me/5358648458', telegram:'https://t.me/JesusDevTrader' },
+  { clave:'oscar', nombre:'Oscar Luis', cargo:'Co-founder · CEO', whatsapp:'https://wa.me/16892786155', telegram:'' },
+];
+function ahoraET(){
+  const p=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'numeric',hour12:false}).formatToParts(new Date());
+  const W={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6}; let d=0,h=0;
+  for(const x of p){ if(x.type==='weekday')d=W[x.value]; if(x.type==='hour')h=parseInt(x.value); }
+  if(h===24)h=0; return {d,h};
+}
+function claveDe(m){ const n=(m.clave||m.nombre||'').toLowerCase(); if(n.includes('jes'))return 'jesus'; if(n.includes('osc'))return 'oscar'; return null; }
+function disponible(clave){ const H=HORARIOS[clave]; if(!H)return true; const {d,h}=ahoraET(); return (H.rangos[d]||[]).some(([a,b])=>h>=a&&h<b); }
+function botones(m,disp){
+  const b=(tipo,label,href,ico)=> !href?'' : disp
+    ? `<a class="ct-btn ${tipo}" href="${esc(href)}" target="_blank" rel="noopener">${ico}<span>${label}</span></a>`
+    : `<span class="ct-btn ${tipo} bloq">${ico}<span>${label} · outside hours</span></span>`;
+  return b('wa','WhatsApp',m.whatsapp,WA)+b('tg','Telegram',m.telegram,TG);
+}
+let _ultimos=[];
+function pintar(miembros){
+  _ultimos=miembros; const list=document.getElementById('ct-list'); if(!list)return;
+  list.innerHTML=miembros.map(m=>{
+    const c=claveDe(m), disp=c?disponible(c):true, H=c?HORARIOS[c]:null;
+    const est=`<div class="ct-estado ${disp?'on':'off'}"><span class="dot"></span>${disp?'Available now':'Outside contact hours'}</div>`;
+    const hor=H?`<div class="ct-horario"><b>Contact hours (Eastern Time):</b><br>${H.texto}</div>`:'';
+    return `<div class="ct-card"><div class="ct-name">${esc(m.nombre)}</div><div class="ct-role">${esc(m.cargo)}</div>${est}${botones(m,disp)}${hor}</div>`;
+  }).join('');
+}
+pintar(DEFAULT);
+(async()=>{ try{
+  const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+  const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
   const app=initializeApp({apiKey:"AIzaSyAbJ9RBm-91N4TRg02Wjv4RzsaUAO1LdsA",authDomain:"handicappper.firebaseapp.com",projectId:"handicappper",storageBucket:"handicappper.firebasestorage.app",messagingSenderId:"279849310534",appId:"1:279849310534:web:94cde85a27b336b8632d47"});const db=getFirestore(app);
   const snap=await getDoc(doc(db,'config','contacto'));
-  if(snap.exists()){const d=snap.data();const list=document.getElementById('ct-list');
-    if(list&&Array.isArray(d.miembros)&&d.miembros.length){
-      list.innerHTML=d.miembros.map(mb=>{
-        const tg=mb.telegram?`<a class="ct-btn tg" href="${esc(mb.telegram)}" target="_blank" rel="noopener">${TG}<span>Telegram</span></a>`:'';
-        const wa=mb.whatsapp?`<a class="ct-btn wa" href="${esc(mb.whatsapp)}" target="_blank" rel="noopener">${WA}<span>WhatsApp</span></a>`:'';
-        return `<div class="ct-card"><div class="ct-name">${esc(mb.nombre)}</div>${mb.cargo?`<div class="ct-role">${esc(mb.cargo)}</div>`:''}${tg}${wa}</div>`;
-      }).join('');
-    }}
-}catch(e){}
+  if(snap.exists()){const d=snap.data(); if(Array.isArray(d.miembros)&&d.miembros.length) pintar(d.miembros);}
+}catch(e){} })();
+setInterval(()=>pintar(_ultimos), 60000);   // re-evalúa el horario cada minuto
 </script>
 </body>
 </html>
