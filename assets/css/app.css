@@ -977,3 +977,7 @@
 .sd-sport { text-shadow: 0 1px 3px rgba(0,0,0,.6); }
 .sd-stats b { text-shadow: 0 1px 3px rgba(0,0,0,.6); }
 @media (max-width: 600px) { .sd-follow { height: 27px; font-size: 10px; padding: 0 11px; } }
+
+/* Botón de idioma: bandera SVG centrada, sin desbordar */
+#idioma-btn-l, #idioma-btn-p { display: inline-flex; align-items: center; justify-content: center; padding: 6px 9px; overflow: hidden; }
+#idioma-btn-l svg, #idioma-btn-p svg { display: block; }
