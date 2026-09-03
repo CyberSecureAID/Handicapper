@@ -159,6 +159,19 @@ function inyectarCSS() {
   /* Tabs del feed (Todas / Siguiendo) */
   /* Descubre analistas */
   .sn-disc{margin:0 0 18px}
+  .sn-disc-tools{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+  .sn-disc-search{display:flex;align-items:center;gap:8px;max-width:340px;height:38px;padding:0 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)}
+  .sn-disc-search svg{width:15px;height:15px;color:#6b7683;flex:none}
+  .sn-disc-search input{flex:1;background:none;border:0;outline:none;color:var(--tx);font-size:13.5px;font-family:inherit}
+  .sn-disc-chips{display:flex;flex-wrap:wrap;gap:7px}
+  .sn-disc-chip{height:30px;padding:0 12px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:var(--tx2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+  .sn-disc-chip.on{background:linear-gradient(180deg,#2a6be0,#143c94);border-color:rgba(120,170,255,.5);color:#fff}
+  .sn-disc-empty{padding:22px;text-align:center;color:var(--tx2);font-size:13px}
+  @media(max-width:640px){
+    .sn-disc-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;overflow:visible}
+    .sn-disc-card{width:auto;min-height:0}
+    .sn-disc-card:nth-child(n+3){display:none}
+  }
   .sn-disc-head{display:flex;align-items:center;gap:8px;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:13px;letter-spacing:.02em;color:#eef3f9;margin-bottom:10px}
   .sn-disc-head svg{width:16px;height:16px;color:var(--g)}
   .sn-disc-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
@@ -273,7 +286,7 @@ function bloqueDescubrir(analistas, ctx) {
     const ava = an.foto
       ? `<img src="assets/imagenes/analistas/${String(an.foto).toLowerCase()}.webp" alt="" loading="lazy">`
       : (est.emblemaSVG || ini);
-    return `<div class="sn-disc-card${an.foto ? ' con-foto' : ''}" style="${est.varCss}">
+    return `<div class="sn-disc-card${an.foto ? ' con-foto' : ''}" data-cat="${_catDisc(an.deporte)}" data-nom="${esc(String(an.firma||an.nombre||'').toLowerCase())}" style="${est.varCss}">
       <div class="sn-disc-ava">${ava}</div>
       <div class="sn-disc-firma">${esc(an.firma || '')}</div>
       <div class="sn-disc-sport">${esc(depenNombre(an.deporte))}</div>
@@ -281,10 +294,31 @@ function bloqueDescubrir(analistas, ctx) {
       ${puede ? `<button class="sn-disc-follow ${sigo ? 'on' : ''}" data-follow="${esc(an.uid)}" data-firma="${esc(an.firma || '')}">${sigo ? L('Following', 'Siguiendo') : L('Follow', 'Seguir')}</button>` : ''}
     </div>`;
   }).join('');
+  const ILupa = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`;
+  const chip = (c, l) => `<button class="sn-disc-chip" data-disccat="${c}">${l}</button>`;
   return `<div class="sn-disc">
     <div class="sn-disc-head">${IComp}<span>${L('Discover analysts', 'Descubre analistas')}</span></div>
-    <div class="sn-disc-row">${cards}</div>
+    <div class="sn-disc-tools">
+      <div class="sn-disc-search">${ILupa}<input id="sn-disc-q" type="text" placeholder="${L('Search analysts…', 'Buscar analistas…')}"></div>
+      <div class="sn-disc-chips">
+        <button class="sn-disc-chip on" data-disccat="">${L('All', 'Todos')}</button>
+        ${chip('futbol', L('Soccer', 'Fútbol'))}${chip('basket', L('Basketball', 'Básquet'))}${chip('hockey', L('Ice hockey', 'Hockey'))}${chip('beisbol', L('Baseball', 'Béisbol'))}${chip('americano', L('Am. football', 'F. am.'))}
+      </div>
+    </div>
+    <div class="sn-disc-row" id="sn-disc-row">${cards}</div>
+    <div class="sn-disc-empty" id="sn-disc-empty" hidden>${L('No analysts found.', 'No se encontraron analistas.')}</div>
   </div>`;
+}
+
+/* Normaliza el deporte a una de las 5 categorías para el filtro. */
+function _catDisc(dep) {
+  const d = String(dep || '').toLowerCase();
+  if (['futbol','soccer','epl','laliga','ucl','seriea','bundes'].includes(d)) return 'futbol';
+  if (['basket','nba','basketball'].includes(d)) return 'basket';
+  if (['hockey','nhl'].includes(d)) return 'hockey';
+  if (['beisbol','mlb','baseball'].includes(d)) return 'beisbol';
+  if (['americano','nfl','football'].includes(d)) return 'americano';
+  return d;
 }
 
 /* Nombre de deporte legible (mapa mínimo; cae al id si no está). */
@@ -489,6 +523,24 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
     cont.querySelectorAll(`[data-discfol="${CSS.escape(uid)}"]`).forEach(el => { el.textContent = `${n.toLocaleString()} ${L('followers', 'seguidores')}`; });
   };
   uids.forEach(uid => pintarSeguidores(uid));
+
+  // Filtro de Discover: búsqueda + categoría (muestra/oculta, no re-renderiza)
+  const _discRow = cont.querySelector('#sn-disc-row');
+  if (_discRow) {
+    let _dcat = '', _dq = '';
+    const _filtrarDisc = () => {
+      const activo = !!(_dcat || _dq);
+      let vis = 0;
+      _discRow.querySelectorAll('.sn-disc-card').forEach(c => {
+        if (!activo) { c.style.display = ''; return; }   // sin filtro: el CSS decide (2 en móvil)
+        const ok = (!_dcat || c.dataset.cat === _dcat) && (!_dq || (c.dataset.nom || '').includes(_dq));
+        c.style.display = ok ? 'flex' : 'none'; if (ok) vis++;
+      });
+      const em = cont.querySelector('#sn-disc-empty'); if (em) em.hidden = !(activo && vis === 0);
+    };
+    const _dqi = cont.querySelector('#sn-disc-q'); if (_dqi) _dqi.oninput = () => { _dq = _dqi.value.trim().toLowerCase(); _filtrarDisc(); };
+    cont.querySelectorAll('[data-disccat]').forEach(b => b.onclick = () => { _dcat = b.dataset.disccat; cont.querySelectorAll('[data-disccat]').forEach(x => x.classList.toggle('on', x === b)); _filtrarDisc(); });
+  }
 
   // Seguir / Siguiendo: sincroniza TODOS los botones del mismo analista (tarjeta + descubrir)
   const syncFollow = (uid, seguir) => cont.querySelectorAll(`[data-follow="${CSS.escape(uid)}"]`).forEach(b => {
