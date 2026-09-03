@@ -518,9 +518,9 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
     ? `<div class="sn-grid">${visibles.map((a, i) => tarjeta(a, ctx, i)).join('')}</div>`
     : `<div class="sn-empty">${IC.flag}<b>${L('Nothing here yet', 'Nada aquí todavía')}</b><span>${L('No signals right now. New calls appear only when there is a clear opportunity.', 'No hay señales ahora. Los nuevos pronósticos aparecen solo cuando hay una oportunidad clara.')}</span></div>`;
 
-  const cuerpo = lista.length
-    ? `${topbar}${discover}${banner}${tabs}${filtroSenales}${grid}`
-    : `${topbar}<div class="sn-empty">${IC.flag}<b>${L('No signals right now', 'No hay señales ahora')}</b><span>${L('The analyst hasn\u2019t published today. New calls appear here only when there is a clear opportunity. Check back later.', 'El analista no ha publicado hoy. Los nuevos pronósticos aparecen aquí solo cuando hay una oportunidad clara. Vuelve más tarde.')}</span></div>`;
+  const cuerpo = `${topbar}${discover}` + (lista.length
+    ? `${banner}${tabs}${filtroSenales}${grid}`
+    : `<div class="sn-empty">${IC.flag}<b>${L('No signals right now', 'No hay señales ahora')}</b><span>${L('The analyst hasn\u2019t published today. New calls appear here only when there is a clear opportunity. Check back later.', 'El analista no ha publicado hoy. Los nuevos pronósticos aparecen aquí solo cuando hay una oportunidad clara. Vuelve más tarde.')}</span></div>`);
   cont.innerHTML = `<div class="sn">${cuerpo}</div>`;
 
   // Filtro de SEÑALES (búsqueda + categoría + orden por probabilidad)
