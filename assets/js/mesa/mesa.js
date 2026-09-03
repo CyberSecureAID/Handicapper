@@ -801,8 +801,6 @@ function vistaAnalistas() {
   return `
     <div class="mesa-head an-head">
       <div><h1>${ML('Staff', 'Personal')}</h1><p>${ML('Hire analysts and assign each one a sport. They only access the Analysis Hub for their sport.', 'Contrata analistas y asigna a cada uno un deporte. Solo acceden al Analysis Hub de su deporte.')}</p></div>
-      <button class="mesa-btn ghost" id="an-go-users">${IC.users} ${ML('Go to Users', 'Ir a Usuarios')}</button>
-      <button class="mesa-btn" id="an-bots-pub">🤖 ${ML('Publish today\\u2019s bot signals', 'Publicar señales de bots (hoy)')}</button>
     </div>
     <div class="mesa-card an-mng">
       <div class="mc-t">${IC.contrato} ${ML('Add analyst', 'Agregar analista')}</div>
