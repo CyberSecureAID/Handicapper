@@ -81,6 +81,11 @@ export function aplicarI18n() {
     const v = t(k);
     if (v && v !== k) el.textContent = v;
   });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const k = el.getAttribute('data-i18n-ph');
+    const v = t(k);
+    if (v && v !== k) el.setAttribute('placeholder', v);
+  });
 }
 
 /* ---- Render de planes (landing teaser + pricing completo) ---- */
