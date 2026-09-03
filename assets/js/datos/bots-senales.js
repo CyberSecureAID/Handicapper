@@ -56,7 +56,7 @@ function explicacion(fav, dog, prob) {
   return partes.join(', ') + '. ' + cierre;
 }
 
-async function generar({ guardar, uid, firma, autor, color, deporte, ligas, max = 2 }) {
+async function generar({ guardar, uid, firma, autor, color, deporte, ligas, foto = null, max = 2 }) {
   let partidos = [];
   for (const lg of ligas) {
     try { const ps = await listarPartidos(lg); if (Array.isArray(ps)) partidos.push(...ps); } catch (_) {}
@@ -78,7 +78,7 @@ async function generar({ guardar, uid, firma, autor, color, deporte, ligas, max 
     const { m, fav, dog, prob } = c;
     const señal = {
       matchId: `${uid.replace('bot-', 'bot')}:${m.id}`,
-      autorUid: uid, firma, autor, deporte,
+      autorUid: uid, firma, autor, deporte, foto,
       equipos: `${m.local.nombre} vs ${m.visita.nombre}`,
       local: m.local.nombre, visita: m.visita.nombre,
       logoLocal: m.local.logo || null, logoVisita: m.visita.logo || null,
@@ -98,10 +98,10 @@ async function generar({ guardar, uid, firma, autor, color, deporte, ligas, max 
 /* Publica los 5 bots (uno por categoría). Lo dispara la automatización diaria. */
 export async function publicarTodosLosBots(guardar) {
   let total = 0;
-  total += await generar({ guardar, uid: 'bot-alejandro', firma: 'Alejandro R.', autor: 'Alejandro Ruiz', color: '#4a90ff', deporte: 'futbol', ligas: ['epl', 'laliga', 'seriea', 'bundes', 'ucl'], max: 2 }).catch(() => 0);
-  total += await generar({ guardar, uid: 'bot-miguel', firma: 'Miguel S.', autor: 'Miguel Santos', color: '#e23b3f', deporte: 'beisbol', ligas: ['mlb'], max: 2 }).catch(() => 0);
-  total += await generar({ guardar, uid: 'bot-daniel', firma: 'Daniel V.', autor: 'Daniel Vega', color: '#8a5cf6', deporte: 'basket', ligas: ['nba'], max: 2 }).catch(() => 0);
-  total += await generar({ guardar, uid: 'bot-ivan', firma: 'Iván T.', autor: 'Iván Torres', color: '#22b8c0', deporte: 'hockey', ligas: ['nhl'], max: 2 }).catch(() => 0);
-  total += await generar({ guardar, uid: 'bot-ricardo', firma: 'Ricardo M.', autor: 'Ricardo Méndez', color: '#e08a2a', deporte: 'americano', ligas: ['nfl'], max: 2 }).catch(() => 0);
+  total += await generar({ guardar, uid: 'bot-alejandro', firma: 'Alejandro R.', autor: 'Alejandro Ruiz', color: '#4a90ff', deporte: 'futbol', ligas: ['epl', 'laliga', 'seriea', 'bundes', 'ucl'], foto: 's', max: 2 }).catch(() => 0);
+  total += await generar({ guardar, uid: 'bot-miguel', firma: 'Miguel S.', autor: 'Miguel Santos', color: '#e23b3f', deporte: 'beisbol', ligas: ['mlb'], foto: 't', max: 2 }).catch(() => 0);
+  total += await generar({ guardar, uid: 'bot-daniel', firma: 'Daniel V.', autor: 'Daniel Vega', color: '#8a5cf6', deporte: 'basket', ligas: ['nba'], foto: 'r', max: 2 }).catch(() => 0);
+  total += await generar({ guardar, uid: 'bot-ivan', firma: 'Iván T.', autor: 'Iván Torres', color: '#22b8c0', deporte: 'hockey', ligas: ['nhl'], foto: 'q', max: 2 }).catch(() => 0);
+  total += await generar({ guardar, uid: 'bot-ricardo', firma: 'Ricardo M.', autor: 'Ricardo Méndez', color: '#e08a2a', deporte: 'americano', ligas: ['nfl'], foto: 'p', max: 2 }).catch(() => 0);
   return { ok: true, publicadas: total };
 }
