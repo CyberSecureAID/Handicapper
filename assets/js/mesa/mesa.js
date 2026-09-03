@@ -96,17 +96,17 @@ function render() {
     <div class="mesa">
       <aside class="mesa-side" id="mesa-side">
         <div class="mesa-side-top">
-          <div class="mesa-marca">HANDICAPPER${_rol === 'analista' ? `<span>${ML('Analyst','Analista')}</span>` : ''}</div>
+          <div class="mesa-marca">SPORTS EXPECTATIONS${_rol === 'analista' ? `<span>${ML('Analyst','Analista')}</span>` : ''}</div>
           <button class="mesa-burger" id="mesa-burger" aria-label="Menu">${IC.menu}</button>
         </div>
         <nav class="mesa-nav" id="mesa-nav">
           ${navBtns}
           <button class="mesa-ver" id="mesa-ver-sitio">${IC.eye} ${ML('View site','Ver sitio')}</button>
           <button class="mesa-lang" id="mesa-lang">${IC.globe} ${_mesaLang === 'es' ? 'English' : 'Español'}</button>
-          <div class="mesa-yo">
-            <div class="mesa-yo-av">${(u?.nombre || u?.email || '?').charAt(0).toUpperCase()}</div>
-            <div class="mesa-yo-txt"><b>${esc(u?.nombre || '')}</b><span>${esc(correoCorto(u?.email || ''))}</span></div>
-          </div>
+          <button class="mesa-yo" id="mesa-yo-foto" title="${ML('Set your profile photo', 'Poner tu foto de perfil')}">
+            <div class="mesa-yo-av">${_miFoto ? `<img src="${rutaFotoAnalista(_miFoto)}" alt="">` : (u?.nombre || u?.email || '?').charAt(0).toUpperCase()}<span class="mesa-yo-cam">${IC.pen || '✎'}</span></div>
+            <div class="mesa-yo-txt"><b>${esc(u?.nombre || '')}</b><span>${_miFoto ? ML('Change photo', 'Cambiar foto') : ML('Set photo', 'Poner foto')}</span></div>
+          </button>
           <button class="mesa-salir" id="mesa-salir">${IC.exit} ${ML('Log out','Cerrar sesión')}</button>
         </nav>
       </aside>
@@ -122,6 +122,25 @@ function render() {
   _cont.querySelector('#mesa-burger').onclick = () => _cont.querySelector('#mesa-nav').classList.toggle('abierto');
   _cont.querySelector('#mesa-salir').onclick = async () => { await salir(); location.hash = ''; location.reload(); };
   _cont.querySelector('#mesa-ver-sitio').onclick = () => verSitio();
+  _cont.querySelector('#mesa-yo-foto') && (_cont.querySelector('#mesa-yo-foto').onclick = () => {
+    abrirSelectorFotos({
+      actual: _miFoto,
+      titulo: ML('Your profile photo', 'Tu foto de perfil'), sub: ML('This is your photo across the platform. You keep it even if you are not an analyst.', 'Es tu foto en toda la plataforma. La conservas aunque no seas analista.'),
+      txtOk: ML('Set photo', 'Poner foto'), txtCancel: ML('Cancel', 'Cancelar'), secHombres: ML('Men', 'Hombres'), secMujeres: ML('Women', 'Mujeres'),
+      onGuardar: async (foto) => {
+        const ok = await guardarPerfilAnalista({ foto });
+        if (ok) {
+          _miFoto = foto;
+          const av = _cont.querySelector('#mesa-yo-foto .mesa-yo-av');
+          if (av) av.innerHTML = `<img src="${rutaFotoAnalista(foto)}" alt=""><span class="mesa-yo-cam">${IC.pen || '✎'}</span>`;
+          // refrescar el avatar de la esquina superior derecha del sitio
+          const cb = document.getElementById('cuenta-btn');
+          if (cb) { cb.classList.add('logueado'); cb.innerHTML = `<img class="av-img" src="${rutaFotoAnalista(foto)}" alt="">`; }
+        }
+        return ok;
+      },
+    });
+  });
   _cont.querySelector('#mesa-lang').onclick = () => { _mesaLang = _mesaLang === 'es' ? 'en' : 'es'; render(); pintarTab(); };
 
   // Delegación de clicks sobre _cont (que persiste): liga, partido, borrar, bloquear.
