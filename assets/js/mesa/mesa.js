@@ -1062,6 +1062,10 @@ function vistaAnalisis() {
     <div class="ah2">
       <div class="ah2-top">
         <div class="ah2-titles"><h1>Analysis Hub</h1></div>
+        <div class="ah2-bots-box">
+          <button class="mesa-btn oro" id="ah2-bots">${L('Publish bot signals now', 'Publicar señales de bots ahora')}</button>
+          <span id="ah2-bots-st" class="ah2-bots-st"></span>
+        </div>
       </div>
       <div class="ah2-metrics">
         <div class="ah2-metric"><b>${LIGAS.length}</b><span>${L('Leagues', 'Ligas')}</span></div>
@@ -1096,6 +1100,20 @@ function tarjetaPartidoAdmin(p) {
 
 function enlazarAnalisis() {
   const cont = _cont; if (!cont) return;
+  cont.querySelector('#ah2-bots') && (cont.querySelector('#ah2-bots').onclick = async () => {
+    const btn = cont.querySelector('#ah2-bots'), st = cont.querySelector('#ah2-bots-st');
+    btn.disabled = true; st.textContent = ML('Checking matches…', 'Buscando partidos…'); st.className = 'ah2-bots-st';
+    try {
+      const { publicarTodosLosBots } = await import('../datos/bots-senales.js');
+      const dm = await import('./mesa-datos.js');
+      const r = await publicarTodosLosBots(dm.guardarAnalisis);
+      _analisis = await dm.listarAnalisis();
+      try { localStorage.setItem('bots-ts', String(Date.now())); } catch (_) {}
+      st.innerHTML = `<b>${r.publicadas}</b> ${ML('published', 'publicadas')} · ${r.fetched} ${ML('matches', 'partidos')} · ${r.enVentana} ${ML('within 48h', 'en 48h')} · ${r.califican} ${ML('qualify', 'califican')}`;
+      st.className = r.publicadas > 0 ? 'ah2-bots-st ok' : 'ah2-bots-st warn';
+    } catch (e) { st.textContent = ML('Error', 'Error') + ': ' + ((e && e.message) || e); st.className = 'ah2-bots-st err'; }
+    btn.disabled = false;
+  });
   cont.querySelectorAll('.ah2-ft').forEach(tab => tab.addEventListener('click', () => {
     const d = tab.dataset.day;
     cont.querySelectorAll('.ah2-ft').forEach(x => x.classList.toggle('on', x === tab));
