@@ -1059,3 +1059,8 @@
 .sd-tools { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center; gap: 10px; }
 .sd-tools .sd-search { flex: 1 1 auto !important; width: auto !important; min-width: 0; margin: 0 !important; }
 .sd-tools .sd-filter { flex: 0 0 auto; }
+
+/* FIX ventana Signals: desplegable respeta hidden + búsqueda llena el ancho + subtítulo visible */
+.sd-filter-pop[hidden] { display: none !important; }
+.sd-tools .sd-search { max-width: none !important; flex: 1 1 auto !important; width: auto !important; }
+.sd-head.sd-head-sm p { color: #6aa6ff; font-weight: 600; text-shadow: 0 1px 6px rgba(42,107,224,.4); }

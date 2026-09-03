@@ -960,3 +960,11 @@ body.en-mesa { overflow: hidden; }
 @media(max-width:640px){.ct-m-grid{grid-template-columns:1fr}}
 .ct-card .u-input, #ct-support { background: rgba(255,255,255,.04); border: 1px solid var(--m-linea); color: #e9eef5; padding: 10px 13px; border-radius: 9px; font-size: 13.5px; font-family: inherit; outline: none; }
 .ct-card .u-input:focus, #ct-support:focus { border-color: rgba(232,184,75,.5); }
+
+/* Botón + diagnóstico de bots en el Analysis Hub */
+.ah2-bots-box { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+.ah2-bots-st { font-size: 13px; color: var(--m-tx2, #aab4c0); }
+.ah2-bots-st b { color: #fff; }
+.ah2-bots-st.ok { color: #3ecf8e; }
+.ah2-bots-st.warn { color: #e8c46a; }
+.ah2-bots-st.err { color: #ff6b72; }
