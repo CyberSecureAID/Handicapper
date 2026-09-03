@@ -1339,14 +1339,19 @@ async function abrirModalSenal(matchId) {
   // ---- Modal de vista previa + estilo ----
   const abrirEstiloPreview = (modoPublicar) => {
     const ES2 = _mesaLang === 'es', L2 = (en, es) => ES2 ? es : en;
+    prepararEstilosSenal();   // inyecta el CSS de señales para que el preview salga bien
     _estiloDraft = { ...estiloSeguro(_miEstilo) };
     const datos = () => ({
-      equipos: `${p.local.abrev} vs ${p.visita.abrev}`,
-      favorito: fav === 'visita' ? p.visita.abrev : p.local.abrev,
+      equipos: `${p.local.nombre} vs ${p.visita.nombre}`,
+      local: p.local.nombre, visita: p.visita.nombre,
+      logoLocal: p.local.logo || null, logoVisita: p.visita.logo || null,
+      favLocal: fav === 'local',
+      favorito: fav === 'visita' ? p.visita.nombre : p.local.nombre,
       prob: Number(slL.value),
       confianza: conf,
       mercado: mktInput.value,
-      texto: ta.value.trim() || L2('Your analysis will appear here.', 'Tu análisis aparecerá aquí.'),
+      foto: _miFoto,
+      analisis: ta.value.trim() || L2('Your analysis will appear here.', 'Tu análisis aparecerá aquí.'),
     });
     document.getElementById('estp-modal')?.remove();
     const pv = document.createElement('div'); pv.className = 'estp-bg'; pv.id = 'estp-modal';
@@ -1362,7 +1367,8 @@ async function abrirModalSenal(matchId) {
         <div class="estp-controls">
           <div class="est-field"><label>${L2('Accent color', 'Color de acento')}</label><div class="est-sws">${sw}</div></div>
           <div class="est-field"><label>${L2('Intensity', 'Intensidad')}</label><div class="est-seg">${it}</div></div>
-          <div class="est-field"><label>${L2('Emblem', 'Emblema')}</label><div class="est-embs">${em}</div></div>
+          <div class="est-field"><label>${L2('Profile photo', 'Foto de perfil')}</label>
+            <button type="button" class="est-foto-btn" id="estp-foto">${_miFoto ? `<img src="${rutaFotoAnalista(_miFoto)}" alt="">` : `<span class="est-foto-mas">+</span>`}<span>${_miFoto ? L2('Change photo', 'Cambiar foto') : L2('Choose photo', 'Elegir foto')}</span></button></div>
         </div>
       </div>
       <div class="estp-btns"><button class="estp-cancel">${L2('Cancel', 'Cancelar')}</button><button class="estp-primary">${modoPublicar ? L2('Publish signal', 'Publicar señal') : L2('Save style', 'Guardar estilo')}</button></div>
@@ -1374,6 +1380,19 @@ async function abrirModalSenal(matchId) {
     pv.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { _estiloDraft.color = b.dataset.color; _estiloDraft = estiloSeguro(_estiloDraft); setSel('[data-color]', _estiloDraft.color, 'color'); render(); });
     pv.querySelectorAll('[data-inten]').forEach(b => b.onclick = () => { _estiloDraft.intensidad = b.dataset.inten; _estiloDraft = estiloSeguro(_estiloDraft); setSel('[data-inten]', _estiloDraft.intensidad, 'inten'); render(); });
     pv.querySelectorAll('[data-emb]').forEach(b => b.onclick = () => { _estiloDraft.emblema = b.dataset.emb; _estiloDraft = estiloSeguro(_estiloDraft); setSel('[data-emb]', _estiloDraft.emblema, 'emb'); render(); });
+    pv.querySelector('#estp-foto') && (pv.querySelector('#estp-foto').onclick = () => {
+      if (!_miUid) return;
+      abrirSelectorFotos({
+        actual: _miFoto, uidAnalista: _miUid,
+        titulo: ML('Your profile photo', 'Tu foto de perfil'), sub: ML('This becomes your permanent photo on every signal.', 'Será tu foto permanente en cada señal.'),
+        txtOk: ML('Set photo', 'Poner foto'), txtCancel: ML('Cancel', 'Cancelar'), secHombres: ML('Men', 'Hombres'), secMujeres: ML('Women', 'Mujeres'),
+        onGuardar: async (foto) => {
+          const ok = await asignarFotoAnalista(_miUid, foto, _miFirma);
+          if (ok) { _miFoto = foto; const fb = pv.querySelector('#estp-foto'); if (fb) fb.innerHTML = `<img src="${rutaFotoAnalista(foto)}" alt=""><span>${ML('Change photo', 'Cambiar foto')}</span>`; render(); }
+          return ok;
+        },
+      });
+    });
     pv.querySelector('.estp-x').onclick = cerrar; pv.querySelector('.estp-cancel').onclick = cerrar;
     pv.onclick = (e) => { if (e.target === pv) cerrar(); };
     pv.querySelector('.estp-primary').onclick = async () => {
