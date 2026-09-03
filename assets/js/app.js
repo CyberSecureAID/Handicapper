@@ -570,7 +570,7 @@ async function abrirDirectorioSenales() {
     datos = await import('./mesa/mesa-datos.js');
     bots = await import('./datos/bots.js');
     const [an, sg] = await Promise.all([datos.listarAnalistas().catch(() => []), datos.misSeguidos().catch(() => [])]);
-    analistas = an.filter(a => a.activo !== false); sigo = new Set(sg);
+    analistas = an.filter(a => a.activo !== false && a.deporte); sigo = new Set(sg);
   } catch (_) { ov.querySelector('#sd-list').innerHTML = `<div class="sd-loading">${Lp('Could not load.', 'No se pudo cargar.')}</div>`; return; }
 
   const rows = await Promise.all(analistas.map(async a => {
