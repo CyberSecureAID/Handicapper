@@ -533,7 +533,7 @@ async function publicarBotsSiEsNuevoDia() {
       import('./mesa/mesa-datos.js'),
     ]);
     const r = await botMod.publicarTodosLosBots(datosMod.guardarAnalisis);
-    if (r && r.ok) { try { localStorage.setItem('bots-dia', hoy); } catch (_) {} }
+    if (r && r.ok && r.publicadas > 0) { try { localStorage.setItem('bots-dia', hoy); } catch (_) {} }
   } catch (_) {}
 }
 
@@ -546,16 +546,19 @@ async function abrirDirectorioSenales() {
   ov.className = 'sd-ov';
   ov.innerHTML = `<div class="sd-modal">
     <button class="sd-x" id="sd-x" aria-label="Close">✕</button>
-    <div class="sd-head"><h2>${Lp('Analyst signals', 'Señales de analistas')}</h2><p>${Lp('Follow an analyst to get their picks in your inbox.', 'Sigue a un analista para recibir sus picks en tu buzón.')}</p></div>
+    <div class="sd-head sd-head-sm"><p>${Lp('Follow an analyst to get their picks in your inbox.', 'Sigue a un analista para recibir sus picks en tu buzón.')}</p></div>
     <div class="sd-tools">
       <div class="sd-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="sd-q" type="text" placeholder="${Lp('Search analysts…', 'Buscar analistas…')}"></div>
-      <div class="sd-chips" id="sd-chips">
-        <button class="sd-chip on" data-cat="">${Lp('All','Todos')}</button>
-        <button class="sd-chip" data-cat="futbol">${Lp('Soccer','Fútbol')}</button>
-        <button class="sd-chip" data-cat="basket">${Lp('Basketball','Básquet')}</button>
-        <button class="sd-chip" data-cat="hockey">${Lp('Ice hockey','Hockey')}</button>
-        <button class="sd-chip" data-cat="beisbol">${Lp('Baseball','Béisbol')}</button>
-        <button class="sd-chip" data-cat="americano">${Lp('Am. football','F. americano')}</button>
+      <div class="sd-filter">
+        <button class="sd-filter-btn" id="sd-filter-btn" aria-label="${Lp('Filter','Filtrar')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M7 12h10M10 19h4"/></svg></button>
+        <div class="sd-filter-pop" id="sd-chips" hidden>
+          <button class="sd-fitem on" data-cat="">${Lp('All sports','Todos los deportes')}</button>
+          <button class="sd-fitem" data-cat="futbol">${Lp('Soccer','Fútbol')}</button>
+          <button class="sd-fitem" data-cat="basket">${Lp('Basketball','Básquet')}</button>
+          <button class="sd-fitem" data-cat="hockey">${Lp('Ice hockey','Hockey')}</button>
+          <button class="sd-fitem" data-cat="beisbol">${Lp('Baseball','Béisbol')}</button>
+          <button class="sd-fitem" data-cat="americano">${Lp('Am. football','F. americano')}</button>
+        </div>
       </div>
     </div>
     <div id="sd-list"><div class="sd-loading"><div class="sn-spin"></div></div></div>
@@ -623,7 +626,10 @@ async function abrirDirectorioSenales() {
   };
   render();
   const inp = ov.querySelector('#sd-q'); if (inp) inp.oninput = () => { q = inp.value.trim().toLowerCase(); render(); };
-  ov.querySelectorAll('.sd-chip').forEach(c => c.onclick = () => { cat = c.dataset.cat; ov.querySelectorAll('.sd-chip').forEach(x => x.classList.toggle('on', x === c)); render(); });
+  const _pop = ov.querySelector('#sd-chips'), _fbtn = ov.querySelector('#sd-filter-btn');
+  _fbtn && (_fbtn.onclick = (e) => { e.stopPropagation(); _pop.hidden = !_pop.hidden; _fbtn.classList.toggle('on', !_pop.hidden); });
+  ov.addEventListener('click', (e) => { if (_pop && !_pop.hidden && !e.target.closest('.sd-filter')) { _pop.hidden = true; _fbtn.classList.remove('on'); } });
+  ov.querySelectorAll('.sd-fitem').forEach(c => c.onclick = () => { cat = c.dataset.cat; ov.querySelectorAll('.sd-fitem').forEach(x => x.classList.toggle('on', x === c)); if (_fbtn) { _fbtn.classList.toggle('activo', !!cat); _fbtn.classList.remove('on'); } if (_pop) _pop.hidden = true; render(); });
 }
 
 /* Ventana de cobro (para vincular con Stripe). Requiere aceptar los términos. */
