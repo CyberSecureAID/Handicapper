@@ -14,9 +14,7 @@ export const PLANES = [
     resumen: { en: 'General access to the platform.', es: 'Acceso general a la plataforma.' },
     incluye: [
       { en: 'All leagues & categories', es: 'Todas las ligas y categorías' },
-      { en: 'Team & player comparison', es: 'Comparación de equipos y jugadores' },
-      { en: 'Advanced stat comparison table', es: 'Tabla de comparación de estadísticas avanzadas' },
-      { en: 'Access to the available stat windows', es: 'Acceso a las ventanas de estadísticas disponibles' },
+      { en: 'Team & player comparison with advanced stat windows', es: 'Comparación de equipos y jugadores con ventanas de estadísticas avanzadas' },
       { en: 'Option to hire specialized analyst signal services', es: 'Posibilidad de contratar servicios de señales de analistas especializados' },
     ],
   },
