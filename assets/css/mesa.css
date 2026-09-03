@@ -946,3 +946,17 @@ body.en-mesa { overflow: hidden; }
 .mesa-yo:hover .mesa-yo-av { box-shadow: 0 0 0 2px rgba(232,184,75,.5); }
 .mesa-yo-cam { position: absolute; right: -3px; bottom: -3px; width: 16px; height: 16px; background: var(--g, #e8b84b); color: #1a1200; border-radius: 50%; display: grid; place-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
 .mesa-yo-cam svg { width: 9px; height: 9px; }
+
+/* Sección Contacto del panel admin */
+.ct-card{background:var(--m-tarjeta);border:1px solid var(--m-linea);border-radius:14px;padding:20px;margin-bottom:16px}
+.ct-label{display:block;font-family:"Poppins",sans-serif;font-size:13px;color:#fff;margin-bottom:10px;font-weight:600}
+.ct-m{border:1px solid var(--m-linea);border-radius:12px;padding:14px;margin-bottom:12px;background:rgba(255,255,255,.02)}
+.ct-m-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.ct-m .u-input{width:100%}
+.ct-del{color:#ff9ba1 !important;border-color:rgba(240,82,90,.4) !important}
+.ct-save-row{display:flex;align-items:center;gap:14px;margin-top:6px}
+.ct-status{font-size:13.5px;font-weight:600;color:var(--m-tx2)}
+.ct-status.ok{color:#3ecf8e}.ct-status.err{color:#ff6b72}
+@media(max-width:640px){.ct-m-grid{grid-template-columns:1fr}}
+.ct-card .u-input, #ct-support { background: rgba(255,255,255,.04); border: 1px solid var(--m-linea); color: #e9eef5; padding: 10px 13px; border-radius: 9px; font-size: 13.5px; font-family: inherit; outline: none; }
+.ct-card .u-input:focus, #ct-support:focus { border-color: rgba(232,184,75,.5); }
