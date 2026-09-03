@@ -203,7 +203,7 @@ function nombreCortoEquipo(nombre) {
 }
 
 const CONTACTO_DEFAULT = {
-  supportLink: 'https://t.me/TradeRecord',
+  supportLink: 'https://t.me/TraderRecord',
   miembros: [
     { nombre: 'Jesús Pérez', cargo: 'Founder · Developer', telegram: 'https://t.me/JesusDevTrader', whatsapp: 'https://wa.me/5358648458' },
     { nombre: 'Oscar Luis', cargo: 'CEO · Data Analyst', telegram: '', whatsapp: 'https://wa.me/16892786155' },
