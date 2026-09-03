@@ -5,7 +5,8 @@
 import { t, Lg, idiomaActual, fijarIdioma } from './idioma.js';
 import { PLANES } from '../datos/planes.js';
 import { marcarVistaPrevia } from '../auth/estado-pago.js';
-import { iniciarParticulas, arrancar as arrancarParticulas, parar as pararParticulas } from './particulas.js';
+import { iniciarParticulas, arrancar as arrancarParticulas, parar as pararParticulas, refrescarTema } from './particulas.js';
+import { montarBotonPrueba } from './festividades.js';
 
 let _cb = {};          // callbacks del app: { abrirAuth, salir, alEntrarApp }
 let _ciclo = 'mensual';
@@ -35,6 +36,7 @@ export function initNavegacion(callbacks) {
   arrancarVideoHero();
   activarTiltTarjetas();
   iniciarParticulas('particulas');
+  montarBotonPrueba(refrescarTema);   // botón TEMPORAL de prueba de festividades
   document.addEventListener('idioma-cambio', () => { aplicarI18n(); pintarPlanes(); actualizarBotonIdiomaLanding(); });
 }
 
