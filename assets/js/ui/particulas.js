@@ -3,16 +3,8 @@
    Colores de la marca (fuego rojo + azul eléctrico), con vida propia
    y REACCIÓN AL SCROLL: al desplazarse, las chispas se estiran/mueven.
    ============================================================ */
-import { temaActual } from './festividades.js';
 let _raf = null, _cv = null, _ctx = null, _dpr = 1, _ps = [], _activo = false, _t = 0;
-let _scrollBoost = 0, _lastScroll = 0, _tema = null;
-
-/* Re-generar partículas con el tema festivo actual (o normales). Lo llama el botón de prueba. */
-export function refrescarTema() {
-  if (!_cv) return;
-  const w = _cv.width / _dpr, h = _cv.height / _dpr;
-  generar(w, h);
-}
+let _scrollBoost = 0, _lastScroll = 0;
 
 export function iniciarParticulas(id) {
   _cv = document.getElementById(id);
@@ -73,38 +65,22 @@ function redim() {
 }
 
 function generar(w, h) {
-  _tema = temaActual();
-  const base = Math.min(230, Math.round((w * h) / 15000));
-  const n = _tema ? Math.max(14, Math.round(base * (_tema.n || 0.6))) : base;
+  const n = Math.min(230, Math.round((w * h) / 15000));
   _ps = [];
   for (let i = 0; i < n; i++) {
-    if (_tema) {
-      const vmin = _tema.vy[0], vmax = _tema.vy[1], tmin = _tema.tam[0], tmax = _tema.tam[1];
-      _ps.push({
-        x: Math.random() * w, y: Math.random() * h,
-        glyph: _tema.glyphs[(Math.random() * _tema.glyphs.length) | 0],
-        tam: tmin + Math.random() * (tmax - tmin),
-        vx: (Math.random() - 0.5) * 0.35,
-        vy: vmin + Math.random() * (vmax - vmin),
-        a: 0.55 + Math.random() * 0.45,
-        rot: Math.random() * Math.PI * 2,
-        rv: _tema.rot ? (Math.random() - 0.5) * 0.02 : 0,
-        f: Math.random() * Math.PI * 2, fv: 0.4 + Math.random() * 0.9,
-      });
-    } else {
-      const rojo = Math.random() < 0.5;
-      _ps.push({
-        x: Math.random() * w, y: Math.random() * h,
-        r: 0.8 + Math.random() * 3.0,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: -(0.08 + Math.random() * 0.4),
-        a: 0.22 + Math.random() * 0.45,
-        f: Math.random() * Math.PI * 2,
-        fv: 0.5 + Math.random() * 1.1,
-        rojo,
-        par: 0.5 + Math.random() * Math.random(),
-      });
-    }
+    const rojo = Math.random() < 0.5;
+    _ps.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: 0.8 + Math.random() * 3.0,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: -(0.08 + Math.random() * 0.4),
+      a: 0.22 + Math.random() * 0.45,
+      f: Math.random() * Math.PI * 2,
+      fv: 0.5 + Math.random() * 1.1,
+      rojo,
+      par: 0.5 + Math.random() * Math.random(),
+    });
   }
 }
 
@@ -117,28 +93,6 @@ function paso(dt) {
 
   _scrollBoost *= 0.90;
   const boost = _scrollBoost;
-
-  if (_tema) {
-    g.globalCompositeOperation = 'source-over';
-    g.textAlign = 'center'; g.textBaseline = 'middle';
-    for (const p of _ps) {
-      p.x += p.vx * s + Math.sin((_t / 1000) * p.fv + p.f) * 0.2;
-      p.y += p.vy * s - boost * 0.3 * s;
-      if (p.rv) p.rot += p.rv * s;
-      if (p.vy >= 0) { if (p.y > h + 26) { p.y = -26; p.x = Math.random() * w; } if (p.y < -34) p.y = h + 26; }
-      else if (p.y < -26) { p.y = h + 26; p.x = Math.random() * w; }
-      if (p.x < -26) p.x = w + 26; else if (p.x > w + 26) p.x = -26;
-      g.save();
-      g.globalAlpha = p.a;
-      g.translate(p.x, p.y);
-      if (p.rv) g.rotate(p.rot);
-      g.font = p.tam + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
-      g.fillText(p.glyph, 0, 0);
-      g.restore();
-    }
-    g.globalAlpha = 1;
-    return;
-  }
 
   for (const p of _ps) {
     p.x += p.vx * s;
