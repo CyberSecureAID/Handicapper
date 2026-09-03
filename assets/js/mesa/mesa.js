@@ -3,7 +3,7 @@
    Secciones: Overview · Users · Analysis.
    Solo visible si esAdmin() (verificado en Firestore).
    ============================================================ */
-import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte, asignarFotoAnalista, quitarFotoAnalista, ajustarContadorAnalista, leerFichaAnalista, guardarPerfilAnalista } from './mesa-datos.js';
+import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte, asignarFotoAnalista, quitarFotoAnalista, ajustarContadorAnalista, leerFichaAnalista, guardarPerfilAnalista, leerConfigContacto, guardarConfigContacto } from './mesa-datos.js';
 import { rutaFotoAnalista } from '../datos/fotos-analistas.js';
 import { seguidoresBot, likesDe, dislikesDe } from '../datos/bots.js';
 import { abrirSelectorFotos } from '../ui/selector-fotos.js';
@@ -16,7 +16,7 @@ import { salir, usuarioActual } from '../auth/auth.js';
 import { marcarVistaPrevia } from '../auth/estado-pago.js';
 import { idiomaActual } from '../ui/idioma.js';
 
-let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = [];
+let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = [], _contactoCfg = null;
 let _ligaSel = null, _partidos = [], _cargandoPart = false;
 let _rol = 'admin', _deporteAnalista = null, _analistas = [];
 let _miFirma = null, _miNombre = null, _miUid = null, _miEstilo = null, _estiloAuto = false, _miFoto = null;
@@ -91,7 +91,8 @@ function render() {
        <button data-tab="analistas" class="${_tab==='analistas'?'on':''}">${IC.contrato} ${ML('Staff','Personal')}</button>
        <button data-tab="monitoreo" class="${_tab==='monitoreo'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg> ${ML('Monitoring','Monitoreo')}</button>
        <button data-tab="moderacion" class="${_tab==='moderacion'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M12 3l7 3v5c0 4.4-3 7.4-7 9-4-1.6-7-4.6-7-9V6l7-3z"/></svg> ${ML('Moderation','Moderación')}</button>
-       <button data-tab="reportes" class="${_tab==='reportes'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V4"/></svg> ${ML('Reports','Reportes')}${_reportesAbiertos() ? `<span class="mesa-nav-badge">${_reportesAbiertos()}</span>` : ''}</button>`;
+       <button data-tab="reportes" class="${_tab==='reportes'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V4"/></svg> ${ML('Reports','Reportes')}${_reportesAbiertos() ? `<span class="mesa-nav-badge">${_reportesAbiertos()}</span>` : ''}</button>
+       <button data-tab="contacto" class="${_tab==='contacto'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M4 5h16v11H6l-2 3z"/><path d="M8 9h8M8 12h5"/></svg> ${ML('Contact','Contacto')}</button>`;
   _cont.innerHTML = `
     <div class="mesa">
       <aside class="mesa-side" id="mesa-side">
@@ -179,6 +180,7 @@ async function cargarDatos() {
   try { _admins = await listarAdmins(); } catch (_) { _admins = []; }
   if (_rol === 'admin') { try { _analistas = await listarAnalistas(); } catch (_) { _analistas = []; } }
   if (_rol === 'admin') { try { _ingresos = await resumenIngresos(); } catch (_) { _ingresos = {}; } }
+  if (_rol === 'admin') { try { _contactoCfg = await leerConfigContacto(); } catch (_) { _contactoCfg = null; } }
   pintarTab();
 }
 function rolAdmin(u) {
@@ -200,6 +202,67 @@ function nombreCortoEquipo(nombre) {
   return w[0].charAt(0).toUpperCase() + '. ' + w.slice(-1)[0];
 }
 
+const CONTACTO_DEFAULT = {
+  supportLink: 'https://t.me/TradeRecord',
+  miembros: [
+    { nombre: 'Jesús Pérez', cargo: 'Founder · Developer', telegram: 'https://t.me/JesusDevTrader', whatsapp: 'https://wa.me/5358648458' },
+    { nombre: 'Oscar Luis', cargo: 'CEO · Data Analyst', telegram: '', whatsapp: 'https://wa.me/16892786155' },
+  ],
+};
+function vistaContacto() {
+  const cfg = _contactoCfg || CONTACTO_DEFAULT;
+  const miembros = cfg.miembros || [];
+  const fila = (mb, i) => `
+    <div class="ct-m" data-mi="${i}">
+      <div class="ct-m-grid">
+        <input class="u-input" data-mf="nombre" placeholder="${ML('Full name', 'Nombre')}" value="${esc(mb.nombre || '')}">
+        <input class="u-input" data-mf="cargo" placeholder="${ML('Role (CEO, Co-founder, Marketing…)', 'Cargo (CEO, Co-founder, Marketing…)')}" value="${esc(mb.cargo || '')}">
+        <input class="u-input" data-mf="whatsapp" placeholder="WhatsApp: https://wa.me/15551234567" value="${esc(mb.whatsapp || '')}">
+        <input class="u-input" data-mf="telegram" placeholder="Telegram: https://t.me/usuario" value="${esc(mb.telegram || '')}">
+      </div>
+      <button class="mesa-btn ghost sm ct-del" data-mdel="${i}">${ML('Remove', 'Quitar')}</button>
+    </div>`;
+  return `
+    <div class="mesa-head"><div><h1>${ML('Contact', 'Contacto')}</h1><p>${ML('Edit the public Contact page and the support channel. Saved to Firebase, live on the site.', 'Edita la página de Contacto pública y el canal de soporte. Se guarda en Firebase y aparece en el sitio.')}</p></div></div>
+    <div class="ct-card">
+      <label class="ct-label">${ML('Support channel link (Contact support button)', 'Enlace del canal de soporte (botón Contact support)')}</label>
+      <input class="u-input" id="ct-support" placeholder="https://t.me/TradeRecord" value="${esc(cfg.supportLink || '')}">
+    </div>
+    <div class="ct-card">
+      <label class="ct-label">${ML('Team members shown on the Contact page', 'Miembros del equipo en la página de Contacto')}</label>
+      <div id="ct-miembros">${miembros.map(fila).join('')}</div>
+      <button class="mesa-btn ghost" id="ct-add">+ ${ML('Add member', 'Agregar miembro')}</button>
+    </div>
+    <div class="ct-save-row">
+      <button class="mesa-btn oro" id="ct-save">${ML('Save changes', 'Guardar cambios')}</button>
+      <span id="ct-status" class="ct-status"></span>
+    </div>`;
+}
+function _recogerContacto() {
+  const supportLink = (_cont.querySelector('#ct-support') ? _cont.querySelector('#ct-support').value : '').trim();
+  const miembros = [..._cont.querySelectorAll('#ct-miembros .ct-m')].map(el => {
+    const g = (k) => { const i = el.querySelector(`[data-mf="${k}"]`); return i ? i.value.trim() : ''; };
+    return { nombre: g('nombre'), cargo: g('cargo'), whatsapp: g('whatsapp'), telegram: g('telegram') };
+  }).filter(mb => mb.nombre || mb.whatsapp || mb.telegram);
+  return { supportLink, miembros };
+}
+function enlazarContacto() {
+  _cont.querySelector('#ct-add') && (_cont.querySelector('#ct-add').onclick = () => {
+    const cfg = _recogerContacto(); cfg.miembros.push({ nombre: '', cargo: '', whatsapp: '', telegram: '' }); _contactoCfg = cfg; pintarTab();
+  });
+  _cont.querySelectorAll('[data-mdel]').forEach(b => b.onclick = () => {
+    const cfg = _recogerContacto(); cfg.miembros.splice(Number(b.dataset.mdel), 1); _contactoCfg = cfg; pintarTab();
+  });
+  _cont.querySelector('#ct-save') && (_cont.querySelector('#ct-save').onclick = async () => {
+    const btn = _cont.querySelector('#ct-save'), st = _cont.querySelector('#ct-status');
+    const cfg = _recogerContacto();
+    btn.disabled = true; st.textContent = ML('Saving…', 'Guardando…'); st.className = 'ct-status';
+    try { await guardarConfigContacto(cfg); _contactoCfg = cfg; st.textContent = ML('Saved ✓', 'Guardado ✓'); st.className = 'ct-status ok'; }
+    catch (_) { st.textContent = ML('Error saving', 'Error al guardar'); st.className = 'ct-status err'; }
+    btn.disabled = false;
+  });
+}
+
 function pintarTab() {
   const m = document.getElementById('mesa-main');
   if (!m) return;
@@ -210,6 +273,7 @@ function pintarTab() {
   else if (_tab === 'monitoreo') { m.innerHTML = vistaMonitoreo(); enlazarMonitoreo(); }
   else if (_tab === 'moderacion') { m.innerHTML = vistaModeracion(); enlazarModeracion(); }
   else if (_tab === 'reportes') { m.innerHTML = vistaReportes(); enlazarReportes(); }
+  else if (_tab === 'contacto') { m.innerHTML = vistaContacto(); enlazarContacto(); }
 }
 
 /* ================= OVERVIEW ================= */

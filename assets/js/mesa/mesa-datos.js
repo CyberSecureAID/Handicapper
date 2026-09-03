@@ -342,6 +342,22 @@ export async function guardarModeracion(palabras) {
   return true;
 }
 
+/* Configuración de CONTACTO editable desde el panel (link de soporte + miembros con cargo). */
+export async function leerConfigContacto() {
+  if (!await _asegurarListo()) return null;
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const snap = await S.getDoc(S.doc(db, 'config', 'contacto'));
+    return snap.exists() ? snap.data() : null;
+  } catch (_) { return null; }
+}
+export async function guardarConfigContacto(cfg) {
+  if (!await _asegurarListo()) return false;
+  const S = _obtenerStore(), db = _obtenerDB();
+  await S.setDoc(S.doc(db, 'config', 'contacto'), { ...cfg, actualizado: S.serverTimestamp() }, { merge: true });
+  return true;
+}
+
 /* ============================================================
    FASE 7 — LIKES / DISLIKES (colección 'votos')
    Doc id = `${uid}__${signalId}` = { uid, signalId, valor: 1|-1, fecha }
