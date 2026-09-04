@@ -527,6 +527,16 @@ let _esAdmin = false;
 let _esAnalista = false;
 
 /* Publica las señales de los bots una vez al día (lo dispara el admin al entrar). */
+/* Resuelve las predicciones terminadas y asigna prestigio (throttle 30 min). */
+async function resolverPrestigioSiToca() {
+  try { const ult = Number(localStorage.getItem('prest-ts') || 0); if (Date.now() - ult < 30 * 60 * 1000) return; } catch (_) {}
+  try {
+    const [pm, api] = await Promise.all([import('./datos/prestigio.js'), import('./datos/proveedor-api.js')]);
+    await pm.resolverPredicciones(api.resultadoPartido);
+    try { localStorage.setItem('prest-ts', String(Date.now())); } catch (_) {}
+  } catch (_) {}
+}
+
 async function publicarBotsSiEsNuevoDia() {
   // Se re-publica el mismo día. Solo throttle de 45 min entre corridas EXITOSAS (evita spam de API).
   // Si una corrida publica 0 (aún no hay oportunidades), NO se marca el throttle -> reintenta al próximo login.
@@ -672,6 +682,7 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   if ((location.hash || '').toLowerCase() === '#mesa') { try { history.replaceState(null, '', location.pathname); } catch (_) {} }
   if (_esAdmin) marcarVistaPrevia('premium');   // el admin tiene acceso total cuando entre
   if (_esAdmin) publicarBotsSiEsNuevoDia();     // señales de bots automáticas (1 vez al día)
+  if (_esAdmin) resolverPrestigioSiToca();      // resuelve predicciones terminadas -> prestigio
   // Foto de perfil (de la ficha de analista) en el avatar de la esquina superior derecha
   try {
     const { leerFichaAnalista } = await import('./mesa/mesa-datos.js');
