@@ -173,14 +173,9 @@ function mercadoDe(comp, futbol, local, visita, ligaId) {
   const hto = o.homeTeamOdds || {}, ato = o.awayTeamOdds || {};
   let mlH = mlNum(hto.moneyLine ?? hto.current?.moneyLine?.american ?? hto.close?.moneyLine?.american ?? hto.open?.moneyLine?.american);
   let mlA = mlNum(ato.moneyLine ?? ato.current?.moneyLine?.american ?? ato.close?.moneyLine?.american ?? ato.open?.moneyLine?.american);
-  if ((mlH == null || mlA == null) && o.details) {
-    const dm = String(o.details).match(/([A-Z]{2,4})\s*([+-]\d+)/);
-    if (dm) {
-      const favAb = dm[1], favMl = mlNum(dm[2]);
-      if (favAb === local.abrev && mlH == null) mlH = favMl;
-      else if (favAb === visita.abrev && mlA == null) mlA = favMl;
-    }
-  }
+  // NOTA: NO usar o.details como moneyline. En la NFL/NBA ese campo es el SPREAD
+  // (ej. "LAR -7.5"), y tratarlo como moneyline invertía la probabilidad por completo.
+  // Sin un moneyline REAL, dejamos que el MODELO calcule la probabilidad.
   let pL = probDeMoneyline(mlH), pV = probDeMoneyline(mlA);
   if (pL != null && pV == null) pV = 1 - pL;
   if (pV != null && pL == null) pL = 1 - pV;
