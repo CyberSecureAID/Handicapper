@@ -810,6 +810,7 @@ function entrarPlataforma() {
   if (!_appArrancada) {
     _appArrancada = true;
     actualizarLogo(); pintarLigas(); pintarPestanas(); pintarDrawer(); cargarLista();
+    setTimeout(_actualizarPuntoSenal, 1500); setInterval(_actualizarPuntoSenal, 120000);
   }
 }
 
@@ -1070,7 +1071,7 @@ function abrirPanelPerfil() {
     });
   }
 
-  const cerrar = () => { ov.remove(); document.body.style.overflow = ''; };
+  const cerrar = () => { ov.remove(); document.body.style.overflow = ''; setTimeout(_actualizarPuntoSenal, 300); };
   ov.querySelector('#pp-x').onclick = cerrar;
   ov.querySelector('#pp-cancel').onclick = cerrar;
   ov.onclick = (e) => { if (e.target === ov) cerrar(); };
@@ -1132,6 +1133,22 @@ function onCuentaClick(e) {
   }
 }
 
+async function _actualizarPuntoSenal() {
+  const cb = document.getElementById('cuenta-btn');
+  if (!cb || !_sesion) return;
+  const esPrem = _esAdmin || planActual() === 'premium';
+  const quitar = () => { const d = cb.querySelector('.cuenta-dot'); if (d) d.remove(); };
+  if (!esPrem) { quitar(); return; }
+  let signals = [];
+  try { const { senalesSeguidas } = await import('./ui/senales.js'); signals = await senalesSeguidas(); } catch (_) {}
+  let vistos = []; try { vistos = JSON.parse(localStorage.getItem('pp-vistos') || '[]'); } catch (_) {}
+  const nuevos = signals.filter(a => !vistos.includes(a.matchId || a.id)).length;
+  if (nuevos > 0) {
+    let d = cb.querySelector('.cuenta-dot');
+    if (!d) { d = document.createElement('span'); d.className = 'cuenta-dot'; cb.appendChild(d); }
+    d.textContent = nuevos > 9 ? '9+' : String(nuevos);
+  } else { quitar(); }
+}
 function avisoToast(msg) {
   let t = document.getElementById('pp-toast');
   if (!t) { t = document.createElement('div'); t.id = 'pp-toast'; t.className = 'pp-toast'; document.body.appendChild(t); }
