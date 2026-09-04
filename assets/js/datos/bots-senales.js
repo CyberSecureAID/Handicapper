@@ -71,7 +71,7 @@ async function generar({ guardar, uid, firma, autor, color, deporte, ligas, foto
     try { const ps = await listarPartidos(lg); if (Array.isArray(ps)) partidos.push(...ps); } catch (_) {}
   }
   const cand = [];
-  const ahora = Date.now(), fin = ahora + 48 * 3600 * 1000;   // próximas 48 horas
+  const ahora = Date.now(), fin = ahora + 72 * 3600 * 1000;   // próximas 72 horas
   let enVentana = 0;
   for (const m of partidos) {
     if (m.estado !== 'proximo') continue;            // solo partidos por jugarse
