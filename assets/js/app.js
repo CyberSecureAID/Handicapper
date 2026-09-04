@@ -843,6 +843,44 @@ function pintarCuenta(usuario) {
   cerrarCuentaMenu();
 }
 
+/* Subir foto de perfil (solo Premium): redimensiona + comprime para no llenar Firebase. */
+function _fotoPerfilFlujo(ov) {
+  const ES = idiomaActual() === 'es';
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = () => {
+    const f = inp.files && inp.files[0]; if (!f) return;
+    if (!/^image\//.test(f.type)) { avisoToast(ES ? 'Debe ser una imagen.' : 'Must be an image.'); return; }
+    const rd = new FileReader();
+    rd.onload = () => {
+      const img = new Image();
+      img.onload = async () => {
+        const max = 256; let w = img.width, h = img.height;
+        if (w >= h && w > max) { h = Math.round(h * max / w); w = max; }
+        else if (h > w && h > max) { w = Math.round(w * max / h); h = max; }
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(img, 0, 0, w, h);
+        let q = 0.82, data = cv.toDataURL('image/jpeg', q);
+        while (data.length * 0.73 > 150 * 1024 && q > 0.4) { q -= 0.1; data = cv.toDataURL('image/jpeg', q); }
+        if (data.length * 0.73 > 150 * 1024) { avisoToast(ES ? 'La imagen es demasiado grande. Prueba otra.' : 'Image too large. Try another.'); return; }
+        const av = ov && ov.querySelector('.pp-av'); const prev = av ? av.innerHTML : '';
+        if (av) av.innerHTML = `<img src="${data}" alt="">`;
+        try {
+          const { guardarFotoUsuario } = await import('./auth/auth.js');
+          await guardarFotoUsuario(data);
+          if (_sesion) _sesion.foto = data;
+          const cb = document.getElementById('cuenta-btn'); if (cb) { cb.classList.add('logueado'); cb.innerHTML = `<img class="av-img" src="${data}" alt="">`; }
+          avisoToast(ES ? 'Foto actualizada \u2713' : 'Photo updated \u2713');
+        } catch (e) { if (av) av.innerHTML = prev; avisoToast(ES ? 'Error al guardar la foto.' : 'Error saving photo.'); }
+      };
+      img.onerror = () => avisoToast(ES ? 'No se pudo leer la imagen.' : 'Could not read image.');
+      img.src = rd.result;
+    };
+    rd.readAsDataURL(f);
+  };
+  inp.click();
+}
+
 /* ============================================================
    PANEL DE PERFIL — pantalla grande de 3 columnas (Fase 1: estructura)
    ============================================================ */
@@ -898,12 +936,13 @@ function abrirPanelPerfil() {
       <div class="pp-grid">
         <aside class="pp-side">
           <div class="pp-avwrap">
-            <div class="pp-av">${ini}</div>
+            <div class="pp-av">${u.foto ? `<img src="${u.foto}" alt="">` : ini}</div>
             ${esPrem ? `<button class="pp-cam" data-pp="foto" title="${L('Change photo', 'Cambiar foto')}">${I.cam}</button>` : ''}
           </div>
           <div class="pp-nombre">${esc(nombre)}</div>
           <span class="pp-plan pp-plan-${nivel}">${badge}</span>
           <div class="pp-mail">${esc(email)}</div>
+          ${esPrem ? `<div class="pp-foto-nota">${L('Tap the camera to set your photo. It is auto-optimized to a light size (max ~150 KB).', 'Toca la cámara para poner tu foto. Se optimiza sola a un tamaño ligero (máx. ~150 KB).')}</div>` : ''}
           <nav class="pp-menu">${menu}</nav>
           <div class="pp-trofeo">
             <span class="pp-tr-ic">${I.trofeo}</span>
@@ -956,9 +995,10 @@ function abrirPanelPerfil() {
     else if (k === 'salir') { try { localStorage.removeItem('se-en-app'); localStorage.removeItem('se-vista'); } catch (_) {} cerrar(); limpiarVistaPrevia(); salir(); }
     else if (k === 'panel') { cerrar(); location.hash = '#mesa'; location.reload(); }
     else if (k === 'planes') { cerrar(); mostrarPantalla('pricing'); }
-    else if (['ajustes', 'notis', 'buzon', 'foto'].includes(k)) {
+    else if (k === 'foto') { _fotoPerfilFlujo(ov); }
+    else if (['ajustes', 'notis', 'buzon'].includes(k)) {
       ov.querySelectorAll('.pp-menu .pp-item').forEach(x => x.classList.toggle('on', x.dataset.pp === k));
-      // Fases 2-4: aquí irá el contenido real de cada sección.
+      // Fases 3-4: aquí irá el contenido real de cada sección.
     }
   }));
 }
@@ -973,6 +1013,12 @@ function onCuentaClick(e) {
   }
 }
 
+function avisoToast(msg) {
+  let t = document.getElementById('pp-toast');
+  if (!t) { t = document.createElement('div'); t.id = 'pp-toast'; t.className = 'pp-toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2600);
+}
 function avisoFirebase() { abrirAuth(); }
 
 function toggleCuentaMenu() {
