@@ -987,10 +987,10 @@ function abrirPanelPerfil() {
         <main class="pp-main">
           <h2 class="pp-h2">${L('Profile settings', 'Ajustes de perfil')}</h2>
           <p class="pp-sub">${L('Manage your personal information and account preferences.', 'Administra tu información personal y las preferencias de tu cuenta.')}</p>
-          <div class="pp-field"><label>${I.user}${L('Name', 'Nombre')}</label><input type="text" value="${esc(nombre)}"></div>
-          <div class="pp-field"><label>${I.user}${L('Username', 'Nombre de usuario')}</label><input type="text" value="${esc(usuario)}"></div>
-          <div class="pp-field"><label>${I.inbox}${L('Email', 'Correo electrónico')}</label><input type="email" value="${esc(email)}"></div>
-          <div class="pp-field"><label>${I.shield}${L('New password', 'Nueva contraseña')}</label><div class="pp-pass"><input type="password" value="••••••••••••"><button class="pp-eye">${I.eye}</button></div><small>${L('Leave blank to keep your current password.', 'Deja en blanco si no deseas cambiar la contraseña.')}</small></div>
+          <div class="pp-field"><label>${I.user}${L('Name', 'Nombre')}</label><input id="pp-f-nombre" type="text" value="${esc(nombre)}" maxlength="40"></div>
+          <div class="pp-field"><label>${I.user}${L('Username', 'Nombre de usuario')}</label><input id="pp-f-usuario" type="text" value="${esc(usuario)}" maxlength="24"></div>
+          <div class="pp-field"><label>${I.inbox}${L('Email', 'Correo electrónico')}</label><input id="pp-f-email" type="email" value="${esc(email)}" ${esc(email) && email.includes("@gmail") ? "readonly" : ""}></div>
+          <div class="pp-field"><label>${I.shield}${L('New password', 'Nueva contraseña')}</label><div class="pp-pass"><input id="pp-f-pass" type="password" placeholder="••••••••" autocomplete="new-password"><button class="pp-eye">${I.eye}</button></div><small>${L('Leave blank to keep your current password.', 'Deja en blanco si no deseas cambiar la contraseña.')}</small></div>
           <div class="pp-actions"><button class="pp-cancel" id="pp-cancel">${L('Cancel', 'Cancelar')}</button><button class="pp-apply">${L('Apply changes', 'Aplicar cambios')} ${I.arrow}</button></div>
         </main>
 
@@ -1035,6 +1035,32 @@ function abrirPanelPerfil() {
   ov.querySelector('#pp-cancel').onclick = cerrar;
   ov.onclick = (e) => { if (e.target === ov) cerrar(); };
   ov.querySelector('.pp-eye').onclick = (e) => { const i = e.currentTarget.previousElementSibling; i.type = i.type === 'password' ? 'text' : 'password'; };
+
+  const apply = ov.querySelector('.pp-apply');
+  if (apply) apply.onclick = async () => {
+    const nombreN = (ov.querySelector('#pp-f-nombre') || {}).value || '';
+    const usuarioN = (ov.querySelector('#pp-f-usuario') || {}).value || '';
+    const emailN = ((ov.querySelector('#pp-f-email') || {}).value || '').trim();
+    const passN = ((ov.querySelector('#pp-f-pass') || {}).value || '').trim();
+    if (!nombreN.trim()) { avisoToast(ES ? 'El nombre no puede estar vacío.' : 'Name cannot be empty.'); return; }
+    apply.disabled = true;
+    try {
+      const auth = await import('./auth/auth.js');
+      const patch = { nombre: nombreN.trim(), usuario: usuarioN.trim() };
+      if (emailN && emailN !== (u.email || '')) patch.email = emailN;
+      if (passN) patch.password = passN;
+      await auth.actualizarPerfil(patch);
+      if (_sesion) { _sesion.nombre = patch.nombre; _sesion.usuario = patch.usuario; if (patch.email) _sesion.email = emailN; }
+      const nm = ov.querySelector('.pp-nombre'); if (nm) nm.textContent = patch.nombre;
+      const passI = ov.querySelector('#pp-f-pass'); if (passI) passI.value = '';
+      avisoToast(ES ? 'Cambios guardados \u2713' : 'Changes saved \u2713');
+    } catch (e) {
+      let msg = ES ? 'Error al guardar.' : 'Error saving.';
+      try { const { mensajeError } = await import('./auth/auth.js'); msg = mensajeError(e, ES ? 'es' : 'en'); } catch (_) {}
+      avisoToast(msg);
+    }
+    apply.disabled = false;
+  };
 
   ov.querySelectorAll('[data-pp]').forEach(b => b.addEventListener('click', () => {
     const k = b.dataset.pp;
