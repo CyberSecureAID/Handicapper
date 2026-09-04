@@ -40,29 +40,40 @@ function medir(m) {
   return { favLocal, prob, fav, dog };
 }
 
-/* Explicación adaptada a los datos reales, en tono cualitativo (sin cifras que puedan ser falsas). */
+/* Explicación en tono de OPINIÓN (variada y con carácter), sin cifras que puedan ser falsas.
+   Se elige de forma determinista por partido: cada señal se siente distinta y con personalidad. */
 function explicacion(fav, dog, prob) {
-  const partes = [];
+  const s = String((fav.nombre || '') + (dog.nombre || ''));
+  let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) & 0xffffff;
+  const pick = (arr, off) => arr[((h >> off) >>> 0) % arr.length];
+
+  const aperturas = [
+    `Para mí no hay mucho que discutir aquí: ${fav.nombre} llega en otro nivel frente a ${dog.nombre}.`,
+    `Si confío en un partido hoy, es este. ${fav.nombre} tiene con qué doblegar a ${dog.nombre}.`,
+    `Lo digo sin rodeos: ${dog.nombre} atraviesa un momento flojo y ${fav.nombre} es de los que castigan eso.`,
+    `Este es de los que uno mira y dice "ojo". ${fav.nombre} está por encima de ${dog.nombre} en casi todo.`,
+    `No me gusta ir contra la corriente sin motivo, y aquí el motivo sobra: ${fav.nombre} es superior.`,
+    `${fav.nombre} viene con hambre; ${dog.nombre} viene a sobrevivir. Y eso, en el papel, se paga.`,
+    `Me sorprendería lo contrario. ${fav.nombre} tiene el control y ${dog.nombre} llega a remolque.`,
+  ];
+  const args = [];
+  if (fav.record && dog.record) args.push(`El récord no engaña: ${fav.record} contra ${dog.record} deja poco margen para la duda`);
+  if (fav.posicion != null && dog.posicion != null && fav.posicion < dog.posicion) args.push(`la tabla los separa (${fav.posicion}º frente a ${dog.posicion}º) y esa distancia termina notándose`);
   const dif = (fav.winPct != null && dog.winPct != null) ? (fav.winPct - dog.winPct) : null;
-  if (dif != null && dif >= 0.28) {
-    partes.push(`${fav.nombre} ha sido muy superior a ${dog.nombre} en rendimiento durante la temporada`);
-  } else if (fav.record && dog.record) {
-    partes.push(`${fav.nombre} llega con mejor récord (${fav.record}) que ${dog.nombre} (${dog.record})`);
-  } else {
-    partes.push(`${fav.nombre} llega en clara ventaja de forma frente a ${dog.nombre}`);
-  }
-  if (fav.posicion != null && dog.posicion != null && fav.posicion < dog.posicion) {
-    partes.push(`y les separan varios puestos en la tabla (${fav.posicion}º frente a ${dog.posicion}º)`);
-  }
+  if (dif != null && dif >= 0.20) args.push(`el rendimiento de ${fav.nombre} esta temporada ha estado muy por encima`);
+  if (!args.length) args.push(`la forma reciente de ${fav.nombre} manda con claridad`);
+  const arg = args[((h >> 6) >>> 0) % args.length];
+
   const cierres = prob >= 74
-    ? ['La balanza se inclina con fuerza hacia el favorito; de los partidos más despejados del día.',
-       'Diferencia amplia en los indicadores clave: un favorito muy marcado.',
-       'Salvo sorpresa, el rendimiento manda con claridad a favor del favorito.']
-    : ['Ventaja consistente por trayectoria y estado reciente.',
-       'El favorito ha sido bastante más regular; los datos lo respaldan.',
-       'Sólido a favor por historial y forma actual, sin ser un caso extremo.'];
-  const cierre = cierres[((fav.posicion || 0) + Math.round((fav.winPct || 0) * 10)) % cierres.length];
-  return partes.join(', ') + '. ' + cierre;
+    ? ['Para mí es de lo más claro de la jornada; difícil imaginar otro final.',
+       'Salvo uno de esos batacazos que pasan una vez al año, esto tiene un solo dueño.',
+       'Me juego el prestigio con este: el favorito tiene que ganarlo.',
+       'Si este no sale, toca revisarlo todo. Así de convencido estoy.']
+    : ['No es un caso extremo, pero la balanza está clara para mí.',
+       'Hay margen para la sorpresa, sí, pero me quedo con el favorito sin dudarlo.',
+       'No es del todo cerrado; aun así, el peso de los datos empuja hacia un lado.',
+       'Respeto al rival, pero el favorito llega mejor, y a la larga eso pesa.'];
+  return pick(aperturas, 0) + ' ' + arg + '. ' + pick(cierres, 12);
 }
 
 async function generar({ guardar, uid, firma, autor, color, deporte, ligas, foto = null, max = 2 }) {
