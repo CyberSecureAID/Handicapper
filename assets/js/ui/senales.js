@@ -191,6 +191,7 @@ function inyectarCSS() {
   .sn-dd-lbl{white-space:nowrap}
   .sn-dd-arr{width:15px;height:15px;flex:none;color:#8b96a6;transition:transform .18s}
   .sn-dd.open .sn-dd-arr{transform:rotate(180deg)}
+  .sn-dd-pop[hidden]{display:none!important}
   .sn-dd-pop{position:absolute;top:calc(100% + 7px);right:0;z-index:30;min-width:180px;padding:6px;border-radius:13px;background:rgba(16,22,34,.99);border:1px solid rgba(255,255,255,.13);box-shadow:0 16px 42px -12px rgba(0,0,0,.75);backdrop-filter:blur(12px);display:flex;flex-direction:column;gap:2px;animation:snDd .16s ease}
   @keyframes snDd{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
   .sn-dd-opt{text-align:left;padding:9px 13px;border-radius:9px;border:0;background:none;color:var(--tx2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .12s}
