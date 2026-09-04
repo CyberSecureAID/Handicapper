@@ -843,6 +843,39 @@ function pintarCuenta(usuario) {
   cerrarCuentaMenu();
 }
 
+/* Fase 3 — carga el buzón + notificaciones con las señales reales de los analistas que sigue el Premium. */
+async function _cargarBuzonPerfil(ov, esPrem) {
+  if (!esPrem || !ov) return;
+  const ES = idiomaActual() === 'es', L = (en, es) => ES ? es : en;
+  let signals = [];
+  try { const { senalesSeguidas } = await import('./ui/senales.js'); signals = await senalesSeguidas(); } catch (_) {}
+  const buzon = ov.querySelector('#pp-buzon-list'), notis = ov.querySelector('#pp-notis-list');
+  const bB = ov.querySelector('#pp-buzon-badge'), nB = ov.querySelector('#pp-noti-badge');
+  const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  const tiempo = (a) => { try { const t = a.actualizado, d = t && t.toDate ? t.toDate() : new Date(t); const m = Math.round((Date.now() - d.getTime()) / 60000); if (m < 60) return m + 'm'; const h = Math.round(m / 60); return h < 24 ? h + 'h' : Math.round(h / 24) + 'd'; } catch (_) { return ''; } };
+  if (!signals.length) {
+    if (buzon) buzon.innerHTML = `<div class="pp-empty-sm">${L('Follow analysts to receive their signals here.', 'Sigue analistas para recibir sus señales aquí.')}</div>`;
+    if (notis) notis.innerHTML = `<div class="pp-empty-sm">${L('No new notifications.', 'Sin notificaciones nuevas.')}</div>`;
+    return;
+  }
+  const buzonItem = (a) => `<div class="pp-r-item"><span class="pp-r-ic verde">${arrow}</span><div><b>${esc(a.favorito || (a.veredicto || '').replace(/ (to win|gana)$/i, ''))} ${a.prob != null ? a.prob + '%' : ''}</b><span>${esc(a.equipos || '')}</span></div><em>${tiempo(a)}</em></div>`;
+  const notiItem = (a) => `<div class="pp-r-item"><span class="pp-r-ic azul">${arrow}</span><div><b>${L('New signal', 'Nueva señal')}: ${esc(a.firma || a.autor || '')}</b><span>${esc(a.equipos || '')}</span></div><em>${tiempo(a)}</em></div>`;
+  if (buzon) buzon.innerHTML = signals.slice(0, 5).map(buzonItem).join('');
+  if (bB) { bB.textContent = signals.length; bB.hidden = false; }
+  if (notis) notis.innerHTML = signals.slice(0, 3).map(notiItem).join('');
+  if (nB) { nB.textContent = Math.min(signals.length, 9); nB.hidden = false; }
+  _notificarNuevas(signals);
+}
+function _notificarNuevas(signals) {
+  try {
+    if (localStorage.getItem('pp-push') !== '1' || !('Notification' in window) || Notification.permission !== 'granted') { localStorage.setItem('pp-vistos', JSON.stringify(signals.map(a => a.matchId || a.id).slice(0, 60))); return; }
+    const vistos = JSON.parse(localStorage.getItem('pp-vistos') || '[]');
+    const nuevos = signals.filter(a => !vistos.includes(a.matchId || a.id));
+    nuevos.slice(0, 3).forEach(a => { try { new Notification('Sports Expectations', { body: (a.firma || a.autor || '') + ': ' + (a.favorito || a.equipos || ''), icon: 'assets/imagenes/logo-h-oscuro.png' }); } catch (_) {} });
+    localStorage.setItem('pp-vistos', JSON.stringify(signals.map(a => a.matchId || a.id).slice(0, 60)));
+  } catch (_) {}
+}
+
 /* Subir foto de perfil (solo Premium): redimensiona + comprime para no llenar Firebase. */
 function _fotoPerfilFlujo(ov) {
   const ES = idiomaActual() === 'es';
@@ -963,14 +996,13 @@ function abrirPanelPerfil() {
 
         <aside class="pp-right">
           <div class="pp-card">
-            <div class="pp-card-h">${I.bell}<b>${L('Notifications', 'Notificaciones')}</b><em class="pp-badge rojo">2</em></div>
-            ${notiEj}
-            <button class="pp-card-link" data-pp="notis">${L('See all notifications', 'Ver todas las notificaciones')} ${I.arrow}</button>
+            <div class="pp-card-h">${I.bell}<b>${L('Notifications', 'Notificaciones')}</b><em class="pp-badge rojo" id="pp-noti-badge" hidden>0</em></div>
+            ${esPrem ? `<div class="pp-push"><div><b>${L('Push notifications', 'Notificaciones push')}</b><span>${L('Alerts for new signals', 'Avisos de nuevas señales')}</span></div><label class="pp-switch"><input type="checkbox" id="pp-push-chk"><span></span></label></div>` : ''}
+            <div id="pp-notis-list"><div class="pp-empty-sm">${L('Loading…', 'Cargando…')}</div></div>
           </div>
           <div class="pp-card">
-            <div class="pp-card-h">${I.inbox}<b>${L('Signals inbox', 'Buzón de señales')}</b>${esPrem ? '<em class="pp-badge">3</em>' : ''}</div>
-            ${buzonEj}
-            ${esPrem ? `<button class="pp-card-link" data-pp="buzon">${L('See all signals', 'Ver todas las señales')} ${I.arrow}</button>` : ''}
+            <div class="pp-card-h">${I.inbox}<b>${L('Signals inbox', 'Buzón de señales')}</b><em class="pp-badge" id="pp-buzon-badge" hidden>0</em></div>
+            <div id="pp-buzon-list">${esPrem ? `<div class="pp-empty-sm">${L('Loading…', 'Cargando…')}</div>` : `<div class="pp-lock">${I.inbox}<p>${L('Signal inbox is a Premium feature.', 'El buzón de señales es una función Premium.')}</p><button class="pp-up" data-pp="planes">${L('See Premium', 'Ver Premium')}</button></div>`}</div>
           </div>
           <div class="pp-card">
             <div class="pp-card-h">${I.shield}<b>${L('Account security', 'Seguridad de cuenta')}</b></div>
@@ -982,6 +1014,21 @@ function abrirPanelPerfil() {
     </div>`;
   document.body.appendChild(ov);
   document.body.style.overflow = 'hidden';
+  _cargarBuzonPerfil(ov, esPrem);
+  // Toggle de notificaciones push (solo Premium)
+  const pchk = ov.querySelector('#pp-push-chk');
+  if (pchk) {
+    try { pchk.checked = localStorage.getItem('pp-push') === '1' && (window.Notification && Notification.permission === 'granted'); } catch (_) {}
+    pchk.addEventListener('change', async () => {
+      if (pchk.checked) {
+        if (!('Notification' in window)) { pchk.checked = false; avisoToast(ES ? 'Tu navegador no soporta notificaciones.' : 'Notifications not supported.'); return; }
+        let perm = Notification.permission;
+        if (perm !== 'granted') { try { perm = await Notification.requestPermission(); } catch (_) {} }
+        if (perm === 'granted') { try { localStorage.setItem('pp-push', '1'); } catch (_) {} avisoToast(ES ? 'Notificaciones push activadas \u2713' : 'Push notifications on \u2713'); }
+        else { pchk.checked = false; avisoToast(ES ? 'Permiso denegado. Actívalo en el navegador.' : 'Permission denied.'); }
+      } else { try { localStorage.setItem('pp-push', '0'); } catch (_) {} }
+    });
+  }
 
   const cerrar = () => { ov.remove(); document.body.style.overflow = ''; };
   ov.querySelector('#pp-x').onclick = cerrar;
