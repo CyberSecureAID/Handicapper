@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How it works · Sports Expectations</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/imagenes/favicon-32.png">
+  <link rel="apple-touch-icon" href="assets/imagenes/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#070b12;--panel:rgba(15,22,34,.62);--line:rgba(255,255,255,.09);--tx:#eef2f8;--tx2:#b6c0cd;--tx3:#7c8797;--oro:#e8c46a}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--tx);font-family:"Inter",system-ui,sans-serif;line-height:1.75;position:relative;min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;z-index:-3;background:url('assets/imagenes/fondos/fondo-pagina.webp') center/cover no-repeat;filter:blur(7px) brightness(.42);transform:scale(1.08)}
+    body::after{content:'';position:fixed;inset:0;z-index:-2;background:linear-gradient(180deg,rgba(7,11,18,.8),rgba(7,11,18,.9))}
+    #lg-particles{position:fixed;inset:0;z-index:-1;pointer-events:none}
+    a{color:var(--oro);text-decoration:none;transition:color .15s}a:hover{color:#f3d488}
+    .lg-nav{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:rgba(7,11,18,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+    .lg-brand{display:flex;align-items:center;gap:11px}
+    .lg-brand img{height:34px;width:auto}
+    .lg-back{font-size:13.5px;font-weight:600;padding:9px 16px;border:1px solid var(--line);border-radius:10px;color:var(--tx);background:rgba(255,255,255,.03)}
+    .lg-back:hover{border-color:var(--oro);color:var(--oro)}
+    .lg-wrap{max-width:880px;margin:0 auto;padding:52px 28px 90px;position:relative;z-index:1}
+    .lg-eyebrow{font-family:"Poppins",sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--oro)}
+    h1{font-family:"Poppins",sans-serif;font-weight:800;font-size:clamp(30px,4vw,44px);color:#fff;margin:12px 0 8px;line-height:1.1;text-shadow:0 2px 24px rgba(0,0,0,.5)}
+    .lg-note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;font-size:14.5px;color:var(--tx2);margin:24px 0 40px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 10px 34px -14px rgba(0,0,0,.6)}
+    .lg-note strong{color:var(--tx)}
+    h2{font-family:"Poppins",sans-serif;font-weight:700;font-size:21px;color:#fff;margin:42px 0 12px;scroll-margin-top:80px}
+    h2 .num{color:var(--oro);margin-right:8px}
+    h3{font-family:"Poppins",sans-serif;font-weight:700;font-size:16px;color:#fff;margin:24px 0 8px}
+    p,li{font-size:15px;color:var(--tx2)}
+    ul,ol{padding-left:22px;margin:10px 0}li{margin-bottom:8px}
+    strong{color:var(--tx)}
+    .lg-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:16px 0;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 10px 34px -14px rgba(0,0,0,.55)}
+    .lg-card h3{margin-top:0}
+    .lg-money{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0}
+    .lg-money div{flex:1;min-width:200px;background:rgba(232,196,106,.08);border:1px solid rgba(232,196,106,.28);border-radius:13px;padding:16px 18px}
+    .lg-money b{display:block;font-family:"Poppins",sans-serif;font-size:22px;color:var(--oro)}
+    .lg-money span{font-size:13px;color:var(--tx2)}
+    .lg-stat{display:flex;gap:22px;flex-wrap:wrap;margin:16px 0}
+    .lg-stat div{text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px 24px;flex:1;min-width:120px}
+    .lg-stat b{display:block;font-family:"Chakra Petch","Poppins",sans-serif;font-size:30px;color:#fff}
+    .lg-stat span{font-size:12.5px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em}
+    .pill-ok{color:#3ecf8e;font-weight:700}.pill-no{color:#ff8a90;font-weight:700}
+    .lg-foot{border-top:1px solid var(--line);padding:26px 28px;text-align:center;font-size:12.5px;color:var(--tx3);position:relative;z-index:1;background:rgba(7,11,18,.45);backdrop-filter:blur(10px)}
+    @media(max-width:640px){.lg-money div,.lg-stat div{min-width:100%}}
+  </style>
+</head>
+<body>
+  <canvas id="lg-particles"></canvas>
+  <nav class="lg-nav">
+    <a href="index.html" class="lg-brand"><img src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations"></a>
+    <a href="index.html" class="lg-back">&larr; Back to home</a>
+  </nav>
+  <main class="lg-wrap">
+    <span class="lg-eyebrow">Platform</span>
+    <h1>How Sports Expectations works</h1>
+    <div class="lg-note"><strong>Everything explained in one place.</strong> How the platform works from the moment you arrive, what each plan includes and what it costs, how our analysts operate and earn, and how our prestige system keeps them accountable. We are an <strong>informational analytics platform</strong> &mdash; we organize public sports data. We are not a sportsbook and we do not accept, place or facilitate any wager.</div>
+
+    <h2><span class="num">1.</span>From the moment you arrive</h2>
+    <p>When you land on Sports Expectations, you see the featured matches of the day. Tap any match and you open its <strong>statistics comparison card</strong>: records, table position, recent form, team-versus-team metrics and a clear <strong>win-probability estimate</strong> built from public data. Nothing is invented &mdash; every number comes from real, verifiable sources, and probabilities are presented as <strong>estimates, never promises of an outcome</strong>.</p>
+    <p>You can browse every sport and league we cover, compare teams and players, and read the analysis. Creating an account is free; some advanced areas and the analyst signals require a paid plan.</p>
+
+    <h2><span class="num">2.</span>Plans &amp; pricing</h2>
+    <p>We keep three simple tiers. Each one shows the same list of features so you can see exactly what is included (&check;) and what is not (&times;):</p>
+    <div class="lg-money">
+      <div><b>$1.99<span style="font-size:13px;color:var(--tx3)">/mo</span></b><span><strong>Basic</strong> &mdash; general access: all leagues &amp; categories, team and player comparison with advanced stat windows, and the option to hire specialized analyst signal services.</span></div>
+      <div><b>$3.99<span style="font-size:13px;color:var(--tx3)">/mo</span></b><span><strong>Pro</strong> &mdash; everything in Basic, plus limited access to Hits, Goals, Points &amp; Shots, limited Fútbol Rubio, and limited access to specialized analyst signals.</span></div>
+      <div><b>$8.99<span style="font-size:13px;color:var(--tx3)">/mo</span></b><span><strong>Premium</strong> &mdash; the most complete access: full Hits, Goals, Points &amp; Shots, full Fútbol Rubio, all stat categories, broad access to analyst signals (about 50%), push notifications, and a profile photo.</span></div>
+    </div>
+    <p>Following an individual analyst to receive all of their signals is a <strong>separate, optional subscription</strong> of <strong>$2.00 per month per analyst</strong>, independent of your plan. You can cancel any subscription at any time; it simply stops at the end of the paid period.</p>
+
+    <h2><span class="num">3.</span>Our analysts &mdash; the program</h2>
+    <p>Alongside our data engine, real people publish their own sports analysis on the platform. An analyst is not an employee on a fixed contract &mdash; it is an <strong>independent collaborator</strong> who chooses to work, and whose earnings depend entirely on the value they create for the people who follow them.</p>
+
+    <h3>How to become an analyst</h3>
+    <p>Any registered user can request to become an analyst. Our team reviews the request, and if approved, assigns the person to a sport and activates their analyst profile so they can start publishing signals. We keep a <strong>limited roster</strong> &mdash; the number of seats is finite, so a spot only opens when it is genuinely available.</p>
+
+    <h3>How analysts earn</h3>
+    <p>When a user decides to follow a specific analyst to receive all of their signals, that user pays <strong>$2.00 per month</strong>. That amount is split as follows:</p>
+    <div class="lg-money">
+      <div><b>$1.00</b><span>goes to the platform, to keep everything running.</span></div>
+      <div><b>$1.00</b><span>goes to the analyst every month, like a salary for the work they put in.</span></div>
+    </div>
+    <p>In other words: the more people value your work and follow you, the more you earn. There is a direct, honest link between effort and reward.</p>
+
+    <h3>There is no obligation &mdash; but activity matters</h3>
+    <p>No analyst is ever <strong>forced</strong> to publish signals. You come in because you want to work: if you work, people see your signals, follow you, and you earn; if you don&rsquo;t, you simply don&rsquo;t earn. It is that clear.</p>
+    <p>Because seats are limited, we do ask that active analysts stay active. Our policy is fair and human:</p>
+    <ul>
+      <li>Missing a single day is <strong>never</strong> a problem &mdash; life happens.</li>
+      <li>If an analyst goes <strong>30 days without publishing any signal</strong>, we reach out first to ask what is going on. We will never remove someone just for going through a hard time.</li>
+      <li>From that contact, the analyst has <strong>up to 72 hours to respond</strong> and let us know their situation.</li>
+      <li>If, after that window, there is no response at all, the analyst account is closed and the seat is freed, so that others who want to work have the opportunity.</li>
+    </ul>
+
+    <h3>Our current roster</h3>
+    <div class="lg-stat">
+      <div><b>28</b><span>Analysts</span></div>
+      <div><b>18</b><span>Men</span></div>
+      <div><b>10</b><span>Women</span></div>
+    </div>
+
+    <h2><span class="num">4.</span>Prestige points &mdash; accountability</h2>
+    <p>To keep analysts honest and to help you choose who to trust, every analyst carries a public <strong>Prestige</strong> score. It works on a simple, measurable principle: <strong>an analyst is judged by whether their calls actually come true</strong>.</p>
+    <ul>
+      <li>Every signal an analyst publishes is <strong>recorded internally</strong> the moment it is posted.</li>
+      <li>When the match ends, our system checks the real result through the data feed and evaluates the signal: <strong>did the team the analyst backed actually win?</strong></li>
+      <li><span class="pill-ok">Correct call &rarr; +1</span> prestige point. <span class="pill-no">Wrong call, or a draw when a win was predicted, &rarr; &minus;1</span> prestige point.</li>
+      <li>Prestige can go <strong>negative</strong>. An analyst who keeps missing will visibly fall below zero.</li>
+    </ul>
+    <p><strong>You cannot game it.</strong> Because the prediction is recorded when it is published, deleting a signal minutes before a match ends does <strong>not</strong> erase the result &mdash; the outcome still counts. This protects followers from analysts trying to hide their misses.</p>
+
+    <h2><span class="num">5.</span>Likes &amp; dislikes</h2>
+    <p>On top of the objective prestige score, the community can react to each signal with a <strong>like</strong> or a <strong>dislike</strong>. This is a softer, human signal of acceptance: it reflects how much people appreciate an analyst&rsquo;s reasoning and style, and helps good analysts stand out. Prestige measures accuracy; likes measure trust and approval.</p>
+
+    <h2><span class="num">6.</span>What this all means for you</h2>
+    <p>Put together, the system is designed to be fair on every side: you get <strong>transparent, measurable</strong> information about who is worth following; analysts get a real, honest way to earn from their work; and the platform stays sustainable. We show the data, we track the results, and we let the numbers speak.</p>
+    <div class="lg-note" style="margin-top:30px"><strong>A reminder.</strong> Everything here is <strong>informational analysis</strong>. Probabilities and signals are estimates based on public data and personal opinion; they are not guarantees, financial advice, or an invitation to wager. Please use the platform responsibly and within the law of your jurisdiction.</div>
+  </main>
+  <footer class="lg-foot">
+    <div style="max-width:900px;margin:0 auto 14px;display:flex;flex-wrap:wrap;justify-content:center;gap:9px 8px;font-size:13px">
+      <a href="index.html">Home</a><span style="color:var(--tx3)">·</span><a href="about.html">About us</a><span style="color:var(--tx3)">·</span><a href="how-it-works.html">How it works</a><span style="color:var(--tx3)">·</span><a href="plans.html">Plans</a><span style="color:var(--tx3)">·</span><a href="terms.html">Terms</a><span style="color:var(--tx3)">·</span><a href="privacy.html">Privacy</a><span style="color:var(--tx3)">·</span><a href="disclaimer.html">Disclaimer</a><span style="color:var(--tx3)">·</span><a href="responsible.html">Responsible gaming</a>
+    </div>
+    <div style="text-align:center">&copy; 2026 Sports Expectations LLC. All rights reserved. Informational analysis, not betting advice.</div>
+  </footer>
+  <script>
+  (function(){var c=document.getElementById('lg-particles');if(!c)return;var x=c.getContext('2d'),P=[],W,H;
+  function rs(){W=c.width=innerWidth;H=c.height=innerHeight;}rs();addEventListener('resize',rs);
+  for(var i=0;i<44;i++)P.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.4,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,a:Math.random()*.35+.08});
+  function loop(){x.clearRect(0,0,W,H);for(var i=0;i<P.length;i++){var p=P[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;x.beginPath();x.arc(p.x,p.y,p.r,0,6.283);x.fillStyle='rgba(232,196,106,'+p.a+')';x.fill();}requestAnimationFrame(loop);}loop();})();
+  </script>
+</body>
+</html>

@@ -4,86 +4,100 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>About us · Sports Expectations</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/imagenes/favicon-32.png">
+  <link rel="apple-touch-icon" href="assets/imagenes/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     :root{--bg:#070b12;--panel:rgba(15,22,34,.62);--line:rgba(255,255,255,.09);--tx:#eef2f8;--tx2:#b6c0cd;--tx3:#7c8797;--oro:#e8c46a}
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--tx);font-family:"Inter",system-ui,sans-serif;line-height:1.7;position:relative;min-height:100vh;overflow-x:hidden}
+    body{margin:0;background:var(--bg);color:var(--tx);font-family:"Inter",system-ui,sans-serif;line-height:1.75;position:relative;min-height:100vh;overflow-x:hidden}
     body::before{content:'';position:fixed;inset:0;z-index:-3;background:url('assets/imagenes/fondos/fondo-pagina.webp') center/cover no-repeat;filter:blur(7px) brightness(.42);transform:scale(1.08)}
     body::after{content:'';position:fixed;inset:0;z-index:-2;background:linear-gradient(180deg,rgba(7,11,18,.8),rgba(7,11,18,.9))}
     #lg-particles{position:fixed;inset:0;z-index:-1;pointer-events:none}
-    a{color:var(--oro);text-decoration:none;transition:color .15s}
-    a:hover{color:#f3d488}
-    .lg-nav{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 28px;background:rgba(7,11,18,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+    a{color:var(--oro);text-decoration:none;transition:color .15s}a:hover{color:#f3d488}
+    .lg-nav{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:rgba(7,11,18,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
     .lg-brand{display:flex;align-items:center;gap:11px}
-    .lg-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:rgba(232,196,106,.14);border:1px solid rgba(232,196,106,.32);color:var(--oro)}
-    .lg-mark svg{width:21px;height:21px}
-    .lg-brand b{font-family:"Poppins",sans-serif;font-weight:700;font-size:15px;color:#fff}
-    .lg-brand span{display:block;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3)}
+    .lg-brand img{height:34px;width:auto}
     .lg-back{font-size:13.5px;font-weight:600;padding:9px 16px;border:1px solid var(--line);border-radius:10px;color:var(--tx);background:rgba(255,255,255,.03)}
     .lg-back:hover{border-color:var(--oro);color:var(--oro)}
-    .lg-wrap{max-width:860px;margin:0 auto;padding:56px 28px 90px;position:relative;z-index:1}
+    .lg-wrap{max-width:880px;margin:0 auto;padding:52px 28px 90px;position:relative;z-index:1}
     .lg-eyebrow{font-family:"Poppins",sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--oro)}
     h1{font-family:"Poppins",sans-serif;font-weight:800;font-size:clamp(30px,4vw,44px);color:#fff;margin:12px 0 8px;line-height:1.1;text-shadow:0 2px 24px rgba(0,0,0,.5)}
-    .lg-updated{color:var(--tx3);font-size:13px;margin-bottom:8px}
-    .lg-note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;font-size:14px;color:var(--tx2);margin:26px 0 40px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 10px 34px -14px rgba(0,0,0,.6)}
+    .lg-note{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;font-size:14.5px;color:var(--tx2);margin:24px 0 40px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 10px 34px -14px rgba(0,0,0,.6)}
     .lg-note strong{color:var(--tx)}
-    h2{font-family:"Poppins",sans-serif;font-weight:700;font-size:20px;color:#fff;margin:38px 0 12px;scroll-margin-top:80px}
+    h2{font-family:"Poppins",sans-serif;font-weight:700;font-size:21px;color:#fff;margin:42px 0 12px;scroll-margin-top:80px}
     h2 .num{color:var(--oro);margin-right:8px}
+    h3{font-family:"Poppins",sans-serif;font-weight:700;font-size:16px;color:#fff;margin:24px 0 8px}
     p,li{font-size:15px;color:var(--tx2)}
-    ul{padding-left:20px;margin:10px 0}
-    li{margin-bottom:7px}
+    ul,ol{padding-left:22px;margin:10px 0}li{margin-bottom:8px}
     strong{color:var(--tx)}
-    .lg-toc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 26px;margin-bottom:44px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 10px 34px -14px rgba(0,0,0,.6)}
-    .lg-toc h3{font-family:"Poppins",sans-serif;font-size:13px;color:#fff;margin:0 0 12px;text-transform:uppercase;letter-spacing:.08em}
-    .lg-toc ol{margin:0;padding-left:20px;columns:2;column-gap:32px}
-    .lg-toc li{font-size:13.5px;margin-bottom:6px}
-    .lg-foot{border-top:1px solid var(--line);padding:26px 28px;text-align:center;font-size:12.5px;color:var(--tx3);position:relative;z-index:1;background:rgba(7,11,18,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-    @media(max-width:640px){.lg-toc ol{columns:1}}
+    .lg-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:16px 0;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 10px 34px -14px rgba(0,0,0,.55)}
+    .lg-card h3{margin-top:0}
+    .lg-money{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0}
+    .lg-money div{flex:1;min-width:200px;background:rgba(232,196,106,.08);border:1px solid rgba(232,196,106,.28);border-radius:13px;padding:16px 18px}
+    .lg-money b{display:block;font-family:"Poppins",sans-serif;font-size:22px;color:var(--oro)}
+    .lg-money span{font-size:13px;color:var(--tx2)}
+    .lg-stat{display:flex;gap:22px;flex-wrap:wrap;margin:16px 0}
+    .lg-stat div{text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px 24px;flex:1;min-width:120px}
+    .lg-stat b{display:block;font-family:"Chakra Petch","Poppins",sans-serif;font-size:30px;color:#fff}
+    .lg-stat span{font-size:12.5px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em}
+    .pill-ok{color:#3ecf8e;font-weight:700}.pill-no{color:#ff8a90;font-weight:700}
+    .lg-foot{border-top:1px solid var(--line);padding:26px 28px;text-align:center;font-size:12.5px;color:var(--tx3);position:relative;z-index:1;background:rgba(7,11,18,.45);backdrop-filter:blur(10px)}
+    @media(max-width:640px){.lg-money div,.lg-stat div{min-width:100%}}
   </style>
 </head>
 <body>
   <canvas id="lg-particles"></canvas>
   <nav class="lg-nav">
-    <a href="index.html" class="lg-brand">
-      <span class="lg-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l5-9 4 5 3-7 6 11z"/><circle cx="18" cy="5" r="2"/></svg></span>
-      <div><b>Sports Expectations</b><span>Data. Stats. Results.</span></div>
-    </a>
-    <a href="index.html" class="lg-back">← Back to home</a>
+    <a href="index.html" class="lg-brand"><img src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations"></a>
+    <a href="index.html" class="lg-back">&larr; Back to home</a>
   </nav>
-
   <main class="lg-wrap">
     <span class="lg-eyebrow">Company</span>
-    <h1>About us</h1>
-    
-    <div class="lg-note">Sports Expectations is an information platform built by two lifelong friends. This is our story, and what we stand for.</div>
-    <p>Sports Expectations was born from something simple and real: a friendship. Two Cubans who met more than thirteen years ago, back home, and who never let distance break what they built together.</p>
-    <h2><span class="num">·</span>Two people, one idea</h2>
-    <p><strong>Oscar Luis</strong> lives in the United States and leads the vision behind the project. He brought the business idea, backs the operation, and works hands-on as a baseball data analyst, a discipline he has refined over years of studying the numbers behind the game.</p>
-    <p><strong>Jesús Pérez</strong> works from Cuba, where, despite every difficulty his country places in the way, he has spent the last decade becoming a developer across many programming languages, from Python and JavaScript to blockchain, along with graphic design and years of experience as a trader. He designed and built the entire ecosystem you are using right now.</p>
-    <h2><span class="num">·</span>How it started</h2>
-    <p>Life took them to different countries, but the friendship stayed. One day, talking like they always had, the conversation turned to what each of them loved: Oscar to sports statistics and the craft of reading data, Jesús to building systems that turn raw information into something useful and clear. They realized that between the two of them, they had everything a real product needs.</p>
-    <p>So they decided to build it. A project where a friendship that survived thousands of miles could also create value, each of them contributing what he does best.</p>
-    <h2><span class="num">·</span>What we built</h2>
-    <p>The result is a platform that monitors sports statistics in real time, organizes them, runs them through careful analysis, and presents them so that anyone can be better informed in seconds instead of hours. We are not a betting service and we do not tell anyone to wager. We do one thing, and we try to do it exceptionally well: turn public sports data into clear, honest, usable information.</p>
-    <p>That is who we are, two friends, their knowledge, and a system built to make sense of the numbers.</p>
+    <h1>About Sports Expectations</h1>
+    <div class="lg-note"><strong>Sports Expectations LLC</strong> is a technology company that turns public sports data into clear, verifiable, and useful information. We are an analytics and information platform &mdash; not a sportsbook, not a betting operator, and not a financial advisor.</div>
+
+    <h2><span class="num">·</span>Who we are</h2>
+    <p>Sports Expectations is a digital platform dedicated to the collection, organization, and presentation of sports statistics and probability estimates. We monitor competitions in real time across multiple sports and leagues, structure the data, run it through consistent analytical methods, and deliver it in a format anyone can understand in seconds rather than hours.</p>
+    <p>Our work is strictly <strong>informational</strong>. We do not accept, place, hold, or facilitate wagers of any kind, and nothing on our platform should be interpreted as a recommendation to bet or as a guarantee of any result.</p>
+
+    <h2><span class="num">·</span>Our mission</h2>
+    <p>To make sports data <strong>honest, accessible, and measurable</strong>. In an industry crowded with inflated claims and false certainty, our commitment is the opposite: show the real numbers, explain how they are derived, present probabilities as the estimates they are, and let people make their own informed decisions.</p>
+
+    <h2><span class="num">·</span>The people behind it</h2>
+    <p>Sports Expectations was founded by two professionals whose partnership predates the company by more than a decade.</p>
+    <p><strong>Oscar Luis</strong>, based in the United States, leads the company&rsquo;s vision and operations. He originated the business concept and works hands-on as a baseball data analyst, a discipline he has developed over years of studying the numbers that drive the sport.</p>
+    <p><strong>Jesús Pérez</strong>, working from Cuba, serves as the founder and developer of the platform. Over the past decade he has built expertise across multiple programming languages &mdash; from Python and JavaScript to blockchain &mdash; along with graphic design and hands-on experience as a trader. He designed and engineered the entire ecosystem that powers the product today.</p>
+    <p>What began as a friendship between two Cubans became a company built on a simple division of strengths: one who reads the data, one who builds the systems that make it useful.</p>
+
+    <h2><span class="num">·</span>What we build</h2>
+    <p>Our platform combines two things. First, an <strong>automated analytics engine</strong> that ingests public data &mdash; records, standings, form, and match context &mdash; and produces clear statistical comparisons and win-probability estimates for upcoming and live games. Second, a <strong>network of independent analysts</strong> who publish their own sports analysis and signals, and whose track record is measured objectively through a public prestige system.</p>
+    <p>Together, these give our users a transparent picture of what the data says and of who, among our analysts, has actually been getting it right.</p>
+
+    <h2><span class="num">·</span>Our principles</h2>
+    <ul>
+      <li><strong>Honesty over hype.</strong> We present estimates, not promises. We never guarantee an outcome.</li>
+      <li><strong>Transparency.</strong> Our probabilities come from real, public data, and our analysts are held to a measurable, public accountability system.</li>
+      <li><strong>We are not a betting service.</strong> We do not take wagers or advise anyone to gamble. What people do with information is their own decision and their own responsibility.</li>
+      <li><strong>Responsibility.</strong> We encourage responsible, lawful use of our platform and provide clear guidance and resources on the subject.</li>
+    </ul>
+
+    <h2><span class="num">·</span>Company &amp; jurisdiction</h2>
+    <p>Sports Expectations operates as <strong>Sports Expectations LLC</strong>, organized under the laws of the State of Florida, United States. For legal terms governing your use of the platform, please see our <a href="terms.html">Terms of Service</a>, <a href="privacy.html">Privacy Policy</a>, and <a href="disclaimer.html">Disclaimer</a>. To learn how the platform, the plans, and the analyst program work in detail, visit <a href="how-it-works.html">How it works</a>.</p>
   </main>
-
-</main>
-
   <footer class="lg-foot">
     <div style="max-width:900px;margin:0 auto 14px;display:flex;flex-wrap:wrap;justify-content:center;gap:9px 8px;font-size:13px">
-      <a href="index.html">Home</a><span style="color:var(--tx3)">·</span><a href="terms.html">Terms</a><span style="color:var(--tx3)">·</span><a href="privacy.html">Privacy</a><span style="color:var(--tx3)">·</span><a href="disclaimer.html">Disclaimer</a><span style="color:var(--tx3)">·</span><a href="cookies.html">Cookies</a><span style="color:var(--tx3)">·</span><a href="acceptable-use.html">Acceptable use</a><span style="color:var(--tx3)">·</span><a href="dmca.html">DMCA</a><span style="color:var(--tx3)">·</span><a href="responsible.html">Responsible gaming</a><span style="color:var(--tx3)">·</span><a href="faq.html">FAQ</a><span style="color:var(--tx3)">·</span><a href="help.html">Help</a>
+      <a href="index.html">Home</a><span style="color:var(--tx3)">·</span><a href="about.html">About us</a><span style="color:var(--tx3)">·</span><a href="how-it-works.html">How it works</a><span style="color:var(--tx3)">·</span><a href="plans.html">Plans</a><span style="color:var(--tx3)">·</span><a href="terms.html">Terms</a><span style="color:var(--tx3)">·</span><a href="privacy.html">Privacy</a><span style="color:var(--tx3)">·</span><a href="disclaimer.html">Disclaimer</a><span style="color:var(--tx3)">·</span><a href="responsible.html">Responsible gaming</a>
     </div>
-    <div style="text-align:center">© 2026 Sports Expectations. All rights reserved. Informational analysis, not betting advice.</div>
+    <div style="text-align:center">&copy; 2026 Sports Expectations LLC. All rights reserved. Informational analysis, not betting advice.</div>
   </footer>
-<script>
-(function(){var c=document.getElementById('lg-particles');if(!c)return;var x=c.getContext('2d'),P=[],W,H;
-function rs(){W=c.width=innerWidth;H=c.height=innerHeight;}rs();addEventListener('resize',rs);
-for(var i=0;i<44;i++)P.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.4,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,a:Math.random()*.35+.08});
-function loop(){x.clearRect(0,0,W,H);for(var i=0;i<P.length;i++){var p=P[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;x.beginPath();x.arc(p.x,p.y,p.r,0,6.283);x.fillStyle='rgba(232,196,106,'+p.a+')';x.fill();}requestAnimationFrame(loop);}loop();})();
-</script>
+  <script>
+  (function(){var c=document.getElementById('lg-particles');if(!c)return;var x=c.getContext('2d'),P=[],W,H;
+  function rs(){W=c.width=innerWidth;H=c.height=innerHeight;}rs();addEventListener('resize',rs);
+  for(var i=0;i<44;i++)P.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.4,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,a:Math.random()*.35+.08});
+  function loop(){x.clearRect(0,0,W,H);for(var i=0;i<P.length;i++){var p=P[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;x.beginPath();x.arc(p.x,p.y,p.r,0,6.283);x.fillStyle='rgba(232,196,106,'+p.a+')';x.fill();}requestAnimationFrame(loop);}loop();})();
+  </script>
 </body>
 </html>
