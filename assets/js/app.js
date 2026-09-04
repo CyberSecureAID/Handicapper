@@ -916,25 +916,40 @@ async function _cargarBuzonPerfil(ov, esPrem) {
   _notificarNuevas(signals);
 }
 
-/* Modal grande con los 3 planes (se abre desde el trofeo). */
+/* Modal grande con los 3 planes (se abre desde el trofeo). Estilo Hostinger:
+   todos muestran las MISMAS filas, con ✓ lo que traen y ✗ lo que no. */
 async function _abrirPlanesModal() {
   if (document.getElementById('pl-ov')) return;
   const ES = idiomaActual() === 'es', L = (en, es) => ES ? es : en;
   let PLANES = [];
   try { const m = await import('./datos/planes.js'); PLANES = m.PLANES || []; } catch (_) {}
   const nivelAct = _esAdmin ? 'premium' : planActual();
-  const chk = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+  // Matriz de características: cada fila dice qué tiene cada plan (true / false / texto corto)
+  const F = [
+    { t: L('All leagues & categories', 'Todas las ligas y categorías'), b: true, p: true, pr: true },
+    { t: L('Advanced team & player comparison', 'Comparación avanzada de equipos y jugadores'), b: true, p: true, pr: true },
+    { t: L('Hire specialized analyst signals', 'Contratar señales de analistas'), b: true, p: true, pr: true },
+    { t: L('Hits, Goals, Points & Shots', 'Hits, Goals, Points y Shots'), b: false, p: L('Limited', 'Limitado'), pr: L('Full', 'Completo') },
+    { t: 'Fútbol Rubio', b: false, p: L('Limited', 'Limitado'), pr: L('Full', 'Completo') },
+    { t: L('Analyst signals access', 'Acceso a señales de analistas'), b: false, p: L('Limited', 'Limitado'), pr: '~50%' },
+    { t: L('Push notifications', 'Notificaciones push'), b: false, p: false, pr: true },
+    { t: L('Profile photo', 'Foto de perfil'), b: false, p: false, pr: true },
+  ];
+  const chk = '<svg class="pl-yes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+  const cross = '<svg class="pl-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const celda = (v) => v === true ? chk : (v === false || v == null) ? cross : `${chk}<i>${esc(v)}</i>`;
+  const key = (p) => p.id === 'basic' ? 'b' : p.id === 'pro' ? 'p' : 'pr';
   const card = (p) => {
-    const feats = (p.incluye || []).map(f => `<li>${chk}<span>${esc(ES ? f.es : f.en)}</span></li>`).join('');
+    const k = key(p);
+    const filas = F.map(f => `<li class="${(f[k] === false || f[k] == null) ? 'off' : ''}">${celda(f[k])}<span>${esc(f.t)}</span></li>`).join('');
     const actual = p.id === nivelAct;
     return `<div class="pl-m-card ${p.destacado ? 'feat' : ''} ${actual ? 'actual' : ''}">
       <div class="pl-m-top">
         ${p.etiqueta ? `<span class="pl-m-tag">${esc(ES ? p.etiqueta.es : p.etiqueta.en)}</span>` : '<span class="pl-m-tag ghost"></span>'}
         <div class="pl-m-name">${esc(p.nombre)}</div>
         <div class="pl-m-price">$${p.mensual}<span>/${L('mo', 'mes')}</span></div>
-        <div class="pl-m-sum">${esc(ES ? p.resumen.es : p.resumen.en)}</div>
       </div>
-      <ul class="pl-m-list">${feats}</ul>
+      <ul class="pl-m-list">${filas}</ul>
       <button class="pl-m-btn ${actual ? 'on' : ''}" ${actual ? 'disabled' : ''}>${actual ? L('Your current plan', 'Tu plan actual') : L('Choose plan', 'Elegir plan')}</button>
     </div>`;
   };
