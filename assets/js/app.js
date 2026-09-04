@@ -954,7 +954,7 @@ async function _abrirPlanesModal() {
     const k = key(p);
     const filas = F.map(f => `<li class="${(f[k] === false || f[k] == null) ? 'off' : ''}">${celda(f[k])}<span>${esc(f.t)}</span></li>`).join('');
     const actual = p.id === nivelAct;
-    return `<div class="pl-m-card ${p.destacado ? 'feat' : ''} ${actual ? 'actual' : ''}">
+    return `<div class="pl-m-card pl-m-${p.id} ${p.destacado ? 'feat' : ''} ${actual ? 'actual' : ''}">
       <div class="pl-m-top">
         ${p.etiqueta ? `<span class="pl-m-tag">${esc(ES ? p.etiqueta.es : p.etiqueta.en)}</span>` : '<span class="pl-m-tag ghost"></span>'}
         <div class="pl-m-name">${esc(p.nombre)}</div>
