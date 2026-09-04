@@ -843,13 +843,133 @@ function pintarCuenta(usuario) {
   cerrarCuentaMenu();
 }
 
+/* ============================================================
+   PANEL DE PERFIL — pantalla grande de 3 columnas (Fase 1: estructura)
+   ============================================================ */
+function abrirPanelPerfil() {
+  if (document.getElementById('pp-ov')) return;
+  const ES = idiomaActual() === 'es';
+  const L = (en, es) => ES ? es : en;
+  const u = _sesion || {};
+  const nombre = u.nombre || (u.email || '').split('@')[0] || (ES ? 'Usuario' : 'User');
+  const email = u.email || '';
+  const usuario = (u.email || '').split('@')[0] || '';
+  const nivel = _esAdmin ? 'admin' : planActual();
+  const esPrem = _esAdmin || nivel === 'premium';
+  const badge = _esAdmin ? 'Admin' : nivel === 'premium' ? 'Premium' : nivel === 'pro' ? 'Pro' : 'Basic';
+  const ini = (nombre || '?').charAt(0).toUpperCase();
+
+  const I = {
+    user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c0-3.4 2.9-5.3 6.5-5.3s6.5 1.9 6.5 5.3"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>',
+    inbox: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 6h13l3.5 6v6a2 2 0 01-2 2H4a2 2 0 01-2-2v-6z"/></svg>',
+    globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg>',
+    panel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l5-9 4 5 3-7 6 11z"/></svg>',
+    salir: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
+    cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+    eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>',
+    arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    trofeo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0zM7 5H4v2a3 3 0 003 3M17 5h3v2a3 3 0 01-3 3"/></svg>',
+  };
+  const item = (id, ic, txt, badge2, extra) => `<button class="pp-item ${extra || ''}" data-pp="${id}">${ic}<span>${txt}</span>${badge2 ? `<em class="pp-badge">${badge2}</em>` : ''}</button>`;
+
+  const menu = `
+    ${item('ajustes', I.user, L('Profile settings', 'Ajustes de perfil'), '', 'on')}
+    ${item('notis', I.bell, L('Notifications', 'Notificaciones'), '')}
+    ${item('buzon', I.inbox, L('Signals inbox', 'Buzón de señales'), '3')}
+    ${item('idioma', I.globe, L('Language', 'Idioma') + ' · ' + idiomaActual().toUpperCase(), '')}
+    ${_esAdmin ? item('panel', I.panel, L('Admin panel', 'Panel administrativo'), '', 'pp-admin') : ''}
+    ${item('salir', I.salir, L('Log out', 'Cerrar sesión'), '', 'pp-out')}`;
+
+  const notiEj = `
+    <div class="pp-r-item"><span class="pp-r-ic azul">${I.bell}</span><div><b>${L('New analysis available', 'Nuevo análisis disponible')}</b><span>NBA · Lakers vs Warriors</span></div><em>10m</em></div>
+    <div class="pp-r-item"><span class="pp-r-ic">${I.panel}</span><div><b>${L('Stats updated', 'Actualización de estadísticas')}</b><span>LaLiga · ${L('Matchday', 'Jornada')} 38</span></div><em>1h</em></div>`;
+  const buzonEj = esPrem ? `
+    <div class="pp-r-item"><span class="pp-r-ic verde">${I.arrow}</span><div><b>${L('Trend signal', 'Señal de tendencia')}</b><span>NFL · ${L('Today', 'Hoy')} 2:30 PM</span></div><em>09:15</em></div>
+    <div class="pp-r-item"><span class="pp-r-ic azul">${I.arrow}</span><div><b>${L('High probability', 'Alta probabilidad')}</b><span>NBA · ${L('Today', 'Hoy')} 7:00 PM</span></div><em>08:45</em></div>`
+    : `<div class="pp-lock">${I.inbox}<p>${L('Signal inbox is a Premium feature.', 'El buzón de señales es una función Premium.')}</p><button class="pp-up" data-pp="planes">${L('See Premium', 'Ver Premium')}</button></div>`;
+
+  const ov = document.createElement('div');
+  ov.className = 'pp-ov'; ov.id = 'pp-ov';
+  ov.innerHTML = `
+    <div class="pp-modal" role="dialog" aria-modal="true">
+      <button class="pp-x" id="pp-x" aria-label="close">✕</button>
+      <div class="pp-grid">
+        <aside class="pp-side">
+          <div class="pp-avwrap">
+            <div class="pp-av">${ini}</div>
+            ${esPrem ? `<button class="pp-cam" data-pp="foto" title="${L('Change photo', 'Cambiar foto')}">${I.cam}</button>` : ''}
+          </div>
+          <div class="pp-nombre">${esc(nombre)}</div>
+          <span class="pp-plan pp-plan-${nivel}">${badge}</span>
+          <div class="pp-mail">${esc(email)}</div>
+          <nav class="pp-menu">${menu}</nav>
+          <div class="pp-trofeo">
+            <span class="pp-tr-ic">${I.trofeo}</span>
+            <div><b>${L('Exclusive analysis', 'Análisis exclusivos')}</b><span>${esPrem ? L('You have full access.', 'Tienes acceso completo.') : L('Upgrade to Pro or Premium', 'Mejora con Pro o Premium')}</span></div>
+            ${esPrem ? '' : `<button class="pp-tr-go" data-pp="planes">${I.arrow}</button>`}
+          </div>
+        </aside>
+
+        <main class="pp-main">
+          <h2 class="pp-h2">${L('Profile settings', 'Ajustes de perfil')}</h2>
+          <p class="pp-sub">${L('Manage your personal information and account preferences.', 'Administra tu información personal y las preferencias de tu cuenta.')}</p>
+          <div class="pp-field"><label>${I.user}${L('Name', 'Nombre')}</label><input type="text" value="${esc(nombre)}"></div>
+          <div class="pp-field"><label>${I.user}${L('Username', 'Nombre de usuario')}</label><input type="text" value="${esc(usuario)}"></div>
+          <div class="pp-field"><label>${I.inbox}${L('Email', 'Correo electrónico')}</label><input type="email" value="${esc(email)}"></div>
+          <div class="pp-field"><label>${I.shield}${L('New password', 'Nueva contraseña')}</label><div class="pp-pass"><input type="password" value="••••••••••••"><button class="pp-eye">${I.eye}</button></div><small>${L('Leave blank to keep your current password.', 'Deja en blanco si no deseas cambiar la contraseña.')}</small></div>
+          <div class="pp-actions"><button class="pp-cancel" id="pp-cancel">${L('Cancel', 'Cancelar')}</button><button class="pp-apply">${L('Apply changes', 'Aplicar cambios')} ${I.arrow}</button></div>
+        </main>
+
+        <aside class="pp-right">
+          <div class="pp-card">
+            <div class="pp-card-h">${I.bell}<b>${L('Notifications', 'Notificaciones')}</b><em class="pp-badge rojo">2</em></div>
+            ${notiEj}
+            <button class="pp-card-link" data-pp="notis">${L('See all notifications', 'Ver todas las notificaciones')} ${I.arrow}</button>
+          </div>
+          <div class="pp-card">
+            <div class="pp-card-h">${I.inbox}<b>${L('Signals inbox', 'Buzón de señales')}</b>${esPrem ? '<em class="pp-badge">3</em>' : ''}</div>
+            ${buzonEj}
+            ${esPrem ? `<button class="pp-card-link" data-pp="buzon">${L('See all signals', 'Ver todas las señales')} ${I.arrow}</button>` : ''}
+          </div>
+          <div class="pp-card">
+            <div class="pp-card-h">${I.shield}<b>${L('Account security', 'Seguridad de cuenta')}</b></div>
+            <div class="pp-sec"><span>${L('Status', 'Estado')}</span><b class="pp-ok">${L('Protected', 'Protegida')} ✓</b></div>
+            <div class="pp-sec"><span>${L('Last access', 'Último acceso')}</span><b>${L('Today', 'Hoy')}</b></div>
+          </div>
+        </aside>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  document.body.style.overflow = 'hidden';
+
+  const cerrar = () => { ov.remove(); document.body.style.overflow = ''; };
+  ov.querySelector('#pp-x').onclick = cerrar;
+  ov.querySelector('#pp-cancel').onclick = cerrar;
+  ov.onclick = (e) => { if (e.target === ov) cerrar(); };
+  ov.querySelector('.pp-eye').onclick = (e) => { const i = e.currentTarget.previousElementSibling; i.type = i.type === 'password' ? 'text' : 'password'; };
+
+  ov.querySelectorAll('[data-pp]').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.pp;
+    if (k === 'idioma') { fijarIdioma(idiomaActual() === 'en' ? 'es' : 'en'); cerrar(); setTimeout(abrirPanelPerfil, 60); }
+    else if (k === 'salir') { try { localStorage.removeItem('se-en-app'); localStorage.removeItem('se-vista'); } catch (_) {} cerrar(); limpiarVistaPrevia(); salir(); }
+    else if (k === 'panel') { cerrar(); location.hash = '#mesa'; location.reload(); }
+    else if (k === 'planes') { cerrar(); mostrarPantalla('pricing'); }
+    else if (['ajustes', 'notis', 'buzon', 'foto'].includes(k)) {
+      ov.querySelectorAll('.pp-menu .pp-item').forEach(x => x.classList.toggle('on', x.dataset.pp === k));
+      // Fases 2-4: aquí irá el contenido real de cada sección.
+    }
+  }));
+}
+
 function onCuentaClick(e) {
   if (e) { e.stopPropagation(); }
   if (!_sesion) {
     if (!estaConfigurado()) { avisoFirebase(); return; }
     abrirAuth();
   } else {
-    toggleCuentaMenu();
+    abrirPanelPerfil();
   }
 }
 
