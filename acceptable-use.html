@@ -18,6 +18,7 @@
     a:hover{color:#f3d488}
     .lg-nav{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:16px 28px;background:rgba(7,11,18,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
     .lg-brand{display:flex;align-items:center;gap:11px}
+    .lg-brand img{height:34px;width:auto;object-fit:contain}
     .lg-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:rgba(232,196,106,.14);border:1px solid rgba(232,196,106,.32);color:var(--oro)}
     .lg-mark svg{width:21px;height:21px}
     .lg-brand b{font-family:"Poppins",sans-serif;font-weight:700;font-size:15px;color:#fff}
@@ -47,10 +48,7 @@
 <body>
   <canvas id="lg-particles"></canvas>
   <nav class="lg-nav">
-    <a href="index.html" class="lg-brand">
-      <span class="lg-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l5-9 4 5 3-7 6 11z"/><circle cx="18" cy="5" r="2"/></svg></span>
-      <div><b>Sports Expectations</b><span>Data. Stats. Results.</span></div>
-    </a>
+    <a href="index.html" class="lg-brand"><img src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations"></a>
     <a href="index.html" class="lg-back">← Back to home</a>
   </nav>
   <main class="lg-wrap">
