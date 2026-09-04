@@ -1118,6 +1118,7 @@ function abrirPanelPerfil() {
   const flag = idiomaActual() === 'es' ? banderaES : banderaEN;
   const menu = `
     <button class="pp-item" data-pp="idioma">${flag}<span>${L('Language', 'Idioma')} · ${idiomaActual().toUpperCase()}</span></button>
+    ${(window.__pwaPrompt || window.matchMedia('(display-mode: browser)').matches) ? `<button class="pp-item pp-install" data-install><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg><span>${L('Install app', 'Instalar app')}</span></button>` : ''}
     ${_esAdmin ? item('panel', I.panel, L('Admin panel', 'Panel administrativo'), '', 'pp-admin') : ''}
     ${item('salir', I.salir, L('Log out', 'Cerrar sesión'), '', 'pp-out')}`;
 
