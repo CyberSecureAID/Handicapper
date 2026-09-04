@@ -92,17 +92,30 @@ export function aplicarI18n() {
 export function pintarPlanes() {
   const precio = (p) => _ciclo === 'anual' ? p.anual : p.mensual;
   const sufijo = _ciclo === 'anual' ? '/yr' : '/mo';
+  const ES = idiomaActual() === 'es';
+  const L = (en, es) => ES ? es : en;
+  const MATRIZ = [
+    { t: L('All leagues & categories', 'Todas las ligas y categorías'), b: true, p: true, pr: true },
+    { t: L('Advanced team & player comparison', 'Comparación avanzada de equipos y jugadores'), b: true, p: true, pr: true },
+    { t: L('Hire specialized analyst signals', 'Contratar señales de analistas'), b: true, p: true, pr: true },
+    { t: L('Hits, Goals, Points & Shots', 'Hits, Goals, Points y Shots'), b: false, p: L('Limited', 'Limitado'), pr: L('Full', 'Completo') },
+    { t: 'Fútbol Rubio', b: false, p: L('Limited', 'Limitado'), pr: L('Full', 'Completo') },
+    { t: L('Analyst signals access', 'Acceso a señales de analistas'), b: false, p: L('Limited', 'Limitado'), pr: '~50%' },
+    { t: L('Push notifications', 'Notificaciones push'), b: false, p: false, pr: true },
+    { t: L('Profile photo', 'Foto de perfil'), b: false, p: false, pr: true },
+  ];
+  const NO_ICON = '<svg class="pl-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" width="14" height="14"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const celda = (v) => v === true ? IC_CHECK : (v === false || v == null) ? NO_ICON : `${IC_CHECK}<i>${v}</i>`;
+  const claveDe = (p) => p.id === 'basic' ? 'b' : p.id === 'pro' ? 'p' : 'pr';
   const cardHTML = (p, conBoton) => {
     const et = p.etiqueta ? `<div class="plan-etq">${Lg(p.etiqueta)}</div>` : '';
-    const feats = p.incluye.map(f => `<li>${IC_CHECK}${Lg(f)}</li>`).join('');
-    const ahorro = '';
+    const k = claveDe(p);
+    const feats = MATRIZ.map(f => `<li class="${(f[k] === false || f[k] == null) ? 'off' : ''}">${celda(f[k])}<span>${f.t}</span></li>`).join('');
     return `
       <div class="plan ${p.destacado ? 'destacado' : ''}">
         ${et}
         <div class="plan-nom">${p.nombre}</div>
-        <div class="plan-resumen">${Lg(p.resumen)}</div>
         <div class="plan-precio"><span class="pp-num">$${precio(p).toFixed(2)}</span><span class="pp-suf">${sufijo}</span></div>
-        ${ahorro}
         <ul class="plan-feats">${feats}</ul>
         ${conBoton ? `<button class="plan-btn ${p.destacado ? 'oro' : ''}" data-plan="${p.id}">${t('pl.choose')}</button>` : ''}
       </div>`;
