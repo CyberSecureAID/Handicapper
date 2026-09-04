@@ -1099,11 +1099,30 @@ function tarjetaPartidoAdmin(p) {
   </button>`;
 }
 
-function auditarMotor() {
+async function auditarMotor() {
+  const es = _mesaLang === 'es';
+  const ov = document.createElement('div');
+  ov.className = 'aud-ov';
+  ov.innerHTML = `<div class="aud-modal">
+    <div class="aud-head"><b>${es ? 'Auditoría del motor' : 'Engine audit'}</b><button class="aud-x" aria-label="close">✕</button></div>
+    <div class="aud-sub">${es ? 'réc = récord · pos = posición · win% = % de victorias. Cópiame esta tabla completa.' : 'rec = record · pos = position · win% = win rate. Copy me the full table.'}</div>
+    <div class="aud-body" id="aud-body"><div style="padding:30px;text-align:center;color:#8a94a3">${es ? 'Cargando partidos de todas las ligas…' : 'Loading matches from all leagues…'}</div></div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('.aud-x').onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+
+  // Cargar partidos de varias ligas (sin depender de la liga seleccionada)
+  const ligas = ['mlb', 'nba', 'nfl', 'nhl', 'epl', 'laliga'];
+  let partidos = [];
+  for (const lg of ligas) {
+    try { const ps = await listarPartidos(lg); if (Array.isArray(ps)) partidos.push(...ps.map(p => ({ ...p, _liga: lg }))); } catch (_) {}
+  }
   const pct = (v) => v != null && isFinite(v) ? Math.round((v <= 1 ? v * 100 : v)) + '%' : '—';
-  const rows = (_partidos || []).map(p => {
+  const rows = partidos.map(p => {
     const L = p.local || {}, V = p.visita || {}, m = p.mercado || {};
     return `<tr>
+      <td style="color:#7c8797">${esc((p._liga || '').toUpperCase())}</td>
       <td>${esc(L.abrev || L.nombre || '?')} <span style="color:#7c8797">vs</span> ${esc(V.abrev || V.nombre || '?')}</td>
       <td>${esc(L.record || '—')} / ${L.posicion != null ? L.posicion + '&ordm;' : '—'} / ${pct(L.winPct)}</td>
       <td>${esc(V.record || '—')} / ${V.posicion != null ? V.posicion + '&ordm;' : '—'} / ${pct(V.winPct)}</td>
@@ -1111,16 +1130,8 @@ function auditarMotor() {
       <td style="color:#7c8797">${esc(p._fuenteProb || 'modelo')}</td>
     </tr>`;
   }).join('');
-  const ov = document.createElement('div');
-  ov.className = 'aud-ov';
-  ov.innerHTML = `<div class="aud-modal">
-    <div class="aud-head"><b>${_mesaLang === 'es' ? 'Auditoría del motor' : 'Engine audit'} · ${(_partidos || []).length} · ${esc(_ligaSel || '')}</b><button class="aud-x" aria-label="close">✕</button></div>
-    <div class="aud-sub">${_mesaLang === 'es' ? 'réc = récord · pos = posición en tabla · win% = % de victorias. Cópiame esta tabla.' : 'rec = record · pos = table position · win% = win rate. Copy me this table.'}</div>
-    <div class="aud-body"><table class="aud-t"><thead><tr><th>${_mesaLang === 'es' ? 'Partido' : 'Match'}</th><th>Local (réc/pos/win%)</th><th>Visita (réc/pos/win%)</th><th>Prob L/V</th><th>${_mesaLang === 'es' ? 'Fuente' : 'Source'}</th></tr></thead><tbody>${rows || `<tr><td colspan="5" style="text-align:center;padding:20px;color:#7c8797">${_mesaLang === 'es' ? 'No hay partidos cargados. Abre una liga primero en Analysis Hub.' : 'No matches loaded. Open a league first in the Analysis Hub.'}</td></tr>`}</tbody></table></div>
-  </div>`;
-  document.body.appendChild(ov);
-  ov.querySelector('.aud-x').onclick = () => ov.remove();
-  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+  const body = ov.querySelector('#aud-body');
+  if (body) body.innerHTML = `<table class="aud-t"><thead><tr><th>Liga</th><th>${es ? 'Partido' : 'Match'}</th><th>Local (réc/pos/win%)</th><th>Visita (réc/pos/win%)</th><th>Prob L/V</th><th>${es ? 'Fuente' : 'Source'}</th></tr></thead><tbody>${rows || `<tr><td colspan="6" style="text-align:center;padding:20px;color:#7c8797">${es ? 'No se recibieron partidos de ninguna liga (posible bloqueo de la API/red).' : 'No matches received from any league (possible API/network block).'}</td></tr>`}</tbody></table>`;
 }
 
 function enlazarAnalisis() {
