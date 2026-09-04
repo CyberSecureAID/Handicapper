@@ -1013,11 +1013,11 @@ function abrirPanelPerfil() {
           <div class="pp-mail">${esc(email)}</div>
           ${esPrem ? `<button class="pp-foto-del" data-pp="foto-del">${L('Remove photo', 'Eliminar foto')}</button>` : ''}
           <nav class="pp-menu">${menu}</nav>
-          <div class="pp-trofeo">
+          <button class="pp-trofeo" data-pp="trofeo">
             <span class="pp-tr-ic pp-tr-img"><img src="assets/imagenes/trofeo.webp" alt="trofeo"></span>
-            <div><b>${L('Exclusive analysis', 'Análisis exclusivos')}</b><span>${esPrem ? L('You have full access.', 'Tienes acceso completo.') : L('Upgrade to Pro or Premium', 'Mejora con Pro o Premium')}</span></div>
-            ${esPrem ? '' : `<button class="pp-tr-go" data-pp="planes">${I.arrow}</button>`}
-          </div>
+            <div class="pp-tr-txt"><b>${L('Access exclusive analysis', 'Accede a análisis exclusivos')}</b><span>${L('Upgrade your experience with Pro or Premium', 'Mejora tu experiencia con Pro o Premium')}</span></div>
+            <span class="pp-tr-arrow">${I.arrow}</span>
+          </button>
         </aside>
 
         <main class="pp-main">
@@ -1108,6 +1108,11 @@ function abrirPanelPerfil() {
     else if (k === 'salir') { try { localStorage.removeItem('se-en-app'); localStorage.removeItem('se-vista'); } catch (_) {} cerrar(); limpiarVistaPrevia(); salir(); }
     else if (k === 'panel') { cerrar(); abrirPanelMesa(); }
     else if (k === 'planes') { cerrar(); mostrarPantalla('pricing'); }
+    else if (k === 'trofeo') {
+      cerrar();
+      if (nivel === 'basic') { mostrarPantalla('pricing'); }
+      else { const sb = document.getElementById('signals-btn'); if (sb) sb.click(); else mostrarPantalla('pricing'); }
+    }
     else if (k === 'foto') { if (esPrem) _fotoPerfilFlujo(ov); else _modalPremiumFoto(); }
     else if (k === 'foto-del') { _eliminarFotoPerfil(ov); }
     else if (['ajustes', 'notis', 'buzon'].includes(k)) {
