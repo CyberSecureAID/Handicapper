@@ -687,9 +687,9 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   // Refresco: si el usuario estaba DENTRO de la app, devolverlo ahí (a su misma vista)
   let _restaurar = false; try { _restaurar = localStorage.getItem('se-en-app') === '1'; } catch (_) {}
   if (_restaurar && (_esAdmin || tieneAcceso())) {
+    let _v = null; try { _v = localStorage.getItem('se-vista'); } catch (_) {}   // leer ANTES
     entrarPlataforma();
-    let _v = null; try { _v = localStorage.getItem('se-vista'); } catch (_) {}
-    if (_v && _v !== 'partidos') setTimeout(() => { const tb = document.querySelector(`#tabbar .t[data-vista="${_v}"]`); if (tb) tb.click(); }, 80);
+    if (_v && _v !== 'partidos') setTimeout(() => { const tb = document.querySelector(`#tabbar .t[data-vista="${_v}"]`); if (tb) tb.click(); }, 90);
     return;
   }
   mostrarPantalla('landing');
@@ -805,7 +805,7 @@ function avisarBloqueo() {
 
 /* Entra a la plataforma (y arranca la app la primera vez) */
 function entrarPlataforma() {
-  try { localStorage.setItem('se-en-app', '1'); } catch (_) {}
+  try { localStorage.setItem('se-en-app', '1'); localStorage.setItem('se-vista', 'partidos'); } catch (_) {}
   mostrarPantalla('app');
   if (!_appArrancada) {
     _appArrancada = true;
@@ -841,6 +841,24 @@ function pintarCuenta(usuario) {
     btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>`;
   }
   cerrarCuentaMenu();
+}
+
+/* Modal: se necesita Premium para poner foto de perfil. */
+function _modalPremiumFoto() {
+  const ES = idiomaActual() === 'es', L = (en, es) => ES ? es : en;
+  if (document.getElementById('pmf-ov')) return;
+  const ov = document.createElement('div'); ov.id = 'pmf-ov'; ov.className = 'pmf-ov';
+  ov.innerHTML = `<div class="pmf-modal">
+    <div class="pmf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+    <h3>${L('Premium feature', 'Función Premium')}</h3>
+    <p>${L('You need the Premium plan to set a profile photo. It lets you share your stats showing they come from you.', 'Debes tener el plan Premium para poner una foto de perfil. Te permite compartir tus estadísticas mostrando que provienen de ti.')}</p>
+    <div class="pmf-btns"><button class="pmf-cancel">${L('Close', 'Cerrar')}</button><button class="pmf-go">${L('See Premium', 'Ver Premium')}</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  const q = () => ov.remove();
+  ov.querySelector('.pmf-cancel').onclick = q;
+  ov.onclick = (e) => { if (e.target === ov) q(); };
+  ov.querySelector('.pmf-go').onclick = () => { q(); document.getElementById('pp-ov') && document.getElementById('pp-ov').remove(); document.body.style.overflow = ''; mostrarPantalla('pricing'); };
 }
 
 /* Fase 3 — carga el buzón + notificaciones con las señales reales de los analistas que sigue el Premium. */
@@ -945,11 +963,11 @@ function abrirPanelPerfil() {
   };
   const item = (id, ic, txt, badge2, extra) => `<button class="pp-item ${extra || ''}" data-pp="${id}">${ic}<span>${txt}</span>${badge2 ? `<em class="pp-badge">${badge2}</em>` : ''}</button>`;
 
+  const banderaES = `<svg viewBox="0 0 30 20" width="21" height="14" style="border-radius:3px;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.4)"><rect width="30" height="20" fill="#fff"/><rect width="30" height="4" fill="#002a8f"/><rect width="30" height="4" y="8" fill="#002a8f"/><rect width="30" height="4" y="16" fill="#002a8f"/><path d="M0 0L13 10 0 20Z" fill="#cb1515"/><path d="M4.3 7.2 5.2 9.5 7.6 9.5 5.7 11 6.4 13.3 4.3 11.9 2.2 13.3 2.9 11 1 9.5 3.4 9.5Z" fill="#fff"/></svg>`;
+  const banderaEN = `<svg viewBox="0 0 30 20" width="21" height="14" style="border-radius:3px;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.4)"><rect width="30" height="20" fill="#fff"/><rect width="30" height="1.54" y="0.00" fill="#b22234"/><rect width="30" height="1.54" y="3.08" fill="#b22234"/><rect width="30" height="1.54" y="6.15" fill="#b22234"/><rect width="30" height="1.54" y="9.23" fill="#b22234"/><rect width="30" height="1.54" y="12.31" fill="#b22234"/><rect width="30" height="1.54" y="15.38" fill="#b22234"/><rect width="30" height="1.54" y="18.46" fill="#b22234"/><rect width="13" height="10.77" fill="#3c3b6e"/></svg>`;
+  const flag = idiomaActual() === 'es' ? banderaES : banderaEN;
   const menu = `
-    ${item('ajustes', I.user, L('Profile settings', 'Ajustes de perfil'), '', 'on')}
-    ${item('notis', I.bell, L('Notifications', 'Notificaciones'), '')}
-    ${item('buzon', I.inbox, L('Signals inbox', 'Buzón de señales'), '3')}
-    ${item('idioma', I.globe, L('Language', 'Idioma') + ' · ' + idiomaActual().toUpperCase(), '')}
+    <button class="pp-item" data-pp="idioma">${flag}<span>${L('Language', 'Idioma')} · ${idiomaActual().toUpperCase()}</span></button>
     ${_esAdmin ? item('panel', I.panel, L('Admin panel', 'Panel administrativo'), '', 'pp-admin') : ''}
     ${item('salir', I.salir, L('Log out', 'Cerrar sesión'), '', 'pp-out')}`;
 
@@ -968,17 +986,17 @@ function abrirPanelPerfil() {
       <button class="pp-x" id="pp-x" aria-label="close">✕</button>
       <div class="pp-grid">
         <aside class="pp-side">
+          <div class="pp-logo"><img src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations"></div>
           <div class="pp-avwrap">
             <div class="pp-av">${u.foto ? `<img src="${u.foto}" alt="">` : ini}</div>
-            ${esPrem ? `<button class="pp-cam" data-pp="foto" title="${L('Change photo', 'Cambiar foto')}">${I.cam}</button>` : ''}
+            <button class="pp-cam" data-pp="foto" title="${L('Change photo', 'Cambiar foto')}">${I.cam}</button>
           </div>
           <div class="pp-nombre">${esc(nombre)}</div>
           <span class="pp-plan pp-plan-${nivel}">${badge}</span>
           <div class="pp-mail">${esc(email)}</div>
-          ${esPrem ? `<div class="pp-foto-nota">${L('Tap the camera to set your photo. It is auto-optimized to a light size (max ~150 KB).', 'Toca la cámara para poner tu foto. Se optimiza sola a un tamaño ligero (máx. ~150 KB).')}</div>` : ''}
           <nav class="pp-menu">${menu}</nav>
           <div class="pp-trofeo">
-            <span class="pp-tr-ic">${I.trofeo}</span>
+            <span class="pp-tr-ic pp-tr-img"><img src="assets/imagenes/trofeo.webp" alt="trofeo"></span>
             <div><b>${L('Exclusive analysis', 'Análisis exclusivos')}</b><span>${esPrem ? L('You have full access.', 'Tienes acceso completo.') : L('Upgrade to Pro or Premium', 'Mejora con Pro o Premium')}</span></div>
             ${esPrem ? '' : `<button class="pp-tr-go" data-pp="planes">${I.arrow}</button>`}
           </div>
@@ -1001,13 +1019,8 @@ function abrirPanelPerfil() {
             <div id="pp-notis-list"><div class="pp-empty-sm">${L('Loading…', 'Cargando…')}</div></div>
           </div>
           <div class="pp-card">
-            <div class="pp-card-h">${I.inbox}<b>${L('Signals inbox', 'Buzón de señales')}</b><em class="pp-badge" id="pp-buzon-badge" hidden>0</em></div>
+            <div class="pp-card-h">${I.inbox}<b>${L('Signals inbox', 'Buzón de señales')}</b></div>
             <div id="pp-buzon-list">${esPrem ? `<div class="pp-empty-sm">${L('Loading…', 'Cargando…')}</div>` : `<div class="pp-lock">${I.inbox}<p>${L('Signal inbox is a Premium feature.', 'El buzón de señales es una función Premium.')}</p><button class="pp-up" data-pp="planes">${L('See Premium', 'Ver Premium')}</button></div>`}</div>
-          </div>
-          <div class="pp-card">
-            <div class="pp-card-h">${I.shield}<b>${L('Account security', 'Seguridad de cuenta')}</b></div>
-            <div class="pp-sec"><span>${L('Status', 'Estado')}</span><b class="pp-ok">${L('Protected', 'Protegida')} ✓</b></div>
-            <div class="pp-sec"><span>${L('Last access', 'Último acceso')}</span><b>${L('Today', 'Hoy')}</b></div>
           </div>
         </aside>
       </div>
@@ -1015,6 +1028,15 @@ function abrirPanelPerfil() {
   document.body.appendChild(ov);
   document.body.style.overflow = 'hidden';
   _cargarBuzonPerfil(ov, esPrem);
+  // Foto: si el usuario no tiene foto propia pero sí ficha de analista/admin, mostrarla
+  if (!u.foto) { (async () => {
+    try {
+      const { leerFichaAnalista } = await import('./mesa/mesa-datos.js');
+      const { rutaFotoAnalista } = await import('./datos/fotos-analistas.js');
+      const f = await leerFichaAnalista();
+      if (f && f.foto) { const av = ov.querySelector('.pp-av'); if (av) av.innerHTML = `<img src="${rutaFotoAnalista(f.foto)}" alt="">`; }
+    } catch (_) {}
+  })(); }
   // Toggle de notificaciones push (solo Premium)
   const pchk = ov.querySelector('#pp-push-chk');
   if (pchk) {
@@ -1066,9 +1088,9 @@ function abrirPanelPerfil() {
     const k = b.dataset.pp;
     if (k === 'idioma') { fijarIdioma(idiomaActual() === 'en' ? 'es' : 'en'); cerrar(); setTimeout(abrirPanelPerfil, 60); }
     else if (k === 'salir') { try { localStorage.removeItem('se-en-app'); localStorage.removeItem('se-vista'); } catch (_) {} cerrar(); limpiarVistaPrevia(); salir(); }
-    else if (k === 'panel') { cerrar(); location.hash = '#mesa'; location.reload(); }
+    else if (k === 'panel') { cerrar(); abrirPanelMesa(); }
     else if (k === 'planes') { cerrar(); mostrarPantalla('pricing'); }
-    else if (k === 'foto') { _fotoPerfilFlujo(ov); }
+    else if (k === 'foto') { if (esPrem) _fotoPerfilFlujo(ov); else _modalPremiumFoto(); }
     else if (['ajustes', 'notis', 'buzon'].includes(k)) {
       ov.querySelectorAll('.pp-menu .pp-item').forEach(x => x.classList.toggle('on', x.dataset.pp === k));
       // Fases 3-4: aquí irá el contenido real de cada sección.
