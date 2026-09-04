@@ -449,7 +449,7 @@ export async function detallePartido(id) {
       if (pV != null && pL == null) pL = 1 - pV;
       if (pL != null && pV != null) {
         const tot = pL + pV || 1;
-        if (futbol) { const e = empateVar(pL/tot, pV/tot, (local.abrev||'')+(visita.abrev||'')), r = 1 - e; const L = Math.round(pL/tot*r*100), V = Math.round(pV/tot*r*100); m.mercado = { local: L, empate: Math.max(0, 100 - L - V), visita: V }; }
+        if (futbol) { const e = empateVar(pL/tot, pV/tot, ((m.local&&m.local.abrev)||'')+((m.visita&&m.visita.abrev)||'')), r = 1 - e; const L = Math.round(pL/tot*r*100), V = Math.round(pV/tot*r*100); m.mercado = { local: L, empate: Math.max(0, 100 - L - V), visita: V }; }
         else { const L = Math.max(1, Math.min(99, Math.round(pL/tot*100))); m.mercado = { local: L, empate: null, visita: 100 - L }; }
         m._fuenteProb = 'cuota';
       }
@@ -461,7 +461,7 @@ export async function detallePartido(id) {
     if (m && !pc && isFinite(hg) && isFinite(ag) && (hg + ag) > 0) {
       if (futbol) {
         const tot = hg + ag || 1;
-        const e = empateVar(hg / tot, ag / tot, (local.abrev||'')+(visita.abrev||'')), r = 1 - e;
+        const e = empateVar(hg / tot, ag / tot, ((m.local&&m.local.abrev)||'')+((m.visita&&m.visita.abrev)||'')), r = 1 - e;
         const L = Math.round((hg / tot) * 100 * r);
         const V = Math.round((ag / tot) * 100 * r);
         m.mercado = { local: L, empate: Math.max(0, 100 - L - V), visita: V };
