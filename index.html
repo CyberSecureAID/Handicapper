@@ -7,6 +7,10 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/imagenes/favicon-32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="assets/imagenes/favicon.png">
   <link rel="apple-touch-icon" href="assets/imagenes/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d1421">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sports Expectations">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -204,8 +208,7 @@
     <div class="foot-in">
       <div class="foot-brand">
         <div class="foot-logo">
-          <span class="foot-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l5-9 4 5 3-7 6 11z"/><circle cx="18" cy="5" r="2"/></svg></span>
-          <div><b>Sports Expectations</b><span>Data. Stats. Results.</span></div>
+          <img class="foot-logo-img" src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations">
         </div>
         <p class="foot-about" data-i18n="foot.tagline">Your ultimate source for verified sports data, advanced analytics and smart insights.</p>
         <div class="foot-social">
@@ -292,6 +295,10 @@
         <button class="proj-b" data-proj="nhl" title="Shots Projection">
           <span class="proj-ic">🏒</span><span class="proj-tx">Shots</span><span class="proj-pro">PRO</span></button>
       </nav>
+      <button class="btn-img btn-install" id="install-btn" data-install aria-label="Install" hidden>
+        <img class="btn-img-desk" src="assets/imagenes/botones/install.webp" alt="Install" loading="eager">
+        <img class="btn-img-mob" src="assets/imagenes/botones/install-movil.webp" alt="Install" loading="eager">
+      </button>
       <button class="btn-img btn-signals" id="signals-btn" aria-label="Signals">
         <img class="btn-img-desk" src="assets/imagenes/botones/signals.webp" alt="Signals" loading="eager">
         <img class="btn-img-mob" src="assets/imagenes/botones/signals-movil.webp" alt="Signals" loading="eager">
@@ -362,5 +369,15 @@
 
   <script type="module" src="assets/js/landing-movil.js"></script>
   <script type="module" src="assets/js/app.js"></script>
+<script>
+(function(){
+  var dp=null;
+  window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;window.__pwaPrompt=e;document.querySelectorAll('[data-install]').forEach(function(b){b.hidden=false;});});
+  window.addEventListener('appinstalled',function(){dp=null;window.__pwaPrompt=null;document.querySelectorAll('[data-install]').forEach(function(b){b.hidden=true;});});
+  window.__instalarPWA=function(){var p=dp||window.__pwaPrompt;if(!p){return false;}p.prompt();p.userChoice.finally(function(){dp=null;window.__pwaPrompt=null;document.querySelectorAll('[data-install]').forEach(function(b){b.hidden=true;});});return true;};
+  document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-install]');if(b){e.preventDefault();window.__instalarPWA();}});
+  if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+})();
+</script>
 </body>
 </html>

@@ -1,0 +1,16 @@
+{
+  "name": "Sports Expectations",
+  "short_name": "Sports Exp.",
+  "description": "Verified sports data, advanced analytics and win-probability estimates.",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#010006",
+  "theme_color": "#0d1421",
+  "icons": [
+    { "src": "assets/imagenes/favicon-32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "assets/imagenes/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/imagenes/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
