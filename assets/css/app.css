@@ -1236,3 +1236,13 @@
 .pp-tr-txt span { display: block; font-size: 11.5px; color: #cbab54; line-height: 1.4; }
 .pp-tr-arrow { flex: none; color: #e8c46a; display: grid; place-items: center; }
 .pp-tr-arrow svg { width: 18px; height: 18px; }
+
+/* #3 — X que no choca con las notificaciones */
+.pp-x { z-index: 5 !important; background: rgba(16,22,34,.9) !important; }
+.pp-right { padding-top: 54px !important; }
+@media (max-width: 980px) { .pp-right { padding-top: 26px !important; } .pp-side { padding-top: 52px !important; } }
+
+/* Puntito rojo (YouTube) con número amarillo, parpadeante, en el avatar */
+.cuenta-btn.logueado { overflow: visible !important; position: relative; }
+.cuenta-dot { position: absolute; top: -6px; right: -6px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; background: #ff0000; color: #ffd400; font-size: 10px; font-weight: 800; display: grid; place-items: center; border: 2px solid #010006; box-shadow: 0 0 7px rgba(255,0,0,.85); animation: ctaPulse 1.3s ease-in-out infinite; z-index: 6; font-family: system-ui,sans-serif; pointer-events: none; }
+@keyframes ctaPulse { 0%,100% { transform: scale(1); box-shadow: 0 0 6px rgba(255,0,0,.7); } 50% { transform: scale(1.2); box-shadow: 0 0 12px rgba(255,0,0,.95); } }
