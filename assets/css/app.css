@@ -1360,3 +1360,7 @@
 .pl-yes { width: 14px !important; height: 14px !important; color: #3ecf8e !important; flex: none; margin-top: 0 !important; }
 .pl-no { width: 13px !important; height: 13px !important; color: #56606e !important; flex: none; }
 .pl-m-btn { margin-top: 14px !important; padding: 10px !important; font-size: 13px !important; }
+
+/* Prestigio en el directorio de analistas */
+.sd-prest { color: #e8b84b; }
+.sd-prest.neg { color: #ff6b72; }
