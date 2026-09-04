@@ -185,7 +185,18 @@ function inyectarCSS() {
   .sn-fs-search svg{width:15px;height:15px;color:#6b7683;flex:none}
   .sn-fs-search input{flex:1;background:none;border:0;outline:none;color:var(--tx);font-size:13.5px;font-family:inherit}
   .sn-fs-sel{height:40px;padding:0 10px;border-radius:11px;background:rgba(18,25,36,.95);border:1px solid rgba(255,255,255,.12);color:var(--tx2);font-size:12.5px;font-family:inherit;cursor:pointer}
-  @media(max-width:560px){.sn-fs-search{min-width:100%}.sn-fs-sel{flex:1;min-width:0}}
+  .sn-dd{position:relative;flex:0 0 auto}
+  .sn-dd-btn{display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:11px;background:rgba(18,25,36,.95);border:1px solid rgba(255,255,255,.12);color:var(--tx);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:border-color .15s}
+  .sn-dd-btn:hover,.sn-dd.open .sn-dd-btn{border-color:rgba(120,170,255,.5)}
+  .sn-dd-lbl{white-space:nowrap}
+  .sn-dd-arr{width:15px;height:15px;flex:none;color:#8b96a6;transition:transform .18s}
+  .sn-dd.open .sn-dd-arr{transform:rotate(180deg)}
+  .sn-dd-pop{position:absolute;top:calc(100% + 7px);right:0;z-index:30;min-width:180px;padding:6px;border-radius:13px;background:rgba(16,22,34,.99);border:1px solid rgba(255,255,255,.13);box-shadow:0 16px 42px -12px rgba(0,0,0,.75);backdrop-filter:blur(12px);display:flex;flex-direction:column;gap:2px;animation:snDd .16s ease}
+  @keyframes snDd{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+  .sn-dd-opt{text-align:left;padding:9px 13px;border-radius:9px;border:0;background:none;color:var(--tx2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .12s}
+  .sn-dd-opt:hover{background:rgba(255,255,255,.06);color:#fff}
+  .sn-dd-opt.on{background:linear-gradient(90deg,rgba(42,107,224,.28),rgba(42,107,224,.1));color:#fff}
+  @media(max-width:560px){.sn-fs-search{min-width:100%}.sn-fs-sel{flex:1;min-width:0}.sn-dd{flex:1}.sn-dd-btn{width:100%;justify-content:space-between}.sn-dd-pop{left:0;right:auto}}
   .sn-disc-card{transition:opacity .34s ease}
   .sn-disc-row.disc-fade .sn-disc-card{opacity:0}
   @media(max-width:640px){
@@ -319,9 +330,6 @@ function bloqueDescubrir(analistas, ctx) {
   }).join('');
   const ILupa = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`;
   return `<div class="sn-disc">
-    <div class="sn-disc-tools">
-      <div class="sn-disc-search"><input id="sn-disc-q" type="text" placeholder="${L('Search analysts by name…', 'Buscar analistas por nombre…')}">${ILupa}</div>
-    </div>
     <div class="sn-disc-row" id="sn-disc-row">${cards}</div>
     <div class="sn-disc-empty" id="sn-disc-empty" hidden>${L('No analysts found.', 'No se encontraron analistas.')}</div>
   </div>`;
@@ -511,18 +519,24 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   const ILup2 = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`;
   const filtroSenales = visibles.length ? `<div class="sn-fs">
       <div class="sn-fs-search">${ILup2}<input id="sn-fs-q" type="text" placeholder="${L('Search signals by team…', 'Buscar señales por equipo…')}"></div>
-      <select id="sn-fs-cat" class="sn-fs-sel" aria-label="${L('Sport', 'Deporte')}">
-        <option value="">${L('All sports', 'Todos')}</option>
-        <option value="futbol">${L('Soccer', 'Fútbol')}</option>
-        <option value="basket">${L('Basketball', 'Básquet')}</option>
-        <option value="hockey">${L('Ice hockey', 'Hockey')}</option>
-        <option value="beisbol">${L('Baseball', 'Béisbol')}</option>
-        <option value="americano">${L('Am. football', 'F. am.')}</option>
-      </select>
-      <select id="sn-fs-sort" class="sn-fs-sel" aria-label="${L('Sort', 'Orden')}">
-        <option value="recent">${L('Most recent', 'Recientes')}</option>
-        <option value="prob">${L('Highest probability', 'Mayor probabilidad')}</option>
-      </select>
+      <div class="sn-dd" data-dd="cat">
+        <button class="sn-dd-btn" type="button"><span class="sn-dd-lbl">${L('All', 'Todos')}</span><svg class="sn-dd-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="sn-dd-pop" hidden>
+          <button class="sn-dd-opt on" data-val="">${L('All sports', 'Todos los deportes')}</button>
+          <button class="sn-dd-opt" data-val="futbol">${L('Soccer', 'Fútbol')}</button>
+          <button class="sn-dd-opt" data-val="basket">${L('Basketball', 'Básquet')}</button>
+          <button class="sn-dd-opt" data-val="hockey">${L('Ice hockey', 'Hockey')}</button>
+          <button class="sn-dd-opt" data-val="beisbol">${L('Baseball', 'Béisbol')}</button>
+          <button class="sn-dd-opt" data-val="americano">${L('Am. football', 'F. americano')}</button>
+        </div>
+      </div>
+      <div class="sn-dd" data-dd="sort">
+        <button class="sn-dd-btn" type="button"><span class="sn-dd-lbl">${L('Recent', 'Recientes')}</span><svg class="sn-dd-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="sn-dd-pop" hidden>
+          <button class="sn-dd-opt on" data-val="recent">${L('Most recent', 'Recientes')}</button>
+          <button class="sn-dd-opt" data-val="prob">${L('Highest probability', 'Mayor probabilidad')}</button>
+        </div>
+      </div>
     </div>` : '';
   const grid = visibles.length
     ? `<div class="sn-grid">${visibles.map((a, i) => tarjeta(a, ctx, i)).join('')}</div>`
@@ -537,20 +551,29 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   const _sgrid = cont.querySelector('.sn-grid');
   if (_sgrid) {
     const _scards = [..._sgrid.querySelectorAll('.sn-card')];
-    const _fsQ = cont.querySelector('#sn-fs-q'), _fsCat = cont.querySelector('#sn-fs-cat'), _fsSort = cont.querySelector('#sn-fs-sort');
+    const _fsQ = cont.querySelector('#sn-fs-q');
+    let _fsCat = '', _fsSort = 'recent';
     const _aplicarFS = () => {
       const q = (_fsQ && _fsQ.value || '').trim().toLowerCase();
-      const cat = (_fsCat && _fsCat.value) || '';
-      const sort = (_fsSort && _fsSort.value) || 'recent';
       _scards.forEach(c => {
-        const ok = (!cat || c.dataset.sdep === cat) && (!q || (c.dataset.steams || '').includes(q));
+        const ok = (!_fsCat || c.dataset.sdep === _fsCat) && (!q || (c.dataset.steams || '').includes(q));
         c.style.display = ok ? '' : 'none';
-        c.style.order = sort === 'prob' ? String(100 - Number(c.dataset.sprob || 0)) : '0';
+        c.style.order = _fsSort === 'prob' ? String(100 - Number(c.dataset.sprob || 0)) : '0';
       });
     };
     if (_fsQ) _fsQ.oninput = _aplicarFS;
-    if (_fsCat) _fsCat.onchange = _aplicarFS;
-    if (_fsSort) _fsSort.onchange = _aplicarFS;
+    cont.querySelectorAll('.sn-dd').forEach(dd => {
+      const btn = dd.querySelector('.sn-dd-btn'), pop = dd.querySelector('.sn-dd-pop'), lbl = dd.querySelector('.sn-dd-lbl');
+      if (!btn || !pop) return;
+      btn.onclick = (e) => { e.stopPropagation(); const abrir = pop.hidden; cont.querySelectorAll('.sn-dd-pop').forEach(p => p.hidden = true); cont.querySelectorAll('.sn-dd').forEach(d => d.classList.remove('open')); pop.hidden = !abrir; dd.classList.toggle('open', !pop.hidden); };
+      dd.querySelectorAll('.sn-dd-opt').forEach(o => o.onclick = () => {
+        dd.querySelectorAll('.sn-dd-opt').forEach(x => x.classList.toggle('on', x === o));
+        if (lbl) lbl.textContent = o.textContent; pop.hidden = true; dd.classList.remove('open');
+        if (dd.dataset.dd === 'cat') _fsCat = o.dataset.val; else _fsSort = o.dataset.val;
+        _aplicarFS();
+      });
+    });
+    document.addEventListener('click', () => { cont.querySelectorAll('.sn-dd-pop').forEach(p => p.hidden = true); cont.querySelectorAll('.sn-dd').forEach(d => d.classList.remove('open')); });
   }
   cont.querySelector('#sn-about')?.addEventListener('click', () => abrirModalInfoSenales());
   // Aviso (descargo de responsabilidad) emergente la primera vez, se puede cerrar
