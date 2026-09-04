@@ -34,9 +34,12 @@ function actualizarLogo() {
   let archivo;
   if (movil) archivo = oscuro ? 'logo-h-oscuro.png' : 'logo-h-claro.png';
   else       archivo = 'logo-nombre-oscuro.png';   // escritorio: siempre el blanco/dorado (se ve mejor en ambos temas)
-  img.onload = () => { img.classList.add('visible'); cont.classList.add('tiene-img'); };
+  const mostrar = () => { img.classList.add('visible'); cont.classList.add('tiene-img'); };
+  img.onload = mostrar;
   img.onerror = () => { img.classList.remove('visible'); cont.classList.remove('tiene-img'); };
-  img.src = 'assets/imagenes/' + archivo;
+  const ruta = 'assets/imagenes/' + archivo;
+  if (img.getAttribute('src') !== ruta) img.src = ruta;
+  if (img.complete && img.naturalWidth) mostrar();   // ya estaba cargada (src puesto en el HTML)
 }
 
 /* -------- Menú lateral móvil (drawer) -------- */
