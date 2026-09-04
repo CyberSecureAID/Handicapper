@@ -1188,3 +1188,35 @@
 .pp-switch input:checked + span { background: linear-gradient(90deg,#e8c46a,#c99a3a); }
 .pp-switch input:checked + span::before { transform: translateX(20px); }
 .pp-empty-sm { font-size: 12.5px; color: #7c8797; text-align: center; padding: 16px 8px; line-height: 1.4; }
+
+/* Fase 4 — arreglos del panel de perfil */
+.pp-modal { max-height: 94vh !important; min-height: 0 !important; }
+.pp-grid { max-height: 94vh; }
+.pp-side, .pp-main, .pp-right { overflow-y: auto; max-height: 94vh; }
+.pp-side::-webkit-scrollbar, .pp-main::-webkit-scrollbar, .pp-right::-webkit-scrollbar { width: 6px; }
+.pp-side::-webkit-scrollbar-thumb, .pp-main::-webkit-scrollbar-thumb, .pp-right::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 99px; }
+.pp-logo { width: 100%; display: flex; justify-content: center; margin-bottom: 20px; }
+.pp-logo img { height: 30px; width: auto; object-fit: contain; }
+.pp-item .pp-badge { display: none; }   /* fuera los puntitos feos del menú */
+.pp-badge.rojo { background: #ff1e2d !important; box-shadow: 0 0 8px rgba(255,30,45,.6); }
+@media (max-width: 980px) {
+  .pp-modal { overflow-y: auto; }
+  .pp-grid { max-height: none; }
+  .pp-side, .pp-main, .pp-right { overflow-y: visible; max-height: none; }
+}
+@media (max-width: 560px) { .pp-modal { max-height: 100vh !important; min-height: 100vh !important; border-radius: 0; } }
+
+/* Modal "necesitas Premium" para la foto */
+.pmf-ov { position: fixed; inset: 0; z-index: 100002; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(3,6,12,.78); backdrop-filter: blur(6px); }
+.pmf-modal { width: 100%; max-width: 380px; text-align: center; padding: 30px 26px; border-radius: 20px; background: linear-gradient(180deg, rgba(18,25,38,.98), rgba(12,17,26,.99)); border: 1px solid rgba(232,196,106,.3); box-shadow: 0 24px 60px -18px rgba(0,0,0,.75); }
+.pmf-ic { width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 16px; display: grid; place-items: center; color: #e8c46a; background: rgba(232,196,106,.14); border: 1px solid rgba(232,196,106,.35); }
+.pmf-ic svg { width: 28px; height: 28px; }
+.pmf-modal h3 { font-family: "Poppins",sans-serif; font-size: 19px; color: #fff; margin: 0 0 8px; }
+.pmf-modal p { font-size: 14px; color: #9aa4b2; line-height: 1.55; margin: 0 0 22px; }
+.pmf-btns { display: flex; gap: 10px; }
+.pmf-cancel, .pmf-go { flex: 1; padding: 12px; border-radius: 12px; font-weight: 700; font-family: inherit; cursor: pointer; font-size: 14px; }
+.pmf-cancel { border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #cfd8e3; }
+.pmf-go { border: 0; background: linear-gradient(135deg,#e8c46a,#c99a3a); color: #2a1c00; }
+/* Trofeo con imagen real */
+.pp-tr-ic.pp-tr-img { background: none; border: 0; width: 46px; height: 46px; }
+.pp-tr-ic.pp-tr-img img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 3px 6px rgba(232,196,106,.4)); }
