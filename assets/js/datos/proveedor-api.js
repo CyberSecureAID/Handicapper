@@ -417,6 +417,21 @@ function standingDe(ligaId, teamId) {
   const m = STANDINGS.get(ligaId); return m ? m.get(String(teamId)) : null;
 }
 
+/* Resultado de un partido finalizado: { final, empate, ganadorId } o null si aún no termina.
+   Se usa para el sistema de prestigio (resolver predicciones). */
+export async function resultadoPartido(ligaId, matchId) {
+  try {
+    const lista = await listarPartidos(ligaId);
+    const m = (lista || []).find(x => String(x.id) === String(matchId));
+    if (!m || m.estado !== 'final' || !m.marcador) return null;
+    const L = Number(m.marcador.local), V = Number(m.marcador.visita);
+    if (!isFinite(L) || !isFinite(V)) return null;
+    if (L === V) return { final: true, empate: true, ganadorId: null };
+    const ganadorId = L > V ? (m.local && m.local.id) : (m.visita && m.visita.id);
+    return { final: true, empate: false, ganadorId: String(ganadorId || '') };
+  } catch (_) { return null; }
+}
+
 export async function detallePartido(id) {
   const [ligaId, evId] = String(id).split(':');
   const ruta = RUTA[ligaId]; if (!ruta) return null;

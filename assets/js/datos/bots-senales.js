@@ -79,7 +79,7 @@ function explicacion(fav, dog, prob) {
 async function generar({ guardar, uid, firma, autor, color, deporte, ligas, foto = null, max = 2 }) {
   let partidos = [];
   for (const lg of ligas) {
-    try { const ps = await listarPartidos(lg); if (Array.isArray(ps)) partidos.push(...ps); } catch (_) {}
+    try { const ps = await listarPartidos(lg); if (Array.isArray(ps)) partidos.push(...ps.map(p => ({ ...p, _liga: lg }))); } catch (_) {}
   }
   const cand = [];
   const ahora = Date.now(), fin = ahora + 72 * 3600 * 1000;   // próximas 72 horas
@@ -113,7 +113,13 @@ async function generar({ guardar, uid, firma, autor, color, deporte, ligas, foto
       cuando: m.cuando || null,
       caducidad: m.cuando || null,                   // desaparece al empezar el partido
     };
-    try { await guardar(señal.matchId, señal); publicadas++; } catch (_) {}
+    try {
+      await guardar(señal.matchId, señal); publicadas++;
+      try {
+        const { registrarPrediccion } = await import('./prestigio.js');
+        await registrarPrediccion({ analistaUid: uid, matchId: m.id, ligaId: m._liga || ligas[0] || '', deporte, favoritoId: (fav && fav.id) || '', favoritoNombre: fav.nombre, cuando: m.cuando });
+      } catch (_) {}
+    } catch (_) {}
   }
   return { publicadas, fetched: partidos.length, enVentana, califican: cand.length };
 }
