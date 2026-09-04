@@ -52,7 +52,7 @@ function pintarDrawer() {
       <span class="ic">${ligaIcono(l)}</span>${l.corto || l.nombre}
     </button>`).join('');
   cont.querySelectorAll('.liga').forEach(b => b.onclick = () => {
-    ligaActiva = b.dataset.liga || null; proyActiva = null; marcarProyeccion();
+    ligaActiva = b.dataset.liga || null; proyActiva = null; try { localStorage.setItem('se-vista', 'partidos'); } catch (_) {} marcarProyeccion();
     pintarLigas(); pintarDrawer(); cargarLista(); cerrarDrawer();
   });
   const dt = $('drawer-t'); if (dt) dt.textContent = t('nav.deportes');
@@ -76,7 +76,7 @@ function pintarLigas() {
       <span class="ic">${ligaIcono(l)}</span>${l.nombre}
     </button>`).join('');
   cont.querySelectorAll('.liga').forEach(b => b.onclick = () => {
-    ligaActiva = b.dataset.liga || null; proyActiva = null; marcarProyeccion(); pintarLigas(); pintarPestanas(); cargarLista();
+    ligaActiva = b.dataset.liga || null; proyActiva = null; try { localStorage.setItem('se-vista', 'partidos'); } catch (_) {} marcarProyeccion(); pintarLigas(); pintarPestanas(); cargarLista();
   });
 }
 
@@ -88,7 +88,7 @@ function pintarPestanas() {
   cont.innerHTML = items.map(l => `
     <button class="pestana ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">${l.nombre}</button>`).join('');
   cont.querySelectorAll('.pestana').forEach(b => b.onclick = () => {
-    ligaActiva = b.dataset.liga || null; proyActiva = null; marcarProyeccion(); pintarLigas(); pintarPestanas(); cargarLista();
+    ligaActiva = b.dataset.liga || null; proyActiva = null; try { localStorage.setItem('se-vista', 'partidos'); } catch (_) {} marcarProyeccion(); pintarLigas(); pintarPestanas(); cargarLista();
   });
 }
 
@@ -851,9 +851,9 @@ function _confirmarEliminarCuenta() {
   const ov = document.createElement('div'); ov.id = 'dc-ov'; ov.className = 'pmf-ov';
   ov.innerHTML = `<div class="pmf-modal">
     <div class="pmf-ic" style="color:#ff6b72;background:rgba(240,82,90,.14);border-color:rgba(240,82,90,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></div>
-    <h3>${L('Delete account?', '¿Eliminar cuenta?')}</h3>
-    <p>${L('This permanently deletes your account and data. It cannot be undone.', 'Esto elimina tu cuenta y tus datos de forma permanente. No se puede deshacer.')}</p>
-    <div class="pmf-btns"><button class="pmf-cancel">${L('Cancel', 'Cancelar')}</button><button class="pmf-go" id="dc-yes" style="background:linear-gradient(135deg,#f0525a,#c0333a);color:#fff">${L('Delete', 'Eliminar')}</button></div>
+    <h3>${L('Are you sure?', '¿Estás seguro?')}</h3>
+    <p>${L('Do you want to delete your account? This action is irreversible.', '¿Deseas eliminar tu cuenta? Esta opción es irreversible.')}</p>
+    <div class="pmf-btns"><button class="pmf-cancel">${L('Cancel', 'Cancelar')}</button><button class="pmf-go" id="dc-yes" style="background:linear-gradient(135deg,#f0525a,#c0333a);color:#fff">${L('Yes, delete my account', 'Sí, eliminar mi cuenta')}</button></div>
   </div>`;
   document.body.appendChild(ov);
   const q = () => ov.remove();
@@ -1072,7 +1072,6 @@ function abrirPanelPerfil() {
 
         <main class="pp-main">
           <h2 class="pp-h2">${L('Profile settings', 'Ajustes de perfil')}</h2>
-          <p class="pp-sub">${L('Manage your personal information and account preferences.', 'Administra tu información personal y las preferencias de tu cuenta.')}</p>
           <div class="pp-field"><label>${I.user}${L('Name', 'Nombre')}</label><input id="pp-f-nombre" type="text" value="${esc(nombre)}" maxlength="40"></div>
           <div class="pp-field"><label>${I.user}${L('Username', 'Nombre de usuario')}</label><input id="pp-f-usuario" type="text" value="${esc(usuario)}" maxlength="24"></div>
           <div class="pp-field"><label>${I.inbox}${L('Email', 'Correo electrónico')}</label><input id="pp-f-email" type="email" value="${esc(email)}" readonly><small>${L('Your email cannot be changed, for account security.', 'El correo no se puede cambiar, por seguridad de la cuenta.')}</small></div>
