@@ -844,6 +844,37 @@ function pintarCuenta(usuario) {
   cerrarCuentaMenu();
 }
 
+/* Confirmar y eliminar la cuenta (Firestore + Auth). */
+function _confirmarEliminarCuenta() {
+  const ES = idiomaActual() === 'es', L = (en, es) => ES ? es : en;
+  if (document.getElementById('dc-ov')) return;
+  const ov = document.createElement('div'); ov.id = 'dc-ov'; ov.className = 'pmf-ov';
+  ov.innerHTML = `<div class="pmf-modal">
+    <div class="pmf-ic" style="color:#ff6b72;background:rgba(240,82,90,.14);border-color:rgba(240,82,90,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></div>
+    <h3>${L('Delete account?', '¿Eliminar cuenta?')}</h3>
+    <p>${L('This permanently deletes your account and data. It cannot be undone.', 'Esto elimina tu cuenta y tus datos de forma permanente. No se puede deshacer.')}</p>
+    <div class="pmf-btns"><button class="pmf-cancel">${L('Cancel', 'Cancelar')}</button><button class="pmf-go" id="dc-yes" style="background:linear-gradient(135deg,#f0525a,#c0333a);color:#fff">${L('Delete', 'Eliminar')}</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  const q = () => ov.remove();
+  ov.querySelector('.pmf-cancel').onclick = q;
+  ov.onclick = (e) => { if (e.target === ov) q(); };
+  ov.querySelector('#dc-yes').onclick = async () => {
+    const btn = ov.querySelector('#dc-yes'); btn.disabled = true; btn.textContent = L('Deleting…', 'Eliminando…');
+    try {
+      const { eliminarCuenta } = await import('./auth/auth.js');
+      await eliminarCuenta();
+      try { localStorage.clear(); } catch (_) {}
+      q(); const pp = document.getElementById('pp-ov'); if (pp) pp.remove(); document.body.style.overflow = '';
+      mostrarPantalla('landing'); avisoToast(L('Account deleted', 'Cuenta eliminada'));
+    } catch (e) {
+      btn.disabled = false; btn.textContent = L('Delete', 'Eliminar');
+      if (e && e.code === 'auth/requires-recent-login') avisoToast(L('Please log in again, then delete your account.', 'Vuelve a iniciar sesión y luego elimina la cuenta.'));
+      else avisoToast(L('Error deleting account.', 'Error al eliminar la cuenta.'));
+    }
+  };
+}
+
 /* Modal: se necesita Premium para poner foto de perfil. */
 function _modalPremiumFoto() {
   const ES = idiomaActual() === 'es', L = (en, es) => ES ? es : en;
@@ -872,18 +903,35 @@ async function _cargarBuzonPerfil(ov, esPrem) {
   const bB = ov.querySelector('#pp-buzon-badge'), nB = ov.querySelector('#pp-noti-badge');
   const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
   const tiempo = (a) => { try { const t = a.actualizado, d = t && t.toDate ? t.toDate() : new Date(t); const m = Math.round((Date.now() - d.getTime()) / 60000); if (m < 60) return m + 'm'; const h = Math.round(m / 60); return h < 24 ? h + 'h' : Math.round(h / 24) + 'd'; } catch (_) { return ''; } };
-  if (!signals.length) {
-    if (buzon) buzon.innerHTML = `<div class="pp-empty-sm">${L('Follow analysts to receive their signals here.', 'Sigue analistas para recibir sus señales aquí.')}</div>`;
-    if (notis) notis.innerHTML = `<div class="pp-empty-sm">${L('No new notifications.', 'Sin notificaciones nuevas.')}</div>`;
-    return;
-  }
-  const buzonItem = (a) => `<div class="pp-r-item"><span class="pp-r-ic verde">${arrow}</span><div><b>${esc(a.favorito || (a.veredicto || '').replace(/ (to win|gana)$/i, ''))} ${a.prob != null ? a.prob + '%' : ''}</b><span>${esc(a.equipos || '')}</span></div><em>${tiempo(a)}</em></div>`;
   const notiItem = (a) => `<div class="pp-r-item"><span class="pp-r-ic azul">${arrow}</span><div><b>${L('New signal', 'Nueva señal')}: ${esc(a.firma || a.autor || '')}</b><span>${esc(a.equipos || '')}</span></div><em>${tiempo(a)}</em></div>`;
-  if (buzon) buzon.innerHTML = signals.slice(0, 5).map(buzonItem).join('');
-  if (bB) { bB.textContent = signals.length; bB.hidden = false; }
-  if (notis) notis.innerHTML = signals.slice(0, 3).map(notiItem).join('');
-  if (nB) { nB.textContent = Math.min(signals.length, 9); nB.hidden = false; }
+  // BUZÓN: siempre un botón "Acceder al buzón" que abre el modal aparte.
+  if (buzon) {
+    buzon.innerHTML = `<button class="pp-buzon-btn" id="pp-buzon-open">${L('Access inbox', 'Acceder al buzón')} ${arrow}</button>`;
+    const ob = buzon.querySelector('#pp-buzon-open'); if (ob) ob.onclick = () => _abrirBuzonModal(signals);
+  }
+  if (bB) { bB.textContent = signals.length; bB.hidden = signals.length === 0; }
+  // NOTIFICACIONES: las señales recientes como avisos.
+  if (notis) notis.innerHTML = signals.length ? signals.slice(0, 3).map(notiItem).join('') : `<div class="pp-empty-sm">${L('No new notifications.', 'Sin notificaciones nuevas.')}</div>`;
+  if (nB) { nB.textContent = Math.min(signals.length, 9); nB.hidden = signals.length === 0; }
   _notificarNuevas(signals);
+}
+
+/* Modal grande del Buzón de señales (Fase 4). Las caducadas ya vienen filtradas por cargarSenales. */
+function _abrirBuzonModal(signals) {
+  if (document.getElementById('bz-ov')) return;
+  const ES = idiomaActual() === 'es', L = (en, es) => ES ? es : en;
+  const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  const inbox = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 6h13l3.5 6v6a2 2 0 01-2 2H4a2 2 0 01-2-2v-6z"/></svg>';
+  const tiempo = (a) => { try { const t = a.actualizado, d = t && t.toDate ? t.toDate() : new Date(t); const m = Math.round((Date.now() - d.getTime()) / 60000); if (m < 60) return m + 'm'; const h = Math.round(m / 60); return h < 24 ? h + 'h' : Math.round(h / 24) + 'd'; } catch (_) { return ''; } };
+  const item = (a) => `<div class="bz-item"><span class="bz-ic">${arrow}</span><div class="bz-tx"><b>${esc(a.favorito || (a.veredicto || '').replace(/ (to win|gana)$/i, ''))} <em>${a.prob != null ? a.prob + '%' : ''}</em></b><span>${esc(a.equipos || '')}</span><small>${esc(a.firma || a.autor || '')} · ${tiempo(a)}</small></div></div>`;
+  const cuerpo = (signals && signals.length) ? signals.map(item).join('') : `<div class="bz-empty">${inbox}<p>${L('Follow analysts to receive their signals here.', 'Sigue analistas para recibir tus señales aquí.')}</p></div>`;
+  const ov = document.createElement('div'); ov.id = 'bz-ov'; ov.className = 'bz-ov';
+  ov.innerHTML = `<div class="bz-modal"><button class="bz-x" aria-label="close">✕</button>
+    <div class="bz-head"><h3>${L('Signals inbox', 'Buzón de señales')}</h3><p>${L('Your most recent signals. Resolved matches disappear automatically.', 'Tus señales más recientes. Las que ya se resolvieron desaparecen solas.')}</p></div>
+    <div class="bz-body">${cuerpo}</div></div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('.bz-x').onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
 }
 function _notificarNuevas(signals) {
   try {
@@ -961,9 +1009,11 @@ function abrirPanelPerfil() {
   const nombre = u.nombre || (u.email || '').split('@')[0] || (ES ? 'Usuario' : 'User');
   const email = u.email || '';
   const usuario = (u.email || '').split('@')[0] || '';
-  const nivel = _esAdmin ? 'admin' : planActual();
+  let nivel, badge;
+  if (_esAdmin) { nivel = 'admin'; badge = 'Admin'; }
+  else if (_esAnalista) { nivel = 'analista'; badge = ES ? 'Analista' : 'Analyst'; }
+  else { nivel = planActual(); badge = nivel === 'premium' ? 'Premium' : nivel === 'pro' ? 'Pro' : (ES ? 'Básico' : 'Basic'); }
   const esPrem = _esAdmin || nivel === 'premium';
-  const badge = _esAdmin ? 'Admin' : nivel === 'premium' ? 'Premium' : nivel === 'pro' ? 'Pro' : 'Basic';
   const ini = (nombre || '?').charAt(0).toUpperCase();
 
   const I = {
@@ -1011,12 +1061,11 @@ function abrirPanelPerfil() {
           </div>
           <div class="pp-nombre">${esc(nombre)}</div>
           <span class="pp-plan pp-plan-${nivel}">${badge}</span>
-          <div class="pp-mail">${esc(email)}</div>
-          ${esPrem ? `<button class="pp-foto-del" data-pp="foto-del">${L('Remove photo', 'Eliminar foto')}</button>` : ''}
+
           <nav class="pp-menu">${menu}</nav>
           <button class="pp-trofeo" data-pp="trofeo">
             <span class="pp-tr-ic pp-tr-img"><img src="assets/imagenes/trofeo.webp" alt="trofeo"></span>
-            <div class="pp-tr-txt"><b>${L('Access exclusive analysis', 'Accede a análisis exclusivos')}</b><span>${L('Upgrade your experience with Pro or Premium', 'Mejora tu experiencia con Pro o Premium')}</span></div>
+            <div class="pp-tr-txt"><b>${L('Upgrade your experience with Pro or Premium', 'Mejora tu experiencia con Pro o Premium')}</b></div>
             <span class="pp-tr-arrow">${I.arrow}</span>
           </button>
         </aside>
@@ -1026,9 +1075,13 @@ function abrirPanelPerfil() {
           <p class="pp-sub">${L('Manage your personal information and account preferences.', 'Administra tu información personal y las preferencias de tu cuenta.')}</p>
           <div class="pp-field"><label>${I.user}${L('Name', 'Nombre')}</label><input id="pp-f-nombre" type="text" value="${esc(nombre)}" maxlength="40"></div>
           <div class="pp-field"><label>${I.user}${L('Username', 'Nombre de usuario')}</label><input id="pp-f-usuario" type="text" value="${esc(usuario)}" maxlength="24"></div>
-          <div class="pp-field"><label>${I.inbox}${L('Email', 'Correo electrónico')}</label><input id="pp-f-email" type="email" value="${esc(email)}" ${esc(email) && email.includes("@gmail") ? "readonly" : ""}></div>
+          <div class="pp-field"><label>${I.inbox}${L('Email', 'Correo electrónico')}</label><input id="pp-f-email" type="email" value="${esc(email)}" readonly><small>${L('Your email cannot be changed, for account security.', 'El correo no se puede cambiar, por seguridad de la cuenta.')}</small></div>
           <div class="pp-field"><label>${I.shield}${L('New password', 'Nueva contraseña')}</label><div class="pp-pass"><input id="pp-f-pass" type="password" placeholder="••••••••" autocomplete="new-password"><button class="pp-eye">${I.eye}</button></div><small>${L('Leave blank to keep your current password.', 'Deja en blanco si no deseas cambiar la contraseña.')}</small></div>
-          <div class="pp-actions"><button class="pp-cancel" id="pp-cancel">${L('Cancel', 'Cancelar')}</button><button class="pp-apply">${L('Apply changes', 'Aplicar cambios')} ${I.arrow}</button></div>
+          ${esPrem ? `<button class="pp-linkdel" data-pp="foto-del">${L('Remove profile photo', 'Eliminar foto de perfil')}</button>` : ''}
+          <div class="pp-actions">
+            <button class="pp-danger" data-pp="del-cuenta">${L('Delete account', 'Eliminar cuenta')}</button>
+            <div class="pp-actions-right"><button class="pp-cancel" id="pp-cancel">${L('Cancel', 'Cancelar')}</button><button class="pp-apply">${L('Apply changes', 'Aplicar cambios')} ${I.arrow}</button></div>
+          </div>
         </main>
 
         <aside class="pp-right">
@@ -1116,6 +1169,7 @@ function abrirPanelPerfil() {
     }
     else if (k === 'foto') { if (esPrem) _fotoPerfilFlujo(ov); else _modalPremiumFoto(); }
     else if (k === 'foto-del') { _eliminarFotoPerfil(ov); }
+    else if (k === 'del-cuenta') { _confirmarEliminarCuenta(); }
     else if (['ajustes', 'notis', 'buzon'].includes(k)) {
       ov.querySelectorAll('.pp-menu .pp-item').forEach(x => x.classList.toggle('on', x.dataset.pp === k));
       // Fases 3-4: aquí irá el contenido real de cada sección.
