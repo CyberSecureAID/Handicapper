@@ -28,11 +28,11 @@ const HFA_LOGIT = {
   mlb: 0.16, nba: 0.41, nfl: 0.28, nhl: 0.20, nba_default: 0.30, _soc: 0.22,
 };
 /* Prior (partidos "fantasma" a 50%) para la regresión. Ligero: deja hablar al récord. */
-const PRIOR_N = { _soc: 5, mlb: 8, nba: 5, nfl: 2, nhl: 6, _def: 5 };
+const PRIOR_N = { _soc: 5, mlb: 8, nba: 5, nfl: 6, nhl: 6, _def: 5 };
 
 /* Pesos del modelo */
 const W = {
-  fuerza: 1.05,   // peso de la diferencia de fuerza (record) en log-odds
+  fuerza: 0.9,    // peso de la diferencia de fuerza (record) en log-odds
   overall: 0.6,   // mezcla récord total vs situacional
   situ: 0.4,      // récord casa/fuera
   era: 0.34,      // por cada 1.00 de diferencia de ERA (MLB)
@@ -139,12 +139,16 @@ export function analizar(match) {
 
   // 3a) Fuerza por récord/% de victorias real (de la tabla de posiciones)
   const fuerzaDe = (eq) => {
+    // Récord PRIMERO: respeta el tamaño de muestra (3-0 en NFL no es un favorito enorme).
+    const fr = fuerzaLogit(eq && eq.record, futbol, ligaId);
+    if (fr.n > 0) return fr;
+    // Sin récord: winPct con regresión fuerte.
     const wp = numDe(eq && eq.winPct);
     if (wp != null && wp > 0 && wp < 1) {
-      const k = 0.07; const p = clamp((wp * (1 - k) + 0.5 * k), 0.05, 0.95);
-      return { logit: logit(p), n: 20 };   // dato real de tabla -> muestra sólida
+      const k = 0.20; const p = clamp((wp * (1 - k) + 0.5 * k), 0.08, 0.92);
+      return { logit: logit(p), n: 10 };
     }
-    return fuerzaLogit(eq && eq.record, futbol, ligaId);
+    return { logit: 0, n: 0 };
   };
   const Lall = fuerzaDe(match.local);
   const Vall = fuerzaDe(match.visita);
@@ -163,7 +167,7 @@ export function analizar(match) {
   const posL = Number(match.local.posicion), posV = Number(match.visita.posicion);
   if (isFinite(posL) && isFinite(posV) && posL > 0 && posV > 0 && posL !== posV) {
     // Menor número = mejor. Diferencia de puestos -> ventaja (con tope).
-    const posEdge = clamp((posV - posL) * 0.10, -0.9, 0.9);
+    const posEdge = clamp((posV - posL) * 0.06, -0.7, 0.7);
     L += posEdge; factoresUsados.push('posicion');
   }
 
