@@ -219,6 +219,9 @@ function inyectarCSS() {
   .sn-disc-ava svg{width:23px;height:23px}
   .sn-disc-firma{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:13.5px;color:var(--acc);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 5px rgba(0,0,0,.7)}
   .sn-disc-sport{font-size:11px;color:var(--tx2)}
+  .sn-disc-prest{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#e8b84b;font-weight:700;margin-top:2px}
+  .sn-disc-prest.neg{color:#ff6b72}
+  .sn-disc-prest svg{opacity:.9}
   .sn-disc-fol{font-size:11px;color:var(--tx3);margin-bottom:8px}
   .sn-disc-follow{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:10px;color:#0a0e15;background:linear-gradient(90deg,#38a9f0,#5cc0ff);border:0;border-radius:8px;padding:5px 16px;cursor:pointer;transition:filter .14s;margin-top:3px}
   .sn-disc-follow:hover{filter:brightness(1.08)}
@@ -326,6 +329,7 @@ function bloqueDescubrir(analistas, ctx) {
       <div class="sn-disc-firma">${esc(an.firma || '')}</div>
       <div class="sn-disc-sport">${esc(depenNombre(an.deporte))}</div>
       <div class="sn-disc-fol" data-discfol="${esc(an.uid)}">…</div>
+      <div class="sn-disc-prest ${(Number(an.prestigio)||0)<0?'neg':''}" title="${L('Prestige','Prestigio')}"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2l2.6 6.3 6.8.5-5.2 4.4 1.7 6.6L12 16.9 6.1 20.3l1.7-6.6L2.6 8.8l6.8-.5z"/></svg><span>${(Number(an.prestigio)||0)>0?'+':''}${Number(an.prestigio)||0}</span> ${L('prestige','prestigio')}</div>
       ${puede ? `<button class="sn-disc-follow ${sigo ? 'on' : ''}" data-follow="${esc(an.uid)}" data-firma="${esc(an.firma || '')}">${sigo ? L('Following', 'Siguiendo') : L('Follow', 'Seguir')}</button>` : ''}
     </div>`;
   }).join('');
