@@ -387,6 +387,7 @@ function tarjeta(a, ctx = {}, idx = 0) {
   const disRnd = (_h % 4 === 0) ? (_h % 3) : 0;            // casi sin dislikes
   const cReal = (ctx.conteos && ctx.conteos[sid]) || { likes: 0, dislikes: 0 };
   const cVot = { likes: (cReal.likes || 0) + likesRnd, dislikes: (cReal.dislikes || 0) + disRnd };
+  if (sid) { ctx.base = ctx.base || {}; ctx.base[sid] = { likes: likesRnd, dislikes: disRnd }; }
   const IUp = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 22V10M2 12v8a2 2 0 002 2h13.4a2 2 0 002-1.6l1.4-7A2 2 0 0018.8 11H14V6a2.5 2.5 0 00-2.5-2.5c-.6 0-1.1.4-1.3 1L7 10"/></svg>`;
   const IDown = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2v12M22 12V4a2 2 0 00-2-2H6.6a2 2 0 00-2 1.6l-1.4 7A2 2 0 005.2 13H10v5a2.5 2.5 0 002.5 2.5c.6 0 1.1-.4 1.3-1L17 14"/></svg>`;
   const IFlag = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V4"/></svg>`;
@@ -669,9 +670,10 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
     try { c = await contarVotos(sid); ctx.conteos[sid] = c; } catch (_) {}
     const box = cont.querySelector(`.sn-c-vote[data-sid="${CSS.escape(sid)}"]`);
     if (!box) return;
+    const base = (ctx.base && ctx.base[sid]) || { likes: 0, dislikes: 0 };
     const l = box.querySelector('[data-likes]'), d = box.querySelector('[data-dis]');
-    if (l) l.textContent = (c.likes || 0).toLocaleString();
-    if (d) d.textContent = (c.dislikes || 0).toLocaleString();
+    if (l) l.textContent = ((base.likes || 0) + (c.likes || 0)).toLocaleString();
+    if (d) d.textContent = ((base.dislikes || 0) + (c.dislikes || 0)).toLocaleString();
   };
 
   cont.querySelectorAll('.sn-c-vote').forEach(box => {
@@ -690,9 +692,10 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
       // Pintar al instante: estado, números y animación de pulsación
       box.querySelectorAll('[data-v]').forEach(x => x.classList.remove('on'));
       if (nuevo !== 0) b.classList.add('on');
+      const base = (ctx.base && ctx.base[sid]) || { likes: 0, dislikes: 0 };
       const l = box.querySelector('[data-likes]'), d = box.querySelector('[data-dis]');
-      if (l) l.textContent = (c.likes || 0).toLocaleString();
-      if (d) d.textContent = (c.dislikes || 0).toLocaleString();
+      if (l) l.textContent = ((base.likes || 0) + (c.likes || 0)).toLocaleString();
+      if (d) d.textContent = ((base.dislikes || 0) + (c.dislikes || 0)).toLocaleString();
       b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
       try {
         if (nuevo === 0) await quitarVoto(sid); else await votarSenal(sid, nuevo);
