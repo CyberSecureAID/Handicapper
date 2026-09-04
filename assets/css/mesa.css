@@ -968,3 +968,14 @@ body.en-mesa { overflow: hidden; }
 .ah2-bots-st.ok { color: #3ecf8e; }
 .ah2-bots-st.warn { color: #e8c46a; }
 .ah2-bots-st.err { color: #ff6b72; }
+
+/* Auditor del motor (tabla de datos) */
+.aud-ov { position: fixed; inset: 0; z-index: 100000; background: rgba(3,6,12,.8); backdrop-filter: blur(6px); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 24px 14px; }
+.aud-modal { width: 100%; max-width: 860px; background: #0f1826; border: 1px solid rgba(255,255,255,.12); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px -20px rgba(0,0,0,.7); }
+.aud-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,.1); color: #fff; font-family: "Poppins",sans-serif; }
+.aud-x { width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #fff; cursor: pointer; }
+.aud-sub { padding: 10px 20px; font-size: 12.5px; color: #8a94a3; border-bottom: 1px solid rgba(255,255,255,.06); }
+.aud-body { padding: 8px 20px 20px; overflow-x: auto; }
+.aud-t { width: 100%; border-collapse: collapse; font-size: 13px; }
+.aud-t th { text-align: left; padding: 10px 8px; color: #7c8797; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,.12); white-space: nowrap; }
+.aud-t td { padding: 9px 8px; color: #c3ccd6; border-bottom: 1px solid rgba(255,255,255,.05); white-space: nowrap; }
