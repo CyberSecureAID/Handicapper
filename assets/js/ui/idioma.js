@@ -11,7 +11,7 @@ const DIC = {
   en: {
     'foot.tagline': 'Your ultimate source for verified sports data, advanced analytics and smart insights.',
     'foot.product': 'Product', 'foot.features': 'Features', 'foot.sports': 'Sports', 'foot.plans': 'Plans & pricing', 'foot.updates': 'Live updates',
-    'foot.company': 'Company', 'foot.about': 'About us', 'foot.contact': 'Contact', 'foot.privacy': 'Privacy policy', 'foot.terms': 'Terms of service',
+    'foot.company': 'Company', 'foot.about': 'About us', 'foot.howto': 'How it works', 'foot.contact': 'Contact', 'foot.privacy': 'Privacy policy', 'foot.terms': 'Terms of service',
     'foot.support': 'Support', 'foot.help': 'Help center', 'foot.faq': 'FAQ', 'foot.csupport': 'Contact support', 'foot.status': 'System status',
     'foot.stay': 'Stay updated', 'foot.newsletter': 'Get the latest updates and insights delivered to your inbox.', 'foot.email': 'Enter your email',
     'foot.disclaimer': 'Disclaimer', 'foot.cookies': 'Cookie policy', 'foot.aup': 'Acceptable use', 'foot.dmca': 'Copyright / DMCA', 'foot.responsible': 'Responsible gaming',
@@ -97,7 +97,7 @@ const DIC = {
   es: {
     'foot.tagline': 'Tu fuente definitiva de datos deportivos verificados, an\u00e1lisis avanzado e informaci\u00f3n inteligente.',
     'foot.product': 'Producto', 'foot.features': 'Caracter\u00edsticas', 'foot.sports': 'Deportes', 'foot.plans': 'Planes y precios', 'foot.updates': 'Actualizaciones en directo',
-    'foot.company': 'Empresa', 'foot.about': 'Sobre nosotros', 'foot.contact': 'Contacto', 'foot.privacy': 'Pol\u00edtica de privacidad', 'foot.terms': 'T\u00e9rminos de servicio',
+    'foot.company': 'Empresa', 'foot.about': 'Sobre nosotros', 'foot.howto': 'Cómo funciona', 'foot.contact': 'Contacto', 'foot.privacy': 'Pol\u00edtica de privacidad', 'foot.terms': 'T\u00e9rminos de servicio',
     'foot.support': 'Soporte', 'foot.help': 'Centro de ayuda', 'foot.faq': 'Preguntas frecuentes', 'foot.csupport': 'Contactar soporte', 'foot.status': 'Estado del sistema',
     'foot.stay': 'Mantente al d\u00eda', 'foot.newsletter': 'Recibe las \u00faltimas novedades e informaci\u00f3n en tu correo.', 'foot.email': 'Introduce tu correo',
     'foot.disclaimer': 'Aviso legal', 'foot.cookies': 'Pol\u00edtica de cookies', 'foot.aup': 'Uso aceptable', 'foot.dmca': 'Derechos de autor / DMCA', 'foot.responsible': 'Juego responsable',
