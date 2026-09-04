@@ -916,6 +916,38 @@ async function _cargarBuzonPerfil(ov, esPrem) {
   _notificarNuevas(signals);
 }
 
+/* Modal grande con los 3 planes (se abre desde el trofeo). */
+async function _abrirPlanesModal() {
+  if (document.getElementById('pl-ov')) return;
+  const ES = idiomaActual() === 'es', L = (en, es) => ES ? es : en;
+  let PLANES = [];
+  try { const m = await import('./datos/planes.js'); PLANES = m.PLANES || []; } catch (_) {}
+  const nivelAct = _esAdmin ? 'premium' : planActual();
+  const chk = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+  const card = (p) => {
+    const feats = (p.incluye || []).map(f => `<li>${chk}<span>${esc(ES ? f.es : f.en)}</span></li>`).join('');
+    const actual = p.id === nivelAct;
+    return `<div class="pl-m-card ${p.destacado ? 'feat' : ''} ${actual ? 'actual' : ''}">
+      <div class="pl-m-top">
+        ${p.etiqueta ? `<span class="pl-m-tag">${esc(ES ? p.etiqueta.es : p.etiqueta.en)}</span>` : '<span class="pl-m-tag ghost"></span>'}
+        <div class="pl-m-name">${esc(p.nombre)}</div>
+        <div class="pl-m-price">$${p.mensual}<span>/${L('mo', 'mes')}</span></div>
+        <div class="pl-m-sum">${esc(ES ? p.resumen.es : p.resumen.en)}</div>
+      </div>
+      <ul class="pl-m-list">${feats}</ul>
+      <button class="pl-m-btn ${actual ? 'on' : ''}" ${actual ? 'disabled' : ''}>${actual ? L('Your current plan', 'Tu plan actual') : L('Choose plan', 'Elegir plan')}</button>
+    </div>`;
+  };
+  const ov = document.createElement('div'); ov.id = 'pl-ov'; ov.className = 'bz-ov';
+  ov.innerHTML = `<div class="bz-modal pl-modal"><button class="bz-x" aria-label="close">✕</button>
+    <div class="bz-head"><h3>${L('Plans & pricing', 'Planes y precios')}</h3><p>${L('Choose the plan that fits you best.', 'Elige el plan que mejor se adapta a ti.')}</p></div>
+    <div class="bz-body"><div class="pl-m-grid">${PLANES.map(card).join('')}</div></div></div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('.bz-x').onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+  ov.querySelectorAll('.pl-m-btn:not([disabled])').forEach(b => b.onclick = () => { ov.remove(); const pp = document.getElementById('pp-ov'); if (pp) pp.remove(); document.body.style.overflow = ''; mostrarPantalla('pricing'); });
+}
+
 /* Modal grande del Buzón de señales (Fase 4). Las caducadas ya vienen filtradas por cargarSenales. */
 function _abrirBuzonModal(signals) {
   if (document.getElementById('bz-ov')) return;
@@ -958,6 +990,30 @@ async function _eliminarFotoPerfil(ov) {
     const cb = document.getElementById('cuenta-btn'); if (cb) cb.innerHTML = `<span class="av-ini">${ini}</span>`;
     avisoToast(ES ? 'Foto eliminada \u2713' : 'Photo removed \u2713');
   } catch (e) { avisoToast(ES ? 'Error al eliminar.' : 'Error removing.'); }
+}
+
+/* Modal de opciones de foto de perfil: seleccionar o eliminar. */
+function _modalOpcionesFoto(ov) {
+  const ES = idiomaActual() === 'es', L = (en, es) => ES ? es : en;
+  if (document.getElementById('of-ov')) return;
+  const tieneFoto = !!(_sesion && _sesion.foto);
+  const o = document.createElement('div'); o.id = 'of-ov'; o.className = 'pmf-ov';
+  o.innerHTML = `<div class="pmf-modal">
+    <div class="pmf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+    <h3>${L('Profile photo', 'Foto de perfil')}</h3>
+    <p>${L('Pick any photo. It is auto-optimized to a light size before saving.', 'Selecciona la foto de tu preferencia. Se optimiza sola a un tamaño ligero antes de guardarse.')}</p>
+    <div class="pmf-btns" style="flex-direction:column">
+      <button class="pmf-go" id="of-sel" style="width:100%">${L('Choose a photo', 'Seleccionar foto')}</button>
+      ${tieneFoto ? `<button class="pmf-cancel" id="of-del" style="width:100%;color:#ff6b72;border-color:rgba(240,82,90,.45)">${L('Remove photo', 'Eliminar foto')}</button>` : ''}
+    </div>
+    <button class="of-close" id="of-close">${L('Cancel', 'Cancelar')}</button>
+  </div>`;
+  document.body.appendChild(o);
+  const q = () => o.remove();
+  o.querySelector('#of-close').onclick = q;
+  o.onclick = (e) => { if (e.target === o) q(); };
+  o.querySelector('#of-sel').onclick = () => { q(); _fotoPerfilFlujo(ov); };
+  const del = o.querySelector('#of-del'); if (del) del.onclick = () => { q(); _eliminarFotoPerfil(ov); };
 }
 
 /* Subir foto de perfil (solo Premium): redimensiona + comprime para no llenar Firebase. */
@@ -1065,7 +1121,7 @@ function abrirPanelPerfil() {
           <nav class="pp-menu">${menu}</nav>
           <button class="pp-trofeo" data-pp="trofeo">
             <span class="pp-tr-ic pp-tr-img"><img src="assets/imagenes/trofeo.webp" alt="trofeo"></span>
-            <div class="pp-tr-txt"><b>${L('Upgrade your experience with Pro or Premium', 'Mejora tu experiencia con Pro o Premium')}</b></div>
+            <div class="pp-tr-txt"><b>${L('Upgrade plan', 'Mejora tu plan')}</b></div>
             <span class="pp-tr-arrow">${I.arrow}</span>
           </button>
         </aside>
@@ -1076,7 +1132,6 @@ function abrirPanelPerfil() {
           <div class="pp-field"><label>${I.user}${L('Username', 'Nombre de usuario')}</label><input id="pp-f-usuario" type="text" value="${esc(usuario)}" maxlength="24"></div>
           <div class="pp-field"><label>${I.inbox}${L('Email', 'Correo electrónico')}</label><input id="pp-f-email" type="email" value="${esc(email)}" readonly><small>${L('Your email cannot be changed, for account security.', 'El correo no se puede cambiar, por seguridad de la cuenta.')}</small></div>
           <div class="pp-field"><label>${I.shield}${L('New password', 'Nueva contraseña')}</label><div class="pp-pass"><input id="pp-f-pass" type="password" placeholder="••••••••" autocomplete="new-password"><button class="pp-eye">${I.eye}</button></div><small>${L('Leave blank to keep your current password.', 'Deja en blanco si no deseas cambiar la contraseña.')}</small></div>
-          ${esPrem ? `<button class="pp-linkdel" data-pp="foto-del">${L('Remove profile photo', 'Eliminar foto de perfil')}</button>` : ''}
           <div class="pp-actions">
             <button class="pp-danger" data-pp="del-cuenta">${L('Delete account', 'Eliminar cuenta')}</button>
             <div class="pp-actions-right"><button class="pp-cancel" id="pp-cancel">${L('Cancel', 'Cancelar')}</button><button class="pp-apply">${L('Apply changes', 'Aplicar cambios')} ${I.arrow}</button></div>
@@ -1161,12 +1216,8 @@ function abrirPanelPerfil() {
     else if (k === 'salir') { try { localStorage.removeItem('se-en-app'); localStorage.removeItem('se-vista'); } catch (_) {} cerrar(); limpiarVistaPrevia(); salir(); }
     else if (k === 'panel') { cerrar(); abrirPanelMesa(); }
     else if (k === 'planes') { cerrar(); mostrarPantalla('pricing'); }
-    else if (k === 'trofeo') {
-      cerrar();
-      if (nivel === 'basic') { mostrarPantalla('pricing'); }
-      else { const sb = document.getElementById('signals-btn'); if (sb) sb.click(); else mostrarPantalla('pricing'); }
-    }
-    else if (k === 'foto') { if (esPrem) _fotoPerfilFlujo(ov); else _modalPremiumFoto(); }
+    else if (k === 'trofeo') { _abrirPlanesModal(); }
+    else if (k === 'foto') { if (esPrem) _modalOpcionesFoto(ov); else _modalPremiumFoto(); }
     else if (k === 'foto-del') { _eliminarFotoPerfil(ov); }
     else if (k === 'del-cuenta') { _confirmarEliminarCuenta(); }
     else if (['ajustes', 'notis', 'buzon'].includes(k)) {
