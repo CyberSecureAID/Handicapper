@@ -1064,6 +1064,7 @@ function vistaAnalisis() {
         <div class="ah2-titles"><h1>Analysis Hub</h1></div>
         <div class="ah2-bots-box">
           <button class="mesa-btn oro" id="ah2-bots">${L('Publish bot signals now', 'Publicar señales de bots ahora')}</button>
+          <button class="mesa-btn" id="ah2-audit">${L('Audit engine', 'Auditar motor')}</button>
           <span id="ah2-bots-st" class="ah2-bots-st"></span>
         </div>
       </div>
@@ -1098,8 +1099,33 @@ function tarjetaPartidoAdmin(p) {
   </button>`;
 }
 
+function auditarMotor() {
+  const pct = (v) => v != null && isFinite(v) ? Math.round((v <= 1 ? v * 100 : v)) + '%' : '—';
+  const rows = (_partidos || []).map(p => {
+    const L = p.local || {}, V = p.visita || {}, m = p.mercado || {};
+    return `<tr>
+      <td>${esc(L.abrev || L.nombre || '?')} <span style="color:#7c8797">vs</span> ${esc(V.abrev || V.nombre || '?')}</td>
+      <td>${esc(L.record || '—')} / ${L.posicion != null ? L.posicion + '&ordm;' : '—'} / ${pct(L.winPct)}</td>
+      <td>${esc(V.record || '—')} / ${V.posicion != null ? V.posicion + '&ordm;' : '—'} / ${pct(V.winPct)}</td>
+      <td><b style="color:#e8b84b">${m.local != null ? m.local + '%' : '?'}</b> / ${m.visita != null ? m.visita + '%' : '?'}</td>
+      <td style="color:#7c8797">${esc(p._fuenteProb || 'modelo')}</td>
+    </tr>`;
+  }).join('');
+  const ov = document.createElement('div');
+  ov.className = 'aud-ov';
+  ov.innerHTML = `<div class="aud-modal">
+    <div class="aud-head"><b>${_mesaLang === 'es' ? 'Auditoría del motor' : 'Engine audit'} · ${(_partidos || []).length} · ${esc(_ligaSel || '')}</b><button class="aud-x" aria-label="close">✕</button></div>
+    <div class="aud-sub">${_mesaLang === 'es' ? 'réc = récord · pos = posición en tabla · win% = % de victorias. Cópiame esta tabla.' : 'rec = record · pos = table position · win% = win rate. Copy me this table.'}</div>
+    <div class="aud-body"><table class="aud-t"><thead><tr><th>${_mesaLang === 'es' ? 'Partido' : 'Match'}</th><th>Local (réc/pos/win%)</th><th>Visita (réc/pos/win%)</th><th>Prob L/V</th><th>${_mesaLang === 'es' ? 'Fuente' : 'Source'}</th></tr></thead><tbody>${rows || `<tr><td colspan="5" style="text-align:center;padding:20px;color:#7c8797">${_mesaLang === 'es' ? 'No hay partidos cargados. Abre una liga primero en Analysis Hub.' : 'No matches loaded. Open a league first in the Analysis Hub.'}</td></tr>`}</tbody></table></div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('.aud-x').onclick = () => ov.remove();
+  ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+}
+
 function enlazarAnalisis() {
   const cont = _cont; if (!cont) return;
+  cont.querySelector('#ah2-audit') && (cont.querySelector('#ah2-audit').onclick = () => auditarMotor());
   cont.querySelector('#ah2-bots') && (cont.querySelector('#ah2-bots').onclick = async () => {
     const btn = cont.querySelector('#ah2-bots'), st = cont.querySelector('#ah2-bots-st');
     btn.disabled = true; st.textContent = ML('Checking matches…', 'Buscando partidos…'); st.className = 'ah2-bots-st';
