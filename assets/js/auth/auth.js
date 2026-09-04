@@ -179,6 +179,17 @@ export async function guardarFotoUsuario(foto) {
   return true;
 }
 
+/* Elimina la cuenta: borra el documento de Firestore y el usuario de Firebase Auth. */
+export async function eliminarCuenta() {
+  await cargar();
+  const u = _auth && _auth.currentUser;
+  if (!u) throw new Error('no-session');
+  try { await _fbStore.deleteDoc(_fbStore.doc(_db, 'usuarios', u.uid)); } catch (_) {}
+  await u.delete();   // puede lanzar 'auth/requires-recent-login' si la sesión es antigua
+  _usuario = null;
+  return true;
+}
+
 export function mensajeError(e, idioma = 'en') {
   const code = (e && e.code) || '';
   const es = {
