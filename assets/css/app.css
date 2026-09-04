@@ -1372,3 +1372,6 @@
 .pl-m-pro .pl-m-name { color: #e08a2a; }
 .pl-m-premium .pl-m-name { color: #c99bff; }
 .pl-m-tag { display: inline-block; }
+/* Botón install: solo escritorio en el nav (en móvil va en el perfil) */
+@media (max-width: 900px) { .btn-install { display: none !important; } }
+.pp-item.pp-install { color: #6aa6ff; }

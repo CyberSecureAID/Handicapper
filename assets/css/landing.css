@@ -346,3 +346,7 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .pp-num { font-size: 30px !important; }
 .pp-suf { font-size: 12.5px !important; }
 .plan-precio { justify-content: center; margin-bottom: 6px; }
+
+/* Logo horizontal en el footer (reemplaza el texto + icono) */
+.foot-logo-img { height: 44px; width: auto; object-fit: contain; display: block; }
+.foot-logo { margin-bottom: 14px; }
