@@ -69,6 +69,12 @@ service cloud.firestore {
       allow read: if esAdmin() || esAnalista();
       allow write: if esAdmin();
     }
+    // PREDICCIONES — registro permanente para el prestigio (anti-trampa).
+    match /predicciones/{id} {
+      allow read: if esAdmin();
+      allow create: if request.auth != null && (esAdmin() || request.resource.data.analistaUid == request.auth.uid);
+      allow update, delete: if esAdmin();
+    }
     match /votos/{id} {
       allow read: if request.auth != null;
       allow create, update: if request.auth != null
