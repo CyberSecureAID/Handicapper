@@ -255,14 +255,14 @@ export async function quitarFotoAnalista(uid) {
 
 /* ADMIN: ajusta un contador figurativo (+/-). campo: followersExtra | likesExtra | dislikesExtra. */
 export async function ajustarContadorAnalista(uid, campo, delta) {
-  const permitidos = ['followersExtra', 'likesExtra', 'dislikesExtra'];
+  const permitidos = ['followersExtra', 'likesExtra', 'dislikesExtra', 'prestigio'];
   if (!permitidos.includes(campo)) return null;
   const S = _obtenerStore(), db = _obtenerDB();
   const ref = S.doc(db, 'analistas', uid);
   try {
     const snap = await S.getDoc(ref);
     const actual = (snap.exists() && Number(snap.data()[campo])) || 0;
-    const nuevo = Math.max(0, actual + delta);
+    const nuevo = campo === 'prestigio' ? (actual + delta) : Math.max(0, actual + delta);   // prestigio SÍ puede ser negativo
     await S.setDoc(ref, { [campo]: nuevo }, { merge: true });
     return nuevo;
   } catch (_) { return null; }

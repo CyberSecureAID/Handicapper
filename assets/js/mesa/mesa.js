@@ -879,6 +879,7 @@ function vistaAnalistas() {
         ${counterUI(a.uid, 'followersExtra', ML('Followers', 'Seguidores'), segMostrar(a))}
         ${counterUI(a.uid, 'likesExtra', ML('Likes', 'Likes'), likesMostrar(a))}
         ${counterUI(a.uid, 'dislikesExtra', ML('Dislikes', 'Dislikes'), dislikesMostrar(a))}
+        ${counterUI(a.uid, 'prestigio', ML('Prestige', 'Prestigio'), Number(a.prestigio) || 0)}
       </div>
     </div>`;
   }).join('') : `<div class="an-mng-empty">${ML('No analysts yet.', 'Aún no hay analistas.')}</div>`;
@@ -941,7 +942,7 @@ function enlazarAnalistas() {
     b.disabled = false;
     if (nuevo == null) return;
     const a = _analistas.find(x => x.uid === uid); if (a) a[campo] = nuevo;
-    const val = campo === 'followersExtra' ? segMostrar(a) : campo === 'likesExtra' ? likesMostrar(a) : dislikesMostrar(a);
+    const val = campo === 'followersExtra' ? segMostrar(a) : campo === 'likesExtra' ? likesMostrar(a) : campo === 'prestigio' ? (Number(a.prestigio) || 0) : dislikesMostrar(a);
     _cont.querySelectorAll(`[data-ancv="${campo}-${uid}"]`).forEach(el => el.textContent = (val || 0).toLocaleString());
   });
   _cont.querySelectorAll('[data-an-foto]').forEach(b => b.onclick = () => {
@@ -1284,6 +1285,12 @@ function abrirModalEditarSenal(a, padre) {
     const analisis = { ...a, equipos, veredicto: `${fav} ${L('to win', 'gana')}`, prob: nProb, favorito: fav, confianza: conf, mercado: bg.querySelector('#edit-mkt').value, texto, estado: 'publicado' };
     const save = bg.querySelector('.edit-save'); save.disabled = true; save.textContent = '…';
     try { await guardarAnalisis(a.matchId || a.id, analisis); _analisis = await listarAnalisis(); } catch (_) {}
+    try {
+      const favId = (a.local && analisis.favorito === a.local.nombre) ? (a.local.id || '') : ((a.visita && a.visita.id) || '');
+      const mid = (a.id && !String(a.id).includes(':')) ? a.id : (a.matchId && !String(a.matchId).includes(':') ? a.matchId : a.id);
+      const { registrarPrediccion } = await import('../datos/prestigio.js');
+      await registrarPrediccion({ analistaUid: analisis.autorUid || _miUid || '', matchId: mid, ligaId: a.liga || a.ligaId || '', deporte: a.deporte || '', favoritoId: favId, favoritoNombre: analisis.favorito, cuando: a.cuando || null });
+    } catch (_) {}
     cerrar();
     if (padre) { const body = padre.querySelector('.pub-body'); if (body) { body.innerHTML = cuerpoPublicadas(); enlazarPublicadas(padre); } }
     pintarTab();
@@ -1595,7 +1602,16 @@ async function abrirModalSenal(matchId) {
     };
     const btn = bg.querySelector(estado === 'borrador' ? '#anm-draft' : '#anm-guardar');
     const txtBtn = btn.textContent; btn.disabled = true; btn.textContent = '…';
-    try { await guardarAnalisis(matchId, analisis); _analisis = await listarAnalisis(); cerrar(); pintarTab(); }
+    try { await guardarAnalisis(matchId, analisis); _analisis = await listarAnalisis(); cerrar(); pintarTab();
+      if (estado === 'publicado') {
+        try {
+          const favId = fav === 'local' ? (p.local.id || '') : (p.visita.id || '');
+          const mid = (matchId && !String(matchId).includes(':')) ? matchId : (p.id || matchId);
+          const { registrarPrediccion } = await import('../datos/prestigio.js');
+          await registrarPrediccion({ analistaUid: analisis.autorUid || _miUid || '', matchId: mid, ligaId: p.ligaId || '', deporte: analisis.deporte || '', favoritoId: favId, favoritoNombre: analisis.favorito, cuando: p.cuando || null });
+        } catch (_) {}
+      }
+    }
     catch (_) { btn.disabled = false; btn.textContent = txtBtn; }
   };
   const del = bg.querySelector('#anm-del');
