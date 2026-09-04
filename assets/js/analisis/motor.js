@@ -32,7 +32,7 @@ const PRIOR_N = { _soc: 5, mlb: 8, nba: 5, nfl: 2, nhl: 6, _def: 5 };
 
 /* Pesos del modelo */
 const W = {
-  fuerza: 0.85,   // peso de la diferencia de fuerza (record) en log-odds
+  fuerza: 1.05,   // peso de la diferencia de fuerza (record) en log-odds
   overall: 0.6,   // mezcla récord total vs situacional
   situ: 0.4,      // récord casa/fuera
   era: 0.34,      // por cada 1.00 de diferencia de ERA (MLB)
@@ -141,7 +141,7 @@ export function analizar(match) {
   const fuerzaDe = (eq) => {
     const wp = numDe(eq && eq.winPct);
     if (wp != null && wp > 0 && wp < 1) {
-      const k = 0.12; const p = clamp((wp * (1 - k) + 0.5 * k), 0.05, 0.95);
+      const k = 0.07; const p = clamp((wp * (1 - k) + 0.5 * k), 0.05, 0.95);
       return { logit: logit(p), n: 20 };   // dato real de tabla -> muestra sólida
     }
     return fuerzaLogit(eq && eq.record, futbol, ligaId);
@@ -163,7 +163,7 @@ export function analizar(match) {
   const posL = Number(match.local.posicion), posV = Number(match.visita.posicion);
   if (isFinite(posL) && isFinite(posV) && posL > 0 && posV > 0 && posL !== posV) {
     // Menor número = mejor. Diferencia de puestos -> ventaja (con tope).
-    const posEdge = clamp((posV - posL) * 0.075, -0.8, 0.8);
+    const posEdge = clamp((posV - posL) * 0.10, -0.9, 0.9);
     L += posEdge; factoresUsados.push('posicion');
   }
 
@@ -257,7 +257,14 @@ export function analizar(match) {
 
   let out;
   if (futbol) {
-    const eDraw = 0.26, r = 1 - eDraw;
+    // Empate VARIABLE: mayor cuando el partido es parejo, menor cuando hay un favorito claro.
+    // Antes era fijo en 26% (placeholder). Ahora depende del margen + un jitter determinista.
+    const margen = Math.abs(pLocal - 0.5) * 2;                    // 0 = parejo .. 1 = disparejo
+    const sem = String((match.local.abrev || match.local.nombre || '') + (match.visita.abrev || match.visita.nombre || ''));
+    let hsh = 0; for (let i = 0; i < sem.length; i++) hsh = (hsh * 31 + sem.charCodeAt(i)) & 0xffff;
+    const jit = ((hsh % 61) - 30) / 1000;                        // ±0.030 estable por partido
+    const eDraw = clamp(0.31 - 0.20 * margen + jit, 0.08, 0.33);  // 8%..33%
+    const r = 1 - eDraw;
     const lo = Math.round(pLocal * r * 100), vi = Math.round((1 - pLocal) * r * 100);
     out = { local: lo, empate: Math.max(0, 100 - lo - vi), visita: vi };
   } else {
