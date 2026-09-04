@@ -94,6 +94,15 @@ function inicioDe(ev) {
 }
 
 /* Probabilidad implícita a partir de la cuota americana (moneyline) */
+/* Empate VARIABLE para fútbol: alto si el partido es parejo, bajo si hay favorito claro.
+   pL, pV suman ~1 (dos vías). seed = para un jitter estable por partido. */
+function empateVar(pL, pV, seed) {
+  const margen = Math.abs((pL || 0) - (pV || 0));
+  let hsh = 0; const s = String(seed || '');
+  for (let i = 0; i < s.length; i++) hsh = (hsh * 31 + s.charCodeAt(i)) & 0xffff;
+  const jit = ((hsh % 61) - 30) / 1000;   // ±0.030 estable
+  return Math.max(0.08, Math.min(0.33, 0.31 - 0.20 * margen + jit));
+}
 function probDeMoneyline(ml) {
   const n = Number(ml);
   if (!isFinite(n) || n === 0) return null;
@@ -181,8 +190,9 @@ function mercadoDe(comp, futbol, local, visita, ligaId) {
   if (pV != null && pL == null) pL = 1 - pV;
   if (pL != null && pV != null) {
     const s = pL + pV || 1;
+    const e = futbol ? empateVar(pL/s, pV/s, (local.abrev||'') + (visita.abrev||'')) : null;
     const prob = futbol
-      ? norm(pL/s*(1-0.26), 0.26, pV/s*(1-0.26), true)
+      ? norm(pL/s*(1-e), e, pV/s*(1-e), true)
       : norm(pL/s, null, pV/s, false);
     return { prob, fuente: 'cuota' };
   }
@@ -439,7 +449,7 @@ export async function detallePartido(id) {
       if (pV != null && pL == null) pL = 1 - pV;
       if (pL != null && pV != null) {
         const tot = pL + pV || 1;
-        if (futbol) { const e = 0.26, r = 1 - e; const L = Math.round(pL/tot*r*100), V = Math.round(pV/tot*r*100); m.mercado = { local: L, empate: Math.max(0, 100 - L - V), visita: V }; }
+        if (futbol) { const e = empateVar(pL/tot, pV/tot, (local.abrev||'')+(visita.abrev||'')), r = 1 - e; const L = Math.round(pL/tot*r*100), V = Math.round(pV/tot*r*100); m.mercado = { local: L, empate: Math.max(0, 100 - L - V), visita: V }; }
         else { const L = Math.max(1, Math.min(99, Math.round(pL/tot*100))); m.mercado = { local: L, empate: null, visita: 100 - L }; }
         m._fuenteProb = 'cuota';
       }
@@ -450,7 +460,8 @@ export async function detallePartido(id) {
     const ag = Number(pred?.awayTeam?.gameProjection);
     if (m && !pc && isFinite(hg) && isFinite(ag) && (hg + ag) > 0) {
       if (futbol) {
-        const e = 26, r = (100 - e) / 100, tot = hg + ag || 1;
+        const tot = hg + ag || 1;
+        const e = empateVar(hg / tot, ag / tot, (local.abrev||'')+(visita.abrev||'')), r = 1 - e;
         const L = Math.round((hg / tot) * 100 * r);
         const V = Math.round((ag / tot) * 100 * r);
         m.mercado = { local: L, empate: Math.max(0, 100 - L - V), visita: V };
