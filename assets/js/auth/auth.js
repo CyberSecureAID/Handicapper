@@ -168,6 +168,17 @@ export async function actualizarPerfil({ nombre, usuario, email, password, passw
 }
 
 /* Traduce códigos de error de Firebase a mensajes claros */
+/* Guarda (o quita) la foto de perfil del usuario en Firestore. foto = dataURL o null. */
+export async function guardarFotoUsuario(foto) {
+  await cargar();
+  const u = _auth && _auth.currentUser;
+  if (!u) throw new Error('no-session');
+  const { doc, updateDoc } = _fbStore;
+  await updateDoc(doc(_db, 'usuarios', u.uid), { foto: foto || null });
+  if (_usuario) _usuario.foto = foto || null;
+  return true;
+}
+
 export function mensajeError(e, idioma = 'en') {
   const code = (e && e.code) || '';
   const es = {
