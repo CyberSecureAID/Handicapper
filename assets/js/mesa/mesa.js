@@ -97,7 +97,7 @@ function render() {
     <div class="mesa">
       <aside class="mesa-side" id="mesa-side">
         <div class="mesa-side-top">
-          <div class="mesa-marca">SPORTS EXPECTATIONS${_rol === 'analista' ? `<span>${ML('Analyst','Analista')}</span>` : ''}</div>
+          <div class="mesa-marca"><img class="mesa-logo" src="assets/imagenes/logo-nombre-oscuro-mesa.png" alt="Sports Expectations">${_rol === 'analista' ? `<span class="mesa-marca-rol">${ML('Analyst','Analista')}</span>` : ''}</div>
           <button class="mesa-burger" id="mesa-burger" aria-label="Menu">${IC.menu}</button>
         </div>
         <nav class="mesa-nav" id="mesa-nav">
