@@ -57,6 +57,16 @@ export async function feedSeguidosHTML() {
   return { total: mias.length, html: mias.map((a, i) => tarjeta(a, ctx, i)).join('') };
 }
 
+/* Fase 3 — datos crudos de las señales de los analistas que sigo (para el panel de perfil). */
+export async function senalesSeguidas() {
+  const lista = await cargarSenales();
+  let sigo = new Set();
+  try { sigo = new Set(await misSeguidos()); } catch (_) {}
+  return lista
+    .filter(a => a.autorUid && sigo.has(a.autorUid))
+    .sort((x, y) => _tsMs(y.actualizado) - _tsMs(x.actualizado));
+}
+
 let _css = false;
 function inyectarCSS() {
   if (_css) return; _css = true;
