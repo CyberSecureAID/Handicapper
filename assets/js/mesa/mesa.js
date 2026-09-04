@@ -1146,7 +1146,9 @@ function enlazarAnalisis() {
       const r = await publicarTodosLosBots(dm.guardarAnalisis);
       _analisis = await dm.listarAnalisis();
       try { localStorage.setItem('bots-ts', String(Date.now())); } catch (_) {}
-      st.innerHTML = `<b>${r.publicadas}</b> ${ML('published', 'publicadas')} · ${r.fetched} ${ML('matches', 'partidos')} · ${r.enVentana} ${ML('within 48h', 'en 48h')} · ${r.califican} ${ML('qualify', 'califican')}`;
+      const NOM = { futbol: 'Fútbol', beisbol: 'Béisbol', basket: 'Básquet', hockey: 'Hockey', americano: 'F.Am.' };
+      const det = Object.entries(r.porDeporte || {}).map(([k, d]) => `${NOM[k] || k}: <b>${d.enVentana}</b>${ML(' games', ' juegos')}/${d.publicadas}${ML(' pub', ' pub')}`).join(' · ');
+      st.innerHTML = `<b>${r.publicadas}</b> ${ML('published', 'publicadas')} · ${r.fetched} ${ML('matches', 'partidos')} · ${r.enVentana} ${ML('in window', 'en ventana')}<br><span style="font-size:11.5px;color:#8a94a3">${det}</span>`;
       st.className = r.publicadas > 0 ? 'ah2-bots-st ok' : 'ah2-bots-st warn';
     } catch (e) { st.textContent = ML('Error', 'Error') + ': ' + ((e && e.message) || e); st.className = 'ah2-bots-st err'; }
     btn.disabled = false;
