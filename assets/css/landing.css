@@ -327,3 +327,8 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .dsk-duel-vs { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
   width: 92px; height: auto; z-index: 3; filter: drop-shadow(0 6px 16px rgba(0,0,0,.85)) drop-shadow(0 0 4px rgba(0,0,0,.6)); }
 @media (max-width: 640px) { .dsk-duel { display: none; } }
+
+/* Planes uniformes: el botón se pinea abajo y los resúmenes alinean (estilo Hostinger) */
+.plan-feats { flex: 1 1 auto; }
+.plan-resumen { min-height: 42px; }
+.plan-btn { margin-top: auto; }

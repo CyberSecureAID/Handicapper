@@ -1313,3 +1313,31 @@
 /* Buzón modal GRANDE (proporciones del perfil) */
 .bz-modal { max-width: 860px !important; }
 .bz-body { min-height: 200px; }
+
+/* ===== Trofeo DEFINITIVO: la imagen es vertical, así que altura fija y ancho auto ===== */
+.pp-trofeo { align-items: center; }
+.pp-tr-ic.pp-tr-img { width: auto !important; height: 72px !important; flex: 0 0 auto !important; }
+.pp-tr-ic.pp-tr-img img { width: auto !important; height: 100% !important; object-fit: contain; }
+.pp-tr-txt b { font-size: 12.5px !important; }
+
+/* ===== Modal de planes (3 cards uniformes) ===== */
+.pl-modal { max-width: 940px !important; }
+.pl-m-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.pl-m-card { display: flex; flex-direction: column; background: rgba(16,22,34,.6); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 20px; }
+.pl-m-card.feat { border-color: rgba(232,196,106,.5); box-shadow: 0 0 0 1px rgba(232,196,106,.25) inset; }
+.pl-m-card.actual { border-color: rgba(62,207,142,.5); }
+.pl-m-top { min-height: 118px; }
+.pl-m-tag { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #e8c46a; background: rgba(232,196,106,.14); border: 1px solid rgba(232,196,106,.4); padding: 3px 10px; border-radius: 7px; margin-bottom: 8px; min-height: 21px; }
+.pl-m-tag.ghost { visibility: hidden; }
+.pl-m-name { font-family: "Poppins",sans-serif; font-size: 20px; color: #fff; }
+.pl-m-price { font-family: "Chakra Petch",sans-serif; font-size: 30px; font-weight: 800; color: #e8c46a; margin: 4px 0; }
+.pl-m-price span { font-size: 13px; color: #8a94a3; font-weight: 500; }
+.pl-m-sum { font-size: 12.5px; color: #9aa4b2; line-height: 1.4; }
+.pl-m-list { list-style: none; padding: 16px 0 0; margin: 14px 0 0; border-top: 1px solid rgba(255,255,255,.08); flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.pl-m-list li { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; color: #c3ccd6; line-height: 1.35; }
+.pl-m-list li svg { width: 15px; height: 15px; flex: none; color: #3ecf8e; margin-top: 2px; }
+.pl-m-btn { margin-top: 18px; padding: 12px; border-radius: 11px; border: 0; background: linear-gradient(135deg,#e8c46a,#c99a3a); color: #2a1c00; font-weight: 800; font-family: inherit; font-size: 14px; cursor: pointer; }
+.pl-m-btn.on { background: rgba(62,207,142,.15); color: #3ecf8e; border: 1px solid rgba(62,207,142,.4); cursor: default; }
+.of-close { width: 100%; margin-top: 10px; background: none; border: 0; color: #8a94a3; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; padding: 6px; }
+.of-close:hover { color: #fff; }
+@media (max-width: 720px) { .pl-m-grid { grid-template-columns: 1fr; } .pl-m-top { min-height: 0; } }
