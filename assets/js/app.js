@@ -894,6 +894,23 @@ function _notificarNuevas(signals) {
   } catch (_) {}
 }
 
+/* Eliminar la foto de perfil (vuelve a la inicial). */
+async function _eliminarFotoPerfil(ov) {
+  const ES = idiomaActual() === 'es';
+  const nom = (_sesion && (_sesion.nombre || (_sesion.email || '').split('@')[0])) || '?';
+  const ini = String(nom).charAt(0).toUpperCase();
+  const cur = _sesion && _sesion.foto;
+  if (!cur) { avisoToast(ES ? 'No tienes una foto puesta.' : 'You have no photo set.'); return; }
+  try {
+    const { guardarFotoUsuario } = await import('./auth/auth.js');
+    await guardarFotoUsuario(null);
+    if (_sesion) _sesion.foto = null;
+    const av = ov && ov.querySelector('.pp-av'); if (av) av.textContent = ini;
+    const cb = document.getElementById('cuenta-btn'); if (cb) cb.innerHTML = `<span class="av-ini">${ini}</span>`;
+    avisoToast(ES ? 'Foto eliminada \u2713' : 'Photo removed \u2713');
+  } catch (e) { avisoToast(ES ? 'Error al eliminar.' : 'Error removing.'); }
+}
+
 /* Subir foto de perfil (solo Premium): redimensiona + comprime para no llenar Firebase. */
 function _fotoPerfilFlujo(ov) {
   const ES = idiomaActual() === 'es';
@@ -906,7 +923,7 @@ function _fotoPerfilFlujo(ov) {
     rd.onload = () => {
       const img = new Image();
       img.onload = async () => {
-        const max = 256; let w = img.width, h = img.height;
+        const max = 400; let w = img.width, h = img.height;
         if (w >= h && w > max) { h = Math.round(h * max / w); w = max; }
         else if (h > w && h > max) { w = Math.round(w * max / h); h = max; }
         const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
@@ -994,6 +1011,7 @@ function abrirPanelPerfil() {
           <div class="pp-nombre">${esc(nombre)}</div>
           <span class="pp-plan pp-plan-${nivel}">${badge}</span>
           <div class="pp-mail">${esc(email)}</div>
+          ${esPrem ? `<button class="pp-foto-del" data-pp="foto-del">${L('Remove photo', 'Eliminar foto')}</button>` : ''}
           <nav class="pp-menu">${menu}</nav>
           <div class="pp-trofeo">
             <span class="pp-tr-ic pp-tr-img"><img src="assets/imagenes/trofeo.webp" alt="trofeo"></span>
@@ -1091,6 +1109,7 @@ function abrirPanelPerfil() {
     else if (k === 'panel') { cerrar(); abrirPanelMesa(); }
     else if (k === 'planes') { cerrar(); mostrarPantalla('pricing'); }
     else if (k === 'foto') { if (esPrem) _fotoPerfilFlujo(ov); else _modalPremiumFoto(); }
+    else if (k === 'foto-del') { _eliminarFotoPerfil(ov); }
     else if (['ajustes', 'notis', 'buzon'].includes(k)) {
       ov.querySelectorAll('.pp-menu .pp-item').forEach(x => x.classList.toggle('on', x.dataset.pp === k));
       // Fases 3-4: aquí irá el contenido real de cada sección.
