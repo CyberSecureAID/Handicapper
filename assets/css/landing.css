@@ -340,3 +340,9 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .plan-feats li .pl-no { color: #56606e !important; flex: 0 0 auto; margin-top: 2px; }
 .plan-feats li i { font-style: normal; color: #8fb3ff; font-weight: 700; font-size: 12px; margin-left: 4px; }
 .plan-feats li span { flex: 1; }
+
+/* Planes públicos: fuentes más compactas (como el modal del perfil) para que no se monten */
+.plan-nom { font-size: 18px !important; }
+.pp-num { font-size: 30px !important; }
+.pp-suf { font-size: 12.5px !important; }
+.plan-precio { justify-content: center; margin-bottom: 6px; }

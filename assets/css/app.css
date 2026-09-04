@@ -1364,3 +1364,11 @@
 /* Prestigio en el directorio de analistas */
 .sd-prest { color: #e8b84b; }
 .sd-prest.neg { color: #ff6b72; }
+
+/* Modal de planes: nombres/precios CENTRADOS + colores por plan */
+.pl-m-top { text-align: center; }
+.pl-m-name, .pl-m-price { text-align: center; }
+.pl-m-basic .pl-m-name { color: #8fb3ff; }
+.pl-m-pro .pl-m-name { color: #e08a2a; }
+.pl-m-premium .pl-m-name { color: #c99bff; }
+.pl-m-tag { display: inline-block; }
