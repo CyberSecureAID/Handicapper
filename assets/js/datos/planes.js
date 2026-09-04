@@ -49,6 +49,7 @@ export const PLANES = [
       { en: 'Full daily shared picks', es: 'Picks compartidos del día completos' },
       { en: 'Broad access to analyst signals (about 50% of what is available)', es: 'Acceso amplio a señales de analistas (aprox. el 50% de lo disponible)' },
       { en: 'Push notifications & alerts', es: 'Notificaciones push y avisos' },
+      { en: 'Profile photo to share your stats showing they come from you', es: 'Foto de perfil para compartir tus estadísticas mostrando que provienen de ti' },
       { en: 'Option to hire additional analyst services for higher access', es: 'Posibilidad de contratar servicios adicionales de analistas para mayor acceso' },
     ],
   },
