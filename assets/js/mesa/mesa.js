@@ -457,14 +457,22 @@ async function toggleBloqueo(uid, btn) {
 function candidatosAnalista() {
   const q = _anBusqueda.trim().toLowerCase();
   return _usuarios.filter(u => {
-    if (_analistas.some(a => a.uid === u.uid)) return false;   // ya es analista/bot -> se gestiona arriba
+    const yaAn = _analistas.some(a => a.uid === u.uid);
     const sub = u.suscripcion || {};
     if (_anFiltro === 'con' && !sub.activo) return false;
     if (_anFiltro === 'sin' && sub.activo) return false;
     if (_anFiltro === 'bloq' && !u.bloqueado) return false;
-    if (q) { const nom = (u.nombre || '').toLowerCase(), mail = (u.email || '').toLowerCase(); if (nom.indexOf(q) === -1 && mail.indexOf(q) === -1) return false; }
+    if (q) {
+      const nom = (u.nombre || '').toLowerCase();
+      const mail = (u.email || '').toLowerCase();
+      const user = mail.split('@')[0];          // "nombre de usuario" = parte antes de @
+      if (nom.indexOf(q) === -1 && mail.indexOf(q) === -1 && user.indexOf(q) === -1) return false;
+    } else if (yaAn) {
+      // sin búsqueda: no listar a los que ya son analistas (se gestionan arriba)
+      return false;
+    }
     return true;
-  });
+  }).map(u => ({ ...u, yaAnalista: _analistas.some(a => a.uid === u.uid) }));
 }
 function pintarCandidatos() {
   const cont = _cont.querySelector('#an-cands'); if (!cont) return;
@@ -474,6 +482,12 @@ function pintarCandidatos() {
     const sub = u.suscripcion || {};
     const st = u.bloqueado ? `<span class="pill red">${ML('Blocked', 'Bloqueado')}</span>`
       : (sub.activo ? `<span class="pill on">${planPorId(sub.plan)?.nombre || ML('Active', 'Activo')}</span>` : `<span class="pill">${ML('No plan', 'Sin plan')}</span>`);
+    if (u.yaAnalista) {
+      return `<div class="an-cand ya">
+        <div class="an-cand-who"><b>${esc(u.nombre || (u.email || '').split('@')[0] || '—')}</b><span>${esc(correoCorto(u.email || ''))}</span>${st}</div>
+        <span class="an-cand-ya">${ML('Already an analyst', 'Ya es analista')}</span>
+      </div>`;
+    }
     return `<div class="an-cand">
       <div class="an-cand-who"><b>${esc(u.nombre || (u.email || '').split('@')[0] || '—')}</b><span>${esc(correoCorto(u.email || ''))}</span>${st}</div>
       <input class="an-mng-inp" data-cand-nombre="${esc(u.uid)}" placeholder="${ML('Analyst name', 'Nombre de analista')}" value="${esc(u.nombre || (u.email || '').split('@')[0] || '')}" maxlength="28">
@@ -891,7 +905,7 @@ function vistaAnalistas() {
       <div class="mc-t">${IC.contrato} ${ML('Add analyst', 'Agregar analista')}</div>
       <p class="an-mng-sub">${ML('Search a registered user and assign a sport. You only see who matches, so you won\u2019t add the wrong person by mistake.', 'Busca un usuario registrado y asígnale un deporte. Solo ves a quién coincide, para no agregar a la persona equivocada.')}</p>
       <div class="an-add-tools">
-        <div class="u-search">${Ilupa}<input id="an-buscar" type="text" placeholder="${ML('Search by name or email…', 'Buscar por nombre o correo…')}" value="${esc(_anBusqueda)}"></div>
+        <div class="u-search">${Ilupa}<input id="an-buscar" type="text" autocomplete="off" spellcheck="false" placeholder="${ML('Search by name, username or email…', 'Buscar por nombre, usuario o correo…')}" value="${esc(_anBusqueda)}"></div>
         <div class="u-chips" id="an-chips">${chips}</div>
       </div>
       <div class="an-cands" id="an-cands"></div>
