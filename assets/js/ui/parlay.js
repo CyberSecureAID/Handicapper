@@ -11,6 +11,7 @@ import { topParlayHits, topHomeRuns } from '../analisis/mlb-parlay.js';
 import { topGoalProjection } from '../analisis/soccer-goal.js';
 import { topPointsProjection } from '../analisis/nba-points.js';
 import { topShotsProjection } from '../analisis/nhl-shots.js';
+import { topTouchdownProjection } from '../analisis/nfl-touchdowns.js';
 import { abrirTracker } from './tracker.js';
 import { idiomaActual } from './idioma.js';
 
@@ -69,6 +70,17 @@ const DEMO_NHL = [
     tags:[() => L('2.1 proj','2.1 proy'), () => L('vs RVL · 29 SA','vs RVL · 29 TC'), '2.1 S/G'],
     factores:[L('Plays at home','Juega en casa')], riesgos:[] },
 ];
+const DEMO_NFL = [
+  { rank:1, nombre:'Red-zone Back', pos:'RB', equipoAbrev:'HOME', rivalAbrev:'AWY', prob:68, confianza:'media',
+    tags:['RB', () => L('vs AWY · 3.2 TD/g allowed','vs AWY · 3.2 TD/j perm.'), '9 TD'],
+    factores:[L('Opponent soft in the red zone','Rival blando en zona roja'), L('Plays at home','Juega en casa'), L('Goal-line role','Rol en la yarda uno')], riesgos:[] },
+  { rank:2, nombre:'Star Receiver', pos:'WR', equipoAbrev:'CLB', rivalAbrev:'OPP', prob:52, confianza:'media',
+    tags:['WR', () => L('vs OPP · 2.7 TD/g allowed','vs OPP · 2.7 TD/j perm.'), '7 TD'],
+    factores:[L('Red-zone target','Objetivo en zona roja'), L('High target share','Muchos envíos')], riesgos:[] },
+  { rank:3, nombre:'Big Tight End', pos:'TE', equipoAbrev:'TMX', rivalAbrev:'RVL', prob:41, confianza:'baja',
+    tags:['TE', () => L('vs RVL · 2.5 TD/g allowed','vs RVL · 2.5 TD/j perm.'), '5 TD'],
+    factores:[L('Plays at home','Juega en casa')], riesgos:[] },
+];
 
 /* ---------- Config por deporte ---------- */
 function VISTA(sport) {
@@ -116,6 +128,17 @@ function VISTA(sport) {
       foot: L('Model probability estimates, not betting advice. Hockey is high-variance: a high probability is not a certainty.',
               'Estimaciones probabilísticas del modelo, no asesoría de apuestas. El hockey es de alta varianza: una probabilidad alta no es certeza.'),
       toCard: (p) => ({ ...p, tags: p.tags || [ `${p.proj} ${L('proj', 'proy')}`, (p.saRival != null ? `${L('vs', 'vs')} ${p.rivalAbrev} · ${(+p.saRival).toFixed(0)} ${L('SA', 'TC')}` : `${L('vs', 'vs')} ${p.rivalAbrev || ''}`), (p.spg != null ? `${(+p.spg).toFixed(1)} S/G` : '') ].filter(Boolean) }),
+    },
+    nfl: {
+      activo: true, img: 'fondo-touchdowns.jpg', run: () => topTouchdownProjection({ fecha: hoyISO(), n: 9 }), demo: DEMO_NFL,
+      eyebrow: L('Premium · Touchdown Projection', 'Premium · Proyección de Touchdowns'),
+      titulo: `${L('Top picks · Best', 'Top del día · Mejores')} <em>${L('touchdown chances', 'opciones de touchdown')}</em>`,
+      metric: 'P(1+ TD)', metricLabel: L('Chance of<br>a TD', 'Opción de<br>un TD'),
+      lead: L('The nine players with the highest estimated probability of scoring a touchdown today (anytime TD scorer).',
+              'Los nueve jugadores con mayor probabilidad estimada de anotar un touchdown hoy (anytime TD scorer).'),
+      foot: L('Model probability estimates, not betting advice. Football is high-variance: a high probability is not a certainty.',
+              'Estimaciones probabilísticas del modelo, no asesoría de apuestas. El fútbol americano es de alta varianza: una probabilidad alta no es certeza.'),
+      toCard: (p) => ({ ...p, tags: p.tags || [ p.pos || 'RB', (p.tdPermRival != null ? `${L('vs', 'vs')} ${p.rivalAbrev} · ${(+p.tdPermRival).toFixed(1)} ${L('TD/g', 'TD/j')}` : `${L('vs', 'vs')} ${p.rivalAbrev || ''}`), (p.tdTot != null ? `${p.tdTot} TD` : '') ].filter(Boolean) }),
     },
   };
   return base[sport] || base.mlb;
