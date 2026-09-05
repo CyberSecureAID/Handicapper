@@ -479,6 +479,10 @@ function initProyeccion() {
 /* -------- Arranque -------- */
 function init() {
   initTema();
+  window.__pintarJesus = function () {
+    const f = window.__jesusFoto;
+    document.querySelectorAll('[data-jesus-ava]').forEach(el => { el.innerHTML = f ? `<img src="${f}" alt="Jesús">` : 'J'; });
+  };
   import('./auth/auth.js').then(m => m.cargarFotoAnalista && m.cargarFotoAnalista()).catch(() => {});
   initIdioma();
   aplicarTextos();
@@ -685,6 +689,7 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   try { const { esAdmin, esAnalista } = await import('./mesa/mesa-datos.js'); _esAdmin = await esAdmin(); if (!_esAdmin) { const a = await esAnalista(); _esAnalista = !!a; } } catch (_) {}
   pintarCuenta(usuario);   // repinta para mostrar la opción de panel si es admin
   if ((location.hash || '').toLowerCase() === '#mesa') { try { history.replaceState(null, '', location.pathname); } catch (_) {} }
+  if (_esAdmin && usuario && usuario.foto) { try { const _a = await import('./auth/auth.js'); _a.sincronizarFotoAnalista && _a.sincronizarFotoAnalista(usuario.foto); } catch (_) {} }
   if (_esAdmin) marcarVistaPrevia('premium');   // el admin tiene acceso total cuando entre
   if (_esAdmin) publicarBotsSiEsNuevoDia();     // señales de bots automáticas (1 vez al día)
   if (_esAdmin) resolverPrestigioSiToca();      // resuelve predicciones terminadas -> prestigio
