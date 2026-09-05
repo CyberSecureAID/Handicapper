@@ -155,7 +155,7 @@ function informeIA(p, ES) {
 
   // ---- Deporte ----
   const dep = String(p.deporte || p.liga || '').toLowerCase();
-  const D = /beis|mlb|base/.test(dep) ? 'beis' : /bask|nba/.test(dep) ? 'bask' : /hock|nhl/.test(dep) ? 'hoc' : /amer|nfl/.test(dep) ? 'amer' : 'fut';
+  const D = /beis|mlb|base/.test(dep) ? 'beis' : /bask|nba/.test(dep) ? 'bask' : /hock|nhl/.test(dep) ? 'hoc' : /amer|nfl|rubio|gridiron/.test(dep) ? 'amer' : 'fut';
   const campo = { beis: L('at the plate','al bate'), bask: L('on the floor','en la duela'), hoc: L('on the ice','en el hielo'), amer: L('on the field','en el campo'), fut: L('on the pitch','en la cancha') }[D];
 
   // ---- Jugadores reales ----
