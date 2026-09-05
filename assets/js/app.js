@@ -470,8 +470,15 @@ function initProyeccion() {
   const pBtn = document.getElementById('premium-btn');
   const pPop = document.getElementById('premium-pop');
   if (pBtn && pPop) {
-    pBtn.addEventListener('click', (e) => { e.stopPropagation(); proyModo = 'premium'; _setPiLabel('premium'); const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); });
-    if (proBtn) proBtn.addEventListener('click', (e) => { e.stopPropagation(); proyModo = 'pro'; _setPiLabel('pro'); const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); proBtn.classList.toggle('open', o); });
+    pBtn.addEventListener('click', (e) => { e.stopPropagation(); proyModo = 'premium'; _setPiLabel('premium'); const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); pPop.style.right = ''; });
+    if (proBtn) proBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); proyModo = 'pro'; _setPiLabel('pro');
+      const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); proBtn.classList.toggle('open', o);
+      // Escritorio: alinear el desplegable BAJO el botón Pro (no bajo Premium)
+      if (o && window.innerWidth > 900) {
+        try { const menuR = pPop.parentElement.getBoundingClientRect(), proR = proBtn.getBoundingClientRect(); pPop.style.right = Math.max(0, Math.round(menuR.right - proR.right)) + 'px'; } catch (_) {}
+      } else { pPop.style.right = ''; }
+    });
     const pAn = document.getElementById('premium-analisis');
     if (pAn) pAn.addEventListener('click', () => {
       pPop.classList.remove('open'); pBtn.classList.remove('open');
@@ -631,7 +638,7 @@ async function abrirDirectorioSenales() {
       <span class="sd-sport">${esc(DEP[a.deporte] || a.deporte || '')}</span>
       <div class="sd-stats">
         <div><b>${f.toLocaleString()}</b><em>${Lp('Followers','Seguidores')}</em></div>
-        <div><b class="sd-prest ${((Number(a.prestigio)||0)+(Number(a.prestigioAuto)||0)) < 0 ? 'neg' : ''}">${((Number(a.prestigio)||0)+(Number(a.prestigioAuto)||0)) > 0 ? '+' : ''}${(Number(a.prestigio)||0)+(Number(a.prestigioAuto)||0)}</b><em>${Lp('Prestige','Prestigio')}</em></div>
+        <div><b class="sd-prest ${(Number(a.prestigio)||0) < 0 ? 'neg' : ''}">${(Number(a.prestigio)||0) > 0 ? '+' : ''}${Number(a.prestigio)||0}</b><em>${Lp('Prestige','Prestigio')}</em></div>
       </div>
       <button class="sd-follow ${sig ? 'on' : ''}" data-sdfollow="${esc(a.uid)}" data-sdfirma="${esc(a.firma || '')}">${sig ? Lp('Following','Siguiendo') : Lp('Follow','Seguir')}</button>
     </div>`;
