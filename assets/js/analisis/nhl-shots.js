@@ -167,7 +167,7 @@ export async function topShotsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}
         if (jug.spg < 1) continue;   // descarta poco volumen de tiro
         const est = estimarTiros({ jugador: { ...jug, titular: true }, oponente, local: lado.local, lineupConfirmado: false });
         candidatos.push({
-          id: jug.id, nombre: jug.nombre, equipoAbrev: ab, rivalAbrev: lado.rival.abbrev,
+          id: jug.id, nombre: jug.nombre, equipoAbrev: ab, rivalAbrev: lado.rival.abbrev, logoLocal: (lado.equipo.logo || (lado.equipo.darkLogo)) || null, logoVisita: (lado.rival.logo || lado.rival.darkLogo) || null,
           pos: jug.pos, spg: jug.spg, local: lado.local, cuando: g.startTimeUTC || g.gameDate, saRival: oponente.saPorPartido, ...est,
         });
         count++;

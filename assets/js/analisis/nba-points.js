@@ -188,7 +188,7 @@ export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {
         const est = estimarPuntos({ jugador: { ...jug, titular: true }, oponente, local: lado.local, lineupConfirmado: false });
         candidatos.push({
           id: jug.id, nombre: jug.nombre, equipoAbrev: lado.equipo.abbreviation, rivalAbrev: lado.rival.abbreviation,
-          ppg: jug.ppg, mpg: jug.mpg, local: lado.local, cuando: ev.date, ptsPermRival: oponente.ptsPermitidos, ...est,
+          ppg: jug.ppg, mpg: jug.mpg, local: lado.local, cuando: ev.date, logoLocal: (lado.equipo.logos && lado.equipo.logos[0] && lado.equipo.logos[0].href) || lado.equipo.logo || null, logoVisita: (lado.rival.logos && lado.rival.logos[0] && lado.rival.logos[0].href) || lado.rival.logo || null,  ptsPermRival: oponente.ptsPermitidos, ...est,
         });
         count++;
       }
