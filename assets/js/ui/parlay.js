@@ -8,7 +8,7 @@
    Bilingüe (inglés por defecto). Sin proxy ni worker.
    ============================================================ */
 import { topParlayHits, topHomeRuns } from '../analisis/mlb-parlay.js';
-import { topGoalProjection } from '../analisis/soccer-goal.js';
+import { topGoalProjection, topGoalsMatchProjection } from '../analisis/soccer-goal.js';
 import { topPointsProjection } from '../analisis/nba-points.js';
 import { topShotsProjection } from '../analisis/nhl-shots.js';
 import { topTouchdownProjection } from '../analisis/nfl-touchdowns.js';
@@ -38,15 +38,15 @@ const DEMO_MLB = [
     factores:['.303 AVG (7th in MLB)','Low strikeout rate','Opponent allows contact'], riesgos:[] },
 ];
 const DEMO_SOCCER = [
-  { rank:1, nombre:'Elite Striker', equipoAbrev:'HOME', rivalAbrev:'AWY', prob:64, confianza:'media',
-    tags:['ST', () => L('vs AWY · 1.8 GA','vs AWY · 1.8 GC'), '22 G'],
-    factores:[L('Opponent concedes 1.80 goals/game','El rival encaja 1.80 goles/partido'), L('Plays at home','Juega en casa'), L('In form: 4 goals in 5','En forma: 4 goles en 5')], riesgos:[] },
-  { rank:2, nombre:'Second Forward', equipoAbrev:'CLB', rivalAbrev:'OPP', prob:41, confianza:'media',
-    tags:['FW', () => L('vs OPP · 1.5 GA','vs OPP · 1.5 GC'), '14 G'],
-    factores:[L('Attacking position','Posición de ataque'), L('14 goals this season','14 goles en la temporada')], riesgos:[] },
-  { rank:3, nombre:'Winger', equipoAbrev:'TMX', rivalAbrev:'RVL', prob:33, confianza:'baja',
-    tags:['LW', () => L('vs RVL · 1.3 GA','vs RVL · 1.3 GC'), '9 G'],
-    factores:[L('Takes penalties','Cobra penales'), L('Plays at home','Juega en casa')], riesgos:[] },
+  { rank:1, esPartido:true, nombre:'Bayern vs Leipzig', equipoAbrev:'BAY', rivalAbrev:'RBL', prob:86, proj:3.4, confianza:'alta',
+    tags:[() => L('3.4 exp. goals','3.4 goles esp.'), () => L('Home side scores','Local anotador'), () => L('Leaky defenses','Defensas permeables')],
+    factores:[L('Both teams average 2+ goals','Ambos promedian 2+ goles'), L('Open, attacking matchup','Cruce abierto y ofensivo')], riesgos:[] },
+  { rank:2, esPartido:true, nombre:'Liverpool vs Everton', equipoAbrev:'LIV', rivalAbrev:'EVE', prob:79, proj:2.9, confianza:'alta',
+    tags:[() => L('2.9 exp. goals','2.9 goles esp.'), () => L('Home side scores','Local anotador')],
+    factores:[L('High-scoring home side','Local muy anotador')], riesgos:[] },
+  { rank:3, esPartido:true, nombre:'Atalanta vs Roma', equipoAbrev:'ATA', rivalAbrev:'ROM', prob:74, proj:2.7, confianza:'media',
+    tags:[() => L('2.7 exp. goals','2.7 goles esp.'), () => L('Away side scores','Visita que marca')],
+    factores:[L('Both sides find the net often','Ambos ven puerta seguido')], riesgos:[] },
 ];
 const DEMO_NBA = [
   { rank:1, nombre:'Elite Scorer', equipoAbrev:'HOME', rivalAbrev:'AWY', prob:84, confianza:'media',
@@ -97,15 +97,15 @@ function VISTA(sport) {
       toCard: (p) => ({ ...p, tags: p.tags || [ `${p.pitcherMano || 'R'}HP`, `${p.pitcher || ''}${p.pitcherEra != null ? ' · ' + (+p.pitcherEra).toFixed(2) : ''}`, `${L('Slot', 'Turno')} ${p.slot || '—'}` ] }),
     },
     soccer: {
-      activo: true, img: 'fondo-goals.jpg', run: () => topGoalProjection({ fecha: hoyISO(), n: 9 }), demo: DEMO_SOCCER,
-      eyebrow: L('Premium · Goal Projection', 'Premium · Proyección de Goles'),
-      titulo: `${L('Top picks · Best', 'Top del día · Mejores')} <em>${L('Goal chances', 'opciones de gol')}</em>`,
-      metric: 'P(≥1 goal)', metricLabel: L('Chance<br>of a goal', 'Opción<br>de gol'),
-      lead: L('The nine players with the highest estimated probability of scoring at least one goal today (anytime goalscorer).',
-              'Los nueve jugadores con mayor probabilidad estimada de anotar al menos un gol hoy (anytime goalscorer).'),
+      activo: true, img: 'fondo-goals.jpg', run: () => topGoalsMatchProjection({ fecha: hoyISO(), n: 9 }), demo: DEMO_SOCCER,
+      eyebrow: L('Premium · Goals Projection', 'Premium · Proyección de Goles'),
+      titulo: `${L('Top picks · Most likely', 'Top del día · Más probables')} <em>${L('to see 2+ goals', 'de tener 2+ goles')}</em>`,
+      metric: 'P(2+ goals)', metricLabel: L('Chance of<br>2+ goals', 'Opción de<br>2+ goles'),
+      lead: L('The matches with the highest estimated probability of seeing two or more goals today (Over 1.5, the most popular goals market).',
+              'Los partidos con mayor probabilidad estimada de tener dos o más goles hoy (Over 1.5, el mercado de goles más popular).'),
       foot: L('Model probability estimates, not betting advice. Football is high-variance: a high probability is not a certainty.',
               'Estimaciones probabilísticas del modelo, no asesoría de apuestas. El fútbol es de alta varianza: una probabilidad alta no es certeza.'),
-      toCard: (p) => ({ ...p, tags: p.tags || [ p.pos || 'FW', (p.gaRival != null ? `${L('vs', 'vs')} ${p.rivalAbrev} · ${(+p.gaRival).toFixed(2)} ${L('GA', 'GC')}` : `${L('vs', 'vs')} ${p.rivalAbrev || ''}`), (p.goles != null ? `${p.goles} G` : '') ].filter(Boolean) }),
+      toCard: (p) => ({ ...p, tags: p.tags || [ (p.proj != null ? `${(+p.proj).toFixed(1)} ${L('exp. goals', 'goles esp.')}` : ''), ...(p.factores || []).slice(0, 2) ].filter(Boolean) }),
     },
     nba: {
       activo: true, img: 'fondo-points.jpg', run: () => topPointsProjection({ fecha: hoyISO(), n: 9 }), demo: DEMO_NBA,
@@ -509,7 +509,9 @@ function cardHTML(p, cfg) {
   return `<article class="ply-c r${p.rank}" data-idx="${p.rank}">
     <div class="ply-c-top"><div class="ply-rank">${p.rank}</div>
       <div class="ply-idn"><div class="ply-nm">${esc(p.nombre)}</div>
-        <div class="ply-mt"><b>${esc(p.equipoAbrev || '')}</b><span class="vs">${L('vs', 'vs')}</span><b>${esc(p.rivalAbrev || '')}</b>${horaPartido(p.cuando) ? `<span class="ply-when">${esc(horaPartido(p.cuando))}</span>` : ''}</div></div></div>
+        ${p.esPartido
+          ? `<div class="ply-mt">${p.proj != null ? `<b>${(+p.proj).toFixed(1)}</b><span class="vs">${L('exp. goals', 'goles esp.')}</span>` : ''}${horaPartido(p.cuando) ? `<span class="ply-when">${esc(horaPartido(p.cuando))}</span>` : ''}</div>`
+          : `<div class="ply-mt"><b>${esc(p.equipoAbrev || '')}</b><span class="vs">${L('vs', 'vs')}</span><b>${esc(p.rivalAbrev || '')}</b>${horaPartido(p.cuando) ? `<span class="ply-when">${esc(horaPartido(p.cuando))}</span>` : ''}</div>`}</div></div>
     <div class="ply-tags">${tags}</div>
     <div class="ply-meter"><div class="ply-pct">${p.prob}%</div><div class="ply-plab">${cfg.metricLabel}</div></div>
     <div class="ply-track"><div class="ply-fill" data-w="${p.prob}"></div></div>
