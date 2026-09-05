@@ -1375,3 +1375,18 @@
 /* Botón install: solo escritorio en el nav (en móvil va en el perfil) */
 @media (max-width: 900px) { .btn-install { display: none !important; } }
 .pp-item.pp-install { color: #6aa6ff; }
+
+/* Modal de instalación PWA (nuestro, no el del navegador) */
+.inst-ov { position: fixed; inset: 0; z-index: 100005; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(3,6,12,.8); backdrop-filter: blur(8px); animation: instFade .2s ease; }
+@keyframes instFade { from { opacity: 0; } to { opacity: 1; } }
+.inst-modal { position: relative; width: 100%; max-width: 420px; text-align: center; padding: 34px 28px 28px; border-radius: 22px; overflow: hidden; isolation: isolate; background: linear-gradient(180deg, rgba(16,22,34,.94), rgba(9,13,20,.97)); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 30px 70px -20px rgba(0,0,0,.8); }
+.inst-modal::before { content: ''; position: absolute; inset: 0; z-index: -1; background: url('../imagenes/fondos/fondo-pagina.webp') center/cover no-repeat; filter: blur(10px) brightness(.35); transform: scale(1.1); }
+.inst-x { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 10px; border: 1px solid rgba(255,255,255,.14); background: rgba(16,22,34,.8); color: #cfd8e3; cursor: pointer; font-size: 13px; }
+.inst-logo { height: 44px; width: auto; margin: 4px auto 18px; display: block; }
+.inst-modal h3 { font-family: "Poppins",sans-serif; font-size: 21px; color: #fff; margin: 0 0 10px; }
+.inst-modal p { font-size: 14px; color: #aab4c0; line-height: 1.6; margin: 0 0 24px; }
+.inst-btns { display: flex; gap: 12px; }
+.inst-cancel, .inst-go { flex: 1; padding: 13px; border-radius: 12px; font-weight: 800; font-family: inherit; font-size: 15px; cursor: pointer; }
+.inst-cancel { border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #cfd8e3; }
+.inst-go { border: 0; background: linear-gradient(135deg,#2a6be0,#7a3ce0); color: #fff; box-shadow: 0 8px 22px -8px rgba(42,107,224,.6); }
+.inst-go:hover { filter: brightness(1.08); }
