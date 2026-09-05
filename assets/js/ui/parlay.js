@@ -258,6 +258,12 @@ function inyectarCSS() {
   .plyg-prob{margin:2px 0 12px}
   .plyg-prob b{display:block;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:42px;line-height:1;background:linear-gradient(180deg,#f6e2a6,#d4a53f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   .plyg-prob span{display:block;font-size:11px;color:var(--tx3);margin-top:4px;text-transform:uppercase;letter-spacing:.04em}
+  .plyg-bars{display:flex;flex-direction:column;gap:11px;margin:2px 0 14px}
+  .plyg-bar-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+  .plyg-bar-top span{font-size:12.5px;color:var(--tx2);font-weight:600}
+  .plyg-bar-top b{font-family:"Chakra Petch",sans-serif;font-size:16px;color:var(--tx)}
+  .plyg-bar-tr{height:9px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden}
+  .plyg-bar-tr u{display:block;height:100%;border-radius:6px}
   .ply-conf i{width:7px;height:7px;border-radius:50%}
   .ply-conf.alta{color:#8ff0cb;background:rgba(65,214,160,.1);border:1px solid rgba(65,214,160,.3)}.ply-conf.alta i{background:var(--ok)}
   .ply-conf.media{color:#f6d38c;background:rgba(243,177,61,.1);border:1px solid rgba(243,177,61,.3)}.ply-conf.media i{background:var(--am)}
@@ -512,16 +518,67 @@ function horaPartido(cuando) {
     return dia + ' ' + hora;
   } catch (_) { return ''; }
 }
-/* Tarjeta a nivel de PARTIDO (Goals / Over 1.5): logos + VS + probabilidad grande. */
+/* Análisis de goles: humano, variado, sobre el PARTIDO (no un jugador). */
+function analisisGoles(p, ES) {
+  const L2 = (en, es) => ES ? es : en;
+  const A = p.localNom || p.equipoAbrev || (ES ? 'el local' : 'the home side');
+  const B = p.visitaNom || p.rivalAbrev || (ES ? 'la visita' : 'the away side');
+  const sem = String((p.equipoAbrev || '') + (p.rivalAbrev || '') + (p.prob || ''));
+  let h = 0; for (let i = 0; i < sem.length; i++) h = (h * 33 + sem.charCodeAt(i)) & 0x7fffffff;
+  const pick = (arr, off) => arr[((h >> off) & 0x3fffffff) % arr.length];
+  const alto = p.prob >= 78, medio = p.prob >= 66;
+  const gfA = p.gfLocal, gfB = p.gfVisita, gaA = p.gaLocal, gaB = p.gaVisita;
+  const ambosMarcan = (gfA != null && gfA >= 1.4) && (gfB != null && gfB >= 1.2);
+  const defsFlojas = (gaA != null && gaA >= 1.4) || (gaB != null && gaB >= 1.4);
+
+  // Apertura (varias, ninguna empieza con "vs")
+  const abre = alto
+    ? [ L2(`This one has goals written all over it.`, `Este partido tiene pinta de goles por todos lados.`),
+        L2(`If you like watching the net bulge, circle this one.`, `Si te gusta ver el balón entrar, marca este.`),
+        L2(`Everything here points to an open, high-scoring night.`, `Todo aquí apunta a una noche abierta y de goles.`),
+        L2(`Hard to see this one staying quiet.`, `Cuesta ver este cruce quedándose callado.`) ]
+    : medio
+    ? [ L2(`There should be goals in this one, without being a certainty.`, `Debería haber goles en este, sin ser una certeza.`),
+        L2(`The pieces are there for a couple of goals.`, `Las piezas están para un par de goles.`),
+        L2(`Lean toward goals here, but keep your eyes open.`, `Inclínate por los goles aquí, pero con los ojos abiertos.`) ]
+    : [ L2(`A tighter one, though a single goal is very likely.`, `Uno más cerrado, aunque un gol es muy probable.`),
+        L2(`Don't expect a shootout, but goals aren't off the table.`, `No esperes una fiesta de goles, pero tampoco están descartados.`) ];
+
+  // Cuerpo con datos reales
+  const cuerpo = [];
+  if (ambosMarcan) cuerpo.push(pick([
+    L2(`Both ${A} and ${B} find the net regularly, and that combination is exactly what feeds the over.`, `Tanto ${A} como ${B} ven puerta con regularidad, y esa combinación es justo lo que alimenta el over.`),
+    L2(`Two attacks that show up week after week tend to produce, and these two do.`, `Dos ataques que aparecen semana tras semana suelen producir, y estos dos lo hacen.`)], 5));
+  if (defsFlojas) cuerpo.push(pick([
+    L2(`Neither back line has been a wall lately, which only helps the case.`, `Ninguna zaga ha sido un muro últimamente, lo que solo ayuda al argumento.`),
+    L2(`There are cracks at the back on at least one side, and that usually shows up on the scoreboard.`, `Hay grietas atrás en al menos uno de los dos, y eso suele reflejarse en el marcador.`)], 11));
+  if (!cuerpo.length) cuerpo.push(pick([
+    L2(`The scoring numbers on both sides make a couple of goals the sensible read.`, `Los números de goles de ambos hacen que un par de goles sea la lectura sensata.`),
+    L2(`Recent scoring form is what tips this toward the over.`, `La forma goleadora reciente es lo que inclina esto hacia el over.`)], 5));
+
+  // Cierre con la probabilidad
+  const cierra = alto
+    ? pick([ L2(`At ${p.prob}%, the two-goal line is one of the cleaner looks on today's board.`, `Con ${p.prob}%, la línea de dos goles es de las más limpias del día.`),
+             L2(`${p.prob}% for 2+ is a number I trust here.`, `${p.prob}% de 2+ es un número en el que me fío aquí.`)], 17)
+    : pick([ L2(`${p.prob}% for 2+ isn't a lock, but it's fair value in a good spot.`, `${p.prob}% de 2+ no es seguro, pero es valor justo en un buen sitio.`),
+             L2(`At ${p.prob}%, the edge is there without needing a goal-fest.`, `Con ${p.prob}%, la ventaja está sin necesitar una fiesta de goles.`)], 17);
+
+  return `${pick(abre, 0)} ${cuerpo.slice(0, 2).join(' ')} ${cierra}`;
+}
+
+/* Tarjeta a nivel de PARTIDO (Goals / Over 1.5): logos + VS + dos barras. */
 function _goalLogo(url, ab) {
   return url
     ? `<span class="plyg-logo"><img src="${esc(url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="plyg-fb" style="display:none">${esc(ab || '')}</span></span>`
     : `<span class="plyg-logo"><span class="plyg-fb" style="display:flex">${esc(ab || '')}</span></span>`;
 }
 function cardPartidoHTML(p, cfg) {
+  const ES = idiomaActual() === 'es';
   const conf = confPorProb(p.prob, cfg);
-  const vd = veredicto({ ...p, confianza: conf }, cfg);
   const cuando = horaPartido(p.cuando);
+  const p05 = p.probOver05 != null ? p.probOver05 : null;
+  const p15 = p.probOver15 != null ? p.probOver15 : p.prob;
+  const barra = (lab, val, color) => `<div class="plyg-bar"><div class="plyg-bar-top"><span>${lab}</span><b>${val == null ? '—' : val + '%'}</b></div><div class="plyg-bar-tr"><u style="width:${val || 0}%;background:${color}"></u></div></div>`;
   return `<article class="ply-c ply-cg r${p.rank}" data-idx="${p.rank}">
     <div class="plyg-top"><div class="ply-rank">${p.rank}</div>${cuando ? `<span class="plyg-when">${esc(cuando)}</span>` : ''}<span class="ply-conf ${conf}"><i></i>${esc(confLabel(conf))}</span></div>
     <div class="plyg-match">
@@ -529,8 +586,11 @@ function cardPartidoHTML(p, cfg) {
       <div class="plyg-vs">VS</div>
       <div class="plyg-side">${_goalLogo(p.logoVisita, p.rivalAbrev)}<span class="plyg-nm">${esc(p.visitaNom || p.rivalAbrev || '')}</span></div>
     </div>
-    <div class="plyg-prob"><b>${p.prob}%</b><span>${cfg.metricLabel}</span></div>
-    <div class="ply-verdict ${vd.tono}">${esc(vd.texto)}</div>
+    <div class="plyg-bars">
+      ${barra(ES ? 'Al menos 1 gol' : 'At least 1 goal', p05, '#3ecf8e')}
+      ${barra(ES ? '2 o más goles' : '2+ goals', p15, '#e8c46a')}
+    </div>
+    <div class="ply-verdict bueno">${esc(analisisGoles(p, ES))}</div>
   </article>`;
 }
 
