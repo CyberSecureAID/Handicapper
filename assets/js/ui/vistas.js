@@ -141,7 +141,7 @@ const FB_PIT = `(function(im){var l=(im.getAttribute('data-fb')||'').split('~~')
    y determinista por partido.
    ============================================================ */
 /* Récord con algún dígito distinto de cero (no "0-0-0" ni vacío). */
-function _recReal(r) { return r && /[1-9]/.test(String(r)); }
+function _recReal(r) { return r && /\d+\s*[-\u2013]\s*\d+/.test(String(r)) && /[1-9]/.test(String(r)); }
 
 function informeIA(p, ES) {
   const L = (en, es) => ES ? es : en;
@@ -170,7 +170,8 @@ function informeIA(p, ES) {
   const estD = (D === 'beis' && batD[0]) || jugD[0] || null;
   const lesion = lesD.find(l => /out|doubt|injur|baja|duda|question/i.test(l.estado || '')) || lesD[0] || null;
   const nom = (j) => esc(j && j.nombre ? j.nombre.split(' ').slice(-2).join(' ') : '');
-  const st = (j) => j && j.dato ? `${esc(j.dato)}${j.etiqueta ? ' ' + esc(j.etiqueta) : ''}` : '';
+  const statOk = (val) => val != null && val !== '' && /[1-9]/.test(String(val));   // stat con algún dígito real
+  const st = (j) => (j && j.dato && statOk(j.dato)) ? `${esc(j.dato)}${j.etiqueta ? ' ' + esc(j.etiqueta) : ''}` : '';
 
   const partes = [];
 
@@ -195,11 +196,12 @@ function informeIA(p, ES) {
 
   // ---- 2) EL CASO (datos tejidos, no sueltos) ----
   const casos = [];
-  const recReal = (r) => r && /[1-9]/.test(String(r));   // récord con algún dígito distinto de cero
+  const recReal = (r) => r && /\d+\s*[-\u2013]\s*\d+/.test(String(r)) && /[1-9]/.test(String(r));   // debe verse como récord (X-Y) y no ser todo ceros
   if (recReal(fav.record) && recReal(dog.record)) casos.push(L(`the records set the tone, ${esc(fav.record)} against ${esc(dog.record)}`, `los récords marcan el tono, ${esc(fav.record)} contra ${esc(dog.record)}`));
   if (fav.posicion != null && dog.posicion != null && Number(fav.posicion) > 0 && Number(dog.posicion) > 0 && Number(fav.posicion) < Number(dog.posicion)) casos.push(L(`the table isn't lying, ${fav.posicion} against ${dog.posicion} is real distance`, `la tabla no miente, ${fav.posicion} contra ${dog.posicion} es distancia real`));
-  const wF = Number(fav.winPct), wD = Number(dog.winPct);
-  if (isFinite(wF) && isFinite(wD) && wF > 0 && wF - wD >= 0.12) casos.push(L(`${fN} has simply converted more often over the stretch`, `${fN} ha convertido más seguido en el tramo`));
+  const wp = (w) => { const n = Number(w); return isFinite(n) ? (n > 1.5 ? n / 100 : n) : NaN; };
+  const wF = wp(fav.winPct), wD = wp(dog.winPct);
+  if (isFinite(wF) && isFinite(wD) && wF > 0 && wF <= 1 && (wF - wD) >= 0.12) casos.push(L(`${fN} has simply converted more often over the stretch`, `${fN} ha convertido más seguido en el tramo`));
   // Sin datos duros -> el caso se apoya en el modelo y la forma, no en cifras vacías
   if (!casos.length) casos.push(pick([L(`the model leans this way on form and matchup, not on a gaudy record`, `el modelo se inclina así por forma y cruce, no por un récord llamativo`), L(`recent form and the matchup are what tip this one`, `la forma reciente y el cruce son lo que inclinan este`), L(`this one is about who's arriving in better shape`, `este va de quién llega en mejor forma`)], 5));
   const casa = favLocal ? L(` Home ground only firms it up.`, ` Jugar en casa solo lo afianza.`) : '';
@@ -258,7 +260,11 @@ function informeIA(p, ES) {
 
   const probLinea = `<div class="hd-ia-prob"><span>${L('Model read', 'Lectura del modelo')}</span><b>${fN} ${probFav}%</b>${empate != null ? `<em>${L('Draw', 'Empate')} ${empate}%</em>` : ''}</div>`;
   return `<div class="hd-ia">
-    <div class="hd-ia-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg>${L('Match analysis', 'Análisis del partido')}</div>
+    <div class="hd-ia-analyst">
+      <div class="hd-ia-ava">${(typeof window !== 'undefined' && window.__jesusFoto) ? `<img src="${esc(window.__jesusFoto)}" alt="Jesús">` : 'J'}</div>
+      <div class="hd-ia-who"><b>Jesús</b><span>${L('Sports statistics analyst', 'Especialista en análisis de estadísticas deportivas')}</span></div>
+      <span class="hd-ia-tag"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg>${L('Analysis', 'Análisis')}</span>
+    </div>
     <p>${partes[0]}</p>
     <p>${partes[1]}</p>
     <p>${partes[2]}</p>
