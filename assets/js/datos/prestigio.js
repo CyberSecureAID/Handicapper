@@ -32,12 +32,17 @@ export async function registrarPrediccion(pred) {
 }
 
 /* Suma (o resta) puntos de prestigio a un analista. */
-export async function ajustarPrestigio(uid, delta) {
+export async function ajustarPrestigio(uid, delta, motivo) {
   if (!uid || !delta) return false;
   if (!await _asegurarListo()) return false;
   try {
     const S = _obtenerStore(), db = _obtenerDB();
-    await S.setDoc(S.doc(db, 'analistas', uid), { prestigio: S.increment(delta) }, { merge: true });
+    const ref = S.doc(db, 'analistas', uid);
+    const snap = await S.getDoc(ref);
+    const actual = (snap.exists() && Number(snap.data().prestigio)) || 0;
+    const nuevo = actual + delta;
+    await S.setDoc(ref, { prestigio: nuevo }, { merge: true });
+    try { console.log(`[prestigio] ${uid}: ${actual} ${delta >= 0 ? '+' : ''}${delta} = ${nuevo}  (${motivo || ''})`); } catch (_) {}
     return true;
   } catch (_) { return false; }
 }
@@ -72,7 +77,7 @@ export async function resolverPredicciones(resultadoFn) {
       const acierto = !res.empate && String(res.ganadorId) === String(p.favoritoId);
       const delta = res.empate ? -1 : (acierto ? 1 : -1);
       try {
-        await ajustarPrestigio(p.analistaUid, delta);
+        await ajustarPrestigio(p.analistaUid, delta, `${p.deporte||'?'} ${p.matchId} ${res.empate ? 'empate' : (acierto ? 'ACIERTO' : 'fallo')}`);
         await S.updateDoc(d.ref, {
           estado: 'resuelta',
           resultado: res.empate ? 'empate' : (acierto ? 'acierto' : 'fallo'),
