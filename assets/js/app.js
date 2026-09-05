@@ -479,6 +479,7 @@ function initProyeccion() {
 /* -------- Arranque -------- */
 function init() {
   initTema();
+  import('./auth/auth.js').then(m => m.cargarFotoAnalista && m.cargarFotoAnalista()).catch(() => {});
   initIdioma();
   aplicarTextos();
   initTabbar();
