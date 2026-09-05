@@ -737,7 +737,7 @@
 @keyframes premTornasol { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
 .premium-btn svg { width: 16px; height: 16px; flex: 0 0 auto; }
 .premium-chev { transition: transform .18s; } .premium-btn.open .premium-chev { transform: rotate(180deg); }
-.premium-pop { position: absolute; top: calc(100% + 10px); right: 0; z-index: 60; width: 268px; max-width: calc(100vw - 24px);
+.premium-pop { position: absolute; top: calc(100% + 10px); right: 0; z-index: 60; width: 268px; max-width: calc(100vw - 24px); max-height: calc(100vh - 96px); overflow-y: auto;
   background: linear-gradient(180deg, #141a24, #0d1119); border: 1px solid rgba(255,255,255,.12); border-radius: 18px;
   padding: 8px; box-shadow: 0 28px 66px rgba(0,0,0,.62); display: none; transform-origin: top right; animation: premIn .16s ease; }
 @keyframes premIn { from { opacity: 0; transform: translateY(-8px) scale(.97); } to { opacity: 1; transform: none; } }
