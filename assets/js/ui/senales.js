@@ -363,59 +363,83 @@ function analisisSenal(a, ES) {
   const riv = (a.favLocal ? a.visita : a.local) || (ES ? 'el rival' : 'the other side');
   const pr = a.prob != null ? Math.max(1, Math.min(99, a.prob)) : 65;
   const alto = pr >= 74, medio = pr >= 62;
+  const casa = !!a.favLocal;
+  const d = String(a.deporte || '').toLowerCase();
+  const D = /beis|mlb/.test(d) ? 'beis' : /basket|nba/.test(d) ? 'basket' : /hock|nhl/.test(d) ? 'hock' : /americ|nfl|rubio/.test(d) ? 'amer' : 'fut';
   const ape = (j) => (j && j.nombre) ? String(j.nombre).split(' ').slice(-1)[0] : '';
-  const st = (j) => (j && j.dato && /[1-9]/.test(String(j.dato))) ? `${j.dato}${j.etiqueta ? ' ' + j.etiqueta : ''}` : '';
   const jf = a.jugFav || [], jd = a.jugDog || [];
-  const sem = String(fav + riv + Math.round(pr) + (jf[0] ? jf[0].nombre : ''));
+  const sem = String(fav + riv + Math.round(pr) + (jf[0] ? jf[0].nombre : '') + D);
   let h = 0; for (let i = 0; i < sem.length; i++) h = (h * 131 + sem.charCodeAt(i)) & 0x7fffffff;
   const pick = (arr, off) => arr[((h >> off) & 0x3fffffff) % arr.length];
+  const dig = (v) => v != null && /[1-9]/.test(String(v));
+
+  // Redacta el stat de un jugador de forma NATURAL según deporte (no "(.312 AVG)" seco)
+  const frase = (j, off) => {
+    if (!j || !dig(j.dato)) return ape(j);
+    const n = ape(j), v = j.dato, e = String(j.etiqueta || '').toLowerCase();
+    if (D === 'beis' && (e.includes('avg') || String(v).startsWith('.'))) return pick([L2(`${n}, hitting ${v}`, `${n}, que batea ${v}`), L2(`a ${v} bat in ${n}`, `un bate de ${v} como ${n}`)], off);
+    if (D === 'beis' && e.includes('hr')) return pick([L2(`${n}, with ${v} homers`, `${n}, con ${v} jonrones`), `${n} (${v} HR)`], off);
+    if (D === 'fut' && (e.includes('gol') || e.includes('goal'))) return pick([L2(`${n}, on ${v} goals`, `${n}, con ${v} goles`), L2(`a ${v}-goal man in ${n}`, `un ${n} de ${v} goles`)], off);
+    if (D === 'basket' && (e.includes('p') || e.includes('pt'))) return pick([L2(`${n}, averaging ${v}`, `${n}, que promedia ${v}`), `${n} (${v} PPG)`], off);
+    return `${n} (${v}${j.etiqueta ? ' ' + j.etiqueta : ''})`;
+  };
+  const rol = { beis: L2('at the plate', 'al bate'), basket: L2('on the floor', 'en la duela'), hock: L2('on the ice', 'en el hielo'), amer: L2('on the field', 'en el campo'), fut: L2('up top', 'arriba') }[D];
 
   const partes = [];
 
-  // 1) La razón principal: si hay jugador estrella, ese es el gancho; si no, el favorito
+  // 1) Gancho: el jugador estrella (o el equipo si no hay datos)
   if (jf[0] && ape(jf[0])) {
-    const n1 = ape(jf[0]), s1 = st(jf[0]);
+    const p1 = frase(jf[0], 2);
     partes.push(pick([
-      L2(`For me it comes down to ${n1}. He's ${s1 ? `putting up ${s1} and ` : ''}the kind of player that decides games like this, and he's on ${fav}'s side.`, `Para mí esto pasa por ${n1}. ${s1 ? `Lleva ${s1} y ` : ''}es de los que deciden partidos así, y está del lado de ${fav}.`),
-      L2(`Give me ${fav} and the main reason has a name: ${n1}${s1 ? ` (${s1})` : ''}. When he's involved, this team is a different story.`, `Dame a ${fav} y la razón principal tiene nombre: ${n1}${s1 ? ` (${s1})` : ''}. Con él metido, este equipo es otra historia.`),
-      L2(`${n1} is why I trust ${fav} here. ${s1 ? `${s1} isn't a coincidence` : `He's been the difference`}, and ${riv} has no clean answer for him.`, `${n1} es por qué me fío de ${fav} aquí. ${s1 ? `${s1} no es casualidad` : `Ha sido la diferencia`}, y ${riv} no tiene una respuesta clara para él.`),
+      L2(`For me this one runs through ${p1}. He's the type that tilts games like this, and he's ${rol} for ${fav}.`, `Para mí este pasa por ${p1}. Es del tipo que inclina partidos así, y lo tiene ${fav} ${rol}.`),
+      L2(`Give me ${fav}, and the reason has a name: ${p1}. With him going, this is a different team.`, `Dame a ${fav}, y la razón tiene nombre: ${p1}. Con él en marcha, este es otro equipo.`),
+      L2(`${p1} is why I trust ${fav} here. That's not a fluke, and ${riv} has no clean answer for it.`, `${p1} es por qué me fío de ${fav} aquí. Eso no es de chiripa, y ${riv} no tiene respuesta limpia.`),
+      L2(`Simple for me: ${fav} has ${p1}, and that alone shifts the matchup with ${riv}.`, `Sencillo para mí: ${fav} tiene a ${p1}, y solo eso mueve el cruce con ${riv}.`),
+      L2(`Start with ${p1}. Put a player like that ${rol} and ${fav} plays with a cushion ${riv} doesn't have.`, `Empieza por ${p1}. Pon a un jugador así ${rol} y ${fav} juega con un colchón que ${riv} no tiene.`),
     ], 0));
   } else {
     partes.push(pick([
-      L2(`I like ${fav} here, plain and simple. They've been arriving in better shape than ${riv}.`, `Me gusta ${fav} aquí, sencillo. Vienen llegando mejor que ${riv}.`),
-      L2(`My read is ${fav} over ${riv}. The recent stretch has been theirs.`, `Mi lectura es ${fav} sobre ${riv}. El tramo reciente ha sido suyo.`),
-      L2(`${fav} is the side for me. On current form, ${riv} is a step behind.`, `${fav} es el lado para mí. Por forma actual, ${riv} va un paso atrás.`),
+      L2(`I like ${fav} here, plain and simple, they've been arriving in better shape than ${riv}.`, `Me gusta ${fav} aquí, sencillo, vienen llegando mejor que ${riv}.`),
+      L2(`My read is ${fav} over ${riv}, the recent stretch has clearly been theirs.`, `Mi lectura es ${fav} sobre ${riv}, el tramo reciente ha sido suyo con claridad.`),
+      L2(`${fav} is my side, on current form ${riv} is a step behind.`, `${fav} es mi lado, por forma actual ${riv} va un paso atrás.`),
     ], 0));
   }
 
-  // 2) El combo / apoyo (segundo jugador del favorito)
+  // 2) Apoyo (segundo jugador) + a veces la localía, con conectores variados
+  const bloque2 = [];
   if (jf[1] && ape(jf[1])) {
-    const n2 = ape(jf[1]), s2 = st(jf[1]);
-    partes.push(pick([
-      L2(`And it's not a one-man job: ${n2}${s2 ? ` (${s2})` : ''} gives them a second gear.`, `Y no es cosa de uno solo: ${n2}${s2 ? ` (${s2})` : ''} les da una segunda marcha.`),
-      L2(`Pair him with ${n2}${s2 ? ` (${s2})` : ''} and the supporting cast is there too.`, `Súmale a ${n2}${s2 ? ` (${s2})` : ''} y el acompañamiento también está.`),
-    ], 6));
+    const p2 = frase(jf[1], 8);
+    bloque2.push(pick([
+      L2(`And it's not a one-man show: ${p2} gives them a real second option.`, `Y no es cosa de uno: ${p2} les da una segunda opción de verdad.`),
+      L2(`He's not alone either, ${p2} carries a chunk of the load.`, `Tampoco está solo, ${p2} carga con buena parte.`),
+      L2(`Back him with ${p2} and the depth shows.`, `Súmale a ${p2} y el fondo se nota.`),
+    ], 10));
   }
+  if (casa && ((h >> 9) & 1) === 0) bloque2.push(pick([L2(`Doing it at home only helps.`, `Y hacerlo en casa solo ayuda.`), L2(`Home crowd tilts the small moments too.`, `El público de casa también inclina los momentos chicos.`)], 20));
+  if (bloque2.length) partes.push(bloque2.join(' '));
 
-  // 3) La amenaza del rival (honesto, con nombre si lo hay)
+  // 3) La amenaza del rival, honesta y con nombre
   if (jd[0] && ape(jd[0])) {
-    const nr = ape(jd[0]), sr = st(jd[0]);
+    const pr1 = frase(jd[0], 14);
     partes.push(pick([
-      L2(`I'm not blind to ${riv}: ${nr}${sr ? ` (${sr})` : ''} can hurt anyone, so this isn't free money.`, `No soy ciego con ${riv}: ${nr}${sr ? ` (${sr})` : ''} le hace daño a cualquiera, así que esto no es dinero gratis.`),
-      L2(`If ${riv} pulls it off, it runs through ${nr}${sr ? ` (${sr})` : ''}. Worth watching, but I still lean ${fav}.`, `Si ${riv} lo logra, pasa por ${nr}${sr ? ` (${sr})` : ''}. Ojo con eso, pero sigo con ${fav}.`),
+      L2(`I'm not blind to ${riv}: ${pr1} can hurt anyone, so this isn't free money.`, `No soy ciego con ${riv}: ${pr1} le hace daño a cualquiera, así que esto no es dinero gratis.`),
+      L2(`If ${riv} steals it, it runs through ${pr1}. Worth watching, but I still lean ${fav}.`, `Si ${riv} lo roba, pasa por ${pr1}. Ojo con eso, pero sigo con ${fav}.`),
+      L2(`Respect where it's due, ${pr1} is a problem, just not enough to flip my call.`, `Respeto lo que hay que respetar, ${pr1} es un problema, solo que no me alcanza para cambiar el pronóstico.`),
     ], 12));
   }
 
   // 4) Cierre honesto (sin clichés)
   partes.push(alto
     ? pick([L2(`Everything I look at points the same way. ${fav}, and I'd be surprised to miss.`, `Todo lo que miro apunta al mismo lado. ${fav}, y me sorprendería fallar.`),
-            L2(`For me it's one of the safer reads today.`, `Para mí es de las lecturas más seguras de hoy.`),
-            L2(`I'm confident enough to put my name on ${fav}.`, `Tengo confianza suficiente para poner mi nombre en ${fav}.`)], 18)
+            L2(`One of the cleaner reads on the board today.`, `De las lecturas más limpias del día.`),
+            L2(`Confident enough to put my name on ${fav}.`, `Con confianza suficiente para poner mi nombre en ${fav}.`),
+            L2(`I've talked myself out of easier ones. Not this. ${fav}.`, `Me he bajado de otras más fáciles. De esta no. ${fav}.`)], 18)
     : pick([L2(`Closer than it looks, but I'll take ${fav}.`, `Más cerrado de lo que parece, pero me quedo con ${fav}.`),
-            L2(`Lean ${fav}, with eyes open.`, `Inclínate por ${fav}, con los ojos abiertos.`)], 18));
+            L2(`Lean ${fav}, eyes open, and don't bet the house.`, `Inclínate por ${fav}, ojos abiertos, y no apuestes la casa.`),
+            L2(`Give me ${fav} and a bit of nerve.`, `Dame a ${fav} y algo de aguante.`)], 18));
 
-  // estructura variable: a veces cambia el orden del combo y la amenaza
-  if (partes.length >= 4 && ((h >> 15) & 1) === 0) { const t = partes[1]; partes[1] = partes[2]; partes[2] = t; }
+  // Estructura variable: a veces intercambia apoyo y amenaza
+  if (partes.length >= 4 && ((h >> 16) & 1) === 0) { const t = partes[1]; partes[1] = partes[2]; partes[2] = t; }
   return partes.join(' ');
 }
 
