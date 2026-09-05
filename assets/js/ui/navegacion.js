@@ -101,6 +101,7 @@ export function pintarPlanes() {
     { t: L('Hits, Goals, Points & Shots', 'Hits, Goals, Points y Shots'), b: false, p: L('Limited', 'Limitado'), pr: L('Full', 'Completo') },
     { t: 'Fútbol Rubio', b: false, p: L('Limited', 'Limitado'), pr: L('Full', 'Completo') },
     { t: L('Analyst signals access', 'Acceso a señales de analistas'), b: false, p: L('Limited', 'Limitado'), pr: '~50%' },
+    { t: L("The Day's Elite (multi-sport)", 'La Élite del Día (multideporte)'), b: false, p: false, pr: true },
     { t: L('Push notifications', 'Notificaciones push'), b: false, p: false, pr: true },
     { t: L('Profile photo', 'Foto de perfil'), b: false, p: false, pr: true },
   ];
