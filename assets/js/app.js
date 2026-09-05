@@ -1,5 +1,5 @@
 /* ============================================================
-   APP — arranca y conecta módulos: datos, vistas, tema, idioma,
+   APP, arranca y conecta módulos: datos, vistas, tema, idioma,
    logo con respaldo, y compartir imagen.
    ============================================================ */
 import { LIGAS, listarPartidos, detallePartido } from './datos/proveedor.js';
@@ -19,7 +19,7 @@ const $ = (id) => document.getElementById(id);
 
 let ligaActiva = null;
 let proyActiva = null;   // 'mlb' | 'soccer' | 'nba' | null (proyecciones premium)
-let proyModo = 'premium';   // 'pro' | 'premium' — según el botón usado
+let proyModo = 'premium';   // 'pro' | 'premium', según el botón usado
 let partidoSel = null;
 
 /* -------- Logo con respaldo -------- */
@@ -192,7 +192,7 @@ function abrirModalDetalle(html, id) {
   _reengancharModal();
 }
 
-/* (Re)engancha los eventos del modal — se llama al abrir y tras enriquecer. */
+/* (Re)engancha los eventos del modal, se llama al abrir y tras enriquecer. */
 function _reengancharModal() {
   const bg = $('det-modal-bg');
   if (!bg) return;
@@ -286,9 +286,9 @@ function actualizarCuenta() {
   const pinta = () => {
     document.querySelectorAll('.cuenta[data-cuando]').forEach(el => {
       const d = new Date(el.dataset.cuando);
-      if (isNaN(d)) { el.textContent = '—'; return; }
+      if (isNaN(d)) { el.textContent = ','; return; }
       let ms = d - Date.now();
-      if (ms <= 0) { el.textContent = '—'; return; }
+      if (ms <= 0) { el.textContent = ','; return; }
       const h = Math.floor(ms / 3600000);
       const m = Math.floor((ms % 3600000) / 60000);
       el.textContent = (h > 0 ? h + 'h ' : '') + m + 'm';
@@ -490,7 +490,7 @@ function init() {
   const bi = $('buscar-input');
   if (bi) bi.addEventListener('input', () => { _busqueda = bi.value; pintarLista(); });
 
-  // Botón "Volver" de la hoja de detalle (móvil) — ahora sí funciona
+  // Botón "Volver" de la hoja de detalle (móvil), ahora sí funciona
   const cerrar = document.querySelector('#hoja .cerrar');
   if (cerrar) cerrar.addEventListener('click', cerrarHoja);
 
@@ -595,7 +595,7 @@ async function abrirDirectorioSenales() {
     f = bots.seguidoresBot(a, f);
     const likes = bots.likesDe(a);
     const bot = bots.botPorUid(a.uid);
-    const prom = bot ? (a.deporte === 'futbol' || a.deporte === 'beisbol' ? '1–2' : '1') : '—';
+    const prom = bot ? (a.deporte === 'futbol' || a.deporte === 'beisbol' ? '1–2' : '1') : ',';
     return { a, f, likes, prom };
   }));
   rows.sort((x, y) => y.f - x.f);
@@ -904,7 +904,7 @@ function _modalPremiumFoto() {
   ov.querySelector('.pmf-go').onclick = () => { q(); document.getElementById('pp-ov') && document.getElementById('pp-ov').remove(); document.body.style.overflow = ''; mostrarPantalla('pricing'); };
 }
 
-/* Fase 3 — carga el buzón + notificaciones con las señales reales de los analistas que sigue el Premium. */
+/* Fase 3, carga el buzón + notificaciones con las señales reales de los analistas que sigue el Premium. */
 async function _cargarBuzonPerfil(ov, esPrem) {
   if (!esPrem || !ov) return;
   const ES = idiomaActual() === 'es', L = (en, es) => ES ? es : en;
@@ -1081,7 +1081,7 @@ function _fotoPerfilFlujo(ov) {
 }
 
 /* ============================================================
-   PANEL DE PERFIL — pantalla grande de 3 columnas (Fase 1: estructura)
+   PANEL DE PERFIL, pantalla grande de 3 columnas (Fase 1: estructura)
    ============================================================ */
 function abrirPanelPerfil() {
   if (document.getElementById('pp-ov')) return;
