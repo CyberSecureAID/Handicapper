@@ -55,7 +55,7 @@ export function tarjetaPartido(p) {
 
   const posLinea = (eq) => eq.posicion != null
     ? `${eq.posicion}° ${ES ? 'Posición' : 'Position'}`
-    : (eq.division || eq.record || '');
+    : (eq.division || (_recReal(eq.record) ? eq.record : '') || '');
 
   const logoBig = (eq) => eq.logo
     ? `<span class="pm-logo"><img src="${esc(eq.logo)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="pm-logo-fb" style="display:none">${esc(eq.abrev || '')}</span></span>`
@@ -140,6 +140,9 @@ const FB_PIT = `(function(im){var l=(im.getAttribute('data-fb')||'').split('~~')
    es bueno, gana su equipo". Ángulos propios por deporte. Combinatorio
    y determinista por partido.
    ============================================================ */
+/* Récord con algún dígito distinto de cero (no "0-0-0" ni vacío). */
+function _recReal(r) { return r && /[1-9]/.test(String(r)); }
+
 function informeIA(p, ES) {
   const L = (en, es) => ES ? es : en;
   const m = p.mercado || {};
@@ -192,13 +195,16 @@ function informeIA(p, ES) {
 
   // ---- 2) EL CASO (datos tejidos, no sueltos) ----
   const casos = [];
-  if (fav.record && dog.record) casos.push(L(`the records set the tone, ${esc(fav.record)} against ${esc(dog.record)}`, `los récords marcan el tono, ${esc(fav.record)} contra ${esc(dog.record)}`));
-  if (fav.posicion != null && dog.posicion != null && Number(fav.posicion) < Number(dog.posicion)) casos.push(L(`the table isn't lying, ${fav.posicion} against ${dog.posicion} is real distance`, `la tabla no miente, ${fav.posicion} contra ${dog.posicion} es distancia real`));
+  const recReal = (r) => r && /[1-9]/.test(String(r));   // récord con algún dígito distinto de cero
+  if (recReal(fav.record) && recReal(dog.record)) casos.push(L(`the records set the tone, ${esc(fav.record)} against ${esc(dog.record)}`, `los récords marcan el tono, ${esc(fav.record)} contra ${esc(dog.record)}`));
+  if (fav.posicion != null && dog.posicion != null && Number(fav.posicion) > 0 && Number(dog.posicion) > 0 && Number(fav.posicion) < Number(dog.posicion)) casos.push(L(`the table isn't lying, ${fav.posicion} against ${dog.posicion} is real distance`, `la tabla no miente, ${fav.posicion} contra ${dog.posicion} es distancia real`));
   const wF = Number(fav.winPct), wD = Number(dog.winPct);
-  if (isFinite(wF) && isFinite(wD) && wF - wD >= 0.12) casos.push(L(`${fN} has simply converted more often over the stretch`, `${fN} ha convertido más seguido en el tramo`));
-  if (!casos.length) casos.push(L(`recent form is what tips it`, `la forma reciente es lo que lo inclina`));
+  if (isFinite(wF) && isFinite(wD) && wF > 0 && wF - wD >= 0.12) casos.push(L(`${fN} has simply converted more often over the stretch`, `${fN} ha convertido más seguido en el tramo`));
+  // Sin datos duros -> el caso se apoya en el modelo y la forma, no en cifras vacías
+  if (!casos.length) casos.push(pick([L(`the model leans this way on form and matchup, not on a gaudy record`, `el modelo se inclina así por forma y cruce, no por un récord llamativo`), L(`recent form and the matchup are what tip this one`, `la forma reciente y el cruce son lo que inclinan este`), L(`this one is about who's arriving in better shape`, `este va de quién llega en mejor forma`)], 5));
   const casa = favLocal ? L(` Home ground only firms it up.`, ` Jugar en casa solo lo afianza.`) : '';
-  partes.push(`${L('Start with the obvious', 'Empieza por lo obvio')}: ${pick(casos, 3)}.${casa} ${pick([
+  const abreCaso = pick([L('Start with the obvious', 'Empieza por lo obvio'), L('Here\u2019s the backbone of it', 'Aquí está la columna vertebral'), L('The foundation is simple', 'El cimiento es simple'), L('What tilts it', 'Lo que lo inclina'), L('Read it straight', 'Léelo directo'), L('The short version', 'La versión corta')], 7);
+  partes.push(`${abreCaso}: ${pick(casos, 3)}.${casa} ${pick([
     L(`None of that guarantees anything, but it's the kind of foundation that usually holds.`, `Nada de eso garantiza nada, pero es de esos cimientos que suelen aguantar.`),
     L(`Take it as the frame of the game, not the final word.`, `Tómalo como el marco del partido, no como la última palabra.`),
     L(`It's a picture built from several pieces, which is exactly why I trust it more than a single number.`, `Es una foto armada de varias piezas, y justo por eso me fío más que de un solo número.`)], 8)}`);
@@ -324,7 +330,7 @@ export function detalle(p, opciones = {}) {
     const parts = String(eq.nombre || '').trim().split(/\s+/);
     const ciudad = parts.length > 1 ? parts.slice(0, -1).join(' ') : '';
     const nombre = parts.length > 1 ? parts.slice(-1)[0] : eq.nombre;
-    const rec = eq.record ? `${esc(eq.record)}${eq.division ? ` <em>| ${esc(eq.division)}</em>` : ''}` : '';
+    const rec = _recReal(eq.record) ? `${esc(eq.record)}${eq.division ? ` <em>| ${esc(eq.division)}</em>` : ''}` : (eq.division ? `<em>${esc(eq.division)}</em>` : '');
     const logo = `<img class="hd-hd-logo" src="${esc(eq.logo || '')}" alt="" onerror="this.style.visibility='hidden'">`;
     const txt = `<div class="hd-hd-tx">${ciudad ? `<span class="hd-hd-city">${esc(ciudad)}</span>` : ''}<span class="hd-hd-name">${esc(nombre)}</span>${rec ? `<span class="hd-hd-rec">${rec}</span>` : ''}</div>`;
     return `<div class="hd-hd-team ${lado}">${lado === 'l' ? logo + txt : txt + logo}</div>`;
@@ -616,7 +622,7 @@ export function detalle(p, opciones = {}) {
     const IHomeS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9h14v-9"/></svg>`;
     const IAwayS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12l20-7-7 20-3-8-8-3z"/></svg>`;
     const filaIc = (k, ic, l, r) => (l || r) ? filas.push(`<div class="hd-tb-row"><span class="hd-tb-l">${esc(l ?? '—')}</span><span class="hd-tb-k hd-tb-k-ic">${ic}<span>${esc(k)}</span></span><span class="hd-tb-r">${esc(r ?? '—')}</span></div>`) : 0;
-    fila(ES ? 'Récord' : 'Record', p.local.record, p.visita.record);
+    fila(ES ? 'Récord' : 'Record', _recReal(p.local.record) ? p.local.record : '—', _recReal(p.visita.record) ? p.visita.record : '—');
     filaIc(ES ? 'En casa' : 'At home', IHomeS, p.local.recordCasa, p.visita.recordCasa);
     filaIc(ES ? 'De visita' : 'Away', IAwayS, p.local.recordFuera, p.visita.recordFuera);
     let extras = '';
@@ -629,7 +635,7 @@ export function detalle(p, opciones = {}) {
   }
 
   const cmp = filasComparacion();
-  const cmpHTML = cmp.length ? `<div class="hd-cmp">${cmp.join('')}</div>` : `<div class="hd-cmp-nd">${cargando ? cargTxt : (ES ? 'Sin estadísticas comparables todavía.' : 'No comparable stats yet.')}</div>`;
+  const cmpHTML = cmp.length ? `<div class="hd-cmp">${cmp.join('')}</div>` : `<div class="hd-cmp-nd">${cargando ? cargTxt : (ES ? 'La liga no publica estadísticas de temporada para este cruce (suele pasar en torneos de copa). Revisa la pestaña <b>Análisis</b> para la lectura completa del partido.' : 'This competition doesn\u2019t publish season stats for this matchup (common in cup ties). Check the <b>Analysis</b> tab for the full read.')}</div>`;
 
   /* --- Pestañas como la referencia: Resumen · Comparación · Equipos · Estadísticas · Enfrentamientos --- */
   const tieneSerie = p.serie && (p.serie.local != null || p.serie.visita != null);
