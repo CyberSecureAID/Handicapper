@@ -357,6 +357,40 @@ function depenNombre(id) { const d = _DEP[id]; return d ? L(d.en, d.es) : (id ||
 
 function tarjeta(a, ctx = {}, idx = 0) {
   let conf = a.confianza || 'media'; if (conf === 'baja' || !['alta','media'].includes(conf)) conf = 'media';
+function analisisSenal(a, ES) {
+  const L2 = (en, es) => ES ? es : en;
+  const fav = a.favorito || (a.favLocal ? a.local : a.visita) || '';
+  const riv = (a.favLocal ? a.visita : a.local) || (ES ? 'el rival' : 'the opponent');
+  const pr = a.prob != null ? Math.max(1, Math.min(99, a.prob)) : 65;
+  const alto = pr >= 74;
+  const sem = String(fav + riv + Math.round(pr));
+  let h = 0; for (let i = 0; i < sem.length; i++) h = (h * 131 + sem.charCodeAt(i)) & 0x7fffffff;
+  const pick = (arr, off) => arr[((h >> off) & 0x3fffffff) % arr.length];
+  const abre = alto ? [
+    L2(`For me there isn't much to debate here: ${fav} shows up a level above ${riv}.`, `Para mí no hay mucho que discutir: ${fav} se planta un escalón por encima de ${riv}.`),
+    L2(`I've got this one circled. ${fav} has what it takes to handle ${riv}, and not by a little.`, `Este lo tengo marcado. ${fav} tiene con qué doblegar a ${riv}, y no por poco.`),
+    L2(`Every so often a game reads itself. This is one, and it belongs to ${fav}.`, `Cada tanto aparece un partido que se lee solo. Este es uno, y es de ${fav}.`),
+    L2(`Straight up: ${riv} is caught in a bad spot and ${fav} is the type to punish it.`, `Sin rodeos: ${riv} entra en un mal momento y ${fav} es del tipo que lo castiga.`),
+    L2(`If I'm trusting one favorite today, it's ${fav}. The gap with ${riv} is real.`, `Si hoy me caso con un favorito, es ${fav}. La diferencia con ${riv} es real.`),
+  ] : [
+    L2(`Tighter than it looks, but I lean ${fav} over ${riv}.`, `Más parejo de lo que parece, pero me inclino por ${fav} sobre ${riv}.`),
+    L2(`Not a formality, but ${fav} arrives in better shape than ${riv}.`, `No es un trámite, pero ${fav} llega mejor que ${riv}.`),
+    L2(`${fav} is my side here, though ${riv} deserves respect.`, `${fav} es mi lado aquí, aunque a ${riv} hay que respetarlo.`),
+    L2(`Solid, not flashy: ${fav} should get past ${riv}.`, `Sólido, no vistoso: ${fav} debería con ${riv}.`),
+  ];
+  const medio = pick([
+    L2(`Everyone loves an upset until the numbers remind them why the favorite is the favorite.`, `A todos les gusta el batacazo hasta que los números recuerdan por qué el favorito es favorito.`),
+    L2(`Call me boring, I'll take the better side over the one that "feels" due.`, `Llámame aburrido, me quedo con el mejor antes que con el que "toca" por sensación.`),
+    L2(`This isn't cooked in a day; it's the residue of doing the small things right for weeks.`, `Esto no se cocina en un día; es el poso de hacer bien las cosas pequeñas por semanas.`),
+    L2(`When the story and the form point the same way, I stop overthinking it.`, `Cuando la historia y la forma apuntan al mismo lado, dejo de pensarlo de más.`),
+    L2(`Strip the badges, leave the form, and most honest eyes land on the same side.`, `Quita los escudos, deja la forma, y la mayoría de ojos honestos caen en el mismo lado.`),
+  ], 7);
+  const cierra = alto
+    ? pick([L2(`For me it's one of the clearest calls on the board today.`, `Para mí es de lo más claro de la jornada.`), L2(`I'd stake my prestige on this one.`, `Me juego el prestigio con este.`), L2(`Short of a rare shock, this has an owner.`, `Salvo un susto raro, esto tiene dueño.`)], 15)
+    : pick([L2(`Lean ${fav}, eyes open. Good spot, not a gift.`, `Inclínate por ${fav}, ojos abiertos. Buen sitio, no un regalo.`), L2(`The scale tips one way for me, without overselling it.`, `La balanza se inclina a un lado para mí, sin exagerar.`)], 15);
+  return `${pick(abre, 0)} ${medio} ${cierra}`;
+}
+
   const prob = a.prob != null ? Math.max(1, Math.min(99, a.prob)) : null;
   const mk = (MERCADO[a.mercado] || MERCADO.ml)();
   const pick = a.favorito ? `${esc(a.favorito)} ${L('to win', 'gana')}` : esc(a.veredicto || '');
@@ -403,7 +437,7 @@ function tarjeta(a, ctx = {}, idx = 0) {
   // Análisis largo (hasta ~1000 palabras): desplegable centrado y responsivo
   const IArrow = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>`;
   const IChev = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
-  const explica = (a.analisis && String(a.analisis).trim()) ? `<p class="sn-c-note">${esc(a.analisis)}</p>` : '';
+  const explica = (a.esBot || a.favorito) ? `<p class="sn-c-note">${esc(analisisSenal(a, ES()))}</p>` : ((a.analisis && String(a.analisis).trim()) ? `<p class="sn-c-note">${esc(a.analisis)}</p>` : '');
   const analisis = a.texto ? `<button class="sn-c-toggle" data-an="${esc(sid)}"><span>${L('Read analysis', 'Ver análisis')}</span>${IChev}</button>
     <div class="sn-c-an" id="an-${esc(sid)}" hidden><p>${esc(a.texto)}</p></div>` : '';
 
@@ -517,7 +551,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   const vistos = new Set(); const analistas = [];
   inicio.forEach(a => { if (a.autorUid && !vistos.has(a.autorUid)) { vistos.add(a.autorUid); analistas.push({ uid: a.autorUid, firma: a.firma || a.autor || '', deporte: a.deporte, estilo: a.estilo, foto: fotoPorUid[a.autorUid] || null }); } });
   // Incluir también analistas/bots registrados aunque aún no tengan señales publicadas
-  analistasLista.forEach(an => { if (an.uid && an.activo !== false && an.deporte && !vistos.has(an.uid)) { vistos.add(an.uid); analistas.push({ uid: an.uid, firma: an.firma || an.nombre || '', deporte: an.deporte, estilo: an.estilo, foto: an.foto || null, prestigio: (Number(an.prestigio) || 0) + (Number(an.prestigioAuto) || 0) }); } });
+  analistasLista.forEach(an => { if (an.uid && an.activo !== false && an.deporte && !vistos.has(an.uid)) { vistos.add(an.uid); analistas.push({ uid: an.uid, firma: an.firma || an.nombre || '', deporte: an.deporte, estilo: an.estilo, foto: an.foto || null, prestigio: Number(an.prestigio) || 0 }); } });
   const discover = analistas.length ? bloqueDescubrir(analistas, ctx) : '';
 
   const tabs = '';   // sin pestañas

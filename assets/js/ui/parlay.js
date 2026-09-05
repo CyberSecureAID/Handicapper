@@ -813,7 +813,7 @@ function elitePickCard(p, ES) {
   const apellido = esc((p.nombre || '').split(' ').slice(-1)[0]);
   const ctx = p.esPartido
     ? L('Both teams tend to score, so goals are the play here.', 'Ambos suelen marcar; los goles son la jugada aquí.')
-    : L(`${apellido} is the clearest name ${pico} today.`, `${apellido} es el nombre más claro ${pico} hoy.`);
+    : L(`${apellido} is the player with the best chance ${pico} today.`, `El jugador ${apellido} es quien más probabilidad tiene ${pico} hoy.`);
   const logo = (url, ab) => url
     ? `<span class="elp-logo"><img src="${esc(url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><b style="display:none">${esc(ab || '')}</b></span>`
     : `<span class="elp-logo"><b style="display:flex">${esc(ab || '')}</b></span>`;
