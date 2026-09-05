@@ -1436,25 +1436,32 @@
 .elite-combo-l span { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: #cdd6e2; font-weight: 700; }
 .elite-combo-l small { font-size: 11.5px; color: #9fb0c2; margin-top: 2px; }
 .elite-combo b { font-family: "Chakra Petch",sans-serif; font-size: 40px; line-height: 1; margin-left: auto; background: linear-gradient(180deg,#f0d9ff,#c99bff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.elite-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 14px; }
-.elp { display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 16px; background: linear-gradient(180deg,rgba(22,29,43,.85),rgba(12,18,28,.94)); text-align: center; }
-.elp-head { display: flex; align-items: center; gap: 10px; text-align: left; margin-bottom: 12px; }
+.elite-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 14px; }
+.elp { display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 18px; background: linear-gradient(180deg,rgba(22,29,43,.85),rgba(12,18,28,.94)); text-align: left; }
+.elp-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .elp-ico { width: 34px; height: 34px; object-fit: contain; flex: none; }
 .elp-htx b { display: block; font-family: "Poppins",sans-serif; font-size: 13.5px; color: #fff; line-height: 1.1; }
 .elp-htx span { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #c99bff; }
-.elp-vs { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 2px 0 8px; }
-.elp-team { width: 46px; height: 46px; display: grid; place-items: center; }
-.elp-team img { max-width: 100%; max-height: 100%; object-fit: contain; }
-.elp-team b { width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); display: grid; place-items: center; font-family: "Chakra Petch",sans-serif; font-weight: 800; font-size: 13px; color: #aab4c0; }
-.elp-vsimg { width: 26px; height: 26px; object-fit: contain; flex: none; opacity: .95; }
-.elp-match { font-size: 11px; color: #8a94a3; font-weight: 600; }
-.elp-match i { font-style: normal; color: #6b7683; margin: 0 2px; }
-.elp-pick { font-family: "Chakra Petch",sans-serif; font-weight: 800; font-size: 16px; color: #fff; margin: 8px 0 6px; line-height: 1.2; }
-.elp-ctx { font-size: 12px; color: #9fb0c2; line-height: 1.45; margin-bottom: 12px; }
+.elp-teams { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.elp-t { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.elp-logo { width: 52px; height: 52px; display: grid; place-items: center; }
+.elp-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.elp-logo b { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); display: grid; place-items: center; font-family: "Chakra Petch",sans-serif; font-weight: 800; font-size: 13px; color: #aab4c0; }
+.elp-tn { font-size: 12px; font-weight: 600; color: #cdd6e2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-align: center; }
+.elp-vsimg { width: 40px; height: 40px; object-fit: contain; flex: none; }
+.elp-pick { font-family: "Chakra Petch",sans-serif; font-weight: 800; font-size: 17px; color: #fff; margin-bottom: 5px; line-height: 1.2; }
+.elp-ctx { font-size: 12.5px; color: #9fb0c2; line-height: 1.5; margin-bottom: 14px; }
 .elp-prob { margin-top: auto; display: flex; align-items: center; gap: 10px; }
 .elp-prob b { font-family: "Chakra Petch",sans-serif; font-size: 22px; color: #fff; flex: none; }
 .elp-prob i { flex: 1; height: 8px; border-radius: 5px; background: rgba(255,255,255,.08); overflow: hidden; }
 .elp-prob u { display: block; height: 100%; background: linear-gradient(90deg,#c99bff,#e8c46a); }
 .elite-load, .elite-empty { text-align: center; color: #9fb0c2; padding: 40px 20px; line-height: 1.6; }
 .elite-foot { font-size: 11.5px; color: #6b7683; margin-top: 18px; text-align: center; font-style: italic; }
-@media (max-width: 560px) { .elite-grid { grid-template-columns: 1fr; } .elite-combo b { font-size: 32px; } }
+@media (max-width: 560px) { .elite-grid { grid-template-columns: 1fr; } .elite-combo b { font-size: 32px; } .elp { text-align: center; align-items: center; } .elp-head { justify-content: center; } .elp-prob { justify-content: center; width: 100%; } }
+
+/* Móvil: quitar los chips del banner (9 players chance...) que se montan bajo la etiqueta Premium */
+@media (max-width: 620px) {
+  .ply-chips { display: none !important; }
+  .ply-hero { min-height: 200px !important; }
+  .ply-hero-in .ply-title { font-size: clamp(22px, 6.5vw, 30px) !important; }
+}
