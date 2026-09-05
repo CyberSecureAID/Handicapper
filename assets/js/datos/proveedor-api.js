@@ -101,7 +101,7 @@ function empateVar(pL, pV, seed) {
   let hsh = 0; const s = String(seed || '');
   for (let i = 0; i < s.length; i++) hsh = (hsh * 31 + s.charCodeAt(i)) & 0xffff;
   const jit = ((hsh % 61) - 30) / 1000;   // ±0.030 estable
-  return Math.max(0.08, Math.min(0.33, 0.31 - 0.20 * margen + jit));
+  return Math.max(0.07, Math.min(0.29, 0.26 - 0.27 * margen + jit));
 }
 function probDeMoneyline(ml) {
   const n = Number(ml);
