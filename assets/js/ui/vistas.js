@@ -150,11 +150,15 @@ function informeIA(p, ES) {
   const favLocal = pl >= pv;
   const fav = favLocal ? p.local : p.visita, dog = favLocal ? p.visita : p.local;
   const probFav = Math.max(pl, pv), empate = m.empate;
+  const probDog = Math.min(pl, pv);
+  const brecha = probFav - probDog;   // qué tan definido está (61 vs 19 = 42 -> claro)
   const fN = esc(fav.nombre || fav.abrev || '?'), dN = esc(dog.nombre || dog.abrev || '?');
   const sem = String((fav.abrev || '') + (dog.abrev || '') + (p.id || ''));
   let h = 0; for (let i = 0; i < sem.length; i++) h = (h * 33 + sem.charCodeAt(i)) & 0x7fffffff;
   const pick = (arr, off) => (arr && arr.length) ? arr[((h >> off) & 0x3fffffff) % arr.length] : '';
-  const nivel = probFav >= 78 ? 'alto' : probFav >= 64 ? 'medio' : 'bajo';
+  // El nivel se define por la BRECHA entre favorito y rival (no por el % suelto,
+  // que con el empate de por medio engaña). 61 vs 19 = brecha 42 = favorito claro.
+  const nivel = (brecha >= 30 || probFav >= 70) ? 'alto' : (brecha >= 15 || probFav >= 55) ? 'medio' : 'bajo';
 
   // ---- Deporte ----
   const dep = String(p.deporte || p.liga || '').toLowerCase();
