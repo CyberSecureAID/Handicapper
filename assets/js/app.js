@@ -689,7 +689,6 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   try { const { esAdmin, esAnalista } = await import('./mesa/mesa-datos.js'); _esAdmin = await esAdmin(); if (!_esAdmin) { const a = await esAnalista(); _esAnalista = !!a; } } catch (_) {}
   pintarCuenta(usuario);   // repinta para mostrar la opción de panel si es admin
   if ((location.hash || '').toLowerCase() === '#mesa') { try { history.replaceState(null, '', location.pathname); } catch (_) {} }
-  if (_esAdmin && usuario && usuario.foto) { try { const _a = await import('./auth/auth.js'); _a.sincronizarFotoAnalista && _a.sincronizarFotoAnalista(usuario.foto); } catch (_) {} }
   if (_esAdmin) marcarVistaPrevia('premium');   // el admin tiene acceso total cuando entre
   if (_esAdmin) publicarBotsSiEsNuevoDia();     // señales de bots automáticas (1 vez al día)
   if (_esAdmin) resolverPrestigioSiToca();      // resuelve predicciones terminadas -> prestigio
@@ -697,9 +696,16 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   try {
     const { leerFichaAnalista } = await import('./mesa/mesa-datos.js');
     const ficha = await leerFichaAnalista();
+    // La foto de Jesús: usa la de usuario (data URL) o, si no, la de la ficha de analista.
+    let fotoJesus = (usuario && usuario.foto) || null;
+    if (!fotoJesus && ficha && ficha.foto) fotoJesus = `assets/imagenes/analistas/${String(ficha.foto).toLowerCase()}.webp`;
     if (ficha && ficha.foto) {
       const btn = $('cuenta-btn');
-      if (btn) { btn.classList.add('logueado'); btn.innerHTML = `<img class="av-img" src="assets/imagenes/analistas/${String(ficha.foto).toLowerCase()}.webp" alt="">`; }
+      if (btn) { btn.classList.add('logueado'); btn.innerHTML = `<img class="av-img" src="assets/imagenes/analistas/${String(ficha.foto).toLowerCase()}.webp" alt=""></img>`; }
+    }
+    if (_esAdmin && fotoJesus) {
+      window.__jesusFoto = fotoJesus; if (window.__pintarJesus) window.__pintarJesus();
+      try { const _a = await import('./auth/auth.js'); _a.sincronizarFotoAnalista && _a.sincronizarFotoAnalista(fotoJesus); } catch (_) {}
     }
   } catch (_) {}
   // NO entramos automáticamente al cargar: el usuario llega al lobby y entra por su elección.
