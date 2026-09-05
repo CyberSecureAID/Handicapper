@@ -1390,3 +1390,14 @@
 .inst-cancel { border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #cfd8e3; }
 .inst-go { border: 0; background: linear-gradient(135deg,#2a6be0,#7a3ce0); color: #fff; box-shadow: 0 8px 22px -8px rgba(42,107,224,.6); }
 .inst-go:hover { filter: brightness(1.08); }
+
+/* Informe de análisis (scouting report) en el detalle del partido */
+.hd-ia { padding: 2px 2px 6px; }
+.hd-ia-badge { display: inline-flex; align-items: center; gap: 7px; font-family: "Poppins",sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #e8c46a; background: rgba(232,196,106,.12); border: 1px solid rgba(232,196,106,.3); padding: 5px 12px; border-radius: 8px; margin-bottom: 14px; }
+.hd-ia p { font-size: 14px; line-height: 1.68; color: #b6c0cd; margin: 0 0 13px; }
+.hd-ia-prob { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-radius: 12px; background: rgba(42,107,224,.1); border: 1px solid rgba(120,170,255,.25); margin: 2px 0 14px; }
+.hd-ia-prob span { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #8a94a3; }
+.hd-ia-prob b { font-family: "Chakra Petch","Poppins",sans-serif; font-size: 16px; color: #fff; }
+.hd-ia-prob em { font-style: normal; font-size: 13px; color: #aab4c0; margin-left: auto; }
+.hd-ia-verdict { color: #eef3f9 !important; font-weight: 600; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.08); }
+.hd-ia-foot { font-size: 11px; color: #6b7683; line-height: 1.5; margin-top: 8px; font-style: italic; }
