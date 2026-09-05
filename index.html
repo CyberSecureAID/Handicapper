@@ -373,9 +373,25 @@
 (function(){
   var dp=null;
   window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;window.__pwaPrompt=e;document.querySelectorAll('[data-install]').forEach(function(b){b.hidden=false;});});
-  window.addEventListener('appinstalled',function(){dp=null;window.__pwaPrompt=null;document.querySelectorAll('[data-install]').forEach(function(b){b.hidden=true;});});
-  window.__instalarPWA=function(){var p=dp||window.__pwaPrompt;if(!p){return false;}p.prompt();p.userChoice.finally(function(){dp=null;window.__pwaPrompt=null;document.querySelectorAll('[data-install]').forEach(function(b){b.hidden=true;});});return true;};
-  document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-install]');if(b){e.preventDefault();window.__instalarPWA();}});
+  window.addEventListener('appinstalled',function(){dp=null;window.__pwaPrompt=null;cerrar();document.querySelectorAll('[data-install]').forEach(function(b){b.hidden=true;});});
+  function nativo(){var p=dp||window.__pwaPrompt;if(!p)return;p.prompt();p.userChoice.finally(function(){dp=null;window.__pwaPrompt=null;document.querySelectorAll('[data-install]').forEach(function(b){b.hidden=true;});});}
+  function cerrar(){var o=document.getElementById('inst-ov');if(o)o.remove();}
+  window.__mostrarModalInstalar=function(){
+    if(document.getElementById('inst-ov'))return;
+    var es=(localStorage.getItem('handicapper-idioma')||'en')==='es';
+    var ov=document.createElement('div');ov.id='inst-ov';ov.className='inst-ov';
+    ov.innerHTML='<div class="inst-modal"><button class="inst-x" aria-label="close">&#10005;</button>'+
+      '<img class="inst-logo" src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations">'+
+      '<h3>'+(es?'Instala nuestra app':'Install our app')+'</h3>'+
+      '<p>'+(es?'Instala Sports Expectations en tu escritorio o en tu teléfono para un acceso rápido, a pantalla completa y sin las barras del navegador.':'Install Sports Expectations on your desktop or phone for quick, full-screen access with no browser bars.')+'</p>'+
+      '<div class="inst-btns"><button class="inst-cancel">'+(es?'Ahora no':'Not now')+'</button><button class="inst-go">'+(es?'Instalar':'Install')+'</button></div></div>';
+    document.body.appendChild(ov);
+    ov.querySelector('.inst-x').onclick=cerrar;
+    ov.querySelector('.inst-cancel').onclick=cerrar;
+    ov.onclick=function(e){if(e.target===ov)cerrar();};
+    ov.querySelector('.inst-go').onclick=function(){cerrar();nativo();};
+  };
+  document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-install]');if(b){e.preventDefault();window.__mostrarModalInstalar();}});
   if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
 })();
 </script>
