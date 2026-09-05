@@ -595,31 +595,47 @@ function cardPartidoHTML(p, cfg) {
   </article>`;
 }
 
+/* Frase clara de QUÉ hace el jugador (para el titular de la tarjeta). */
+const QUE = {
+  'P(≥1 hit)':  { en: 'to get a hit',        es: 'de conectar un hit' },
+  'P(20+ pts)': { en: 'for 20+ points',      es: 'de anotar 20+ puntos' },
+  'P(2+ SOG)':  { en: 'for 2+ shots',        es: 'de disparar 2+ veces a puerta' },
+  'P(1+ TD)':   { en: 'to score a TD',       es: 'de anotar un touchdown' },
+  'P(1+ HR)':   { en: 'to hit a home run',   es: 'de conectar un jonrón' },
+};
+
+function _plmLogo(url, ab) {
+  return url
+    ? `<span class="plm-logo"><img src="${esc(url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><b style="display:none">${esc(ab || '')}</b></span>`
+    : `<span class="plm-logo"><b style="display:flex">${esc(ab || '')}</b></span>`;
+}
+
 function cardHTML(p, cfg) {
   if (p.esPartido) return cardPartidoHTML(p, cfg);
-
-  const conf = confPorProb(p.prob, cfg);       // confianza coherente con la probabilidad
-  const pv = { ...p, confianza: conf };
-  const tags = (cfg.toCard(p).tags || []).map((t, i) => `<span class="ply-tag${i === 0 ? ' h' : ''}">${esc(tagTxt(t))}</span>`).join('');
-  const fav = (p.factores || []).map(f => `<li>${esc(f)}</li>`).join('');
-  const rsk = (p.riesgos || []).map(f => `<li>${esc(f)}</li>`).join('');
-  const vd = veredicto(pv, cfg);
+  const ES = idiomaActual() === 'es';
+  const conf = confPorProb(p.prob, cfg);
+  const vd = veredicto({ ...p, confianza: conf }, cfg);
+  const cuando = horaPartido(p.cuando);
+  const que = QUE[cfg.metric] ? (ES ? QUE[cfg.metric].es : QUE[cfg.metric].en) : (cfg.metricLabel || '').replace(/<br>/g, ' ');
+  const nomA = esc(p.nomLocal || p.equipoAbrev || ''), nomB = esc(p.nomVisita || p.rivalAbrev || '');
   return `<article class="ply-c r${p.rank}" data-idx="${p.rank}">
-    <div class="ply-c-top"><div class="ply-rank">${p.rank}</div>
-      <div class="ply-idn"><div class="ply-nm">${esc(p.nombre)}</div>
-        ${p.esPartido
-          ? `<div class="ply-mt">${p.proj != null ? `<b>${(+p.proj).toFixed(1)}</b><span class="vs">${L('exp. goals', 'goles esp.')}</span>` : ''}${horaPartido(p.cuando) ? `<span class="ply-when">${esc(horaPartido(p.cuando))}</span>` : ''}</div>`
-          : `<div class="ply-mt"><b>${esc(p.equipoAbrev || '')}</b><span class="vs">${L('vs', 'vs')}</span><b>${esc(p.rivalAbrev || '')}</b>${horaPartido(p.cuando) ? `<span class="ply-when">${esc(horaPartido(p.cuando))}</span>` : ''}</div>`}</div></div>
-    <div class="ply-tags">${tags}</div>
-    <div class="ply-meter"><div class="ply-pct">${p.prob}%</div><div class="ply-plab">${cfg.metricLabel}</div></div>
+    <div class="ply-c-hd">
+      <div class="ply-rank">${p.rank}</div>
+      <div class="ply-idn">
+        <div class="ply-nm">${esc(p.nombre)}</div>
+        <div class="ply-teams">
+          ${_plmLogo(p.logoLocal, p.equipoAbrev)}<span class="plm-nm">${nomA}</span>
+          <i class="plm-vs">vs</i>
+          <span class="plm-nm">${nomB}</span>${_plmLogo(p.logoVisita, p.rivalAbrev)}
+        </div>
+        ${cuando ? `<div class="ply-when-row"><span class="ply-when">${esc(cuando)}</span></div>` : ''}
+      </div>
+    </div>
+    <div class="ply-headline"><b class="ply-pct">${p.prob}%</b><span class="ply-what">${esc(que)}</span></div>
     <div class="ply-track"><div class="ply-fill" data-w="${p.prob}"></div></div>
     <div class="ply-verdict ${vd.tono}">${esc(vd.texto)}</div>
     <span class="ply-conf ${conf}"><i></i>${L('Confidence', 'Confianza')} ${esc(confLabel(conf))}</span>
-    <div class="ply-split">
-      ${fav ? `<div class="ply-blk f"><div class="ply-blk-t">${L('Key factors', 'Factores favorables')}</div><ul>${fav}</ul></div>` : ''}
-      ${rsk ? `<div class="ply-blk r"><div class="ply-blk-t">${L('Risks', 'Riesgos')}</div><ul>${rsk}</ul></div>` : ''}
-    </div>
-    <button class="ply-analyze" data-analyze="${p.rank}">${IC_LUPA}${L('Analyze player · Last 10', 'Analizar jugador · Últimos 10')}</button>
+    <button class="ply-analyze" data-analyze="${p.rank}">${IC_LUPA}${L('Analyze · Last 10', 'Analizar · Últimos 10')}</button>
   </article>`;
 }
 
@@ -685,6 +701,10 @@ function wireBets(cont) {
   }));
 }
 
+function sinJuegosHTML(cont, cfg) {
+  const msg = L('No games for this sport today, so there are no picks to show. Check back on a game day.', 'Hoy no hay partidos de este deporte, así que no hay picks que mostrar. Vuelve un día de juego.');
+  cont.innerHTML = `<div class="ply">${heroHTML(cfg, { fecha: hoyISO() }, false)}<div class="ply-note ply-note-big"><i></i>${msg}</div></div>`;
+}
 function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
   cfg._count = jugadores.length;
   const nota = preliminar
@@ -760,10 +780,10 @@ export async function pintarParlay(cont, { sport = 'mlb', nivel = 'basic', modo 
         CACHE.set(sport, { jugadores: jug, meta: r.meta, ts: Date.now() });
         pintarGrid(cont, cfg, limitarPro(jug, modo), r.meta, false);
       } else {
-        pintarGrid(cont, cfg, limitarPro(cfg.demo, modo), { fecha: hoyISO() }, true);
+        sinJuegosHTML(cont, cfg);
       }
     } catch (_) {
-      pintarGrid(cont, cfg, limitarPro(cfg.demo, modo), { fecha: hoyISO() }, true);
+      sinJuegosHTML(cont, cfg);
     }
   }
 }
