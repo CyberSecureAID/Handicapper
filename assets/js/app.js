@@ -440,6 +440,10 @@ function marcarProyeccion() {
   document.querySelectorAll('.premium-item').forEach(it => it.classList.toggle('on', proyActiva === it.dataset.projgoto));
   const pb = document.getElementById('premium-btn'); if (pb) pb.classList.toggle('activo', !!proyActiva);
 }
+function _setPiLabel(modo) {
+  const txt = modo === 'pro' ? 'PRO' : 'PREMIUM';
+  document.querySelectorAll('#premium-pop .pi-pro').forEach(el => { el.textContent = txt; el.classList.toggle('prem', modo !== 'pro'); });
+}
 function initProyeccion() {
   document.querySelectorAll('.proj-b').forEach(b => b.addEventListener('click', () => {
     proyActiva = b.dataset.proj;
@@ -454,8 +458,8 @@ function initProyeccion() {
   if (sigBtn) sigBtn.addEventListener('click', (e) => { e.stopPropagation(); abrirDirectorioSenales(); });
   const pPop = document.getElementById('premium-pop');
   if (pBtn && pPop) {
-    pBtn.addEventListener('click', (e) => { e.stopPropagation(); proyModo = 'premium'; const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); });
-    if (proBtn) proBtn.addEventListener('click', (e) => { e.stopPropagation(); proyModo = 'pro'; const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); proBtn.classList.toggle('open', o); });
+    pBtn.addEventListener('click', (e) => { e.stopPropagation(); proyModo = 'premium'; _setPiLabel('premium'); const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); });
+    if (proBtn) proBtn.addEventListener('click', (e) => { e.stopPropagation(); proyModo = 'pro'; _setPiLabel('pro'); const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); proBtn.classList.toggle('open', o); });
     const pAn = document.getElementById('premium-analisis');
     if (pAn) pAn.addEventListener('click', () => {
       pPop.classList.remove('open'); pBtn.classList.remove('open');
