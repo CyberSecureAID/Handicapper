@@ -12,7 +12,7 @@ import { topGoalProjection, topGoalsMatchProjection } from '../analisis/soccer-g
 import { topPointsProjection } from '../analisis/nba-points.js';
 import { topShotsProjection } from '../analisis/nhl-shots.js';
 import { topTouchdownProjection } from '../analisis/nfl-touchdowns.js';
-import { abrirTracker } from './tracker.js';
+import { abrirTracker, abrirTrackerGoles } from './tracker.js';
 import { idiomaActual } from './idioma.js';
 
 const ES = () => idiomaActual() === 'es';
@@ -99,8 +99,8 @@ function VISTA(sport) {
     soccer: {
       activo: true, img: 'fondo-goals.jpg', run: () => topGoalsMatchProjection({ fecha: hoyISO(), n: 9 }), demo: DEMO_SOCCER,
       eyebrow: L('Premium · Goals Projection', 'Premium · Proyección de Goles'),
-      titulo: `${L('Top picks · Most likely', 'Top del día · Más probables')} <em>${L('to see 2+ goals', 'de tener 2+ goles')}</em>`,
-      metric: 'P(2+ goals)', metricLabel: L('Chance of<br>2+ goals', 'Opción de<br>2+ goles'),
+      titulo: `${L('Goals', 'Goles')} <em>${L('today', 'de hoy')}</em>`,
+      metric: 'P(2+ goals)', metricLabel: L('Chance of 2+ goals', 'Opción de 2+ goles'),
       lead: L('The matches with the highest estimated probability of seeing two or more goals today (Over 1.5, the most popular goals market).',
               'Los partidos con mayor probabilidad estimada de tener dos o más goles hoy (Over 1.5, el mercado de goles más popular).'),
       foot: L('Model probability estimates, not betting advice. Football is high-variance: a high probability is not a certainty.',
@@ -244,6 +244,20 @@ function inyectarCSS() {
   .ply-plab{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);font-weight:700;text-align:right;line-height:1.35}
   .ply-fill{height:100%;border-radius:6px;width:0;transition:width 1s cubic-bezier(.2,.7,.2,1);background:linear-gradient(90deg,var(--oro2),#f6e2a6);box-shadow:0 0 14px rgba(232,196,106,.4)}
   .ply-conf{display:inline-flex;align-items:center;gap:7px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:5px 12px}
+  .ply-cg{text-align:center}
+  .plyg-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .plyg-when{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:#0f1622;background:linear-gradient(180deg,#e8c46a,#cfa63f);border-radius:6px;padding:3px 8px}
+  .plyg-top .ply-conf{margin-left:6px}
+  .plyg-match{display:flex;align-items:center;justify-content:center;gap:14px;margin:4px 0 14px}
+  .plyg-side{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1 1 0;min-width:0}
+  .plyg-logo{width:58px;height:58px;display:grid;place-items:center}
+  .plyg-logo img{max-width:100%;max-height:100%;object-fit:contain}
+  .plyg-fb{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--line);display:grid;place-items:center;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:16px;color:var(--tx2)}
+  .plyg-nm{font-size:12.5px;font-weight:700;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.15}
+  .plyg-vs{flex:0 0 auto;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:14px;color:var(--oro);opacity:.9}
+  .plyg-prob{margin:2px 0 12px}
+  .plyg-prob b{display:block;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:42px;line-height:1;background:linear-gradient(180deg,#f6e2a6,#d4a53f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .plyg-prob span{display:block;font-size:11px;color:var(--tx3);margin-top:4px;text-transform:uppercase;letter-spacing:.04em}
   .ply-conf i{width:7px;height:7px;border-radius:50%}
   .ply-conf.alta{color:#8ff0cb;background:rgba(65,214,160,.1);border:1px solid rgba(65,214,160,.3)}.ply-conf.alta i{background:var(--ok)}
   .ply-conf.media{color:#f6d38c;background:rgba(243,177,61,.1);border:1px solid rgba(243,177,61,.3)}.ply-conf.media i{background:var(--am)}
@@ -498,7 +512,30 @@ function horaPartido(cuando) {
     return dia + ' ' + hora;
   } catch (_) { return ''; }
 }
+/* Tarjeta a nivel de PARTIDO (Goals / Over 1.5): logos + VS + probabilidad grande. */
+function _goalLogo(url, ab) {
+  return url
+    ? `<span class="plyg-logo"><img src="${esc(url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="plyg-fb" style="display:none">${esc(ab || '')}</span></span>`
+    : `<span class="plyg-logo"><span class="plyg-fb" style="display:flex">${esc(ab || '')}</span></span>`;
+}
+function cardPartidoHTML(p, cfg) {
+  const conf = confPorProb(p.prob, cfg);
+  const vd = veredicto({ ...p, confianza: conf }, cfg);
+  const cuando = horaPartido(p.cuando);
+  return `<article class="ply-c ply-cg r${p.rank}" data-idx="${p.rank}">
+    <div class="plyg-top"><div class="ply-rank">${p.rank}</div>${cuando ? `<span class="plyg-when">${esc(cuando)}</span>` : ''}<span class="ply-conf ${conf}"><i></i>${esc(confLabel(conf))}</span></div>
+    <div class="plyg-match">
+      <div class="plyg-side">${_goalLogo(p.logoLocal, p.equipoAbrev)}<span class="plyg-nm">${esc(p.localNom || p.equipoAbrev || '')}</span></div>
+      <div class="plyg-vs">VS</div>
+      <div class="plyg-side">${_goalLogo(p.logoVisita, p.rivalAbrev)}<span class="plyg-nm">${esc(p.visitaNom || p.rivalAbrev || '')}</span></div>
+    </div>
+    <div class="plyg-prob"><b>${p.prob}%</b><span>${cfg.metricLabel}</span></div>
+    <div class="ply-verdict ${vd.tono}">${esc(vd.texto)}</div>
+  </article>`;
+}
+
 function cardHTML(p, cfg) {
+  if (p.esPartido) return cardPartidoHTML(p, cfg);
 
   const conf = confPorProb(p.prob, cfg);       // confianza coherente con la probabilidad
   const pv = { ...p, confianza: conf };
@@ -600,7 +637,7 @@ function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
   </div>`;
   animar(cont);
   wireBets(cont);
-  const abrir = (idx) => { const j = jugadores[idx - 1]; if (j) abrirTracker(j, cfg._sport); };
+  const abrir = (idx) => { const j = jugadores[idx - 1]; if (!j) return; if (j.esPartido) abrirTrackerGoles(j); else abrirTracker(j, cfg._sport); };
   cont.querySelectorAll('.ply-analyze[data-analyze]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); abrir(+b.dataset.analyze); }));
   cont.querySelectorAll('.ply-c[data-idx]').forEach(el => el.addEventListener('click', () => abrir(+el.dataset.idx)));
 }
