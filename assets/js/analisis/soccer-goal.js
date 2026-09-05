@@ -116,6 +116,88 @@ export function estimarGol({ jugador, oponente, local, lineupConfirmado }) {
   };
 }
 
+/* ============================================================
+   OVER 1.5 GOLES (por PARTIDO) — el mercado de goles #1: ~77% de acierto
+   histórico. Rápido (solo standings, sin rosters) y de ALTA confianza.
+   Proyecta los partidos con mayor probabilidad de tener 2+ goles.
+   ============================================================ */
+
+/* Goles a favor y en contra por partido, por equipo (desde standings). */
+async function golesDeLiga(ruta) {
+  const mapa = new Map();
+  try {
+    const d = await pedir(`https://site.api.espn.com/apis/v2/sports/soccer/${ruta}/standings`);
+    const entries = [];
+    const juntar = (n) => { if (!n) return; if (Array.isArray(n.entries)) entries.push(...n.entries); if (n.standings) juntar(n.standings); if (Array.isArray(n.children)) n.children.forEach(juntar); };
+    juntar(d);
+    entries.forEach(e => {
+      const id = e?.team?.id; if (!id) return;
+      const st = {}; (e.stats || []).forEach(s => { const k = (s.name || s.type || '').toLowerCase(); st[k] = num(s.value != null ? s.value : s.displayValue); });
+      const gf = st.pointsfor ?? st.goalsfor ?? st.for;
+      const ga = st.pointsagainst ?? st.goalsagainst ?? st.against;
+      const pj = st.gamesplayed ?? st.games ?? null;
+      if (pj && pj > 0 && (gf != null || ga != null)) mapa.set(String(id), { gf: gf != null ? gf / pj : null, ga: ga != null ? ga / pj : null, pj });
+    });
+  } catch (_) {}
+  return mapa;
+}
+
+/* P(2+ goles) por Poisson sobre el total esperado de goles del partido. */
+export function estimarOver15({ home, away }) {
+  const LIGA = 1.35;   // media de goles por equipo por partido, aprox liga
+  const gh = (home && home.gf != null) ? home.gf : LIGA;
+  const ga = (away && away.gf != null) ? away.gf : LIGA;
+  const dh = (home && home.ga != null) ? home.ga : LIGA;
+  const da = (away && away.ga != null) ? away.ga : LIGA;
+  // Goles esperados: ataque propio combinado con defensa rival. Local anota algo más.
+  let expHome = ((gh + da) / 2) * 1.10;
+  let expAway = (ga + dh) / 2;
+  const lambda = Math.max(0.6, Math.min(4.8, expHome + expAway));
+  // P(0)=e^-l ; P(1)=l·e^-l ; P(2+)=1-P0-P1
+  const p0 = Math.exp(-lambda), p1 = lambda * Math.exp(-lambda);
+  const prob = Math.round((1 - p0 - p1) * 100);
+  const muestra = Math.min((home && home.pj) || 0, (away && away.pj) || 0);
+  const factores = [], riesgos = [];
+  if (expHome >= 1.6) factores.push('Local anotador');
+  if (expAway >= 1.4) factores.push('Visita que marca fuera');
+  if ((dh >= 1.6) || (da >= 1.6)) factores.push('Defensas permeables');
+  if (lambda < 2.3) riesgos.push('Cruce con pinta cerrada');
+  return { prob, proj: +lambda.toFixed(2), expHome: +expHome.toFixed(2), expAway: +expAway.toFixed(2), muestra, factores: factores.slice(0, 3), riesgos: riesgos.slice(0, 2) };
+}
+
+export async function topGoalsMatchProjection({ fecha, n = 9, ligas } = {}) {
+  const ids = ligas || ['epl', 'laliga', 'seriea', 'bundes', 'ucl', 'ligue1'];
+  const candidatos = [];
+  for (const ligaId of ids) {
+    const ruta = LIGAS[ligaId]; if (!ruta) continue;
+    let data;
+    try { data = await pedir(`${API}/${ruta}/scoreboard?dates=${fecha.replace(/-/g, '')}`); }
+    catch (_) { continue; }
+    const eventos = data?.events || [];
+    if (!eventos.length) continue;
+    const goles = await golesDeLiga(ruta);
+    for (const ev of eventos) {
+      const comp = ev?.competitions?.[0]; if (!comp) continue;
+      const cs = comp.competitors || [];
+      const home = cs.find(c => c.homeAway === 'home'), away = cs.find(c => c.homeAway === 'away');
+      if (!home || !away) continue;
+      const est = estimarOver15({ home: goles.get(String(home.team.id)), away: goles.get(String(away.team.id)) });
+      const conf = est.muestra >= 6 ? 'alta' : est.muestra >= 3 ? 'media' : 'baja';
+      candidatos.push({
+        esPartido: true,
+        nombre: `${home.team.shortDisplayName || home.team.abbreviation} vs ${away.team.shortDisplayName || away.team.abbreviation}`,
+        equipoAbrev: home.team.abbreviation, rivalAbrev: away.team.abbreviation,
+        logoLocal: (home.team.logos && home.team.logos[0] && home.team.logos[0].href) || home.team.logo || null,
+        logoVisita: (away.team.logos && away.team.logos[0] && away.team.logos[0].href) || away.team.logo || null,
+        cuando: ev.date, confianza: conf, ...est,
+      });
+    }
+  }
+  candidatos.sort((a, b) => b.prob - a.prob || b.proj - a.proj);
+  const top = candidatos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
+  return { jugadores: top, meta: { fecha, fuente: 'ESPN', modelo: 'Over 1.5 (Poisson sobre goles esperados)', candidatosEvaluados: candidatos.length } };
+}
+
 /* --------- Carga de defensa (GA/partido) por equipo desde standings --------- */
 async function defensasDeLiga(ruta) {
   const mapa = new Map();
