@@ -95,7 +95,7 @@ const TG=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 3L2 10.5l6 2
 const WA=`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15l-1.4 5 5.1-1.3A10 10 0 1012 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .3-3.4-.7s-3.9-3.5-4-3.7c-.1-.2-1-1.3-1-2.5s.6-1.8.8-2c.2-.3.5-.3.6-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.5c-.2.2-.3.4-.1.7.2.3.9 1.4 1.9 2 .8.5 1.2.6 1.4.5l.6-.7c.2-.3.4-.2.6-.1l1.9.9c.2.1.4.2.4.3v1.4z"/></svg>`;
 const esc=s=>String(s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
 
-// Horarios (hora del Este US/Cuba). rango [inicio, fin) en 24h. día 0=Dom..6=Sáb.
+// Horarios (hora del Este, US). rango [inicio, fin) en 24h. día 0=Dom..6=Sáb.
 const HORARIOS = {
   jesus: { rangos:{1:[[8,23]],2:[[8,23]],3:[[8,23]],4:[[8,23]],5:[[8,23]],6:[[7,12]],0:[]}, texto:'Mon–Fri 8:00 AM – 11:00 PM · Sat 7:00 AM – 12:00 PM · Sun closed' },
   oscar: { rangos:{1:[[18,24]],2:[[18,24]],3:[[18,24]],4:[[18,24]],5:[[18,24]],6:[],0:[]}, texto:'Mon–Fri 6:00 PM – 12:00 AM · Sat & Sun closed' },
