@@ -227,8 +227,10 @@ function inyectarCSS() {
   .ply-c.r4 .ply-rank,.ply-c.r5 .ply-rank,.ply-c.r6 .ply-rank,.ply-c.r7 .ply-rank,.ply-c.r8 .ply-rank,.ply-c.r9 .ply-rank{background:linear-gradient(135deg,#2a3646,#1a2431);color:#9fb0c2;box-shadow:none;border:1px solid var(--line)}
   .ply-idn{min-width:0;flex:1}
   .ply-nm{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:19px;color:var(--tx);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .ply-mt{font-size:12px;color:var(--tx2);font-weight:600;margin-top:2px}
-  .ply-mt b{color:var(--tx)}
+  .ply-mt{font-size:13.5px;color:#d4dce8;font-weight:700;margin-top:4px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .ply-mt b{color:var(--oro)}
+  .ply-mt .vs{color:#8a94a3;font-weight:600;font-size:12px}
+  .ply-mt .ply-when{font-size:10.5px;letter-spacing:.03em;color:#0f1622;font-weight:800;background:linear-gradient(180deg,#e8c46a,#cfa63f);border-radius:6px;padding:3px 8px;text-transform:uppercase}
   .ply-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:15px}
   .ply-tag{font-size:11px;font-weight:600;color:var(--tx2);border:1px solid var(--line);border-radius:7px;padding:4px 8px;background:rgba(255,255,255,.02);white-space:nowrap}
   .ply-tag.h{color:var(--oro);border-color:rgba(232,196,106,.3)}
@@ -350,6 +352,12 @@ const FRASES = {
     parejo: { es: (pr) => `HR poco probable hoy (${pr}%): matchup complicado.`,     en: (pr) => `HR unlikely today (${pr}%): tough matchup.` },
     flojo:  { es: (pr) => `Muestra corta: este ${pr}% es poco fiable.`,            en: (pr) => `Small sample: this ${pr}% isn't reliable.` },
     solido: { es: ' Bate de poder a seguir.', en: ' A power bat to watch.' } },
+  'P(1+ TD)': { hi: 46, mid: 36,
+    alta:   { es: (pr) => `Fuerte candidato a anotar touchdown hoy (${pr}%).`,       en: (pr) => `Strong candidate to score a touchdown today (${pr}%).` },
+    mod:    { es: (pr) => `Opciones reales de ver la end zone (${pr}%), sin garantías.`, en: (pr) => `Real shot at the end zone (${pr}%), no guarantees.` },
+    parejo: { es: (pr) => `TD poco probable hoy (${pr}%): defensa rival dura.`,      en: (pr) => `TD unlikely today (${pr}%): tough rival defense.` },
+    flojo:  { es: (pr) => `Muestra corta: este ${pr}% es poco fiable.`,             en: (pr) => `Small sample: this ${pr}% isn't reliable.` },
+    solido: { es: ' Anotador a seguir.', en: ' A scorer to watch.' } },
 };
 FRASES._def = FRASES['P(≥1 hit)'];
 
@@ -377,20 +385,19 @@ function confPorProb(prob, cfg) {
   return 'baja';
 }
 
-/* Curación (regla obligatoria): solo jugadores BUENOS. Ordena por probabilidad
-   y, si hay suficientes por encima del umbral del deporte, descarta a los flojos.
-   Nunca deja la vista vacía. Máximo 9. */
+/* Curación (regla obligatoria): SOLO jugadores de ALTA confianza (prob >= umbral
+   alto del deporte). Calidad, no cantidad: mejor mostrar 1 o 2 monstruos que
+   rellenar con dudosos. Si nadie califica, la vista queda vacía (con aviso). */
 function curar(jugadores, cfg) {
   const S = FRASES[cfg.metric] || FRASES._def;
   let arr = (jugadores || []).slice();
-  // Si el motor ya trae 'score' (racha real de juegos-con-hit), respeta ese orden.
   if (arr.some(j => j.score != null)) {
     arr.sort((a, b) => (b.score || 0) - (a.score || 0));
+    arr = arr.filter(j => (j.prob || 0) >= S.hi);   // solo alta confianza
     return arr.slice(0, 9).map((j, i) => ({ ...j, rank: i + 1 }));
   }
   arr.sort((a, b) => (b.prob || 0) - (a.prob || 0));
-  const buenos = arr.filter(j => (j.prob || 0) >= S.mid);
-  if (buenos.length >= 5) arr = buenos;
+  arr = arr.filter(j => (j.prob || 0) >= S.hi);      // REGLA: solo alta confianza
   return arr.slice(0, 9).map((j, i) => ({ ...j, rank: i + 1 }));
 }
 
@@ -424,6 +431,19 @@ function veredicto(p, cfg) {
   return { texto: txt, tono };
 }
 
+function horaPartido(cuando) {
+  if (!cuando) return '';
+  try {
+    const d = new Date(cuando); if (isNaN(d)) return '';
+    const hoy = new Date(); const mismo = d.toDateString() === hoy.toDateString();
+    const man = new Date(hoy); man.setDate(hoy.getDate() + 1); const esMan = d.toDateString() === man.toDateString();
+    const hora = d.toLocaleTimeString(ES() ? 'es' : 'en', { hour: 'numeric', minute: '2-digit' });
+    if (mismo) return (ES() ? 'Hoy ' : 'Today ') + hora;
+    if (esMan) return (ES() ? 'Mañana ' : 'Tomorrow ') + hora;
+    const dia = d.toLocaleDateString(ES() ? 'es' : 'en', { weekday: 'short', day: 'numeric' });
+    return dia + ' ' + hora;
+  } catch (_) { return ''; }
+}
 function cardHTML(p, cfg) {
 
   const conf = confPorProb(p.prob, cfg);       // confianza coherente con la probabilidad
@@ -435,7 +455,7 @@ function cardHTML(p, cfg) {
   return `<article class="ply-c r${p.rank}" data-idx="${p.rank}">
     <div class="ply-c-top"><div class="ply-rank">${p.rank}</div>
       <div class="ply-idn"><div class="ply-nm">${esc(p.nombre)}</div>
-        <div class="ply-mt"><b>${esc(p.equipoAbrev || '')}</b> ${L('vs', 'vs')} ${esc(p.rivalAbrev || '')}</div></div></div>
+        <div class="ply-mt"><b>${esc(p.equipoAbrev || '')}</b><span class="vs">${L('vs', 'vs')}</span><b>${esc(p.rivalAbrev || '')}</b>${horaPartido(p.cuando) ? `<span class="ply-when">${esc(horaPartido(p.cuando))}</span>` : ''}</div></div></div>
     <div class="ply-tags">${tags}</div>
     <div class="ply-meter"><div class="ply-pct">${p.prob}%</div><div class="ply-plab">${cfg.metricLabel}</div></div>
     <div class="ply-track"><div class="ply-fill" data-w="${p.prob}"></div></div>
