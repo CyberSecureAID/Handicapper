@@ -308,3 +308,7 @@
   mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
 }
 .hd-pit-photo.sin-fondo { border: 0; box-shadow: none; }
+
+/* Nombre del jugador destacado: 1 sola línea, no se parte en guiones ni empuja los datos */
+.hd-pit-fn, .hd-pit-ln { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.hd-pit-ln { font-size: clamp(19px, 5vw, 27px); }
