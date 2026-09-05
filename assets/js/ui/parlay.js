@@ -772,20 +772,33 @@ export async function pintarParlay(cont, { sport = 'mlb', nivel = 'basic', modo 
 /* ============================================================
    LA ÉLITE DEL DÍA — sección Premium: selección multideporte.
    ============================================================ */
-const SPORT_ICO = { mlb: '\u26be', soccer: '\u26bd', nba: '\ud83c\udfc0', nhl: '\ud83c\udfd2', nfl: '\ud83c\udfc8' };
-const SPORT_NM = { mlb: { en: 'Baseball', es: 'Béisbol' }, soccer: { en: 'Soccer', es: 'Fútbol' }, nba: { en: 'Basketball', es: 'Básquet' }, nhl: { en: 'Hockey', es: 'Hockey' }, nfl: { en: 'Football', es: 'Fútbol Am.' } };
+const ELITE_ICO = { mlb: 'hit.png', soccer: 'goal.png', nba: 'puntos.png', nhl: 'shots.png', nfl: 'touchdowns.png' };
+const ELITE_DEP = { mlb: { en: 'Baseball', es: 'Béisbol' }, soccer: { en: 'Soccer', es: 'Fútbol' }, nba: { en: 'Basketball', es: 'Básquet' }, nhl: { en: 'Hockey', es: 'Hockey' }, nfl: { en: 'Football', es: 'Fútbol Am.' } };
+
+function _elLogo(url, ab) {
+  return url
+    ? `<span class="elp-team"><img src="${esc(url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><b style="display:none">${esc(ab || '')}</b></span>`
+    : `<span class="elp-team"><b style="display:flex">${esc(ab || '')}</b></span>`;
+}
 
 function elitePickCard(p, ES) {
   const L = (en, es) => ES ? es : en;
+  const dep = ELITE_DEP[p._sport] ? (ES ? ELITE_DEP[p._sport].es : ELITE_DEP[p._sport].en) : '';
   const eti = p._etiqueta ? (ES ? p._etiqueta.es : p._etiqueta.en) : '';
   const pico = p._pico ? (ES ? p._pico.es : p._pico.en) : '';
-  const dep = SPORT_NM[p._sport] ? (ES ? SPORT_NM[p._sport].es : SPORT_NM[p._sport].en) : '';
-  const quien = p.esPartido ? `${esc(p.localNom || p.equipoAbrev || '')} vs ${esc(p.visitaNom || p.rivalAbrev || '')}` : esc(p.nombre || '');
-  const sub = p.esPartido ? '' : `<span class="elp-sub">${esc(p.equipoAbrev || '')}${p.rivalAbrev ? ' ' + L('vs', 'vs') + ' ' + esc(p.rivalAbrev) : ''}</span>`;
+  const ico = ELITE_ICO[p._sport] || 'hit.png';
+  // Nombre del pick: jugador (Hits/Points/Shots/TD) o el propio partido (Goles)
+  const quien = p.esPartido ? (ES ? '2+ goles en el partido' : '2+ goals in this match') : esc(p.nombre || '');
+  // Contexto humano según el deporte
+  const ctx = p.esPartido
+    ? L('Both teams tend to score, so goals are the play here.', 'Ambos suelen marcar, así que los goles son la jugada aquí.')
+    : L(`${esc((p.nombre || '').split(' ').slice(-1)[0])} is the clear name to ${pico.replace(/^(to |for |de |of )/, '')} today.`, `${esc((p.nombre || '').split(' ').slice(-1)[0])} es el nombre claro ${pico} hoy.`);
   return `<div class="elp">
-    <div class="elp-top"><span class="elp-dep">${SPORT_ICO[p._sport] || ''} ${esc(dep)}</span><span class="elp-eti">${esc(eti)}</span></div>
-    <div class="elp-nm">${quien}</div>${sub}
-    <div class="elp-pico">${esc(pico)}</div>
+    <div class="elp-head"><img class="elp-ico" src="assets/imagenes/${ico}" alt=""><div class="elp-htx"><b>${esc(dep)}</b><span>${esc(eti)}</span></div></div>
+    <div class="elp-vs">${_elLogo(p.logoLocal, p.equipoAbrev)}<img class="elp-vsimg" src="assets/imagenes/vs.png" alt="vs">${_elLogo(p.logoVisita, p.rivalAbrev)}</div>
+    <div class="elp-match">${esc(p.equipoAbrev || '')} <i>vs</i> ${esc(p.rivalAbrev || '')}</div>
+    <div class="elp-pick">${quien}</div>
+    <div class="elp-ctx">${ctx}</div>
     <div class="elp-prob"><b>${p.prob}%</b><i><u style="width:${p.prob}%"></u></i></div>
   </div>`;
 }
@@ -794,37 +807,40 @@ export async function pintarElite(cont, { nivel = 'basic', abrirPlanes } = {}) {
   inyectarCSS();
   const ES = idiomaActual() === 'es';
   const L = (en, es) => ES ? es : en;
-  const bannerBg = "assets/imagenes/fondos/fondo-elite.jpg";
+  const bg = "assets/imagenes/fondos/fondo-elite.jpg";
+  const corona = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18h16l-1.2-8-4.3 3-2.5-5-2.5 5-4.3-3z"/></svg>';
 
   if (nivel !== 'premium') {
-    cont.innerHTML = `<div class="ply"><div class="ply-lock lock-prem"><div class="ply-hero-bg" style="background-image:url('${bannerBg}')"></div><div class="ply-hero-veil"></div>
+    cont.innerHTML = `<div class="ply"><div class="ply-lock lock-prem"><div class="ply-hero-bg" style="background-image:url('${bg}')"></div><div class="ply-hero-veil"></div>
       <div class="ply-lock-in"><span class="ply-eyebrow"><i></i>Premium</span>
-        <h3>${L('The Day\'s Elite', 'La Élite del Día')}</h3>
+        <h3>${L("The Day's Elite", 'La Élite del Día')}</h3>
         <p>${L('The single best multi-sport selection of the day, only the clearest plays. Premium plan only.', 'La mejor selección multideporte del día, solo lo más evidente. Exclusivo del plan Premium.')}</p>
         <button class="ply-cta" id="ply-cta">${L('See Premium plan', 'Ver plan Premium')}</button></div></div></div>`;
     const b = cont.querySelector('#ply-cta'); if (b && abrirPlanes) b.onclick = abrirPlanes;
     return;
   }
 
-  const banner = `<div class="ply-hero" style="background-image:url('${bannerBg}')">
-    <div class="ply-hero-bg" style="background-image:url('${bannerBg}')"></div><div class="ply-hero-veil"></div>
-    <div class="ply-hero-in"><span class="ply-eyebrow"><i></i>Premium</span>
-      <h1 class="ply-title">${L('The Day\'s', 'La Élite')} <em>${L('Elite', 'del Día')}</em></h1>
-      <p class="ply-lead">${L('The crème de la crème across every sport, in one multi-sport selection. Only the clearest plays make the cut.', 'La crème de la crème de todos los deportes, en una sola selección multideporte. Solo lo más evidente entra.')}</p>
+  const banner = `<div class="ply-hero" style="background-image:url('${bg}');background-position:65% center">
+    <div class="ply-hero-veil"></div>
+    <span class="ply-nivel prem">${corona}PREMIUM</span>
+    <div class="ply-hero-in">
+      <div class="ply-title">${L("The Day's", 'La Élite')} <em>${L('Elite', 'del Día')}</em></div>
+      <div class="ply-lead">${L('One elite pick per sport, combined into a single multi-sport play. Only the clearest calls make the cut.', 'Un pick de élite por deporte, combinados en una sola jugada multideporte. Solo lo más evidente entra.')}</div>
     </div></div>`;
-  cont.innerHTML = `<div class="ply">${banner}<div class="elite-load">${L('Building today\'s Elite…', 'Armando la Élite de hoy…')}</div></div>`;
+  cont.innerHTML = `<div class="ply">${banner}<div class="elite-load">${L("Building today's Elite…", 'Armando la Élite de hoy…')}</div></div>`;
 
   let r; try { r = await eliteDelDia(); } catch (_) { r = { picks: [], probComb: null }; }
   const picks = r.picks || [];
-  const cont2 = cont.querySelector('.elite-load'); if (!cont2) return;
+  const slot = cont.querySelector('.elite-load'); if (!slot) return;
   if (!picks.length) {
-    cont2.outerHTML = `<div class="elite-empty">${L('No standout multi-sport plays today. The Elite only shows the clearest calls, so check back later.', 'Hoy no hay jugadas multideporte evidentes. La Élite solo muestra lo más claro, así que vuelve más tarde.')}</div>`;
+    slot.outerHTML = `<div class="elite-empty">${L('No standout multi-sport plays today. The Elite only shows the clearest calls, so check back later.', 'Hoy no hay jugadas multideporte evidentes. La Élite solo muestra lo más claro, así que vuelve más tarde.')}</div>`;
     return;
   }
-  const foto = (typeof window !== 'undefined' && window.__jesusFoto) ? `<img src="${esc(window.__jesusFoto)}" alt="Jesús">` : 'J';
-  const firma = `<div class="elite-firma"><span class="elite-ava" data-jesus-ava>${foto}</span><div><b>${L('Jesús\'s Elite for today', 'La Élite de Jesús para hoy')}</b><span>${L('One elite pick per sport, combined.', 'Un pick de élite por deporte, combinados.')}</span></div></div>`;
-  const combo = r.probComb != null ? `<div class="elite-combo"><span>${L('Combined probability', 'Probabilidad combinada')}</span><b>${r.probComb}%</b><em>${picks.length} ${L('legs', 'selecciones')}</em></div>` : '';
+  const combo = r.probComb != null
+    ? `<div class="elite-combo"><div class="elite-combo-l"><span>${L('Combined chance', 'Probabilidad combinada')}</span><small>${picks.length} ${L('sports · all must hit', 'deportes · deben cumplirse todos')}</small></div><b>${r.probComb}%</b></div>`
+    : '';
+  const intro = `<p class="elite-intro">${L('These are the single highest-confidence plays from each sport today. Follow one on its own, or track them together as the multi-sport play of the day.', 'Estas son las jugadas de mayor confianza de cada deporte hoy. Sigue una por su cuenta, o síguelas juntas como la jugada multideporte del día.')}</p>`;
   const cards = picks.map(p => elitePickCard(p, ES)).join('');
   const foot = L('Automated multi-sport selection from public data. An opinion and an estimate, not betting advice.', 'Selección multideporte automatizada a partir de datos públicos. Una opinión y una estimación, no asesoría de apuestas.');
-  cont2.outerHTML = `${firma}${combo}<div class="elite-grid">${cards}</div><div class="elite-foot">${foot}</div>`;
+  slot.outerHTML = `${intro}${combo}<div class="elite-grid">${cards}</div><div class="elite-foot">${foot}</div>`;
 }
