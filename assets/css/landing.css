@@ -350,3 +350,12 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 /* Logo horizontal en el footer (reemplaza el texto + icono) */
 .foot-logo-img { height: 44px; width: auto; object-fit: contain; display: block; }
 .foot-logo { margin-bottom: 14px; }
+
+/* ===== Astronautas flotantes (solo escritorio) ===== */
+.analytics { position: relative; }
+.astro { position: absolute; pointer-events: none; z-index: 4; filter: drop-shadow(0 22px 44px rgba(0,0,0,.55)); }
+.astro-1 { width: clamp(200px, 20vw, 300px); right: -18px; top: -70px; animation: astroFloat 6.5s ease-in-out infinite; }
+@keyframes astroFloat { 0%,100% { transform: translateY(0) rotate(-2.5deg); } 50% { transform: translateY(-24px) rotate(2.5deg); } }
+.foot-news { display: flex; align-items: flex-end; justify-content: center; min-height: 0; }
+.astro-news { height: clamp(170px, 16vw, 230px); width: auto; margin-top: -20px; filter: drop-shadow(0 16px 32px rgba(0,0,0,.5)); }
+@media (max-width: 900px) { .astro-1 { display: none; } .astro-news { display: none; } }
