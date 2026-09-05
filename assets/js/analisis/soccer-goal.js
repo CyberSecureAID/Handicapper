@@ -142,27 +142,33 @@ async function golesDeLiga(ruta) {
   return mapa;
 }
 
-/* P(2+ goles) por Poisson sobre el total esperado de goles del partido. */
+/* P(1+) y P(2+) goles por Poisson sobre el total esperado de goles del partido.
+   Fórmula estándar: fuerza de ataque propia x debilidad defensiva rival x media de liga. */
 export function estimarOver15({ home, away }) {
-  const LIGA = 1.35;   // media de goles por equipo por partido, aprox liga
+  const LIGA = 1.35;   // goles por equipo por partido, media aproximada
   const gh = (home && home.gf != null) ? home.gf : LIGA;
-  const ga = (away && away.gf != null) ? away.gf : LIGA;
+  const gaA = (away && away.gf != null) ? away.gf : LIGA;
   const dh = (home && home.ga != null) ? home.ga : LIGA;
   const da = (away && away.ga != null) ? away.ga : LIGA;
-  // Goles esperados: ataque propio combinado con defensa rival. Local anota algo más.
-  let expHome = ((gh + da) / 2) * 1.10;
-  let expAway = (ga + dh) / 2;
-  const lambda = Math.max(0.6, Math.min(4.8, expHome + expAway));
-  // P(0)=e^-l ; P(1)=l·e^-l ; P(2+)=1-P0-P1
+  const clampN = (x, a, b) => Math.max(a, Math.min(b, x));
+  // Goles esperados de cada equipo (acotados para que nunca salgan cifras absurdas)
+  const expHome = clampN(LIGA * (gh / LIGA) * (da / LIGA) * 1.08, 0.35, 2.4);
+  const expAway = clampN(LIGA * (gaA / LIGA) * (dh / LIGA), 0.30, 2.2);
+  const lambda = clampN(expHome + expAway, 1.0, 3.6);   // total realista: 1.0 a 3.6
   const p0 = Math.exp(-lambda), p1 = lambda * Math.exp(-lambda);
-  const prob = Math.round((1 - p0 - p1) * 100);
+  const probOver05 = Math.round((1 - p0) * 100);          // P(1+ gol)  -> alta
+  const probOver15 = Math.round((1 - p0 - p1) * 100);     // P(2+ goles)
   const muestra = Math.min((home && home.pj) || 0, (away && away.pj) || 0);
   const factores = [], riesgos = [];
-  if (expHome >= 1.6) factores.push('Local anotador');
-  if (expAway >= 1.4) factores.push('Visita que marca fuera');
-  if ((dh >= 1.6) || (da >= 1.6)) factores.push('Defensas permeables');
-  if (lambda < 2.3) riesgos.push('Cruce con pinta cerrada');
-  return { prob, proj: +lambda.toFixed(2), expHome: +expHome.toFixed(2), expAway: +expAway.toFixed(2), muestra, factores: factores.slice(0, 3), riesgos: riesgos.slice(0, 2) };
+  if (expHome >= 1.5) factores.push('Local anotador');
+  if (expAway >= 1.3) factores.push('Visita marca fuera');
+  if (dh >= 1.5 || da >= 1.5) factores.push('Defensas permeables');
+  if (lambda < 2.2) riesgos.push('Cruce con pinta cerrada');
+  return {
+    prob: probOver15, probOver05, probOver15,
+    proj: +lambda.toFixed(1), expHome: +expHome.toFixed(1), expAway: +expAway.toFixed(1),
+    muestra, factores: factores.slice(0, 3), riesgos: riesgos.slice(0, 2),
+  };
 }
 
 export async function topGoalsMatchProjection({ fecha, n = 9, ligas } = {}) {
@@ -181,14 +187,20 @@ export async function topGoalsMatchProjection({ fecha, n = 9, ligas } = {}) {
       const cs = comp.competitors || [];
       const home = cs.find(c => c.homeAway === 'home'), away = cs.find(c => c.homeAway === 'away');
       if (!home || !away) continue;
-      const est = estimarOver15({ home: goles.get(String(home.team.id)), away: goles.get(String(away.team.id)) });
+      const gH = goles.get(String(home.team.id)), gA = goles.get(String(away.team.id));
+      const est = estimarOver15({ home: gH, away: gA });
       const conf = est.muestra >= 6 ? 'alta' : est.muestra >= 3 ? 'media' : 'baja';
       candidatos.push({
         esPartido: true,
         nombre: `${home.team.shortDisplayName || home.team.abbreviation} vs ${away.team.shortDisplayName || away.team.abbreviation}`,
+        localNom: home.team.shortDisplayName || home.team.displayName || home.team.abbreviation,
+        visitaNom: away.team.shortDisplayName || away.team.displayName || away.team.abbreviation,
         equipoAbrev: home.team.abbreviation, rivalAbrev: away.team.abbreviation,
+        localId: String(home.team.id), visitaId: String(away.team.id), ligaRuta: ruta,
         logoLocal: (home.team.logos && home.team.logos[0] && home.team.logos[0].href) || home.team.logo || null,
         logoVisita: (away.team.logos && away.team.logos[0] && away.team.logos[0].href) || away.team.logo || null,
+        gfLocal: gH && gH.gf != null ? +gH.gf.toFixed(2) : null, gaLocal: gH && gH.ga != null ? +gH.ga.toFixed(2) : null,
+        gfVisita: gA && gA.gf != null ? +gA.gf.toFixed(2) : null, gaVisita: gA && gA.ga != null ? +gA.ga.toFixed(2) : null,
         cuando: ev.date, confianza: conf, ...est,
       });
     }
