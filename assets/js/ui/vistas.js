@@ -133,11 +133,12 @@ const FB_IMG = `(function(im){var l=(im.getAttribute('data-fb')||'').split('~~')
 const FB_PIT = `(function(im){var l=(im.getAttribute('data-fb')||'').split('~~').filter(Boolean);if(l.length){var n=l[0];im.setAttribute('data-fb',l.slice(1).join('~~'));if(n.indexOf('/imagenes/jugadores/')>-1)im.classList.add('is-figura');im.src=n;}else{im.onerror=null;}})(this)`;
 
 /* ============================================================
-   INFORME DE ANÁLISIS — genera un "scouting report" escrito, ÚNICO y
-   con opinión por cada partido, a partir de los datos reales. 100%
-   dentro del repo (sin IA externa, sin servidor). Determinista por
-   partido, pero combinatorio: 6 secciones x muchas variantes = decenas
-   de miles de combinaciones -> nunca se lee igual.
+   INFORME DE ANÁLISIS ("el cerebro") — v2. Genera un scouting report
+   escrito, único, humano y con voz de ESPECIALISTA por cada partido.
+   100% dentro del repo (sin IA externa). Razonamiento maduro: los datos
+   y los jugadores se tejen como FACTORES de un caso, nunca como "fulano
+   es bueno, gana su equipo". Ángulos propios por deporte. Combinatorio
+   y determinista por partido.
    ============================================================ */
 function informeIA(p, ES) {
   const L = (en, es) => ES ? es : en;
@@ -147,73 +148,119 @@ function informeIA(p, ES) {
   const fav = favLocal ? p.local : p.visita, dog = favLocal ? p.visita : p.local;
   const probFav = Math.max(pl, pv), empate = m.empate;
   const fN = esc(fav.nombre || fav.abrev || '?'), dN = esc(dog.nombre || dog.abrev || '?');
-  const localFav = favLocal;
   const sem = String((fav.abrev || '') + (dog.abrev || '') + (p.id || ''));
   let h = 0; for (let i = 0; i < sem.length; i++) h = (h * 33 + sem.charCodeAt(i)) & 0x7fffffff;
-  const pick = (arr, off) => arr[((h >> off) & 0x3fffffff) % arr.length];
-  const nivel = probFav >= 76 ? 'alto' : probFav >= 63 ? 'medio' : 'bajo';
+  const pick = (arr, off) => (arr && arr.length) ? arr[((h >> off) & 0x3fffffff) % arr.length] : '';
+  const nivel = probFav >= 78 ? 'alto' : probFav >= 64 ? 'medio' : 'bajo';
 
-  const HOOK = {
+  // ---- Deporte ----
+  const dep = String(p.deporte || p.liga || '').toLowerCase();
+  const D = /beis|mlb|base/.test(dep) ? 'beis' : /bask|nba/.test(dep) ? 'bask' : /hock|nhl/.test(dep) ? 'hoc' : /amer|nfl/.test(dep) ? 'amer' : 'fut';
+  const campo = { beis: L('at the plate','al bate'), bask: L('on the floor','en la duela'), hoc: L('on the ice','en el hielo'), amer: L('on the field','en el campo'), fut: L('on the pitch','en la cancha') }[D];
+
+  // ---- Jugadores reales ----
+  const ladoF = favLocal ? 'local' : 'visita', ladoD = favLocal ? 'visita' : 'local';
+  const jugF = (p.jugadores && p.jugadores[ladoF]) || [], jugD = (p.jugadores && p.jugadores[ladoD]) || [];
+  const batF = (p.bateadores && p.bateadores[ladoF]) || [], batD = (p.bateadores && p.bateadores[ladoD]) || [];
+  const lesD = (p.lesionados && p.lesionados[ladoD]) || [];
+  const estF = (D === 'beis' && batF[0]) || jugF[0] || null;
+  const estD = (D === 'beis' && batD[0]) || jugD[0] || null;
+  const lesion = lesD.find(l => /out|doubt|injur|baja|duda|question/i.test(l.estado || '')) || lesD[0] || null;
+  const nom = (j) => esc(j && j.nombre ? j.nombre.split(' ').slice(-2).join(' ') : '');
+  const st = (j) => j && j.dato ? `${esc(j.dato)}${j.etiqueta ? ' ' + esc(j.etiqueta) : ''}` : '';
+
+  const partes = [];
+
+  // ---- 1) APERTURA ----
+  partes.push(pick({
     alto: [
-      L(`Let's not overcomplicate this. ${fN} is a level above ${dN}, and the data barely blinks about it.`, `No compliquemos esto. ${fN} está un escalón por encima de ${dN}, y los datos apenas parpadean al respecto.`),
-      L(`Every so often a game shows up that reads itself. This is one: ${fN} over ${dN}, and it isn't close on paper.`, `Cada tanto aparece un partido que se lee solo. Este es uno: ${fN} sobre ${dN}, y en el papel no está cerca.`),
-      L(`If you're looking for a spot to trust the numbers, ${fN} versus ${dN} is it. The gap is real.`, `Si buscas un sitio donde confiar en los números, ${fN} contra ${dN} es ese. La diferencia es real.`),
-      L(`I'll say it plainly: ${dN} is walking into a bad matchup, and ${fN} is exactly the type to make them pay.`, `Lo digo sin rodeos: ${dN} entra en un cruce complicado, y ${fN} es justo del tipo que lo castiga.`)],
+      L(`Let's not overthink this one. ${fN} sits a level above ${dN}, and the numbers barely blink about it.`, `No le demos tantas vueltas. ${fN} está un escalón por encima de ${dN}, y los números apenas parpadean.`),
+      L(`Every so often a game reads itself. This is one: ${fN} over ${dN}, and it isn't close on paper.`, `Cada tanto aparece un partido que se lee solo. Este es uno: ${fN} sobre ${dN}, y en el papel no está cerca.`),
+      L(`If there's a spot to trust the process today, it's ${fN} against ${dN}. The gap is real and it's earned.`, `Si hay un sitio donde fiarse del proceso hoy, es ${fN} contra ${dN}. La diferencia es real y está ganada.`),
+      L(`On form and on paper this tilts hard toward ${fN}. ${dN} has genuine work to do just to keep it honest.`, `Por forma y por papel esto se inclina fuerte hacia ${fN}. ${dN} tiene tarea de verdad solo para mantenerlo digno.`),
+      L(`I'll be direct: ${dN} walks into a rough matchup, and ${fN} is the kind of side that makes those pay.`, `Voy directo: ${dN} entra en un cruce complicado, y ${fN} es del tipo que lo cobra.`)],
     medio: [
-      L(`This one has more going on than the scoreline will suggest. ${fN} has the edge over ${dN}, but earn-it kind of edge.`, `Este tiene más tela de la que dirá el marcador. ${fN} tiene la ventaja sobre ${dN}, pero del tipo que hay que ganarse.`),
-      L(`${fN} is the side I'd lean on against ${dN}, though anyone calling it a lock is selling something.`, `${fN} es el equipo por el que me inclino frente a ${dN}, aunque quien lo cante como seguro te está vendiendo algo.`),
-      L(`The tape and the table both point at ${fN} here, but ${dN} isn't the kind of opponent you sleep on.`, `La forma y la tabla apuntan a ${fN} aquí, pero ${dN} no es rival para dormirse.`),
-      L(`Solid, not spectacular: ${fN} should have the better of ${dN}, and the reasons hold up.`, `Sólido, no espectacular: ${fN} debería llevarse lo mejor de ${dN}, y las razones se sostienen.`)],
+      L(`There's more here than the scoreline will suggest. ${fN} holds the edge over ${dN}, but it's the earn-it kind.`, `Hay más tela de la que dirá el marcador. ${fN} tiene la ventaja sobre ${dN}, pero del tipo que hay que ganarse.`),
+      L(`${fN} is the side I lean on against ${dN}, though anyone calling it a lock is skipping a few steps.`, `${fN} es el lado por el que me inclino frente a ${dN}, aunque quien lo cante como seguro se está saltando pasos.`),
+      L(`Form and table both nudge toward ${fN}, but ${dN} is not the sort of opponent you take lightly.`, `La forma y la tabla empujan hacia ${fN}, pero ${dN} no es rival para tomárselo a la ligera.`),
+      L(`Sound rather than spectacular: ${fN} should get the better of ${dN}, and the case holds together.`, `Sólido más que espectacular: ${fN} debería llevarse lo mejor de ${dN}, y el caso se sostiene.`)],
     bajo: [
-      L(`Coin-flip territory, and I won't pretend otherwise. ${fN} gets the faintest nod over ${dN}.`, `Terreno de moneda al aire, y no voy a fingir lo contrario. ${fN} se lleva el favoritismo más leve sobre ${dN}.`),
-      L(`Anybody promising you certainty on ${fN} vs ${dN} is guessing. This is a genuine toss-up.`, `Cualquiera que te prometa certezas en ${fN} contra ${dN} está adivinando. Esto es un verdadero volado.`),
-      L(`Don't expect fireworks in one direction. ${fN} edges it, but ${dN} is right there.`, `No esperes fuegos artificiales en una sola dirección. ${fN} lo saca por poco, pero ${dN} está ahí mismo.`),
-      L(`Tight as they come. If you're forced to pick, ${fN}, but hold it loosely.`, `Parejo como pocos. Si te obligan a elegir, ${fN}, pero sin casarte con ello.`)]
-  }[nivel];
+      L(`Coin-flip territory, and I won't dress it up. ${fN} earns the faintest of nods over ${dN}.`, `Terreno de moneda al aire, y no lo voy a maquillar. ${fN} se gana el favoritismo más leve sobre ${dN}.`),
+      L(`Anyone selling certainty on ${fN} vs ${dN} is guessing with confidence. This is a genuine toss-up.`, `Cualquiera que venda certezas en ${fN} contra ${dN} adivina con seguridad. Esto es un volado de verdad.`),
+      L(`No runaway here. ${fN} shades it, but ${dN} is right in the frame with them.`, `Nada de goleadas aquí. ${fN} lo saca por poco, pero ${dN} está en el cuadro con ellos.`)]
+  }[nivel], 0));
 
-  const datos = [];
-  if (fav.record && dog.record) datos.push(L(`the record says plenty on its own, ${esc(fav.record)} against ${esc(dog.record)}`, `el récord ya dice bastante por sí solo, ${esc(fav.record)} contra ${esc(dog.record)}`));
-  if (fav.posicion != null && dog.posicion != null && Number(fav.posicion) < Number(dog.posicion)) datos.push(L(`the table puts real distance between them, ${fav.posicion} to ${dog.posicion}`, `la tabla mete distancia de verdad entre ellos, ${fav.posicion} contra ${dog.posicion}`));
+  // ---- 2) EL CASO (datos tejidos, no sueltos) ----
+  const casos = [];
+  if (fav.record && dog.record) casos.push(L(`the records set the tone, ${esc(fav.record)} against ${esc(dog.record)}`, `los récords marcan el tono, ${esc(fav.record)} contra ${esc(dog.record)}`));
+  if (fav.posicion != null && dog.posicion != null && Number(fav.posicion) < Number(dog.posicion)) casos.push(L(`the table isn't lying, ${fav.posicion} against ${dog.posicion} is real distance`, `la tabla no miente, ${fav.posicion} contra ${dog.posicion} es distancia real`));
   const wF = Number(fav.winPct), wD = Number(dog.winPct);
-  if (isFinite(wF) && isFinite(wD) && wF - wD >= 0.12) datos.push(L(`${fN} has simply been the more efficient team over the stretch`, `${fN} ha sido, sencillamente, el equipo más eficiente en el tramo`));
-  if (!datos.length) datos.push(L(`recent form is what tips this one`, `la forma reciente es lo que inclina este`));
-  const d1 = pick(datos, 3);
-  const casa = localFav ? L(` Doing it at home only adds to it.`, ` Y hacerlo en casa solo suma.`) : '';
-  const casoStr = `${L('The case for', 'El argumento a favor de')} ${fN}: ${d1}.${casa}`;
+  if (isFinite(wF) && isFinite(wD) && wF - wD >= 0.12) casos.push(L(`${fN} has simply converted more often over the stretch`, `${fN} ha convertido más seguido en el tramo`));
+  if (!casos.length) casos.push(L(`recent form is what tips it`, `la forma reciente es lo que lo inclina`));
+  const casa = favLocal ? L(` Home ground only firms it up.`, ` Jugar en casa solo lo afianza.`) : '';
+  partes.push(`${L('Start with the obvious', 'Empieza por lo obvio')}: ${pick(casos, 3)}.${casa} ${pick([
+    L(`None of that guarantees anything, but it's the kind of foundation that usually holds.`, `Nada de eso garantiza nada, pero es de esos cimientos que suelen aguantar.`),
+    L(`Take it as the frame of the game, not the final word.`, `Tómalo como el marco del partido, no como la última palabra.`),
+    L(`It's a picture built from several pieces, which is exactly why I trust it more than a single number.`, `Es una foto armada de varias piezas, y justo por eso me fío más que de un solo número.`)], 8)}`);
 
-  const SHARP = [
-    L(`Here's the part most people miss: numbers like these don't happen by accident, they show up because one side is quietly doing the little things right.`, `Aquí está lo que la mayoría pasa por alto: números así no salen por accidente, aparecen porque un equipo, en silencio, hace bien las cosas pequeñas.`),
-    L(`Everyone loves an upset story until the data reminds them why favorites are favorites.`, `A todos les encanta la historia del batacazo hasta que los datos les recuerdan por qué los favoritos son favoritos.`),
-    L(`Call me boring, but I'll take the team that's been better over the team that "feels" due. Feelings don't cover spreads.`, `Llámame aburrido, pero me quedo con el equipo que ha sido mejor antes que con el que "toca" por sensación. Las sensaciones no ganan partidos.`),
-    L(`The narrative and the numbers are pointing the same way here, and when that happens, I stop overthinking it.`, `La narrativa y los números apuntan al mismo lado aquí, y cuando eso pasa, dejo de pensarlo de más.`),
-    L(`People will find a hundred reasons to talk themselves into ${dN}. The data isn't one of them.`, `La gente encontrará cien razones para convencerse de ${dN}. Los datos no son una de ellas.`),
-    L(`If this were a blind test, no logos, no names, just the numbers, you'd pick the same side and not blink.`, `Si esto fuera una prueba a ciegas, sin escudos, sin nombres, solo los números, elegirías el mismo lado sin pestañear.`)];
+  // ---- 3) ÁNGULO DE ESPECIALISTA (por deporte) + jugador como FACTOR ----
+  const anguloDep = {
+    beis: L(`In baseball it so often turns on the mound and whether the bats show up, so I look there first.`, `En béisbol tantas veces todo gira en la loma y en si aparecen los bates, así que ahí miro primero.`),
+    fut: L(`Soccer is a game of fine margins, one moment, one set piece, and the plan changes, so I weigh who controls those margins.`, `El fútbol es un juego de márgenes finos: un momento, una jugada a balón parado, y el plan cambia, así que peso quién domina esos márgenes.`),
+    bask: L(`Over forty-eight minutes, efficiency and depth tend to win out, so a single hot quarter rarely fools me.`, `En cuarenta y ocho minutos, la eficiencia y el fondo suelen imponerse, así que un cuarto caliente rara vez me engaña.`),
+    hoc: L(`Hockey tightens around goaltending and special teams, and that's where I'd expect this to be decided.`, `El hockey se aprieta en el portero y en las jugadas especiales, y ahí espero que se decida.`),
+    amer: L(`Football usually gets won up front and lost on turnovers, so I care less about the headline names than the margins.`, `El fútbol americano suele ganarse en la línea y perderse en las pérdidas de balón, así que me importan menos los nombres de portada que los márgenes.`)
+  }[D];
+  let bloque3 = anguloDep;
+  if (estF && nom(estF)) {
+    const s = st(estF);
+    bloque3 += ' ' + pick([
+      L(`It helps that ${campo}, ${nom(estF)}${s ? ` (${s})` : ''} gives ${fN} a reliable focal point, one more thing tilting the matchup rather than the whole argument.`, `Ayuda que ${campo}, ${nom(estF)}${s ? ` (${s})` : ''} le da a ${fN} un punto de apoyo fiable; una cosa más que inclina el cruce, no el argumento entero.`),
+      L(`${nom(estF)}${s ? ` (${s})` : ''} is part of why ${fN} feels steadier, though I'd never hang a result on one name.`, `${nom(estF)}${s ? ` (${s})` : ''} es parte de por qué ${fN} se siente más firme, aunque jamás colgaría un resultado de un solo nombre.`),
+      L(`And with ${nom(estF)} in form${s ? ` (${s})` : ''}, ${fN} has a card to play when the game gets tight, useful, not decisive on its own.`, `Y con ${nom(estF)} en forma${s ? ` (${s})` : ''}, ${fN} tiene una carta para el momento apretado; útil, no decisiva por sí sola.`)], 14);
+  }
+  partes.push(bloque3);
 
-  const ANGULO = [
-    L(`That said, ${dN} isn't here to fill a slot, and an early goal or a hot start can flip the tone in a hurry.`, `Dicho esto, ${dN} no viene a rellenar un hueco, y un gol tempranero o un buen arranque pueden cambiar el tono en un instante.`),
-    L(`The trap for anyone on ${fN} is complacency, ${dN} tends to bite teams that show up expecting an easy night.`, `La trampa para quien va con ${fN} es la relajación; ${dN} suele morder a los que llegan esperando una noche fácil.`),
-    L(`Watch ${dN} in the opening stretch: if they hang around past the first push, the pressure quietly shifts.`, `Ojo con ${dN} en el arranque: si aguantan más allá del primer empujón, la presión se mueve de lado sin avisar.`),
-    L(`One caveat, ${dN} has the kind of profile that can steal a result on the right night, so this isn't money in the bank.`, `Un matiz: ${dN} tiene el perfil de robar un resultado en la noche justa, así que esto no es dinero en el banco.`),
-    L(`If there's a way in for ${dN}, it's chaos, force the game ugly and anything can happen.`, `Si hay una vía para ${dN}, es el caos: ensuciar el partido y que pase cualquier cosa.`)];
+  // ---- 4) CONTRA-CASO (por qué el rival puede romperlo) ----
+  const contra = [];
+  if (lesion && nom(lesion)) contra.push(L(`It doesn't help ${dN} that ${nom(lesion)} is ${esc(lesion.estado || 'banged up')}, and depth gets tested in exactly these spots.`, `No le ayuda a ${dN} que ${nom(lesion)} esté ${esc(lesion.estado || 'tocado')}, y el fondo se pone a prueba justo en estos partidos.`));
+  if (estD && nom(estD)) contra.push(L(`If there's a way in for ${dN}, it runs through ${nom(estD)}${st(estD) ? ` (${st(estD)})` : ''}; get him going early and the tone shifts.`, `Si hay una vía para ${dN}, pasa por ${nom(estD)}${st(estD) ? ` (${st(estD)})` : ''}; que arranque temprano y el tono cambia.`));
+  contra.push(L(`The trap for anyone on ${fN} is complacency; ${dN} is the type to punish a side that arrives expecting an easy night.`, `La trampa para quien va con ${fN} es la relajación; ${dN} es del tipo que castiga a quien llega esperando una noche fácil.`));
+  contra.push(L(`${dN}'s cleanest path is chaos, drag it into a scrap early and let the pressure do the talking.`, `La vía más limpia de ${dN} es el caos: llevarlo a la pelea temprano y dejar que la presión hable.`));
+  partes.push(pick(contra, 20));
 
-  const CIERRE = {
-    alto: [L(`Bottom line: the data backs ${fN} clearly. Short of one of those once-in-a-while shocks, this has one owner.`, `En resumen: los datos respaldan a ${fN} con claridad. Salvo uno de esos sustos que pasan de vez en cuando, esto tiene un solo dueño.`),
-           L(`Bottom line: I'm not looking for cute angles here. ${fN}, and I'd be surprised to be wrong.`, `En resumen: no busco ángulos rebuscados aquí. ${fN}, y me sorprendería estar equivocado.`)],
-    medio: [L(`Bottom line: ${fN} is the sound read, not a formality. Respect the matchup and you're fine.`, `En resumen: ${fN} es la lectura sensata, no un trámite. Respeta el cruce y vas bien.`),
-            L(`Bottom line: lean ${fN}, keep your eyes open. Good spot, not a gift.`, `En resumen: inclínate por ${fN}, con los ojos abiertos. Buen sitio, no un regalo.`)],
+  // ---- 5) OPINIÓN (el "wow", coherente) ----
+  partes.push(pick([
+    L(`Here's what a lot of people miss: edges like this don't appear by accident, they're the residue of one side doing the small things right for weeks.`, `Aquí está lo que muchos pasan por alto: ventajas así no aparecen por accidente, son el poso de un equipo haciendo bien las cosas pequeñas durante semanas.`),
+    L(`Everyone loves an upset story until the numbers quietly remind them why favorites are favorites.`, `A todos les encanta la historia del batacazo hasta que los números, en voz baja, recuerdan por qué los favoritos son favoritos.`),
+    L(`Call it boring, but I'll take the side that's been better over the side that "feels" due. Feelings don't move the scoreboard.`, `Llámalo aburrido, pero me quedo con el que ha sido mejor antes que con el que "toca" por sensación. Las sensaciones no mueven el marcador.`),
+    L(`When the story and the data point the same way, I stop looking for a clever angle and respect what's in front of me.`, `Cuando la historia y el dato apuntan al mismo lado, dejo de buscar el ángulo ingenioso y respeto lo que tengo delante.`),
+    L(`Strip the crests and the names, leave the numbers, and most honest observers land on the same side.`, `Quita los escudos y los nombres, deja los números, y la mayoría de observadores honestos caen en el mismo lado.`),
+    L(`This is the unglamorous kind of good, the version that never makes a highlight but keeps showing up in the standings.`, `Este es del bueno sin glamour, el que nunca sale en un resumen pero sigue apareciendo en la tabla.`)], 24));
+
+  // ---- 6) VEREDICTO ----
+  const ver = pick({
+    alto: [L(`Bottom line: the weight of evidence is with ${fN}. Short of one of those rare shocks, this has an owner.`, `En resumen: el peso de la evidencia está con ${fN}. Salvo uno de esos sustos raros, esto tiene dueño.`),
+           L(`Bottom line: I'm not chasing a cute angle here. ${fN}, and I'd be genuinely surprised to be wrong.`, `En resumen: no persigo un ángulo rebuscado aquí. ${fN}, y me sorprendería de verdad estar equivocado.`),
+           L(`Bottom line: everything that matters points one way. ${fN}, with conviction.`, `En resumen: todo lo que importa apunta a un lado. ${fN}, con convicción.`)],
+    medio: [L(`Bottom line: ${fN} is the sound read, not a formality. Respect the matchup and you're in good shape.`, `En resumen: ${fN} es la lectura sensata, no un trámite. Respeta el cruce y estás bien.`),
+            L(`Bottom line: lean ${fN} with your eyes open. A good spot, never a gift.`, `En resumen: inclínate por ${fN} con los ojos abiertos. Buen sitio, nunca un regalo.`),
+            L(`Bottom line: I'd side with ${fN} and expect to sweat it a little. That's fine.`, `En resumen: me pondría del lado de ${fN} esperando sudarlo un poco. Está bien.`)],
     bajo: [L(`Bottom line: too close to call with a straight face. ${fN} by a whisker, and a draw is very much alive.`, `En resumen: demasiado parejo para cantarlo en serio. ${fN} por un suspiro, y el empate está muy vivo.`),
            L(`Bottom line: if you need a side, ${fN}, but this is one to watch, not to bank on.`, `En resumen: si necesitas un lado, ${fN}, pero este es para mirar, no para apostar la casa.`)]
-  }[nivel];
+  }[nivel], 28);
 
   const probLinea = `<div class="hd-ia-prob"><span>${L('Model read', 'Lectura del modelo')}</span><b>${fN} ${probFav}%</b>${empate != null ? `<em>${L('Draw', 'Empate')} ${empate}%</em>` : ''}</div>`;
   return `<div class="hd-ia">
     <div class="hd-ia-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg>${L('Match analysis', 'Análisis del partido')}</div>
-    <p>${pick(HOOK, 0)}</p>
-    <p>${casoStr} ${pick(SHARP, 6)}</p>
-    <p>${pick(ANGULO, 12)}</p>
+    <p>${partes[0]}</p>
+    <p>${partes[1]}</p>
+    <p>${partes[2]}</p>
+    <p>${partes[3]}</p>
+    <p>${partes[4]}</p>
     ${probLinea}
-    <p class="hd-ia-verdict">${pick(CIERRE, 18)}</p>
-    <div class="hd-ia-foot">${L('Automated analysis from public data. An opinion and an estimate, not a promise of results.', 'Análisis automatizado a partir de datos públicos. Una opinión y una estimación, no una promesa de resultados.')}</div>
+    <p class="hd-ia-verdict">${ver}</p>
+    <div class="hd-ia-foot">${L('Automated analysis from public data. A specialist opinion and an estimate, not a promise of results.', 'Análisis automatizado a partir de datos públicos. Una opinión especializada y una estimación, no una promesa de resultados.')}</div>
   </div>`;
 }
 
