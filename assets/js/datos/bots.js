@@ -18,7 +18,7 @@ export const BOTS = [
     configurado: true,
     esBot: true,
     fuente: 'espn',
-    followers: 328, likes: 96, dislikes: 11, desde: '2026-09-02',
+    followers: 328, likes: 96, dislikes: 11, prestigio: 20, desde: '2026-09-02',
     estilo: { color: '#4a90ff' },
   },
   {
@@ -32,7 +32,7 @@ export const BOTS = [
     configurado: true,
     esBot: true,
     fuente: 'espn',
-    followers: 183, likes: 61, dislikes: 7, desde: '2026-09-02',
+    followers: 183, likes: 61, dislikes: 7, prestigio: 19, desde: '2026-09-02',
     estilo: { color: '#e23b3f' },
   },
   {
@@ -46,7 +46,7 @@ export const BOTS = [
     configurado: true,
     esBot: true,
     fuente: 'espn',
-    followers: 254, likes: 78, dislikes: 9, desde: '2026-09-02',
+    followers: 254, likes: 78, dislikes: 9, prestigio: 16, desde: '2026-09-02',
     estilo: { color: '#8a5cf6' },
   },
   {
@@ -60,7 +60,7 @@ export const BOTS = [
     configurado: true,
     esBot: true,
     fuente: 'espn',
-    followers: 209, likes: 64, dislikes: 8, desde: '2026-09-02',
+    followers: 209, likes: 64, dislikes: 8, prestigio: 14, desde: '2026-09-02',
     estilo: { color: '#22b8c0' },
   },
   {
@@ -74,7 +74,7 @@ export const BOTS = [
     configurado: true,
     esBot: true,
     fuente: 'espn',
-    followers: 176, likes: 52, dislikes: 6, desde: '2026-09-02',
+    followers: 176, likes: 52, dislikes: 6, prestigio: 12, desde: '2026-09-02',
     estilo: { color: '#e08a2a' },
   },
 ];
