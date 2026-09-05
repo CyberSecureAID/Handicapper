@@ -65,6 +65,10 @@ service cloud.firestore {
       allow read: if true;              // página pública de contacto: cualquiera puede leer
       allow write: if esAdmin();        // solo el admin edita
     }
+    match /config/analista {
+      allow read: if true;              // foto del analista Jesús: visible para todos
+      allow write: if esAdmin();
+    }
     match /config/{doc} {
       allow read: if esAdmin() || esAnalista();
       allow write: if esAdmin();
