@@ -4,7 +4,7 @@
    Explicación HUMANIZADA y ADAPTATIVA: usa los números reales del partido,
    no un texto genérico. Cada señal caduca cuando empieza el partido.
    ============================================================ */
-import { listarPartidos } from './proveedor-api.js';
+import { listarPartidos, detallePartido } from './proveedor-api.js';
 
 const num = (v) => { const n = Number(v); return isFinite(n) ? n : null; };
 const pct = (w) => Math.round(w * 100);
@@ -124,6 +124,19 @@ async function generar({ guardar, uid, firma, autor, color, deporte, ligas, foto
   let publicadas = 0;
   for (const c of elegidos) {
     const { m, fav, dog, prob } = c;
+    // Jugadores clave reales del partido (para que el análisis hable de personas, no de clichés)
+    let jugFav = [], jugDog = [];
+    try {
+      const det = await detallePartido(m.id);
+      if (det) {
+        const esBeis = /beis|mlb/.test(String(deporte).toLowerCase());
+        const jl = (esBeis && det.bateadores && (det.bateadores.local || det.bateadores.visita)) ? det.bateadores : (det.jugadores || {});
+        const map = (arr) => (arr || []).slice(0, 2).map(j => ({ nombre: j.nombre, dato: j.dato, etiqueta: j.etiqueta }));
+        const loc = map(jl.local), vis = map(jl.visita);
+        jugFav = (fav === m.local) ? loc : vis;
+        jugDog = (fav === m.local) ? vis : loc;
+      }
+    } catch (_) {}
     const señal = {
       matchId: `${uid.replace('bot-', 'bot')}:${m.id}`,
       autorUid: uid, firma, autor, deporte, foto,
@@ -134,6 +147,7 @@ async function generar({ guardar, uid, firma, autor, color, deporte, ligas, foto
       favorito: fav.nombre, prob, mercado: 'ml',
       confianza: prob >= 74 ? 'alta' : 'media',
       analisis: explicacion(fav, dog, prob),
+      jugFav, jugDog,
       estilo: { color },
       cuando: m.cuando || null,
       caducidad: m.cuando || null,                   // desaparece al empezar el partido
