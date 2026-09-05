@@ -39,10 +39,11 @@ export async function ajustarPrestigio(uid, delta, motivo) {
     const S = _obtenerStore(), db = _obtenerDB();
     const ref = S.doc(db, 'analistas', uid);
     const snap = await S.getDoc(ref);
-    const actual = (snap.exists() && Number(snap.data().prestigio)) || 0;
+    // El AUTOMÁTICO va en su propio campo: NUNCA toca el prestigio manual del admin.
+    const actual = (snap.exists() && Number(snap.data().prestigioAuto)) || 0;
     const nuevo = actual + delta;
-    await S.setDoc(ref, { prestigio: nuevo }, { merge: true });
-    try { console.log(`[prestigio] ${uid}: ${actual} ${delta >= 0 ? '+' : ''}${delta} = ${nuevo}  (${motivo || ''})`); } catch (_) {}
+    await S.setDoc(ref, { prestigioAuto: nuevo }, { merge: true });
+    try { console.log(`[prestigio-auto] ${uid}: ${actual} ${delta >= 0 ? '+' : ''}${delta} = ${nuevo}  (${motivo || ''})`); } catch (_) {}
     return true;
   } catch (_) { return false; }
 }
