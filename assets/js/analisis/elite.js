@@ -23,8 +23,11 @@ const SECCIONES = [
   { sport: 'nfl',    hi: 46, etiqueta: { en: 'Touchdown', es: 'Touchdown' }, pico: { en: 'to score a TD', es: 'de anotar un TD' },  run: () => topTouchdownProjection({ fecha: hoyISO(), n: 9 }) },
 ];
 
+let _cacheElite = null;
 export async function eliteDelDia() {
-  const res = await Promise.allSettled(SECCIONES.map(s => s.run()));
+  if (_cacheElite && (Date.now() - _cacheElite.ts) < 5 * 60 * 1000) return _cacheElite.data;
+  const conTimeout = (p, ms) => Promise.race([Promise.resolve(p).catch(() => null), new Promise(r => setTimeout(() => r(null), ms))]);
+  const res = await Promise.allSettled(SECCIONES.map(s => conTimeout(s.run(), 13000)));
   const picks = [];
   res.forEach((r, i) => {
     if (r.status !== 'fulfilled' || !r.value) return;
@@ -37,5 +40,7 @@ export async function eliteDelDia() {
   picks.sort((a, b) => b.prob - a.prob);
   // Probabilidad combinada = producto de las individuales (así funciona una combinada real).
   const probComb = picks.length ? Math.round(picks.reduce((a, p) => a * (p.prob / 100), 1) * 100) : null;
-  return { picks, probComb, fecha: hoyISO(), total: picks.length };
+  const data = { picks, probComb, fecha: hoyISO(), total: picks.length };
+  _cacheElite = { data, ts: Date.now() };
+  return data;
 }
