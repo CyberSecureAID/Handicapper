@@ -127,7 +127,13 @@ export async function listarAnalistas() {
     const out = base;
     q.forEach(d => {
       const b = out.find(x => x.uid === d.id);
-      if (b) Object.assign(b, d.data());          // override sobre el bot (ej. foto asignada por admin)
+      if (b) {
+        const data = d.data();
+        const basePrest = b.prestigio;   // prestigio base del bot (bots.js)
+        Object.assign(b, data);          // override sobre el bot (ej. foto asignada por admin)
+        // No dejar que un prestigio 0/vacío en Firestore (drenaje viejo) borre la base del bot.
+        if ((data.prestigio == null || Number(data.prestigio) === 0) && basePrest) b.prestigio = basePrest;
+      }
       else out.push({ uid: d.id, ...d.data() });
     });
     return out;
