@@ -402,6 +402,60 @@ function curar(jugadores, cfg) {
 }
 
 
+/* ============================================================
+   ANÁLISIS DEL PICK ("por qué ESTE, HOY") — lee como un especialista
+   del deporte, tejiendo jugador + debilidad del rival + el número.
+   Determinista por jugador, combinatorio (nunca el mismo verso).
+   Solo se usa en picks de alta confianza (los únicos que se muestran).
+   ============================================================ */
+function analisisPick(p, cfg) {
+  const es = ES();
+  const L2 = (en, esT) => es ? esT : en;
+  const nom = (p.nombre || '').split(' ').slice(-2).join(' ');
+  const riv = p.rivalAbrev || (es ? 'el rival' : 'the opponent');
+  const pr = p.prob;
+  const M = cfg.metric;
+  // semilla determinista
+  const sem = String((p.nombre || '') + (p.rivalAbrev || '') + M);
+  let h = 0; for (let i = 0; i < sem.length; i++) h = (h * 33 + sem.charCodeAt(i)) & 0x7fffffff;
+  const pick = (arr, off) => arr[((h >> off) & 0x3fffffff) % arr.length];
+
+  // Debilidad del rival, según el deporte (usa el dato real que ya trae el pick)
+  let debil = null;
+  if (M === 'P(1+ TD)' && p.tdPermRival != null && p.tdPermRival >= 2.8) debil = L2(`a defense that's been leaking touchdowns`, `una defensa que viene regalando touchdowns`);
+  else if ((M === 'P(≥1 hit)') && p.pitcherEra != null && +p.pitcherEra >= 4.2) debil = L2(`a starter who's been very hittable`, `un abridor al que le conectan con facilidad`);
+  else if (M === 'P(≥1 goal)' && p.gaRival != null && +p.gaRival >= 1.4) debil = L2(`a back line that concedes chances`, `una zaga que concede ocasiones`);
+  else if (M === 'P(20+ pts)' && p.ptsPermRival != null && +p.ptsPermRival >= 115) debil = L2(`a defense that can't slow scorers`, `una defensa que no frena a los anotadores`);
+  else if (M === 'P(2+ SOG)' && p.saRival != null && +p.saRival >= 31) debil = L2(`a team that gives up shot volume`, `un equipo que permite mucho volumen de tiro`);
+
+  // Verbo del deporte
+  const meta = { 'P(1+ TD)': L2('find the end zone','ver la end zone'), 'P(≥1 hit)': L2('connect','conectar'),
+    'P(≥1 goal)': L2('find the net','ver puerta'), 'P(20+ pts)': L2('go off','explotar'),
+    'P(2+ SOG)': L2('pepper the net','tirar a puerta'), 'P(1+ HR)': L2('go deep','volarla') }[M] || L2('deliver','responder');
+
+  // Apertura: el spot (con o sin debilidad concreta del rival)
+  const spot = debil
+    ? pick([
+        L2(`${nom} against ${riv}, ${debil}, is the kind of spot you circle.`, `${nom} contra ${riv}, ${debil}, es de esos partidos que uno marca.`),
+        L2(`Put ${nom} in front of ${debil} and the matchup does half the work.`, `Pon a ${nom} frente a ${debil} y el cruce hace la mitad del trabajo.`),
+        L2(`This is the matchup to target: ${nom} versus ${riv}, ${debil}.`, `Este es el cruce a buscar: ${nom} contra ${riv}, ${debil}.`)], 3)
+    : pick([
+        L2(`${nom} has been the reliable one here, and the role is exactly what you want.`, `${nom} ha sido el fiable aquí, y el rol es justo el que quieres.`),
+        L2(`${nom} keeps getting the looks that matter, and that's what tips this.`, `${nom} sigue recibiendo las oportunidades que importan, y eso es lo que lo inclina.`),
+        L2(`Volume and role make ${nom} the sensible name against ${riv}.`, `Volumen y rol hacen de ${nom} el nombre sensato frente a ${riv}.`)], 3);
+
+  // Cierre: el número como remate (sin prometer)
+  const cierre = pr >= 70
+    ? pick([
+        L2(`At ${pr}%, this is one of the cleaner looks to ${meta} on the board today.`, `Con ${pr}%, es de las opciones más limpias para ${meta} en toda la jornada.`),
+        L2(`${pr}% to ${meta} is a strong number, and I'd trust it.`, `${pr}% para ${meta} es un número fuerte, y me fío de él.`)], 9)
+    : pick([
+        L2(`${pr}% to ${meta} isn't a lock, but it's real value in a good spot.`, `${pr}% para ${meta} no es seguro, pero es valor real en un buen sitio.`),
+        L2(`At ${pr}%, the edge is there without needing everything to break right.`, `Con ${pr}%, la ventaja está sin necesitar que todo salga perfecto.`)], 9);
+
+  return `${spot} ${cierre}`;
+}
+
 function veredicto(p, cfg) {
   const es = ES();
   const pr = p.prob, conf = p.confianza;
@@ -420,7 +474,7 @@ function veredicto(p, cfg) {
     txt = line(S.flojo) + (rsk ? (es ? ` ${rsk}.` : ` ${rsk}.`) : '') + (es ? ' No te apoyes solo en esto.' : " Don't lean on it alone.");
   } else if (pr >= S.hi) {
     tono = baja ? 'medio' : 'bueno';
-    txt = line(S.alta) + F + (baja ? (es ? ' Aún con reservas.' : ' Still with reservations.') : (es ? S.solido.es : S.solido.en));
+    txt = baja ? (line(S.alta) + F + (es ? ' Aún con reservas.' : ' Still with reservations.')) : analisisPick(p, cfg);
   } else if (pr >= S.mid) {
     tono = 'medio';
     txt = line(S.mod) + F;
