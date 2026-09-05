@@ -255,7 +255,7 @@ export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 6
         const est = estimarHit({ bateador: bat, pitcher: L.pit, slot: i + 1, venue, lineupConfirmado: confLineup });
         cands.push({
           id: bat.id, nombre: bat.nombre, equipo: L.equipo?.name, equipoAbrev: L.equipo?.abbreviation,
-          rival: L.rival?.name, rivalAbrev: L.rival?.abbreviation, venue, cuando: g.gameDate, logoLocal: L.equipo?.logo || null, logoVisita: L.rival?.logo || null,
+          rival: L.rival?.name, rivalAbrev: L.rival?.abbreviation, venue, cuando: g.gameDate, logoLocal: L.equipo?.id ? `https://www.mlbstatic.com/team-logos/${L.equipo.id}.svg` : null, logoVisita: L.rival?.id ? `https://www.mlbstatic.com/team-logos/${L.rival.id}.svg` : null, nomLocal: L.equipo?.teamName || L.equipo?.name, nomVisita: L.rival?.teamName || L.rival?.name,
           pitcher: L.pit.nombre, pitcherMano: L.pit.mano, pitcherEra: L.pit.era,
           slot: i + 1, mano: bat.mano, ...est,
         });

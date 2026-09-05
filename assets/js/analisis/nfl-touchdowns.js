@@ -153,7 +153,7 @@ export async function topTouchdownProjection({ fecha, n = 9, maxPorEquipo = 5 } 
         const est = estimarTD({ jugador: { ...jug, titular: true }, oponente, local: lado.local, lineupConfirmado: false });
         candidatos.push({
           id: jug.id, nombre: jug.nombre, pos: jug.pos,
-          equipoAbrev: lado.equipo.abbreviation, rivalAbrev: lado.rival.abbreviation, cuando: ev.date, logoLocal: (lado.equipo.logos && lado.equipo.logos[0] && lado.equipo.logos[0].href) || lado.equipo.logo || null, logoVisita: (lado.rival.logos && lado.rival.logos[0] && lado.rival.logos[0].href) || lado.rival.logo || null, 
+          equipoAbrev: lado.equipo.abbreviation, rivalAbrev: lado.rival.abbreviation, cuando: ev.date, logoLocal: (lado.equipo.logos && lado.equipo.logos[0] && lado.equipo.logos[0].href) || null, logoVisita: (lado.rival.logos && lado.rival.logos[0] && lado.rival.logos[0].href) || null, nomLocal: lado.equipo.shortDisplayName || lado.equipo.name, nomVisita: lado.rival.shortDisplayName || lado.rival.name, 
           tdRate: jug.tdRate, tdTot: jug.tdTot, local: lado.local,
           tdPermRival: oponente.tdPermPorPartido, ...est,
         });
