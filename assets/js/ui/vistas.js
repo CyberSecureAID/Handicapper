@@ -176,7 +176,7 @@ function informeIA(p, ES) {
   const partes = [];
 
   // ---- 1) APERTURA ----
-  partes.push(pick({
+  const bHook = pick({
     alto: [
       L(`Let's not overthink this one. ${fN} sits a level above ${dN}, and the numbers barely blink about it.`, `No le demos tantas vueltas. ${fN} está un escalón por encima de ${dN}, y los números apenas parpadean.`),
       L(`Every so often a game reads itself. This is one: ${fN} over ${dN}, and it isn't close on paper.`, `Cada tanto aparece un partido que se lee solo. Este es uno: ${fN} sobre ${dN}, y en el papel no está cerca.`),
@@ -192,7 +192,7 @@ function informeIA(p, ES) {
       L(`Coin-flip territory, and I won't dress it up. ${fN} earns the faintest of nods over ${dN}.`, `Terreno de moneda al aire, y no lo voy a maquillar. ${fN} se gana el favoritismo más leve sobre ${dN}.`),
       L(`Anyone selling certainty on ${fN} vs ${dN} is guessing with confidence. This is a genuine toss-up.`, `Cualquiera que venda certezas en ${fN} contra ${dN} adivina con seguridad. Esto es un volado de verdad.`),
       L(`No runaway here. ${fN} shades it, but ${dN} is right in the frame with them.`, `Nada de goleadas aquí. ${fN} lo saca por poco, pero ${dN} está en el cuadro con ellos.`)]
-  }[nivel], 0));
+  }[nivel], 0);
 
   // ---- 2) EL CASO (datos tejidos, no sueltos) ----
   const casos = [];
@@ -206,10 +206,10 @@ function informeIA(p, ES) {
   if (!casos.length) casos.push(pick([L(`the model leans this way on form and matchup, not on a gaudy record`, `el modelo se inclina así por forma y cruce, no por un récord llamativo`), L(`recent form and the matchup are what tip this one`, `la forma reciente y el cruce son lo que inclinan este`), L(`this one is about who's arriving in better shape`, `este va de quién llega en mejor forma`)], 5));
   const casa = favLocal ? L(` Home ground only firms it up.`, ` Jugar en casa solo lo afianza.`) : '';
   const abreCaso = pick([L('Start with the obvious', 'Empieza por lo obvio'), L('Here\u2019s the backbone of it', 'Aquí está la columna vertebral'), L('The foundation is simple', 'El cimiento es simple'), L('What tilts it', 'Lo que lo inclina'), L('Read it straight', 'Léelo directo'), L('The short version', 'La versión corta')], 7);
-  partes.push(`${abreCaso}: ${pick(casos, 3)}.${casa} ${pick([
+  const bCaso = `${abreCaso}: ${pick(casos, 3)}.${casa} ${pick([
     L(`None of that guarantees anything, but it's the kind of foundation that usually holds.`, `Nada de eso garantiza nada, pero es de esos cimientos que suelen aguantar.`),
     L(`Take it as the frame of the game, not the final word.`, `Tómalo como el marco del partido, no como la última palabra.`),
-    L(`It's a picture built from several pieces, which is exactly why I trust it more than a single number.`, `Es una foto armada de varias piezas, y justo por eso me fío más que de un solo número.`)], 8)}`);
+    L(`It's a picture built from several pieces, which is exactly why I trust it more than a single number.`, `Es una foto armada de varias piezas, y justo por eso me fío más que de un solo número.`)], 8)}`;
 
   // ---- 3) ÁNGULO DE ESPECIALISTA (por deporte) + jugador como FACTOR ----
   const anguloDep = {
@@ -227,7 +227,7 @@ function informeIA(p, ES) {
       L(`${nom(estF)}${s ? ` (${s})` : ''} is part of why ${fN} feels steadier, though I'd never hang a result on one name.`, `${nom(estF)}${s ? ` (${s})` : ''} es parte de por qué ${fN} se siente más firme, aunque jamás colgaría un resultado de un solo nombre.`),
       L(`And with ${nom(estF)} in form${s ? ` (${s})` : ''}, ${fN} has a card to play when the game gets tight, useful, not decisive on its own.`, `Y con ${nom(estF)} en forma${s ? ` (${s})` : ''}, ${fN} tiene una carta para el momento apretado; útil, no decisiva por sí sola.`)], 14);
   }
-  partes.push(bloque3);
+  const bSport = bloque3;
 
   // ---- 4) CONTRA-CASO (por qué el rival puede romperlo) ----
   const contra = [];
@@ -235,16 +235,16 @@ function informeIA(p, ES) {
   if (estD && nom(estD)) contra.push(L(`If there's a way in for ${dN}, it runs through ${nom(estD)}${st(estD) ? ` (${st(estD)})` : ''}; get him going early and the tone shifts.`, `Si hay una vía para ${dN}, pasa por ${nom(estD)}${st(estD) ? ` (${st(estD)})` : ''}; que arranque temprano y el tono cambia.`));
   contra.push(L(`The trap for anyone on ${fN} is complacency; ${dN} is the type to punish a side that arrives expecting an easy night.`, `La trampa para quien va con ${fN} es la relajación; ${dN} es del tipo que castiga a quien llega esperando una noche fácil.`));
   contra.push(L(`${dN}'s cleanest path is chaos, drag it into a scrap early and let the pressure do the talking.`, `La vía más limpia de ${dN} es el caos: llevarlo a la pelea temprano y dejar que la presión hable.`));
-  partes.push(pick(contra, 20));
+  const bContra = pick(contra, 20);
 
   // ---- 5) OPINIÓN (el "wow", coherente) ----
-  partes.push(pick([
+  const bSharp = pick([
     L(`Here's what a lot of people miss: edges like this don't appear by accident, they're the residue of one side doing the small things right for weeks.`, `Aquí está lo que muchos pasan por alto: ventajas así no aparecen por accidente, son el poso de un equipo haciendo bien las cosas pequeñas durante semanas.`),
     L(`Everyone loves an upset story until the numbers quietly remind them why favorites are favorites.`, `A todos les encanta la historia del batacazo hasta que los números, en voz baja, recuerdan por qué los favoritos son favoritos.`),
     L(`Call it boring, but I'll take the side that's been better over the side that "feels" due. Feelings don't move the scoreboard.`, `Llámalo aburrido, pero me quedo con el que ha sido mejor antes que con el que "toca" por sensación. Las sensaciones no mueven el marcador.`),
     L(`When the story and the data point the same way, I stop looking for a clever angle and respect what's in front of me.`, `Cuando la historia y el dato apuntan al mismo lado, dejo de buscar el ángulo ingenioso y respeto lo que tengo delante.`),
     L(`Strip the crests and the names, leave the numbers, and most honest observers land on the same side.`, `Quita los escudos y los nombres, deja los números, y la mayoría de observadores honestos caen en el mismo lado.`),
-    L(`This is the unglamorous kind of good, the version that never makes a highlight but keeps showing up in the standings.`, `Este es del bueno sin glamour, el que nunca sale en un resumen pero sigue apareciendo en la tabla.`)], 24));
+    L(`This is the unglamorous kind of good, the version that never makes a highlight but keeps showing up in the standings.`, `Este es del bueno sin glamour, el que nunca sale en un resumen pero sigue apareciendo en la tabla.`)], 24);
 
   // ---- 6) VEREDICTO ----
   const ver = pick({
@@ -259,18 +259,23 @@ function informeIA(p, ES) {
   }[nivel], 28);
 
   const probLinea = `<div class="hd-ia-prob"><span>${L('Model read', 'Lectura del modelo')}</span><b>${fN} ${probFav}%</b>${empate != null ? `<em>${L('Draw', 'Empate')} ${empate}%</em>` : ''}</div>`;
+  // ---- ESTRUCTURA VARIABLE: abre con el hook, cierra con veredicto; el MEDIO
+  //      cambia de bloques, orden y cantidad por partido -> nunca la misma plantilla.
+  const medios = [bCaso, bSport, bContra, bSharp].filter(Boolean);
+  for (let i = medios.length - 1; i > 0; i--) { const k = ((h >> (i * 3 + 4)) & 0xffff) % (i + 1); const tmp = medios[i]; medios[i] = medios[k]; medios[k] = tmp; }
+  const cuantos = 2 + (((h >> 11) & 0xff) % 2);            // 2 o 3 bloques del medio
+  const cuerpo = [bHook, ...medios.slice(0, cuantos)].filter(Boolean);
+  const probPrimero = ((h >> 19) & 1) === 0;               // el % a veces antes del cierre, a veces tras el primer bloque
+  const cuerpoHTML = cuerpo.map((x, i) => `<p>${x}</p>` + (probPrimero && i === 0 ? probLinea : '')).join('');
+
   return `<div class="hd-ia">
     <div class="hd-ia-analyst">
-      <div class="hd-ia-ava">${(typeof window !== 'undefined' && window.__jesusFoto) ? `<img src="${esc(window.__jesusFoto)}" alt="Jesús">` : 'J'}</div>
+      <div class="hd-ia-ava" data-jesus-ava>${(typeof window !== 'undefined' && window.__jesusFoto) ? `<img src="${esc(window.__jesusFoto)}" alt="Jesús">` : 'J'}</div>
       <div class="hd-ia-who"><b>Jesús</b><span>${L('Sports statistics analyst', 'Especialista en análisis de estadísticas deportivas')}</span></div>
       <span class="hd-ia-tag"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg>${L('Analysis', 'Análisis')}</span>
     </div>
-    <p>${partes[0]}</p>
-    <p>${partes[1]}</p>
-    <p>${partes[2]}</p>
-    <p>${partes[3]}</p>
-    <p>${partes[4]}</p>
-    ${probLinea}
+    ${cuerpoHTML}
+    ${probPrimero ? '' : probLinea}
     <p class="hd-ia-verdict">${ver}</p>
     <div class="hd-ia-foot">${L('Automated analysis from public data. A specialist opinion and an estimate, not a promise of results.', 'Análisis automatizado a partir de datos públicos. Una opinión especializada y una estimación, no una promesa de resultados.')}</div>
   </div>`;
