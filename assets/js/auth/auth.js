@@ -61,7 +61,18 @@ export async function iniciarAuth(alCambiar) {
         alCambiar?.(null, { bloqueado: true });
         return;
       }
-      if (perfil) { _usuario.suscripcion = perfil.suscripcion || null; _usuario.rol = perfil.rol || 'usuario'; _usuario.usuario = perfil.usuario || ''; }
+      if (perfil) {
+        _usuario.suscripcion = perfil.suscripcion || null; _usuario.rol = perfil.rol || 'usuario'; _usuario.usuario = perfil.usuario || '';
+        if (perfil.foto) _usuario.foto = perfil.foto;   // foto real del perfil (Firestore)
+        // Analista "Jesús": si el admin (desarrollador) YA tiene foto, se refleja sin re-guardar.
+        if (_usuario.rol === 'admin' && _usuario.foto) {
+          try {
+            const { doc, setDoc } = _fbStore;
+            setDoc(doc(_db, 'config', 'analista'), { foto: _usuario.foto }, { merge: true });
+            if (typeof window !== 'undefined') window.__jesusFoto = _usuario.foto;
+          } catch (_) {}
+        }
+      }
     } else {
       _usuario = null;
     }
