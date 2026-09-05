@@ -396,7 +396,9 @@ export function detalle(p, opciones = {}) {
     } else {
       let lid = (p.jugadores && p.jugadores[lado]) || [];
       if (!lid.length && p.plantilla && p.plantilla[lado] && p.plantilla[lado].length) lid = p.plantilla[lado];
-      const j0 = lid[0];
+      // Preferir un jugador CON foto (headshot). Evita siluetas y fotos rotas en el destacado.
+      const conFoto = lid.find(x => x && (x.foto || x.headshot));
+      const j0 = conFoto || lid[0];
       badgeT = ES ? 'Jugador destacado' : 'Featured player';
       if (!j0) { jug = null; ln = ES ? 'Por confirmar' : 'TBD'; }
       else {
