@@ -787,16 +787,23 @@ function elitePickCard(p, ES) {
   const eti = p._etiqueta ? (ES ? p._etiqueta.es : p._etiqueta.en) : '';
   const pico = p._pico ? (ES ? p._pico.es : p._pico.en) : '';
   const ico = ELITE_ICO[p._sport] || 'hit.png';
-  // Nombre del pick: jugador (Hits/Points/Shots/TD) o el propio partido (Goles)
-  const quien = p.esPartido ? (ES ? '2+ goles en el partido' : '2+ goals in this match') : esc(p.nombre || '');
-  // Contexto humano según el deporte
+  const nomA = esc(p.localNom || p.nomLocal || p.equipoAbrev || '');
+  const nomB = esc(p.visitaNom || p.nomVisita || p.rivalAbrev || '');
+  const quien = p.esPartido ? L('2+ goals in this match', '2+ goles en el partido') : esc(p.nombre || '');
+  const apellido = esc((p.nombre || '').split(' ').slice(-1)[0]);
   const ctx = p.esPartido
-    ? L('Both teams tend to score, so goals are the play here.', 'Ambos suelen marcar, así que los goles son la jugada aquí.')
-    : L(`${esc((p.nombre || '').split(' ').slice(-1)[0])} is the clear name to ${pico.replace(/^(to |for |de |of )/, '')} today.`, `${esc((p.nombre || '').split(' ').slice(-1)[0])} es el nombre claro ${pico} hoy.`);
+    ? L('Both teams tend to score, so goals are the play here.', 'Ambos suelen marcar; los goles son la jugada aquí.')
+    : L(`${apellido} is the clearest name ${pico} today.`, `${apellido} es el nombre más claro ${pico} hoy.`);
+  const logo = (url, ab) => url
+    ? `<span class="elp-logo"><img src="${esc(url)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><b style="display:none">${esc(ab || '')}</b></span>`
+    : `<span class="elp-logo"><b style="display:flex">${esc(ab || '')}</b></span>`;
   return `<div class="elp">
     <div class="elp-head"><img class="elp-ico" src="assets/imagenes/${ico}" alt=""><div class="elp-htx"><b>${esc(dep)}</b><span>${esc(eti)}</span></div></div>
-    <div class="elp-vs">${_elLogo(p.logoLocal, p.equipoAbrev)}<img class="elp-vsimg" src="assets/imagenes/vs.png" alt="vs">${_elLogo(p.logoVisita, p.rivalAbrev)}</div>
-    <div class="elp-match">${esc(p.equipoAbrev || '')} <i>vs</i> ${esc(p.rivalAbrev || '')}</div>
+    <div class="elp-teams">
+      <div class="elp-t">${logo(p.logoLocal, p.equipoAbrev)}<span class="elp-tn">${nomA}</span></div>
+      <img class="elp-vsimg" src="assets/imagenes/vs.png" alt="vs">
+      <div class="elp-t">${logo(p.logoVisita, p.rivalAbrev)}<span class="elp-tn">${nomB}</span></div>
+    </div>
     <div class="elp-pick">${quien}</div>
     <div class="elp-ctx">${ctx}</div>
     <div class="elp-prob"><b>${p.prob}%</b><i><u style="width:${p.prob}%"></u></i></div>
@@ -839,8 +846,7 @@ export async function pintarElite(cont, { nivel = 'basic', abrirPlanes } = {}) {
   const combo = r.probComb != null
     ? `<div class="elite-combo"><div class="elite-combo-l"><span>${L('Combined chance', 'Probabilidad combinada')}</span><small>${picks.length} ${L('sports · all must hit', 'deportes · deben cumplirse todos')}</small></div><b>${r.probComb}%</b></div>`
     : '';
-  const intro = `<p class="elite-intro">${L('These are the single highest-confidence plays from each sport today. Follow one on its own, or track them together as the multi-sport play of the day.', 'Estas son las jugadas de mayor confianza de cada deporte hoy. Sigue una por su cuenta, o síguelas juntas como la jugada multideporte del día.')}</p>`;
   const cards = picks.map(p => elitePickCard(p, ES)).join('');
   const foot = L('Automated multi-sport selection from public data. An opinion and an estimate, not betting advice.', 'Selección multideporte automatizada a partir de datos públicos. Una opinión y una estimación, no asesoría de apuestas.');
-  slot.outerHTML = `${intro}${combo}<div class="elite-grid">${cards}</div><div class="elite-foot">${foot}</div>`;
+  slot.outerHTML = `${combo}<div class="elite-grid">${cards}</div><div class="elite-foot">${foot}</div>`;
 }
