@@ -362,33 +362,68 @@ function analisisSenal(a, ES) {
   const fav = a.favorito || (a.favLocal ? a.local : a.visita) || '';
   const riv = (a.favLocal ? a.visita : a.local) || (ES ? 'el rival' : 'the opponent');
   const pr = a.prob != null ? Math.max(1, Math.min(99, a.prob)) : 65;
-  const alto = pr >= 74;
-  const sem = String(fav + riv + Math.round(pr));
+  const alto = pr >= 74, medio = pr >= 62;
+  const d = String(a.deporte || '').toLowerCase();
+  const D = /beis|mlb/.test(d) ? 'beis' : /basket|nba/.test(d) ? 'basket' : /hock|nhl/.test(d) ? 'hock' : /americ|nfl|rubio/.test(d) ? 'amer' : 'fut';
+  const sem = String(fav + riv + Math.round(pr) + D);
   let h = 0; for (let i = 0; i < sem.length; i++) h = (h * 131 + sem.charCodeAt(i)) & 0x7fffffff;
   const pick = (arr, off) => arr[((h >> off) & 0x3fffffff) % arr.length];
-  const abre = alto ? [
-    L2(`For me there isn't much to debate here: ${fav} shows up a level above ${riv}.`, `Para mí no hay mucho que discutir: ${fav} se planta un escalón por encima de ${riv}.`),
-    L2(`I've got this one circled. ${fav} has what it takes to handle ${riv}, and not by a little.`, `Este lo tengo marcado. ${fav} tiene con qué doblegar a ${riv}, y no por poco.`),
-    L2(`Every so often a game reads itself. This is one, and it belongs to ${fav}.`, `Cada tanto aparece un partido que se lee solo. Este es uno, y es de ${fav}.`),
-    L2(`Straight up: ${riv} is caught in a bad spot and ${fav} is the type to punish it.`, `Sin rodeos: ${riv} entra en un mal momento y ${fav} es del tipo que lo castiga.`),
-    L2(`If I'm trusting one favorite today, it's ${fav}. The gap with ${riv} is real.`, `Si hoy me caso con un favorito, es ${fav}. La diferencia con ${riv} es real.`),
+
+  // 1) HOOK con voz de fan (por nivel)
+  const HOOK = alto ? [
+    L2(`I'm not going to dress this up: ${fav} is on another level and ${riv} is walking into it.`, `No lo voy a maquillar: ${fav} está en otro nivel y ${riv} se lo va a encontrar de frente.`),
+    L2(`Write it down. ${fav} wants this more, and when a side wants it like that, ${riv} suffers.`, `Anótalo. ${fav} lo quiere más, y cuando un equipo lo quiere así, ${riv} sufre.`),
+    L2(`Every so often one reads itself. This is it, and it has ${fav} written all over it.`, `Cada tanto hay uno que se lee solo. Este es ese, y tiene la cara de ${fav}.`),
+    L2(`${fav} steps out to win, not to survive. ${riv} is going to feel every minute of it.`, `${fav} sale a matar, no a sobrevivir. ${riv} va a sentir cada minuto.`),
+    L2(`Trust me on this one: ${fav} has the grit and the level, and ${riv} just doesn't match up.`, `Confía en este: ${fav} tiene la garra y el nivel, y ${riv} sencillamente no le llega.`),
+    L2(`If I'm putting my name on a favorite today, it's ${fav}. Full stop.`, `Si le pongo mi nombre a un favorito hoy, es ${fav}. Punto.`),
+  ] : medio ? [
+    L2(`Tighter than the casuals think, but my gut and the form both say ${fav}.`, `Más cerrado de lo que cree el que no ve fútbol, pero el ojo y la forma dicen ${fav}.`),
+    L2(`${fav} is my side against ${riv}, and I'll sweat it, but I trust it.`, `${fav} es mi lado frente a ${riv}, lo sudaré, pero me fío.`),
+    L2(`Respect to ${riv}, but ${fav} arrives with more, and that usually decides these.`, `Respeto a ${riv}, pero ${fav} llega con más, y eso suele decidir estos.`),
+    L2(`This one's got teeth. Still, give me ${fav} to find the way.`, `Este tiene dientes. Aun así, dame a ${fav} para encontrar la vía.`),
   ] : [
-    L2(`Tighter than it looks, but I lean ${fav} over ${riv}.`, `Más parejo de lo que parece, pero me inclino por ${fav} sobre ${riv}.`),
-    L2(`Not a formality, but ${fav} arrives in better shape than ${riv}.`, `No es un trámite, pero ${fav} llega mejor que ${riv}.`),
-    L2(`${fav} is my side here, though ${riv} deserves respect.`, `${fav} es mi lado aquí, aunque a ${riv} hay que respetarlo.`),
-    L2(`Solid, not flashy: ${fav} should get past ${riv}.`, `Sólido, no vistoso: ${fav} debería con ${riv}.`),
+    L2(`Coin flip, I won't lie to you. If you twist my arm, ${fav}, by a hair.`, `Volado, no te voy a mentir. Si me obligas, ${fav}, por un pelo.`),
+    L2(`Don't expect a clinic. ${fav} shades it, but ${riv} is right there breathing.`, `No esperes una clase magistral. ${fav} lo saca por poco, pero ${riv} respira ahí mismo.`),
   ];
-  const medio = pick([
-    L2(`Everyone loves an upset until the numbers remind them why the favorite is the favorite.`, `A todos les gusta el batacazo hasta que los números recuerdan por qué el favorito es favorito.`),
-    L2(`Call me boring, I'll take the better side over the one that "feels" due.`, `Llámame aburrido, me quedo con el mejor antes que con el que "toca" por sensación.`),
-    L2(`This isn't cooked in a day; it's the residue of doing the small things right for weeks.`, `Esto no se cocina en un día; es el poso de hacer bien las cosas pequeñas por semanas.`),
-    L2(`When the story and the form point the same way, I stop overthinking it.`, `Cuando la historia y la forma apuntan al mismo lado, dejo de pensarlo de más.`),
-    L2(`Strip the badges, leave the form, and most honest eyes land on the same side.`, `Quita los escudos, deja la forma, y la mayoría de ojos honestos caen en el mismo lado.`),
-  ], 7);
-  const cierra = alto
-    ? pick([L2(`For me it's one of the clearest calls on the board today.`, `Para mí es de lo más claro de la jornada.`), L2(`I'd stake my prestige on this one.`, `Me juego el prestigio con este.`), L2(`Short of a rare shock, this has an owner.`, `Salvo un susto raro, esto tiene dueño.`)], 15)
-    : pick([L2(`Lean ${fav}, eyes open. Good spot, not a gift.`, `Inclínate por ${fav}, ojos abiertos. Buen sitio, no un regalo.`), L2(`The scale tips one way for me, without overselling it.`, `La balanza se inclina a un lado para mí, sin exagerar.`)], 15);
-  return `${pick(abre, 0)} ${medio} ${cierra}`;
+
+  // 2) CONVICCIÓN con sabor del deporte
+  const DEP = {
+    beis: [L2(`In baseball it lives on the mound and dies at the plate, and right now ${fav} has the edge in both.`, `En béisbol se vive en la loma y se muere en el plato, y ahora mismo ${fav} pega mejor en las dos.`),
+           L2(`Bats win series, and ${fav}'s lineup has been the one showing up.`, `Los bates ganan series, y la alineación de ${fav} es la que viene apareciendo.`)],
+    basket: [L2(`Over 48 minutes the deeper, sharper team wins, and that's ${fav}.`, `En 48 minutos gana el más hondo y más fino, y ese es ${fav}.`),
+             L2(`When ${fav} gets rolling, there's no timeout that saves ${riv}.`, `Cuando ${fav} se enciende, no hay tiempo muerto que salve a ${riv}.`)],
+    hock: [L2(`Hockey turns on the goalie and the special teams, and ${fav} is stronger there.`, `El hockey se decide en el portero y las jugadas especiales, y ${fav} es más fuerte ahí.`),
+           L2(`Whoever peppers the net wins, and ${fav} shoots more, cleaner.`, `Gana el que más tira a puerta, y ${fav} dispara más y mejor.`)],
+    amer: [L2(`Football is won up front and lost on turnovers, and ${fav} controls both.`, `El americano se gana en la línea y se pierde en las pérdidas, y ${fav} manda en ambas.`),
+           L2(`Forget the headlines, ${fav} wins the trenches and that's the whole game.`, `Olvida los titulares, ${fav} gana la línea y ese es el partido entero.`)],
+    fut: [L2(`Football is decided in the margins, and ${fav} owns the margins in this one.`, `El fútbol se decide en los detalles, y ${fav} manda en los detalles de este.`),
+          L2(`Goals don't lie, and ${fav} has been finding them while ${riv} chases the game.`, `Los goles no mienten, y ${fav} los viene encontrando mientras ${riv} corre detrás.`)]
+  }[D];
+
+  // 3) LÍNEA POLÉMICA / EMOCIONAL
+  const POLE = [
+    L2(`Everyone loves the underdog story until the whistle blows and reality shows up.`, `A todos les encanta la historia del débil hasta que suena el silbato y aparece la realidad.`),
+    L2(`Call me biased, I don't care. I've watched enough of ${fav} to know what this is.`, `Llámame parcial, me da igual. He visto suficiente de ${fav} para saber qué es esto.`),
+    L2(`Fans of ${riv} will argue with me today and thank me tomorrow.`, `Los de ${riv} van a discutir conmigo hoy y a darme la razón mañana.`),
+    L2(`This isn't luck, it's weeks of ${fav} doing the little things while nobody watched.`, `Esto no es suerte, son semanas de ${fav} haciendo lo pequeño mientras nadie miraba.`),
+    L2(`Strip the shirts and the noise, leave the football, and you land on ${fav} every time.`, `Quita las camisetas y el ruido, deja el juego, y caes en ${fav} siempre.`),
+    L2(`I'd rather be right and boring than clever and wrong. ${fav} is the boring right answer.`, `Prefiero tener razón y ser aburrido que ser ingenioso y fallar. ${fav} es la respuesta aburrida y correcta.`),
+  ];
+
+  // 4) VEREDICTO
+  const VER = alto
+    ? [L2(`Bottom line: ${fav}. I'd be genuinely shocked to eat these words.`, `En resumen: ${fav}. Me sorprendería de verdad tener que tragarme estas palabras.`),
+       L2(`For me it's the clearest call on the board. ${fav}, and I sleep fine.`, `Para mí es lo más claro de la jornada. ${fav}, y duermo tranquilo.`),
+       L2(`I'm staking my prestige here. ${fav} has to get it done.`, `Me juego el prestigio aquí. ${fav} tiene que sacarlo.`)]
+    : [L2(`Lean ${fav}, eyes open. A good spot, never a gift.`, `Inclínate por ${fav}, ojos abiertos. Buen sitio, nunca un regalo.`),
+       L2(`Give me ${fav} and a bit of nerve. That's the honest read.`, `Dame a ${fav} y algo de aguante. Esa es la lectura honesta.`)];
+
+  // Estructura VARIABLE: hook + (convicción y/o polémica en orden variable) + veredicto
+  const medioArr = [pick(DEP, 5), pick(POLE, 9)];
+  if (((h >> 13) & 1) === 0) medioArr.reverse();
+  const cuantos = 1 + ((h >> 15) & 1);   // 1 o 2 líneas de medio
+  return `${pick(HOOK, 0)} ${medioArr.slice(0, cuantos).join(' ')} ${pick(VER, 18)}`;
 }
 
   const prob = a.prob != null ? Math.max(1, Math.min(99, a.prob)) : null;
