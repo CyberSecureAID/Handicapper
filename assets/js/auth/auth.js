@@ -64,14 +64,6 @@ export async function iniciarAuth(alCambiar) {
       if (perfil) {
         _usuario.suscripcion = perfil.suscripcion || null; _usuario.rol = perfil.rol || 'usuario'; _usuario.usuario = perfil.usuario || '';
         if (perfil.foto) _usuario.foto = perfil.foto;   // foto real del perfil (Firestore)
-        // Analista "Jesús": si el admin (desarrollador) YA tiene foto, se refleja sin re-guardar.
-        if (_usuario.rol === 'admin' && _usuario.foto) {
-          try {
-            const { doc, setDoc } = _fbStore;
-            setDoc(doc(_db, 'config', 'analista'), { foto: _usuario.foto }, { merge: true });
-            if (typeof window !== 'undefined') window.__jesusFoto = _usuario.foto;
-          } catch (_) {}
-        }
       }
     } else {
       _usuario = null;
@@ -199,6 +191,16 @@ export async function guardarFotoUsuario(foto) {
   return true;
 }
 
+/* Publica la foto del analista Jesús (la llama app.js SOLO cuando confirma que es admin). */
+export async function sincronizarFotoAnalista(foto) {
+  try {
+    if (!await cargar()) return;
+    const { doc, setDoc, serverTimestamp } = _fbStore;
+    await setDoc(doc(_db, 'config', 'analista'), { foto: foto || null, ts: serverTimestamp() }, { merge: true });
+    if (typeof window !== 'undefined') { window.__jesusFoto = foto || null; window.__pintarJesus && window.__pintarJesus(); }
+  } catch (_) {}
+}
+
 /* Carga la foto del analista "Jesús" (pública) para mostrarla en el cerebro a todos. */
 export async function cargarFotoAnalista() {
   try {
@@ -206,7 +208,7 @@ export async function cargarFotoAnalista() {
     const { doc, getDoc } = _fbStore;
     const snap = await getDoc(doc(_db, 'config', 'analista'));
     const foto = snap.exists() ? (snap.data().foto || null) : null;
-    if (typeof window !== 'undefined') window.__jesusFoto = foto;
+    if (typeof window !== 'undefined') { window.__jesusFoto = foto; window.__pintarJesus && window.__pintarJesus(); }
     return foto;
   } catch (_) { return null; }
 }
