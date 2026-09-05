@@ -1,5 +1,5 @@
 /* ============================================================
-   SEÑALES DE BOTS — con datos GRATIS de ESPN (sin proxy, sin key, sin tarjeta).
+   SEÑALES DE BOTS, con datos GRATIS de ESPN (sin proxy, sin key, sin tarjeta).
    Regla de oro: SOLO partidos MUY DISPAREJOS (favorito claro). Nada de 45/55.
    Explicación HUMANIZADA y ADAPTATIVA: usa los números reales del partido,
    no un texto genérico. Cada señal caduca cuando empieza el partido.

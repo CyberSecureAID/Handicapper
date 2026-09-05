@@ -1,5 +1,5 @@
 /* ============================================================
-   PLANES — definición central de los 3 niveles y precios.
+   PLANES, definición central de los 3 niveles y precios.
    Un solo lugar para cambiar precios/funciones sin tocar la UI.
    Redacción auditada: fiel a lo que ofrece la plataforma, sin
    prometer resultados y sin lenguaje de apuestas.
