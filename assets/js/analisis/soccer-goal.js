@@ -197,7 +197,7 @@ export async function topGoalProjection({ fecha, n = 9, maxPorEquipo = 6, ligas 
           const est = estimarGol({ jugador: { ...jug, titular: true }, oponente, local: lado.local, lineupConfirmado: false });
           candidatos.push({
             id: jug.id, nombre: jug.nombre, equipoAbrev: lado.equipo.abbreviation, rivalAbrev: lado.rival.abbreviation,
-            pos: jug.pos, goles: jug.goles, local: lado.local,
+            pos: jug.pos, goles: jug.goles, local: lado.local, cuando: ev.date,
             gaRival: oponente.gaPorPartido, ...est,
           });
           count++;

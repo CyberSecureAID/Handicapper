@@ -153,7 +153,7 @@ export async function topTouchdownProjection({ fecha, n = 9, maxPorEquipo = 5 } 
         const est = estimarTD({ jugador: { ...jug, titular: true }, oponente, local: lado.local, lineupConfirmado: false });
         candidatos.push({
           id: jug.id, nombre: jug.nombre, pos: jug.pos,
-          equipoAbrev: lado.equipo.abbreviation, rivalAbrev: lado.rival.abbreviation,
+          equipoAbrev: lado.equipo.abbreviation, rivalAbrev: lado.rival.abbreviation, cuando: ev.date,
           tdRate: jug.tdRate, tdTot: jug.tdTot, local: lado.local,
           tdPermRival: oponente.tdPermPorPartido, ...est,
         });

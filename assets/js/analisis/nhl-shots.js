@@ -168,7 +168,7 @@ export async function topShotsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}
         const est = estimarTiros({ jugador: { ...jug, titular: true }, oponente, local: lado.local, lineupConfirmado: false });
         candidatos.push({
           id: jug.id, nombre: jug.nombre, equipoAbrev: ab, rivalAbrev: lado.rival.abbrev,
-          pos: jug.pos, spg: jug.spg, local: lado.local, saRival: oponente.saPorPartido, ...est,
+          pos: jug.pos, spg: jug.spg, local: lado.local, cuando: g.startTimeUTC || g.gameDate, saRival: oponente.saPorPartido, ...est,
         });
         count++;
       }
