@@ -265,8 +265,7 @@ function informeIA(p, ES) {
   for (let i = medios.length - 1; i > 0; i--) { const k = ((h >> (i * 3 + 4)) & 0xffff) % (i + 1); const tmp = medios[i]; medios[i] = medios[k]; medios[k] = tmp; }
   const cuantos = 2 + (((h >> 11) & 0xff) % 2);            // 2 o 3 bloques del medio
   const cuerpo = [bHook, ...medios.slice(0, cuantos)].filter(Boolean);
-  const probPrimero = ((h >> 19) & 1) === 0;               // el % a veces antes del cierre, a veces tras el primer bloque
-  const cuerpoHTML = cuerpo.map((x, i) => `<p>${x}</p>` + (probPrimero && i === 0 ? probLinea : '')).join('');
+  const cuerpoHTML = cuerpo.map(x => `<p>${x}</p>`).join('');
 
   return `<div class="hd-ia">
     <div class="hd-ia-analyst">
@@ -275,7 +274,7 @@ function informeIA(p, ES) {
       <span class="hd-ia-tag"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8z"/></svg>${L('Analysis', 'Análisis')}</span>
     </div>
     ${cuerpoHTML}
-    ${probPrimero ? '' : probLinea}
+    ${probLinea}
     <p class="hd-ia-verdict">${ver}</p>
     <div class="hd-ia-foot">${L('Automated analysis from public data. A specialist opinion and an estimate, not a promise of results.', 'Análisis automatizado a partir de datos públicos. Una opinión especializada y una estimación, no una promesa de resultados.')}</div>
   </div>`;
