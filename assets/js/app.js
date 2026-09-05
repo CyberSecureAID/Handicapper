@@ -467,6 +467,7 @@ function initProyeccion() {
   const proBtn = document.getElementById('pro-btn');
   const sigBtn = document.getElementById('signals-btn');
   if (sigBtn) sigBtn.addEventListener('click', (e) => { e.stopPropagation(); abrirDirectorioSenales(); });
+  const pBtn = document.getElementById('premium-btn');
   const pPop = document.getElementById('premium-pop');
   if (pBtn && pPop) {
     pBtn.addEventListener('click', (e) => { e.stopPropagation(); proyModo = 'premium'; _setPiLabel('premium'); const o = pPop.classList.toggle('open'); pBtn.classList.toggle('open', o); });
