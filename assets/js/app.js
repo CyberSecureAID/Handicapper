@@ -12,7 +12,7 @@ import { iniciarAuth, registrarCorreo, entrarCorreo, entrarGoogle, salir, mensaj
 import { initAuthUI, abrirAuth } from './auth/auth-ui.js';
 import { initNavegacion, mostrarPantalla, aplicarI18n } from './ui/navegacion.js';
 import { fijarSuscripcion, tieneAcceso, limpiarVistaPrevia, marcarVistaPrevia, planActual } from './auth/estado-pago.js';
-import { pintarParlay } from './ui/parlay.js';
+import { pintarParlay, pintarElite } from './ui/parlay.js';
 import { pintarSenales, cargarSenales, contarSenales } from './ui/senales.js';
 
 const $ = (id) => document.getElementById(id);
@@ -100,6 +100,10 @@ async function cargarLista() {
   const cont = $('lista');
   if (!cont) return;
   // Sección premium Parlay (Top 9 P(≥1 hit))
+  if (proyActiva === 'elite') {
+    await pintarElite(cont, { nivel: _esAdmin ? 'premium' : planActual(), abrirPlanes: () => mostrarPantalla('pricing') });
+    return;
+  }
   if (proyActiva) {
     await pintarParlay(cont, {
       sport: proyActiva,
@@ -437,6 +441,7 @@ function actualizarBotonNivel() {
 }
 function marcarProyeccion() {
   document.querySelectorAll('.proj-b').forEach(b => b.classList.toggle('on', proyActiva === b.dataset.proj));
+  const eb = document.getElementById('elite-btn'); if (eb) eb.classList.toggle('on', proyActiva === 'elite');
   document.querySelectorAll('.premium-item').forEach(it => it.classList.toggle('on', proyActiva === it.dataset.projgoto));
   const pb = document.getElementById('premium-btn'); if (pb) pb.classList.toggle('activo', !!proyActiva);
 }
@@ -451,8 +456,14 @@ function initProyeccion() {
     marcarProyeccion(); pintarLigas(); pintarPestanas();
     cargarLista();
   }));
-  // Botón Premium (móvil): despliega las proyecciones reusando los handlers de arriba
-  const pBtn = document.getElementById('premium-btn');
+  // Botón "La Élite del Día"
+  const eliteBtn = document.getElementById('elite-btn');
+  if (eliteBtn) eliteBtn.addEventListener('click', () => {
+    proyActiva = 'elite'; ligaActiva = null;
+    try { localStorage.setItem('se-vista', 'proyeccion'); } catch (_) {}
+    marcarProyeccion(); pintarLigas(); pintarPestanas(); cargarLista();
+    try { $('lista').scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_) {}
+  });
   const proBtn = document.getElementById('pro-btn');
   const sigBtn = document.getElementById('signals-btn');
   if (sigBtn) sigBtn.addEventListener('click', (e) => { e.stopPropagation(); abrirDirectorioSenales(); });
@@ -959,6 +970,7 @@ async function _abrirPlanesModal() {
     { t: L('Hits, Goals, Points & Shots', 'Hits, Goals, Points y Shots'), b: false, p: L('Limited', 'Limitado'), pr: L('Full', 'Completo') },
     { t: 'Fútbol Rubio', b: false, p: L('Limited', 'Limitado'), pr: L('Full', 'Completo') },
     { t: L('Analyst signals access', 'Acceso a señales de analistas'), b: false, p: L('Limited', 'Limitado'), pr: '~50%' },
+    { t: L("The Day's Elite (multi-sport)", 'La Élite del Día (multideporte)'), b: false, p: false, pr: true },
     { t: L('Push notifications', 'Notificaciones push'), b: false, p: false, pr: true },
     { t: L('Profile photo', 'Foto de perfil'), b: false, p: false, pr: true },
   ];
