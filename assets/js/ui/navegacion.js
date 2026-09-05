@@ -1,5 +1,5 @@
 /* ============================================================
-   NAVEGACIÓN — router de pantallas (landing / pricing / app),
+   NAVEGACIÓN, router de pantallas (landing / pricing / app),
    render de los planes e internacionalización de la landing.
    ============================================================ */
 import { t, Lg, idiomaActual, fijarIdioma } from './idioma.js';

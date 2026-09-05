@@ -1,5 +1,5 @@
 /* ============================================================
-   ÁREA PREMIUM DE SEÑALES — "Analyst signals" / "Señales del analista"
+   ÁREA PREMIUM DE SEÑALES, "Analyst signals" / "Señales del analista"
    Donde los usuarios Premium ven las señales publicadas por el analista:
    equipo elegido, probabilidad, confianza, mercado y su análisis.
    Con descargo de responsabilidad y la nota de que no se publican
@@ -44,7 +44,7 @@ export async function cargarSenales() {
 }
 export function contarSenales() { return _cache ? _cache.length : 0; }
 
-/* Fase 3 — feed del perfil: señales de los analistas que sigo (siempre claras, ya pagué) */
+/* Fase 3, feed del perfil: señales de los analistas que sigo (siempre claras, ya pagué) */
 export async function feedSeguidosHTML() {
   inyectarCSS();
   const lista = await cargarSenales();
@@ -57,7 +57,7 @@ export async function feedSeguidosHTML() {
   return { total: mias.length, html: mias.map((a, i) => tarjeta(a, ctx, i)).join('') };
 }
 
-/* Fase 3 — datos crudos de las señales de los analistas que sigo (para el panel de perfil). */
+/* Fase 3, datos crudos de las señales de los analistas que sigo (para el panel de perfil). */
 export async function senalesSeguidas() {
   const lista = await cargarSenales();
   let sigo = new Set();
@@ -472,7 +472,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   cont.innerHTML = `<div class="sn">${topbar}<div class="sn-empty"><div class="sn-spin"></div>${L('Loading signals…', 'Cargando señales…')}</div></div>`;
   const lista = await cargarSenales();
 
-  // Fase 3 — a quién sigo + notificaciones de nuevas señales
+  // Fase 3, a quién sigo + notificaciones de nuevas señales
   const me = (usuarioActual() && usuarioActual().uid) || null;
   let sigo = new Set();
   try { sigo = new Set(await misSeguidos()); } catch (_) {}

@@ -1,5 +1,5 @@
 /* ============================================================
-   IDIOMAS (i18n) — Inglés por defecto, Español a elección.
+   IDIOMAS (i18n), Inglés por defecto, Español a elección.
    Uso:  import { t, initIdioma, idiomaActual } from './idioma.js';
          t('cta.suscribir')  -> texto en el idioma activo
    El idioma se guarda en el navegador para la próxima visita.
