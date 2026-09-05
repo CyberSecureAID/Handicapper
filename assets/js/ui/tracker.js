@@ -191,3 +191,48 @@ export async function abrirTracker(jugador, sport, bet) {
     <div class="trk-note"><b>${aciertos}/10</b> ${cfg.logro()}. ${L('Trend', 'Tendencia')}: <b>${tendencia}</b>.${demo ? `<br><span class="trk-demo">${L('Demo trajectory', 'Trayectoria de demostración')}</span>` : ''}</div>`;
   requestAnimationFrame(() => bg.querySelectorAll('.trk-bar').forEach(b => { b.style.height = b.dataset.h + '%'; }));
 }
+
+/* ============================================================
+   POPUP DE GOLES (nivel PARTIDO) — dos probabilidades (1+ y 2+ goles)
+   y la forma goleadora REAL de cada equipo (goles marcados/recibidos
+   por partido). Sin placeholders: usa los datos del modelo.
+   ============================================================ */
+export function abrirTrackerGoles(pt) {
+  inyectarCSS();
+  const ES = (typeof idiomaActual === 'function') ? idiomaActual() === 'es' : ((localStorage.getItem('handicapper-idioma') || 'en') === 'es');
+  const L = (en, es) => ES ? es : en;
+  const bg = document.createElement('div'); bg.className = 'trk-bg';
+  const fmt = (v) => (v == null ? '—' : (+v).toFixed(2));
+  const barra = (label, val, color, sub) => `
+    <div class="tgl-row">
+      <div class="tgl-top"><span>${label}</span><b>${val == null ? '—' : val + '%'}</b></div>
+      <div class="tgl-track"><u style="width:${val || 0}%;background:${color}"></u></div>
+      ${sub ? `<div class="tgl-sub">${sub}</div>` : ''}
+    </div>`;
+  const nota = (pt.probOver15 >= 68)
+    ? L('Both sides score with regularity and the defenses give up chances, which is why the two-goal line looks strong here.',
+        'Ambos anotan con regularidad y las defensas conceden, por eso la línea de dos goles se ve fuerte aquí.')
+    : L('One goal is very likely; the second depends on the game opening up, so treat the 2+ line with a bit more caution.',
+        'Un gol es muy probable; el segundo depende de que el partido se abra, así que toma la línea de 2+ con algo más de cautela.');
+  bg.innerHTML = `<div class="trk" role="dialog" aria-modal="true">
+    <div class="trk-hd"><button class="trk-x" aria-label="Close">×</button>
+      <div class="trk-nm">${esc(pt.localNom || pt.equipoAbrev || '')} <span style="color:var(--oro,#e8c46a)">vs</span> ${esc(pt.visitaNom || pt.rivalAbrev || '')}</div>
+      <div class="trk-sub">${L('Goals analysis', 'Análisis de goles')}</div>
+    </div>
+    <div class="trk-bd">
+      ${barra(L('At least 1 goal', 'Al menos 1 gol'), pt.probOver05, '#3ecf8e', L('Almost always hits in these matchups.', 'Casi siempre se cumple en estos cruces.'))}
+      ${barra(L('2 or more goals', '2 o más goles'), pt.probOver15, '#e8c46a', L('The popular Over 1.5 market.', 'El popular mercado Over 1.5.'))}
+      <div class="tgl-stats">
+        <div><b>${esc(pt.localNom || pt.equipoAbrev || '')}</b><span>${fmt(pt.gfLocal)} ${L('scored', 'marcados')} · ${fmt(pt.gaLocal)} ${L('conceded', 'recibidos')} <em>${L('per game', 'por partido')}</em></span></div>
+        <div><b>${esc(pt.visitaNom || pt.rivalAbrev || '')}</b><span>${fmt(pt.gfVisita)} ${L('scored', 'marcados')} · ${fmt(pt.gaVisita)} ${L('conceded', 'recibidos')} <em>${L('per game', 'por partido')}</em></span></div>
+      </div>
+      <div class="tgl-note">${nota}</div>
+    </div>
+  </div>`;
+  document.body.appendChild(bg);
+  requestAnimationFrame(() => bg.classList.add('on'));
+  const cerrar = () => { bg.classList.remove('on'); setTimeout(() => bg.remove(), 180); };
+  bg.querySelector('.trk-x').onclick = cerrar;
+  bg.addEventListener('click', e => { if (e.target === bg) cerrar(); });
+  document.addEventListener('keydown', function onEsc(e) { if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', onEsc); } });
+}
