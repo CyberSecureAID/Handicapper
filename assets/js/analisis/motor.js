@@ -32,7 +32,7 @@ const PRIOR_N = { _soc: 5, mlb: 8, nba: 5, nfl: 6, nhl: 6, _def: 5 };
 
 /* Pesos del modelo */
 const W = {
-  fuerza: 0.9,    // peso de la diferencia de fuerza (record) en log-odds
+  fuerza: 1.15,   // peso de la diferencia de fuerza (record) en log-odds (subido: números más decididos)
   overall: 0.6,   // mezcla récord total vs situacional
   situ: 0.4,      // récord casa/fuera
   era: 0.34,      // por cada 1.00 de diferencia de ERA (MLB)
@@ -167,7 +167,7 @@ export function analizar(match) {
   const posL = Number(match.local.posicion), posV = Number(match.visita.posicion);
   if (isFinite(posL) && isFinite(posV) && posL > 0 && posV > 0 && posL !== posV) {
     // Menor número = mejor. Diferencia de puestos -> ventaja (con tope).
-    const posEdge = clamp((posV - posL) * 0.06, -0.7, 0.7);
+    const posEdge = clamp((posV - posL) * 0.09, -0.9, 0.9);
     L += posEdge; factoresUsados.push('posicion');
   }
 
@@ -217,7 +217,7 @@ export function analizar(match) {
   // Inclinación mínima: la página debe DECIDIR. Nunca 50-50; si quedó muy
   // pegado al centro, se separa un poco manteniendo la dirección (o la del
   // desparejador si estaba exactamente en 0.5).
-  const MIN_LEAN = 0.045;   // ~4.5 puntos de separación mínima del centro
+  const MIN_LEAN = 0.065;   // ~6.5 puntos de separación mínima del centro (más decidido)
   if (Math.abs(pLocal - 0.5) < MIN_LEAN) {
     const dir = (pLocal === 0.5) ? (desparejador(match) >= 0 ? 1 : -1) : Math.sign(pLocal - 0.5);
     pLocal = 0.5 + dir * MIN_LEAN;
