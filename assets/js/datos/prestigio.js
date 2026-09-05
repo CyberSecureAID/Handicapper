@@ -63,6 +63,12 @@ export async function resolverPredicciones(resultadoFn) {
       let res = null;
       try { res = await resultadoFn(p.ligaId, p.matchId); } catch (_) {}
       if (!res || !res.final) continue;   // aún no es definitivo -> se reintenta después
+      // Blindaje: si no podemos verificar el favorito (falta el id) o el ganador,
+      // NO penalizamos. Marcamos resuelta con delta 0 para no reintentar en bucle.
+      if (!p.favoritoId || !res.ganadorId) {
+        try { await S.updateDoc(d.ref, { estado: 'resuelta', resultado: 'sin-verificar', delta: 0, resuelto: S.serverTimestamp() }); } catch (_) {}
+        continue;
+      }
       const acierto = !res.empate && String(res.ganadorId) === String(p.favoritoId);
       const delta = res.empate ? -1 : (acierto ? 1 : -1);
       try {
