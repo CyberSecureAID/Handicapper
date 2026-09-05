@@ -176,7 +176,28 @@ export async function guardarFotoUsuario(foto) {
   const { doc, updateDoc } = _fbStore;
   await updateDoc(doc(_db, 'usuarios', u.uid), { foto: foto || null });
   if (_usuario) _usuario.foto = foto || null;
+  // Identidad del analista "Jesús": si quien actualiza es admin (el desarrollador),
+  // se refleja su foto en el análisis del cerebro para TODOS los usuarios.
+  try {
+    if (_usuario && _usuario.rol === 'admin') {
+      const { setDoc, serverTimestamp } = _fbStore;
+      await setDoc(doc(_db, 'config', 'analista'), { foto: foto || null, ts: serverTimestamp() }, { merge: true });
+      if (typeof window !== 'undefined') window.__jesusFoto = foto || null;
+    }
+  } catch (_) {}
   return true;
+}
+
+/* Carga la foto del analista "Jesús" (pública) para mostrarla en el cerebro a todos. */
+export async function cargarFotoAnalista() {
+  try {
+    if (!await cargar()) return null;
+    const { doc, getDoc } = _fbStore;
+    const snap = await getDoc(doc(_db, 'config', 'analista'));
+    const foto = snap.exists() ? (snap.data().foto || null) : null;
+    if (typeof window !== 'undefined') window.__jesusFoto = foto;
+    return foto;
+  } catch (_) { return null; }
 }
 
 /* Elimina la cuenta: borra el documento de Firestore y el usuario de Firebase Auth. */
