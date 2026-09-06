@@ -9,14 +9,6 @@
 import { listarAnalisis, listarAnalistas, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos, misApoyos, apoyarAnalista, cancelarApoyo, contarApoyos, reportarSenal, miReporte } from '../mesa/mesa-datos.js';
 import { BOTS, botPorUid, seguidoresBot } from '../datos/bots.js';
 
-/* Prestigio a mostrar: para un BOT, si Firestore trae un valor <=0/ausente (drenaje viejo o resta
-   sobre 0), se usa el prestigio base de bots.js. Un valor >0 (fijado por el admin) manda. */
-function prestOf(an) {
-  const bb = an && botPorUid(an.uid);
-  const p = Number(an && an.prestigio);
-  if (bb && (!isFinite(p) || p <= 0)) return Number(bb.prestigio) || 0;
-  return isFinite(p) ? p : 0;
-}
 import { usuarioActual } from '../auth/auth.js';
 import { planPorId } from '../datos/planes.js';
 import { estiloAttrs } from './estilo-senal.js';
@@ -578,7 +570,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   let yaReporte = false;
   try { yaReporte = !!(await miReporte()); } catch (_) {}
   let fotoPorUid = {}; let analistasLista = []; let analistaPorUid = {};
-  try { analistasLista = await listarAnalistas(); analistasLista.forEach(an => { if (an.foto) fotoPorUid[an.uid] = an.foto; analistaPorUid[an.uid] = an; }); try { console.log('[prestigio-view]', analistasLista.filter(x=>x.esBot).map(x=>x.uid+':'+x.prestigio).join(' ')); } catch(_){} } catch (_) {}
+  try { analistasLista = await listarAnalistas(); analistasLista.forEach(an => { if (an.foto) fotoPorUid[an.uid] = an.foto; analistaPorUid[an.uid] = an; }); } catch (_) {}
   const ctx = { premium: esPremium, nivel: nivelReal, nClaras, me, sigo, votos, apoyos, conteos: {}, yaReporte, fotoPorUid };
 
   // Conteos de like/dislike de todas las señales (para mostrar y para ordenar "Populares")
@@ -612,7 +604,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   const vistos = new Set(); const analistas = [];
   inicio.forEach(a => { if (a.autorUid && !vistos.has(a.autorUid)) { vistos.add(a.autorUid); analistas.push({ uid: a.autorUid, firma: a.firma || a.autor || '', deporte: a.deporte, estilo: a.estilo, foto: fotoPorUid[a.autorUid] || null }); } });
   // Incluir también analistas/bots registrados aunque aún no tengan señales publicadas
-  analistasLista.forEach(an => { if (an.uid && an.activo !== false && an.deporte && !vistos.has(an.uid)) { vistos.add(an.uid); analistas.push({ uid: an.uid, firma: an.firma || an.nombre || '', deporte: an.deporte, estilo: an.estilo, foto: an.foto || null, prestigio: prestOf(an) }); } });
+  analistasLista.forEach(an => { if (an.uid && an.activo !== false && an.deporte && !vistos.has(an.uid)) { vistos.add(an.uid); analistas.push({ uid: an.uid, firma: an.firma || an.nombre || '', deporte: an.deporte, estilo: an.estilo, foto: an.foto || null, prestigio: Number(an.prestigio) || 0 }); } });
   const discover = analistas.length ? bloqueDescubrir(analistas, ctx) : '';
 
   const tabs = '';   // sin pestañas
