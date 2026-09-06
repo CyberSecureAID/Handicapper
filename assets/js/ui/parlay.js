@@ -854,7 +854,13 @@ export async function pintarElite(cont, { nivel = 'basic', abrirPlanes } = {}) {
     </div></div>`;
   cont.innerHTML = `<div class="ply">${banner}<div class="elite-load">${L("Building today's Elite…", 'Armando la Élite de hoy…')}</div></div>`;
 
-  let r; try { r = await eliteDelDia(); } catch (_) { r = { picks: [], probComb: null }; }
+  let r;
+  try {
+    r = await Promise.race([
+      eliteDelDia(),
+      new Promise(res => setTimeout(() => res({ picks: [], probComb: null, _timeout: true }), 16000)),
+    ]);
+  } catch (_) { r = { picks: [], probComb: null }; }
   const picks = r.picks || [];
   const slot = cont.querySelector('.elite-load'); if (!slot) return;
   if (!picks.length) {
