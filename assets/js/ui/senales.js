@@ -7,7 +7,7 @@
    Bilingüe (inglés por defecto). Responsivo.
    ============================================================ */
 import { listarAnalisis, listarAnalistas, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos, misApoyos, apoyarAnalista, cancelarApoyo, contarApoyos, reportarSenal, miReporte } from '../mesa/mesa-datos.js';
-import { BOTS, botPorUid, seguidoresBot, prestigioReal } from '../datos/bots.js';
+import { BOTS, botPorUid, seguidoresBot, prestigioReal, baseDe } from '../datos/bots.js';
 
 import { usuarioActual } from '../auth/auth.js';
 import { planPorId } from '../datos/planes.js';
@@ -570,7 +570,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   let yaReporte = false;
   try { yaReporte = !!(await miReporte()); } catch (_) {}
   let fotoPorUid = {}; let analistasLista = []; let analistaPorUid = {};
-  try { analistasLista = await listarAnalistas(); analistasLista.forEach(an => { if (an.foto) fotoPorUid[an.uid] = an.foto; analistaPorUid[an.uid] = an; }); } catch (_) {}
+  try { analistasLista = await listarAnalistas(); analistasLista.forEach(an => { if (an.foto) fotoPorUid[an.uid] = an.foto; analistaPorUid[an.uid] = an; }); try { console.log('[PRESTIGIO]', analistasLista.filter(x=>botPorUid(x.uid)).map(x=>`${x.uid} base=${baseDe(x.uid)} ajuste=${x.prestigioAjuste} => ${prestigioReal(x)}`).join(' | ')); } catch(_){} } catch (_) {}
   const ctx = { premium: esPremium, nivel: nivelReal, nClaras, me, sigo, votos, apoyos, conteos: {}, yaReporte, fotoPorUid };
 
   // Conteos de like/dislike de todas las señales (para mostrar y para ordenar "Populares")
