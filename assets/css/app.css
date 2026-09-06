@@ -1511,3 +1511,37 @@
 
 /* Botón Upgrade (móvil y web): texto a la derecha, junto a la flecha */
 .pp-tr-txt { margin-left: auto; text-align: right; }
+
+/* Logos en tarjetas verticales: caja estricta, el logo NUNCA se sale sobre el nombre */
+.elp-logo, .plm-logo, .plyg-logo, .ply-mt-side .plm-logo, .elp-team { overflow: hidden; flex: none; }
+.elp-logo img, .plm-logo img, .plyg-logo img, .elp-team img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block; }
+
+/* Perfil: Cancel/Apply abajo a la derecha, con aire (no pegados al fondo) */
+.pp-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 34px; padding-bottom: 8px; }
+.pp-actions-right { display: flex; gap: 12px; margin-left: auto; }
+
+/* ===== Menú contextual propio (clic derecho) — glass ===== */
+.ctx-menu { position: fixed; z-index: 9999; width: 252px; border-radius: 16px; overflow: hidden; opacity: 0; transform: scale(.95) translateY(-4px); transition: opacity .16s ease, transform .16s ease; box-shadow: 0 24px 60px -12px rgba(0,0,0,.72); border: 1px solid rgba(255,255,255,.16); }
+.ctx-menu.on { opacity: 1; transform: scale(1) translateY(0); }
+.ctx-bg { position: absolute; inset: 0; background: url('../imagenes/fondos/fondo-pagina.webp') center/cover; filter: blur(9px) brightness(.5); transform: scale(1.25); }
+.ctx-veil { position: absolute; inset: 0; background: linear-gradient(160deg, rgba(14,20,32,.8), rgba(8,11,18,.92)); }
+.ctx-in { position: relative; padding: 18px; }
+.ctx-center { text-align: center; }
+.ctx-center .ctx-in { padding: 24px 20px; }
+.ctx-ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 12px; color: #e8c46a; background: rgba(232,196,106,.14); border: 1px solid rgba(232,196,106,.3); }
+.ctx-ic svg { width: 24px; height: 24px; }
+.ctx-center .ctx-ic { margin: 0 auto 14px; }
+.ctx-ic.gold { color: #241a06; background: linear-gradient(135deg,#f6e2a6,#d4a53f); border: 0; }
+.ctx-menu h4 { font-family: "Poppins",sans-serif; font-size: 15.5px; color: #fff; margin: 0 0 6px; }
+.ctx-menu p { font-size: 12.5px; color: #b6c0cd; line-height: 1.5; margin: 0 0 15px; }
+.ctx-head { margin-bottom: 12px; }
+.ctx-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #cdd6e2; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 4px 11px; }
+.ctx-badge.prem { color: #e8c46a; background: rgba(232,196,106,.14); border-color: rgba(232,196,106,.35); }
+.ctx-badge svg { width: 12px; height: 12px; }
+.ctx-btn { width: 100%; padding: 11px; border-radius: 11px; border: 0; cursor: pointer; font-family: "Poppins",sans-serif; font-weight: 700; font-size: 13px; color: #241a06; background: linear-gradient(135deg,#f6e2a6,#d4a53f); transition: filter .15s; }
+.ctx-btn:hover { filter: brightness(1.06); }
+.ctx-thanks { font-size: 12.5px; color: #b6c0cd; line-height: 1.5; margin: 0 0 14px; }
+.ctx-stats { display: flex; flex-direction: column; gap: 8px; }
+.ctx-stat { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; border-radius: 10px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09); }
+.ctx-stat span { font-size: 12px; color: #9fb0c2; }
+.ctx-stat b { font-size: 13px; color: #fff; font-weight: 700; }
