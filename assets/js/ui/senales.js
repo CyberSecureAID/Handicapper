@@ -7,7 +7,7 @@
    Bilingüe (inglés por defecto). Responsivo.
    ============================================================ */
 import { listarAnalisis, listarAnalistas, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos, misApoyos, apoyarAnalista, cancelarApoyo, contarApoyos, reportarSenal, miReporte } from '../mesa/mesa-datos.js';
-import { BOTS, botPorUid, seguidoresBot } from '../datos/bots.js';
+import { BOTS, botPorUid, seguidoresBot, prestigioReal } from '../datos/bots.js';
 
 import { usuarioActual } from '../auth/auth.js';
 import { planPorId } from '../datos/planes.js';
@@ -604,7 +604,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   const vistos = new Set(); const analistas = [];
   inicio.forEach(a => { if (a.autorUid && !vistos.has(a.autorUid)) { vistos.add(a.autorUid); analistas.push({ uid: a.autorUid, firma: a.firma || a.autor || '', deporte: a.deporte, estilo: a.estilo, foto: fotoPorUid[a.autorUid] || null }); } });
   // Incluir también analistas/bots registrados aunque aún no tengan señales publicadas
-  analistasLista.forEach(an => { if (an.uid && an.activo !== false && an.deporte && !vistos.has(an.uid)) { vistos.add(an.uid); analistas.push({ uid: an.uid, firma: an.firma || an.nombre || '', deporte: an.deporte, estilo: an.estilo, foto: an.foto || null, prestigio: Number(an.prestigio) || 0 }); } });
+  analistasLista.forEach(an => { if (an.uid && an.activo !== false && an.deporte && !vistos.has(an.uid)) { vistos.add(an.uid); analistas.push({ uid: an.uid, firma: an.firma || an.nombre || '', deporte: an.deporte, estilo: an.estilo, foto: an.foto || null, prestigio: prestigioReal(an) }); } });
   const discover = analistas.length ? bloqueDescubrir(analistas, ctx) : '';
 
   const tabs = '';   // sin pestañas
