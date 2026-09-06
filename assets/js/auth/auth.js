@@ -214,6 +214,19 @@ export async function cargarFotoAnalista() {
 }
 
 /* Elimina la cuenta: borra el documento de Firestore y el usuario de Firebase Auth. */
+/* Reautentica al usuario con su contraseña (para acciones sensibles como borrar la cuenta).
+   Devuelve true si OK; lanza si la contraseña es incorrecta. Para cuentas de Google, omite (true). */
+export async function reautenticar(pass) {
+  await cargar();
+  const u = _auth && _auth.currentUser;
+  if (!u) return false;
+  const esGoogle = (u.providerData || []).some(p => p && p.providerId === 'google.com');
+  if (esGoogle) return true;   // Google no usa contraseña; se omite
+  const cred = _fbAuth.EmailAuthProvider.credential(u.email, pass);
+  await _fbAuth.reauthenticateWithCredential(u, cred);
+  return true;
+}
+
 export async function eliminarCuenta() {
   await cargar();
   const u = _auth && _auth.currentUser;
