@@ -747,7 +747,14 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
     const grupo = cont.querySelectorAll(`[data-follow="${CSS.escape(uid)}"]`);
     grupo.forEach(b => b.disabled = true);
     try {
-      if (seguir) { await seguirAnalista(uid, firma); try { await apoyarAnalista(uid, firma); } catch (_) {} ctx.sigo.add(uid); }
+      if (seguir) {
+        // Puerta de pago: nadie (salvo admin) sigue sin pasar por la ventana de cobro.
+        if (nivel !== 'admin' && typeof window !== 'undefined' && window.__cobroSeguir) {
+          const ok = await window.__cobroSeguir(uid, firma);
+          if (!ok) { grupo.forEach(b => b.disabled = false); return; }
+        }
+        await seguirAnalista(uid, firma); try { await apoyarAnalista(uid, firma); } catch (_) {} ctx.sigo.add(uid);
+      }
       else { await dejarDeSeguir(uid); try { await cancelarApoyo(uid); } catch (_) {} ctx.sigo.delete(uid); }
       syncFollow(uid, seguir);
       await pintarSeguidores(uid);
