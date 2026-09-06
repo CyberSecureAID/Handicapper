@@ -1449,8 +1449,8 @@
 .elp-htx b { display: block; font-family: "Poppins",sans-serif; font-size: 13.5px; color: #fff; line-height: 1.1; }
 .elp-htx span { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #c99bff; }
 .elp-teams { display: flex; align-items: center; gap: 30px; margin-bottom: 14px; }
-.elp-t { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 7px; }
-.elp-logo { width: 52px; height: 52px; display: grid; place-items: center; }
+.elp-t { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.elp-logo { width: 56px; height: 56px; display: grid; place-items: center; }
 .elp-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .elp-logo b { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); display: grid; place-items: center; font-family: "Chakra Petch",sans-serif; font-weight: 800; font-size: 13px; color: #aab4c0; }
 .elp-tn { font-size: 12px; font-weight: 600; color: #cdd6e2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-align: center; }
@@ -1519,8 +1519,8 @@
 .pp-tr-txt { margin-left: auto; text-align: right; }
 
 /* Logos en tarjetas verticales: caja estricta, el logo NUNCA se sale sobre el nombre */
-.elp-logo, .plm-logo, .plyg-logo, .ply-mt-side .plm-logo, .elp-team { overflow: hidden; flex: none; }
-.elp-logo img, .plm-logo img, .plyg-logo img, .elp-team img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block; }
+.elp-logo, .plm-logo, .plyg-logo, .ply-mt-side .plm-logo, .elp-team { flex: none; }
+.elp-logo img, .plm-logo img, .plyg-logo img, .elp-team img, .ply-mt-side .plm-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 /* Perfil: Cancel/Apply abajo a la derecha, con aire (no pegados al fondo) */
 .pp-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 34px; padding-bottom: 8px; }
