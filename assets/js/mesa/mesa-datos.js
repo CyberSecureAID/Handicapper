@@ -267,7 +267,9 @@ export async function ajustarContadorAnalista(uid, campo, delta) {
   const ref = S.doc(db, 'analistas', uid);
   try {
     const snap = await S.getDoc(ref);
-    const actual = (snap.exists() && Number(snap.data()[campo])) || 0;
+    let actual = (snap.exists() && Number(snap.data()[campo])) || 0;
+    // Prestigio de un bot con valor viejo <=0: se parte de su base (bots.js), no de 0.
+    if (campo === 'prestigio' && actual <= 0) { const bb = BOTS.find(b => b.uid === uid); if (bb && Number(bb.prestigio) > 0) actual = Number(bb.prestigio); }
     const nuevo = campo === 'prestigio' ? (actual + delta) : Math.max(0, actual + delta);   // prestigio SÍ puede ser negativo
     await S.setDoc(ref, { [campo]: nuevo }, { merge: true });
     return nuevo;
