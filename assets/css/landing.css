@@ -98,7 +98,7 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
   box-shadow: 0 4px 14px rgba(120,20,30,.32), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -2px 6px rgba(0,0,0,.35); text-shadow: 0 1px 2px rgba(0,0,0,.5); }
 .an-btn svg { width: 17px; height: 17px; }
 .an-btn:hover { background: linear-gradient(180deg, #b02c38, #6e1720); border-color: var(--oro); box-shadow: 0 6px 18px rgba(150,30,40,.42), inset 0 1px 0 rgba(255,255,255,.18); }
-.an-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.an-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
 .an-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; text-align: left; overflow: hidden;
   background: linear-gradient(158deg, rgba(22,29,43,.72), rgba(11,15,23,.9)); border: 1px solid rgba(255,255,255,.08);
   border-radius: 18px; padding: 24px 22px; box-shadow: 0 12px 32px -18px rgba(0,0,0,.7); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
@@ -113,7 +113,7 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .an-card h3 { font-family: "Poppins", sans-serif; font-weight: 700; font-size: 16px; color: #fff; margin: 0 0 8px; }
 .an-cline { display: none; }
 .an-card p { font-family: "Inter", sans-serif; font-size: 13px; line-height: 1.55; color: var(--tinta-2); margin: 0; }
-@media (max-width: 900px) { .an-panel { grid-template-columns: 1fr; gap: 30px; padding: 32px 22px; } .an-cards { grid-template-columns: 1fr 1fr; gap: 14px; } }
+@media (max-width: 900px) { .an-panel { grid-template-columns: 1fr; gap: 30px; padding: 32px 22px; } .an-cards { grid-template-columns: 1fr; gap: 16px; } }
 
 /* ===================== COMPARE PLAYERS ===================== */
 .compare { max-width: 1080px; margin: 0 auto; padding: 60px 28px; font-family: "Poppins", var(--sans); }
@@ -362,3 +362,20 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
   .hero-eyebrow-txt { display: none; }
   .hero-eyebrow-logo { display: block; height: 46px; width: auto; margin-bottom: 20px; }
 }
+
+
+/* ===== Advanced Analytics: capturas con bisel 3D ===== */
+.an-shot { position: relative; margin: 0; border-radius: 13px; overflow: hidden; cursor: pointer; background: #0c121c;
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), inset 0 -1px 0 rgba(0,0,0,.5), 0 16px 38px -18px rgba(0,0,0,.75);
+  transition: transform .35s cubic-bezier(.2,.7,.3,1), box-shadow .35s; }
+.an-shot img { display: block; width: 100%; height: auto; }
+.an-shot figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 14px 11px;
+  font-family: "Poppins", sans-serif; font-weight: 600; font-size: 13px; color: #fff; letter-spacing: .01em;
+  background: linear-gradient(0deg, rgba(6,9,15,.9), rgba(6,9,15,.4) 55%, transparent); pointer-events: none; }
+.an-shot:hover { transform: scale(1.045); z-index: 3;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 26px 56px -18px rgba(0,0,0,.85), 0 0 0 1px rgba(232,196,106,.34); }
+.an-shot.zoom { transform: scale(1.14); z-index: 6;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 34px 74px -20px rgba(0,0,0,.92), 0 0 0 1px rgba(232,196,106,.5); }
+.an-shot:focus-visible { outline: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 0 0 2px rgba(232,196,106,.6); }
+@media (max-width: 900px) { .an-shot:hover { transform: none; } .an-shot figcaption { font-size: 12px; padding: 22px 12px 10px; } }
