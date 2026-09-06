@@ -898,7 +898,8 @@ function _confirmarEliminarCuenta() {
   ov.innerHTML = `<div class="pmf-modal">
     <div class="pmf-ic" style="color:#ff6b72;background:rgba(240,82,90,.14);border-color:rgba(240,82,90,.35)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></div>
     <h3>${L('Are you sure?', '¿Estás seguro?')}</h3>
-    <p>${L('Do you want to delete your account? This action is irreversible.', '¿Deseas eliminar tu cuenta? Esta opción es irreversible.')}</p>
+    <p>${L('Do you want to delete your account? This action is irreversible. Enter your password to confirm.', '¿Deseas eliminar tu cuenta? Esta acción es irreversible. Escribe tu contraseña para confirmar.')}</p>
+    <input type="password" id="dc-pass" class="pmf-input" placeholder="${L('Your password', 'Tu contraseña')}" autocomplete="current-password">
     <div class="pmf-btns"><button class="pmf-cancel">${L('Cancel', 'Cancelar')}</button><button class="pmf-go" id="dc-yes" style="background:linear-gradient(135deg,#f0525a,#c0333a);color:#fff">${L('Yes, delete my account', 'Sí, eliminar mi cuenta')}</button></div>
   </div>`;
   document.body.appendChild(ov);
@@ -906,16 +907,20 @@ function _confirmarEliminarCuenta() {
   ov.querySelector('.pmf-cancel').onclick = q;
   ov.onclick = (e) => { if (e.target === ov) q(); };
   ov.querySelector('#dc-yes').onclick = async () => {
+    const pass = (ov.querySelector('#dc-pass') || {}).value || '';
+    if (!pass) { avisoToast(L('Enter your password to confirm.', 'Escribe tu contraseña para confirmar.')); return; }
     const btn = ov.querySelector('#dc-yes'); btn.disabled = true; btn.textContent = L('Deleting…', 'Eliminando…');
     try {
-      const { eliminarCuenta } = await import('./auth/auth.js');
-      await eliminarCuenta();
+      const auth = await import('./auth/auth.js');
+      if (auth.reautenticar) { const ok = await auth.reautenticar(pass); if (!ok) { throw { code: 'auth/wrong-password' }; } }
+      await auth.eliminarCuenta();
       try { localStorage.clear(); } catch (_) {}
       q(); const pp = document.getElementById('pp-ov'); if (pp) pp.remove(); document.body.style.overflow = '';
       mostrarPantalla('landing'); avisoToast(L('Account deleted', 'Cuenta eliminada'));
     } catch (e) {
-      btn.disabled = false; btn.textContent = L('Delete', 'Eliminar');
-      if (e && e.code === 'auth/requires-recent-login') avisoToast(L('Please log in again, then delete your account.', 'Vuelve a iniciar sesión y luego elimina la cuenta.'));
+      btn.disabled = false; btn.textContent = L('Yes, delete my account', 'Sí, eliminar mi cuenta');
+      if (e && (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')) avisoToast(L('Incorrect password.', 'Contraseña incorrecta.'));
+      else if (e && e.code === 'auth/requires-recent-login') avisoToast(L('Please log in again, then delete your account.', 'Vuelve a iniciar sesión y luego elimina la cuenta.'));
       else avisoToast(L('Error deleting account.', 'Error al eliminar la cuenta.'));
     }
   };
@@ -1196,7 +1201,6 @@ function abrirPanelPerfil() {
           <div class="pp-field"><label>${I.inbox}${L('Email', 'Correo electrónico')}</label><input id="pp-f-email" type="email" value="${esc(email)}" readonly><small>${L('Your email cannot be changed, for account security.', 'El correo no se puede cambiar, por seguridad de la cuenta.')}</small></div>
           <div class="pp-field"><label>${I.shield}${L('New password', 'Nueva contraseña')}</label><div class="pp-pass"><input id="pp-f-pass" type="password" placeholder="••••••••" autocomplete="new-password"><button class="pp-eye">${I.eye}</button></div><small>${L('Leave blank to keep your current password.', 'Deja en blanco si no deseas cambiar la contraseña.')}</small></div>
           <div class="pp-actions">
-            <button class="pp-danger" data-pp="del-cuenta">${L('Delete account', 'Eliminar cuenta')}</button>
             <div class="pp-actions-right"><button class="pp-cancel" id="pp-cancel">${L('Cancel', 'Cancelar')}</button><button class="pp-apply">${L('Apply changes', 'Aplicar cambios')} ${I.arrow}</button></div>
           </div>
         </main>
@@ -1212,6 +1216,10 @@ function abrirPanelPerfil() {
             <div id="pp-buzon-list">${esPrem ? `<div class="pp-empty-sm">${L('Loading…', 'Cargando…')}</div>` : `<div class="pp-lock">${I.inbox}<p>${L('Signal inbox is a Premium feature.', 'El buzón de señales es una función Premium.')}</p><button class="pp-up" data-pp="planes">${L('See Premium', 'Ver Premium')}</button></div>`}</div>
           </div>
         </aside>
+      </div>
+      <div class="pp-danger-zone">
+        <div class="pp-dz-txt"><b>${L('Danger zone', 'Zona de riesgo')}</b><span>${L('Deleting your account is permanent and cannot be undone.', 'Eliminar tu cuenta es permanente y no se puede deshacer.')}</span></div>
+        <button class="pp-danger" data-pp="del-cuenta">${L('Delete account', 'Eliminar cuenta')}</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
