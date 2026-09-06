@@ -85,6 +85,15 @@ export const FOTOS_BOT = BOTS.map(b => b.foto).filter(Boolean);
 export function esBot(uid) { return BOTS.some(b => b.uid === uid); }
 export function botPorUid(uid) { return BOTS.find(b => b.uid === uid) || null; }
 
+/* Prestigio REAL a mostrar = base del bot (bots.js) + ajuste del admin (Firestore 'prestigioAjuste').
+   Ignora por completo el campo viejo 'prestigio' de Firestore (que puede tener basura de bugs previos).
+   Para usuarios que NO son bots, la base es 0 -> muestran solo su ajuste. Rango libre -inf..+inf. */
+export function baseDe(uid) { const b = botPorUid(uid); return b ? (Number(b.prestigio) || 0) : 0; }
+export function prestigioReal(a) {
+  if (!a) return 0;
+  return baseDe(a.uid) + (Number(a.prestigioAjuste) || 0);
+}
+
 /* Seguidores mostrados = base figurativa + 1/semana + ajuste admin + seguidores REALES.
    Funciona con un bot (tiene 'followers'/'desde') o con un analista real (solo ajuste + reales). */
 export function seguidoresBot(a, real = 0) {
