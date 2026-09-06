@@ -18,7 +18,13 @@ export function initNavegacion(callbacks) {
   bind('btn-hero', () => { if (!(window.__handiEntrar && window.__handiEntrar())) _cb.abrirAuth?.('entrar'); });
   bind('btn-hero-2', () => document.getElementById('landing-planes')?.scrollIntoView({ behavior: 'smooth' }));
   bind('btn-cta', () => { if (!(window.__handiEntrar && window.__handiEntrar())) _cb.abrirAuth?.('entrar'); });
-  bind('btn-explore', () => document.querySelector('.compare')?.scrollIntoView({ behavior: 'smooth' }));
+  bind('btn-explore', () => document.getElementById('landing-planes')?.scrollIntoView({ behavior: 'smooth' }));
+  // Capturas Advanced Analytics: clic -> se agranda 3 segundos y regresa sola
+  document.querySelectorAll('.an-shot[data-zoom]').forEach(el => {
+    const activar = () => { if (el.classList.contains('zoom')) return; el.classList.add('zoom'); clearTimeout(el._zt); el._zt = setTimeout(() => el.classList.remove('zoom'), 3000); };
+    el.addEventListener('click', activar);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activar(); } });
+  });
   bind('btn-unlock', () => document.getElementById('landing-planes')?.scrollIntoView({ behavior: 'smooth' }));
   bind('btn-salir-planes', () => _cb.salir?.());
   // Idioma en landing y pricing
