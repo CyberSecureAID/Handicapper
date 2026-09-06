@@ -19,11 +19,24 @@ export function initNavegacion(callbacks) {
   bind('btn-hero-2', () => document.getElementById('landing-planes')?.scrollIntoView({ behavior: 'smooth' }));
   bind('btn-cta', () => { if (!(window.__handiEntrar && window.__handiEntrar())) _cb.abrirAuth?.('entrar'); });
   bind('btn-explore', () => document.getElementById('landing-planes')?.scrollIntoView({ behavior: 'smooth' }));
-  // Capturas Advanced Analytics: clic -> se agranda 3 segundos y regresa sola
+  // Capturas Advanced Analytics: clic -> se abre grande en un visor con X para cerrar.
+  const abrirVisor = (src) => {
+    document.querySelectorAll('.an-visor').forEach(v => v.remove());
+    const ov = document.createElement('div');
+    ov.className = 'an-visor';
+    ov.innerHTML = `<div class="an-visor-in"><img src="${src}" alt=""><button class="an-visor-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`;
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add('on'));
+    const cerrar = () => { ov.classList.remove('on'); setTimeout(() => ov.remove(), 200); };
+    ov.querySelector('.an-visor-x').addEventListener('click', cerrar);
+    ov.addEventListener('click', (e) => { if (e.target === ov) cerrar(); });
+    document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', esc); } });
+  };
   document.querySelectorAll('.an-shot[data-zoom]').forEach(el => {
-    const activar = () => { if (el.classList.contains('zoom')) return; el.classList.add('zoom'); clearTimeout(el._zt); el._zt = setTimeout(() => el.classList.remove('zoom'), 3000); };
-    el.addEventListener('click', activar);
-    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activar(); } });
+    const img = el.querySelector('img');
+    const ir = () => abrirVisor(img ? img.src : '');
+    el.addEventListener('click', ir);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ir(); } });
   });
   bind('btn-unlock', () => document.getElementById('landing-planes')?.scrollIntoView({ behavior: 'smooth' }));
   bind('btn-salir-planes', () => _cb.salir?.());
