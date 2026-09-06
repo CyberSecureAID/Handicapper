@@ -526,7 +526,7 @@ function initMenuContextual() {
     let cuerpo, clase = '';
     if (!u) {
       clase = 'ctx-center';
-      cuerpo = `<div class="ctx-ic">${estrella}</div>
+      cuerpo = `<img class="ctx-logo" src="assets/imagenes/logo-nombre-oscuro-mesa.png" alt="Sports Expectations">
         <h4>${L('Welcome to Sports Expectations', 'Bienvenido a Sports Expectations')}</h4>
         <p>${L('Sign up and pick a plan to unlock the picks, analysts and the daily Elite.', 'Regístrate y elige un plan para desbloquear los picks, los analistas y la Élite del día.')}</p>
         <button class="ctx-btn" data-ctx="registrar">${L('Sign up', 'Regístrate')}</button>`;
@@ -570,14 +570,13 @@ function initMenuContextual() {
 }
 
 
-/* Sorpresa amistosa al abrir la consola (F12) */
+/* Mensaje profesional al abrir la consola (F12) */
 function saludoConsola() {
   try {
     const oro = 'color:#e8c46a;font-family:"Chakra Petch",monospace';
-    console.log('%cSPORTS EXPECTATIONS', oro + ';font-size:34px;font-weight:800;text-shadow:0 2px 0 rgba(0,0,0,.4)');
-    console.log('%c\u00a1Hey, curioso! \ud83d\udc4b', 'color:#fff;font-size:16px;font-weight:700');
-    console.log('%cNo escondemos nada: todo esto es c\u00f3digo p\u00fablico y honesto.\nSi te gusta lo que ves y sabes de esto, escr\u00edbenos \u2014 siempre buscamos gente buena.', 'color:#9fb0c2;font-size:13px;line-height:1.6');
-    console.log('%c\u26be \u26bd \ud83c\udfc0 \ud83c\udfd2 \ud83c\udfc8  \u2014  hecho con cari\u00f1o.', 'color:#e8c46a;font-size:14px');
+    console.log('%cSPORTS EXPECTATIONS', oro + ';font-size:32px;font-weight:800');
+    console.log('%cEste es un espacio de c\u00f3digo p\u00fablico. No ocultamos nada.', 'color:#cdd6e2;font-size:14px;font-weight:600');
+    console.log('%cSi trabajas en desarrollo o an\u00e1lisis deportivo y te interesa lo que construimos, cont\u00e1ctanos.', 'color:#9fb0c2;font-size:13px');
   } catch (_) {}
 }
 
