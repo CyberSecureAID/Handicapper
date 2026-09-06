@@ -621,15 +621,13 @@ function cardHTML(p, cfg) {
   return `<article class="ply-c r${p.rank}" data-idx="${p.rank}">
     <div class="ply-c-hd">
       <div class="ply-rank">${p.rank}</div>
-      <div class="ply-idn">
-        <div class="ply-nm">${esc(p.nombre)}</div>
-        <div class="ply-teams">
-          ${_plmLogo(p.logoLocal, p.equipoAbrev)}<span class="plm-nm">${nomA}</span>
-          <i class="plm-vs">vs</i>
-          <span class="plm-nm">${nomB}</span>${_plmLogo(p.logoVisita, p.rivalAbrev)}
-        </div>
-        ${cuando ? `<div class="ply-when-row"><span class="ply-when">${esc(cuando)}</span></div>` : ''}
-      </div>
+      <div class="ply-idn"><div class="ply-nm">${esc(p.nombre)}</div></div>
+      ${cuando ? `<span class="ply-when ply-when-r">${esc(cuando)}</span>` : ''}
+    </div>
+    <div class="ply-matchup">
+      <div class="ply-mt-side">${_plmLogo(p.logoLocal, p.equipoAbrev)}<span class="plm-nm">${nomA}</span></div>
+      <img class="ply-mt-vs" src="assets/imagenes/vs.png" alt="vs">
+      <div class="ply-mt-side">${_plmLogo(p.logoVisita, p.rivalAbrev)}<span class="plm-nm">${nomB}</span></div>
     </div>
     <div class="ply-headline"><b class="ply-pct">${p.prob}%</b><span class="ply-what">${esc(que)}</span></div>
     <div class="ply-track"><div class="ply-fill" data-w="${p.prob}"></div></div>
