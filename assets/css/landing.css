@@ -355,3 +355,10 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 /* Forzar alineación a la izquierda de las tarjetas (una regla externa las centraba) */
 .an-card { align-items: flex-start !important; }
 .an-card .an-ic, .an-card h3, .an-card p { align-self: flex-start; text-align: left; }
+
+/* Portada: logo en web, cápsula de texto en móvil */
+.hero-eyebrow-logo { display: none; }
+@media (min-width: 900px) {
+  .hero-eyebrow-txt { display: none; }
+  .hero-eyebrow-logo { display: block; height: 46px; width: auto; margin-bottom: 20px; }
+}
