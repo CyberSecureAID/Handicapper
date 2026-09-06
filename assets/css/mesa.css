@@ -988,3 +988,7 @@ body.en-mesa { overflow: hidden; }
 .mesa-marca { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
 .mesa-marca .mesa-logo { height: 46px; width: auto; object-fit: contain; }
 .mesa-marca .mesa-marca-rol { font-size: 11px; font-weight: 700; color: var(--m-tinta2, #8a94a3); letter-spacing: .05em; text-transform: uppercase; }
+
+/* Contador: pulso verde "guardado" al cambiar (confirma que se guardó al instante) */
+@keyframes cntGuardado { 0% { color: #3ecf8e; transform: scale(1.18); } 100% { color: inherit; transform: scale(1); } }
+[data-ancv].guardado { animation: cntGuardado .5s ease; }
