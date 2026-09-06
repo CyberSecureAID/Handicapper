@@ -14,7 +14,7 @@ body.en-mesa { overflow: hidden; }
 
 .mesa { display: grid; grid-template-columns: 250px 1fr; height: 100vh; }
 .mesa-side { background: #0e141b; border-right: 1px solid var(--m-linea); padding: 20px 16px; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
-.mesa-side-top { display: flex; align-items: center; justify-content: space-between; }
+.mesa-side-top { display: flex; align-items: center; justify-content: center; }
 .mesa-marca { font-family: 'Chakra Petch', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: .04em; color: #fff; }
 .mesa-marca span { display: block; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--m-oro); font-weight: 700; }
 .mesa-burger { display: none; width: 40px; height: 40px; border-radius: 11px; border: 1px solid var(--m-linea);
@@ -985,6 +985,6 @@ body.en-mesa { overflow: hidden; }
 /* Refuerzo por si el input se ve sin estilo */
 .an-add-tools .u-search input { background: none !important; border: 0 !important; color: #eef3f9 !important; }
 /* Logo SE en la barra vertical del panel (reemplaza el texto) */
-.mesa-marca { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.mesa-marca { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
 .mesa-marca .mesa-logo { height: 46px; width: auto; object-fit: contain; }
 .mesa-marca .mesa-marca-rol { font-size: 11px; font-weight: 700; color: var(--m-tinta2, #8a94a3); letter-spacing: .05em; text-transform: uppercase; }
