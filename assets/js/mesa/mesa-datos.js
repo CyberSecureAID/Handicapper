@@ -127,13 +127,7 @@ export async function listarAnalistas() {
     const out = base;
     q.forEach(d => {
       const b = out.find(x => x.uid === d.id);
-      if (b) {
-        const data = d.data();
-        const basePrest = b.prestigio;   // prestigio base del bot (bots.js)
-        Object.assign(b, data);          // override sobre el bot (ej. foto asignada por admin)
-        // No dejar que un prestigio 0/vacío en Firestore (drenaje viejo) borre la base del bot.
-        if ((data.prestigio == null || Number(data.prestigio) === 0) && basePrest) b.prestigio = basePrest;
-      }
+      if (b) Object.assign(b, d.data());          // override normal (Firestore manda: 0, negativo, positivo)
       else out.push({ uid: d.id, ...d.data() });
     });
     return out;
@@ -267,9 +261,15 @@ export async function ajustarContadorAnalista(uid, campo, delta) {
   const ref = S.doc(db, 'analistas', uid);
   try {
     const snap = await S.getDoc(ref);
-    let actual = (snap.exists() && Number(snap.data()[campo])) || 0;
-    // Prestigio de un bot con valor viejo <=0: se parte de su base (bots.js), no de 0.
-    if (campo === 'prestigio' && actual <= 0) { const bb = BOTS.find(b => b.uid === uid); if (bb && Number(bb.prestigio) > 0) actual = Number(bb.prestigio); }
+    const raw = snap.exists() ? snap.data()[campo] : undefined;
+    let actual;
+    // Prestigio: si el bot AÚN no tiene valor guardado (campo ausente), se parte de su base.
+    // Si ya tiene valor (incluido 0 o negativo), se respeta tal cual -> rango libre -inf..+inf.
+    if (campo === 'prestigio' && (raw === undefined || raw === null)) {
+      const bb = BOTS.find(b => b.uid === uid); actual = (bb && Number(bb.prestigio)) || 0;
+    } else {
+      actual = Number(raw) || 0;
+    }
     const nuevo = campo === 'prestigio' ? (actual + delta) : Math.max(0, actual + delta);   // prestigio SÍ puede ser negativo
     await S.setDoc(ref, { [campo]: nuevo }, { merge: true });
     return nuevo;

@@ -893,7 +893,7 @@ function vistaAnalistas() {
         ${counterUI(a.uid, 'followersExtra', ML('Followers', 'Seguidores'), segMostrar(a))}
         ${counterUI(a.uid, 'likesExtra', ML('Likes', 'Likes'), likesMostrar(a))}
         ${counterUI(a.uid, 'dislikesExtra', ML('Dislikes', 'Dislikes'), dislikesMostrar(a))}
-        ${counterUI(a.uid, 'prestigio', ML('Prestige', 'Prestigio'), (() => { const pb = botPorUid(a.uid); let pv = Number(a.prestigio); if (pb && (!isFinite(pv) || pv <= 0)) pv = Number(pb.prestigio)||0; return isFinite(pv) ? pv : 0; })())}
+        ${counterUI(a.uid, 'prestigio', ML('Prestige', 'Prestigio'), Number(a.prestigio) || 0)}
       </div>
     </div>`;
   }).join('') : `<div class="an-mng-empty">${ML('No analysts yet.', 'Aún no hay analistas.')}</div>`;
@@ -956,7 +956,7 @@ function enlazarAnalistas() {
     b.disabled = false;
     if (nuevo == null) return;
     const a = _analistas.find(x => x.uid === uid); if (a) a[campo] = nuevo;
-    const val = campo === 'followersExtra' ? segMostrar(a) : campo === 'likesExtra' ? likesMostrar(a) : campo === 'prestigio' ? (() => { const pb = botPorUid(a.uid); let pv = Number(a.prestigio); if (pb && (!isFinite(pv) || pv <= 0)) pv = Number(pb.prestigio)||0; return isFinite(pv) ? pv : 0; })() : dislikesMostrar(a);
+    const val = campo === 'followersExtra' ? segMostrar(a) : campo === 'likesExtra' ? likesMostrar(a) : campo === 'prestigio' ? (Number(a.prestigio) || 0) : dislikesMostrar(a);
     _cont.querySelectorAll(`[data-ancv="${campo}-${uid}"]`).forEach(el => el.textContent = (val || 0).toLocaleString());
   });
   _cont.querySelectorAll('[data-an-foto]').forEach(b => b.onclick = () => {
