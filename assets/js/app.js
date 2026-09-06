@@ -638,7 +638,7 @@ async function abrirDirectorioSenales() {
       <span class="sd-sport">${esc(DEP[a.deporte] || a.deporte || '')}</span>
       <div class="sd-stats">
         <div><b>${f.toLocaleString()}</b><em>${Lp('Followers','Seguidores')}</em></div>
-        <div><b class="sd-prest ${(Number(a.prestigio)||0) < 0 ? 'neg' : ''}">${(Number(a.prestigio)||0) > 0 ? '+' : ''}${Number(a.prestigio)||0}</b><em>${Lp('Prestige','Prestigio')}</em></div>
+        <div>${(() => { const pb = bots.botPorUid(a.uid); let pv = Number(a.prestigio); if (pb && (!isFinite(pv) || pv <= 0)) pv = Number(pb.prestigio)||0; if (!isFinite(pv)) pv = 0; return `<b class="sd-prest ${pv<0?'neg':''}">${pv>0?'+':''}${pv}</b>`; })()}<em>${Lp('Prestige','Prestigio')}</em></div>
       </div>
       <button class="sd-follow ${sig ? 'on' : ''}" data-sdfollow="${esc(a.uid)}" data-sdfirma="${esc(a.firma || '')}">${sig ? Lp('Following','Siguiendo') : Lp('Follow','Seguir')}</button>
     </div>`;
@@ -907,19 +907,39 @@ function _confirmarEliminarCuenta() {
   ov.querySelector('.pmf-cancel').onclick = q;
   ov.onclick = (e) => { if (e.target === ov) q(); };
   ov.querySelector('#dc-yes').onclick = async () => {
+    // Bloqueo por intentos fallidos (3 -> 24h). Protección "protocolar" del lado del cliente.
+    try {
+      const hasta = Number(localStorage.getItem('dc-lock') || 0);
+      if (hasta && Date.now() < hasta) {
+        const hrs = Math.ceil((hasta - Date.now()) / 3600000);
+        avisoToast(L(`Too many attempts. Try again in ${hrs}h.`, `Demasiados intentos. Inténtalo en ${hrs}h.`));
+        return;
+      }
+    } catch (_) {}
     const pass = (ov.querySelector('#dc-pass') || {}).value || '';
     if (!pass) { avisoToast(L('Enter your password to confirm.', 'Escribe tu contraseña para confirmar.')); return; }
     const btn = ov.querySelector('#dc-yes'); btn.disabled = true; btn.textContent = L('Deleting…', 'Eliminando…');
     try {
       const auth = await import('./auth/auth.js');
-      if (auth.reautenticar) { const ok = await auth.reautenticar(pass); if (!ok) { throw { code: 'auth/wrong-password' }; } }
+      if (auth.reautenticar) { await auth.reautenticar(pass); }
       await auth.eliminarCuenta();
       try { localStorage.clear(); } catch (_) {}
       q(); const pp = document.getElementById('pp-ov'); if (pp) pp.remove(); document.body.style.overflow = '';
       mostrarPantalla('landing'); avisoToast(L('Account deleted', 'Cuenta eliminada'));
     } catch (e) {
       btn.disabled = false; btn.textContent = L('Yes, delete my account', 'Sí, eliminar mi cuenta');
-      if (e && (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')) avisoToast(L('Incorrect password.', 'Contraseña incorrecta.'));
+      const malPass = e && (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential');
+      if (malPass) {
+        let intentos = 0;
+        try { intentos = Number(localStorage.getItem('dc-tries') || 0) + 1; localStorage.setItem('dc-tries', String(intentos)); } catch (_) {}
+        if (intentos >= 3) {
+          try { localStorage.setItem('dc-lock', String(Date.now() + 24 * 3600000)); localStorage.setItem('dc-tries', '0'); } catch (_) {}
+          avisoToast(L('Incorrect password. Locked for 24h for security.', 'Contraseña incorrecta. Bloqueado 24h por seguridad.'));
+          q();
+        } else {
+          avisoToast(L(`Incorrect password. ${3 - intentos} attempt(s) left.`, `Contraseña incorrecta. Quedan ${3 - intentos} intento(s).`));
+        }
+      }
       else if (e && e.code === 'auth/requires-recent-login') avisoToast(L('Please log in again, then delete your account.', 'Vuelve a iniciar sesión y luego elimina la cuenta.'));
       else avisoToast(L('Error deleting account.', 'Error al eliminar la cuenta.'));
     }
@@ -1215,11 +1235,11 @@ function abrirPanelPerfil() {
             <div class="pp-card-h">${I.inbox}<b>${L('Signals inbox', 'Buzón de señales')}</b></div>
             <div id="pp-buzon-list">${esPrem ? `<div class="pp-empty-sm">${L('Loading…', 'Cargando…')}</div>` : `<div class="pp-lock">${I.inbox}<p>${L('Signal inbox is a Premium feature.', 'El buzón de señales es una función Premium.')}</p><button class="pp-up" data-pp="planes">${L('See Premium', 'Ver Premium')}</button></div>`}</div>
           </div>
+          <div class="pp-danger-zone">
+            <div class="pp-dz-txt"><b>${L('Danger zone', 'Zona de riesgo')}</b><span>${L('Deleting your account is permanent and cannot be undone.', 'Eliminar tu cuenta es permanente y no se puede deshacer.')}</span></div>
+            <button class="pp-danger" data-pp="del-cuenta">${L('Delete account', 'Eliminar cuenta')}</button>
+          </div>
         </aside>
-      </div>
-      <div class="pp-danger-zone">
-        <div class="pp-dz-txt"><b>${L('Danger zone', 'Zona de riesgo')}</b><span>${L('Deleting your account is permanent and cannot be undone.', 'Eliminar tu cuenta es permanente y no se puede deshacer.')}</span></div>
-        <button class="pp-danger" data-pp="del-cuenta">${L('Delete account', 'Eliminar cuenta')}</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
