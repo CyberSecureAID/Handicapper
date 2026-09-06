@@ -1480,3 +1480,18 @@
 .ply-headline .ply-what { font-size: 14px; color: #aab4c0; font-weight: 600; line-height: 1.3; }
 @media (max-width: 560px) { .plm-nm { max-width: 70px; } .ply-headline .ply-pct { font-size: 36px; } }
 .ply-note-big { margin-top: 18px; font-size: 14px; padding: 22px 20px; text-align: center; justify-content: center; }
+
+/* Tarjeta de jugador: hora a la derecha + matchup abajo espaciado */
+.ply-c-hd { display: flex; align-items: center; gap: 12px; }
+.ply-c-hd .ply-idn { flex: 1; min-width: 0; }
+.ply-when-r { margin-left: auto; flex: none; }
+.ply-matchup { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 12px 0 14px; }
+.ply-mt-side { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1 1 0; min-width: 0; }
+.ply-mt-side .plm-logo { width: 46px; height: 46px; }
+.ply-mt-side .plm-logo b { width: 42px; height: 42px; font-size: 12px; }
+.ply-mt-side .plm-nm { font-size: 13px; max-width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ply-mt-vs { width: 36px; height: 36px; object-fit: contain; flex: none; }
+
+/* Menú Pro/Premium: que el texto en español no se apile (una línea con ellipsis) */
+.premium-item .pi-tx { min-width: 0; overflow: hidden; }
+.premium-item .pi-tx b, .premium-item .pi-tx em { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
