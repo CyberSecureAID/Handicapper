@@ -580,10 +580,74 @@ function saludoConsola() {
   } catch (_) {}
 }
 
+
+/* ============================================================
+   Ventana de cobro para SEGUIR a un analista. Puerta de pago:
+   ningún usuario (salvo admin) puede seguir sin pasar por aquí.
+   Devuelve Promise<boolean> (true = el pago se completó).
+   La integración real con Stripe se conecta en _procesarPagoSeguir().
+   ============================================================ */
+function abrirCobroSeguir(uid, firma) {
+  const ES = idiomaActual() === 'es', L = (en, es) => ES ? es : en;
+  return new Promise((resolve) => {
+    const ov = document.createElement('div');
+    ov.className = 'cobro-ov';
+    const nombre = firma || (ES ? 'este analista' : 'this analyst');
+    ov.innerHTML = `
+      <div class="cobro" role="dialog" aria-modal="true">
+        <div class="cobro-bg"></div><div class="cobro-veil"></div>
+        <div class="cobro-in">
+          <div class="cobro-head">
+            <span class="cobro-badge">${L('Analyst subscription', 'Suscripción de analista')}</span>
+            <h3>${L('Follow', 'Seguir a')} <em>${esc(nombre)}</em></h3>
+          </div>
+          <div class="cobro-price"><b>$2</b><span>${L('/ month', '/ mes')}</span></div>
+          <ul class="cobro-list">
+            <li>${L('Every signal this analyst posts, straight to your inbox.', 'Todas las señales de este analista, directo a tu buzón.')}</li>
+            <li>${L('Backed by an experienced analyst and an advanced multi-factor model.', 'Respaldado por un analista experimentado y un sistema avanzado de análisis.')}</li>
+            <li>${L('Cancel anytime.', 'Cancela cuando quieras.')}</li>
+          </ul>
+          <p class="cobro-note">${L('Signals are opinions, not guarantees. Analysts only post when they see a clear, measurable opportunity, never on every game.', 'Las señales son opiniones, no garantías. Los analistas solo publican cuando ven una oportunidad clara y medible, nunca en todos los partidos.')}</p>
+          <div class="cobro-btns">
+            <button class="cobro-cancel">${L('Cancel', 'Cancelar')}</button>
+            <button class="cobro-go">${L('Agree & pay', 'Aceptar y pagar')}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => ov.classList.add('on'));
+    const cerrar = (val) => { ov.classList.remove('on'); document.body.style.overflow = ''; setTimeout(() => ov.remove(), 200); resolve(val); };
+    ov.querySelector('.cobro-cancel').onclick = () => cerrar(false);
+    ov.addEventListener('click', (e) => { if (e.target === ov) cerrar(false); });
+    document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { cerrar(false); document.removeEventListener('keydown', esc); } });
+    ov.querySelector('.cobro-go').onclick = async () => {
+      const btn = ov.querySelector('.cobro-go'); btn.disabled = true; btn.textContent = L('Processing…', 'Procesando…');
+      const ok = await _procesarPagoSeguir(uid, firma).catch(() => false);
+      if (ok) { cerrar(true); }
+      else {
+        // Stripe aún no está conectado: se informa con elegancia y NO se sigue gratis.
+        ov.querySelector('.cobro-in').innerHTML = `<div class="cobro-soon">
+          <div class="cobro-soon-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg></div>
+          <h3>${L('Payments are launching soon', 'Los pagos se activan muy pronto')}</h3>
+          <p>${L('Secure checkout is being finalized. You will be able to follow your analysts in just a bit.', 'Estamos afinando el pago seguro. Muy pronto podrás seguir a tus analistas.')}</p>
+          <button class="cobro-go" id="cobro-ok">${L('Got it', 'Entendido')}</button></div>`;
+        ov.querySelector('#cobro-ok').onclick = () => cerrar(false);
+      }
+    };
+  });
+}
+/* Placeholder de la pasarela. Cuando se integre Stripe, aquí se procesa el pago
+   y se devuelve true si fue exitoso. Por ahora devuelve false (no hay cobro real). */
+async function _procesarPagoSeguir(uid, firma) { return false; }
+
 function init() {
   initTema();
   saludoConsola();
   initMenuContextual();
+  window.__cobroSeguir = abrirCobroSeguir;
   window.__pintarJesus = function () {
     const f = window.__jesusFoto;
     document.querySelectorAll('[data-jesus-ava]').forEach(el => { el.innerHTML = f ? `<img src="${f}" alt="Jesús">` : 'J'; });
@@ -743,7 +807,7 @@ async function abrirDirectorioSenales() {
     };
     if (!seguir) return aplicar(false);
     if (_esAdmin) return aplicar(true);
-    abrirPagoAnalista(firma, () => aplicar(true));
+    abrirCobroSeguir(uid, firma).then(ok => { if (ok) aplicar(true); });
   });
 
   let cat = '', q = '';
