@@ -957,7 +957,7 @@ function enlazarAnalistas() {
     if (nuevo == null) return;
     const a = _analistas.find(x => x.uid === uid); if (a) { if (campo === 'prestigio') a.prestigioAjuste = nuevo - baseDe(uid); else a[campo] = nuevo; }
     const val = campo === 'followersExtra' ? segMostrar(a) : campo === 'likesExtra' ? likesMostrar(a) : campo === 'prestigio' ? nuevo : dislikesMostrar(a);
-    _cont.querySelectorAll(`[data-ancv="${campo}-${uid}"]`).forEach(el => el.textContent = (val || 0).toLocaleString());
+    _cont.querySelectorAll(`[data-ancv="${campo}-${uid}"]`).forEach(el => { el.textContent = (val || 0).toLocaleString(); el.classList.remove('guardado'); void el.offsetWidth; el.classList.add('guardado'); });
   });
   _cont.querySelectorAll('[data-an-foto]').forEach(b => b.onclick = () => {
     const uid = b.dataset.anFoto, a = _analistas.find(x => x.uid === uid); if (!a) return;

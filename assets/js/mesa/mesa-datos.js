@@ -266,9 +266,9 @@ export async function ajustarContadorAnalista(uid, campo, delta) {
       const bb = BOTS.find(b => b.uid === uid); const base = bb ? (Number(bb.prestigio) || 0) : 0;
       const snap = await S.getDoc(ref);
       const ajuste = (snap.exists() && Number(snap.data().prestigioAjuste)) || 0;
-      const nuevoAjuste = ajuste + delta;
-      await S.setDoc(ref, { prestigioAjuste: nuevoAjuste }, { merge: true });
-      return base + nuevoAjuste;
+      // Escritura ATÓMICA: increment() no sufre carrera aunque se hagan clics muy rápidos.
+      await S.setDoc(ref, { prestigioAjuste: S.increment(delta) }, { merge: true });
+      return base + ajuste + delta;
     }
     const snap = await S.getDoc(ref);
     const actual = (snap.exists() && Number(snap.data()[campo])) || 0;
