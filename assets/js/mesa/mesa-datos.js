@@ -260,17 +260,19 @@ export async function ajustarContadorAnalista(uid, campo, delta) {
   const S = _obtenerStore(), db = _obtenerDB();
   const ref = S.doc(db, 'analistas', uid);
   try {
-    const snap = await S.getDoc(ref);
-    const raw = snap.exists() ? snap.data()[campo] : undefined;
-    let actual;
-    // Prestigio: si el bot AÚN no tiene valor guardado (campo ausente), se parte de su base.
-    // Si ya tiene valor (incluido 0 o negativo), se respeta tal cual -> rango libre -inf..+inf.
-    if (campo === 'prestigio' && (raw === undefined || raw === null)) {
-      const bb = BOTS.find(b => b.uid === uid); actual = (bb && Number(bb.prestigio)) || 0;
-    } else {
-      actual = Number(raw) || 0;
+    // Prestigio: se guarda un AJUSTE limpio (prestigioAjuste). El valor mostrado = base(bots.js) + ajuste.
+    // Así se ignora cualquier valor viejo/corrupto del campo 'prestigio' y el rango es libre (-inf..+inf).
+    if (campo === 'prestigio') {
+      const bb = BOTS.find(b => b.uid === uid); const base = bb ? (Number(bb.prestigio) || 0) : 0;
+      const snap = await S.getDoc(ref);
+      const ajuste = (snap.exists() && Number(snap.data().prestigioAjuste)) || 0;
+      const nuevoAjuste = ajuste + delta;
+      await S.setDoc(ref, { prestigioAjuste: nuevoAjuste }, { merge: true });
+      return base + nuevoAjuste;
     }
-    const nuevo = campo === 'prestigio' ? (actual + delta) : Math.max(0, actual + delta);   // prestigio SÍ puede ser negativo
+    const snap = await S.getDoc(ref);
+    const actual = (snap.exists() && Number(snap.data()[campo])) || 0;
+    const nuevo = Math.max(0, actual + delta);
     await S.setDoc(ref, { [campo]: nuevo }, { merge: true });
     return nuevo;
   } catch (_) { return null; }

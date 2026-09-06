@@ -5,7 +5,7 @@
    ============================================================ */
 import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte, asignarFotoAnalista, quitarFotoAnalista, ajustarContadorAnalista, leerFichaAnalista, guardarPerfilAnalista, leerConfigContacto, guardarConfigContacto } from './mesa-datos.js';
 import { rutaFotoAnalista } from '../datos/fotos-analistas.js';
-import { seguidoresBot, likesDe, dislikesDe, botPorUid } from '../datos/bots.js';
+import { seguidoresBot, likesDe, dislikesDe, botPorUid, prestigioReal, baseDe } from '../datos/bots.js';
 import { abrirSelectorFotos } from '../ui/selector-fotos.js';
 import { prepararEstilosSenal, tarjetaMuestra } from '../ui/senales.js';
 import { PALETA, INTENSIDADES, EMBLEMAS, EMBLEMA_NOMBRE, estiloSeguro } from '../ui/estilo-senal.js';
@@ -893,7 +893,7 @@ function vistaAnalistas() {
         ${counterUI(a.uid, 'followersExtra', ML('Followers', 'Seguidores'), segMostrar(a))}
         ${counterUI(a.uid, 'likesExtra', ML('Likes', 'Likes'), likesMostrar(a))}
         ${counterUI(a.uid, 'dislikesExtra', ML('Dislikes', 'Dislikes'), dislikesMostrar(a))}
-        ${counterUI(a.uid, 'prestigio', ML('Prestige', 'Prestigio'), Number(a.prestigio) || 0)}
+        ${counterUI(a.uid, 'prestigio', ML('Prestige', 'Prestigio'), prestigioReal(a))}
       </div>
     </div>`;
   }).join('') : `<div class="an-mng-empty">${ML('No analysts yet.', 'Aún no hay analistas.')}</div>`;
@@ -955,8 +955,8 @@ function enlazarAnalistas() {
     const nuevo = await ajustarContadorAnalista(uid, campo, d);
     b.disabled = false;
     if (nuevo == null) return;
-    const a = _analistas.find(x => x.uid === uid); if (a) a[campo] = nuevo;
-    const val = campo === 'followersExtra' ? segMostrar(a) : campo === 'likesExtra' ? likesMostrar(a) : campo === 'prestigio' ? (Number(a.prestigio) || 0) : dislikesMostrar(a);
+    const a = _analistas.find(x => x.uid === uid); if (a) { if (campo === 'prestigio') a.prestigioAjuste = nuevo - baseDe(uid); else a[campo] = nuevo; }
+    const val = campo === 'followersExtra' ? segMostrar(a) : campo === 'likesExtra' ? likesMostrar(a) : campo === 'prestigio' ? nuevo : dislikesMostrar(a);
     _cont.querySelectorAll(`[data-ancv="${campo}-${uid}"]`).forEach(el => el.textContent = (val || 0).toLocaleString());
   });
   _cont.querySelectorAll('[data-an-foto]').forEach(b => b.onclick = () => {
