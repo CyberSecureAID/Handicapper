@@ -569,8 +569,21 @@ function initMenuContextual() {
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrar(); });
 }
 
+
+/* Sorpresa amistosa al abrir la consola (F12) */
+function saludoConsola() {
+  try {
+    const oro = 'color:#e8c46a;font-family:"Chakra Petch",monospace';
+    console.log('%cSPORTS EXPECTATIONS', oro + ';font-size:34px;font-weight:800;text-shadow:0 2px 0 rgba(0,0,0,.4)');
+    console.log('%c\u00a1Hey, curioso! \ud83d\udc4b', 'color:#fff;font-size:16px;font-weight:700');
+    console.log('%cNo escondemos nada: todo esto es c\u00f3digo p\u00fablico y honesto.\nSi te gusta lo que ves y sabes de esto, escr\u00edbenos \u2014 siempre buscamos gente buena.', 'color:#9fb0c2;font-size:13px;line-height:1.6');
+    console.log('%c\u26be \u26bd \ud83c\udfc0 \ud83c\udfd2 \ud83c\udfc8  \u2014  hecho con cari\u00f1o.', 'color:#e8c46a;font-size:14px');
+  } catch (_) {}
+}
+
 function init() {
   initTema();
+  saludoConsola();
   initMenuContextual();
   window.__pintarJesus = function () {
     const f = window.__jesusFoto;
@@ -806,7 +819,7 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   if (extra && extra.intencional) { entrarSegunAcceso(); return; }
   // Refresco: si el usuario estaba DENTRO de la app, devolverlo ahí (a su misma vista)
   let _restaurar = false; try { _restaurar = localStorage.getItem('se-en-app') === '1'; } catch (_) {}
-  if (_restaurar && (_esAdmin || tieneAcceso())) {
+  if (_restaurar && (_esAdmin || _esAnalista || tieneAcceso())) {
     let _v = null; try { _v = localStorage.getItem('se-vista'); } catch (_) {}   // leer ANTES
     entrarPlataforma();
     if (_v && _v !== 'partidos') setTimeout(() => { const tb = document.querySelector(`#tabbar .t[data-vista="${_v}"]`); if (tb) tb.click(); }, 90);
@@ -817,7 +830,7 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
 
 /* Decide a dónde va el usuario cuando ELIGE entrar (login intencional o CTA del lobby) */
 function entrarSegunAcceso() {
-  if (_esAdmin || tieneAcceso()) entrarPlataforma();
+  if (_esAdmin || _esAnalista || tieneAcceso()) entrarPlataforma();
   else mostrarPantalla('pricing');
 }
 /* El lobby llama a esto cuando el usuario ya tiene sesión y toca "Entrar" */
