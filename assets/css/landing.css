@@ -379,3 +379,20 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
   box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 34px 74px -20px rgba(0,0,0,.92), 0 0 0 1px rgba(232,196,106,.5); }
 .an-shot:focus-visible { outline: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 0 0 2px rgba(232,196,106,.6); }
 @media (max-width: 900px) { .an-shot:hover { transform: none; } .an-shot figcaption { font-size: 12px; padding: 22px 12px 10px; } }
+
+/* Visor de capturas (clic en una imagen -> se abre grande con X) */
+.an-visor { position: fixed; inset: 0; z-index: 9998; display: grid; place-items: center; padding: 26px;
+  background: rgba(4,7,12,.82); backdrop-filter: blur(6px); opacity: 0; transition: opacity .2s ease; }
+.an-visor.on { opacity: 1; }
+.an-visor-in { position: relative; max-width: min(880px, 94vw); transform: scale(.96); transition: transform .2s ease; }
+.an-visor.on .an-visor-in { transform: scale(1); }
+.an-visor-in img { display: block; width: 100%; height: auto; border-radius: 13px;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 -1px 0 rgba(0,0,0,.5), 0 30px 72px -20px rgba(0,0,0,.9); }
+.an-visor-x { position: absolute; top: -15px; right: -15px; width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center; color: #ffe6c4;
+  background: linear-gradient(180deg, #9a2530, #5e141c); border: 1.5px solid rgba(232,184,75,.7);
+  box-shadow: 0 6px 18px rgba(120,20,30,.5), inset 0 1px 0 rgba(255,255,255,.18); transition: transform .15s, background .15s, box-shadow .15s; }
+.an-visor-x:hover { background: linear-gradient(180deg, #b02c38, #6e1720); transform: scale(1.08); box-shadow: 0 9px 24px rgba(150,30,40,.62), inset 0 1px 0 rgba(255,255,255,.2); }
+.an-visor-x svg { width: 20px; height: 20px; }
+@media (max-width: 560px) { .an-visor { padding: 16px; } .an-visor-x { top: -10px; right: -10px; width: 38px; height: 38px; } }
