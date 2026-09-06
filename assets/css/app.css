@@ -1495,3 +1495,17 @@
 /* Menú Pro/Premium: que el texto en español no se apile (una línea con ellipsis) */
 .premium-item .pi-tx { min-width: 0; overflow: hidden; }
 .premium-item .pi-tx b, .premium-item .pi-tx em { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+/* Delete Account: zona de riesgo al fondo del perfil + input de contraseña */
+.pp-danger-zone { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 8px 30px 30px; padding: 16px 20px; border: 1px solid rgba(240,82,90,.3); border-radius: 14px; background: rgba(240,82,90,.06); }
+.pp-dz-txt b { display: block; font-size: 13.5px; color: #ff8a8f; font-weight: 700; margin-bottom: 2px; }
+.pp-dz-txt span { font-size: 12px; color: #9aa4b2; line-height: 1.4; }
+.pp-danger { flex: none; padding: 10px 18px; border-radius: 10px; border: 1px solid rgba(240,82,90,.5); background: rgba(240,82,90,.12); color: #ff8a8f; font-weight: 700; font-size: 13px; cursor: pointer; transition: background .15s; }
+.pp-danger:hover { background: rgba(240,82,90,.22); }
+.pmf-input { width: 100%; padding: 12px 14px; border-radius: 11px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #fff; font-size: 14px; margin: 0 0 20px; text-align: center; box-sizing: border-box; }
+.pmf-input:focus { outline: none; border-color: rgba(240,82,90,.5); }
+.pp-actions { margin-top: 34px; }
+@media (max-width: 720px) {
+  .pp-danger-zone { flex-direction: column; align-items: stretch; text-align: center; margin: 8px 18px 24px; }
+  .pp-danger { width: 100%; padding: 13px; }
+}
