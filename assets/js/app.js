@@ -1367,9 +1367,9 @@ function abrirPanelPerfil() {
 
         <main class="pp-main">
           <h2 class="pp-h2">${L('Profile settings', 'Ajustes de perfil')}</h2>
-          <div class="pp-field"><label>${I.user}${L('Name', 'Nombre')}</label><input id="pp-f-nombre" type="text" value="${esc(nombre)}" maxlength="40"></div>
-          <div class="pp-field"><label>${I.user}${L('Username', 'Nombre de usuario')}</label><input id="pp-f-usuario" type="text" value="${esc(usuario)}" maxlength="24"></div>
-          <div class="pp-field"><label>${I.inbox}${L('Email', 'Correo electrónico')}</label><input id="pp-f-email" type="email" value="${esc(email)}" readonly><small>${L('Your email cannot be changed, for account security.', 'El correo no se puede cambiar, por seguridad de la cuenta.')}</small></div>
+          <div class="pp-field"><label>${I.user}${L('Name', 'Nombre')}</label><div class="pp-pass"><input id="pp-f-nombre" class="oculto" type="text" value="${esc(nombre)}" maxlength="40"><button class="pp-eye" data-mask type="button" aria-label="Show">${I.eye}</button></div></div>
+          <div class="pp-field"><label>${I.user}${L('Username', 'Nombre de usuario')}</label><div class="pp-pass"><input id="pp-f-usuario" class="oculto" type="text" value="${esc(usuario)}" maxlength="24"><button class="pp-eye" data-mask type="button" aria-label="Show">${I.eye}</button></div></div>
+          <div class="pp-field"><label>${I.inbox}${L('Email', 'Correo electrónico')}</label><div class="pp-pass"><input id="pp-f-email" class="oculto" type="email" value="${esc(email)}" readonly><button class="pp-eye" data-mask type="button" aria-label="Show">${I.eye}</button></div><small>${L('Your email cannot be changed, for account security.', 'El correo no se puede cambiar, por seguridad de la cuenta.')}</small></div>
           <div class="pp-field"><label>${I.shield}${L('New password', 'Nueva contraseña')}</label><div class="pp-pass"><input id="pp-f-pass" type="password" placeholder="••••••••" autocomplete="new-password"><button class="pp-eye">${I.eye}</button></div><small>${L('Leave blank to keep your current password.', 'Deja en blanco si no deseas cambiar la contraseña.')}</small></div>
           <div class="pp-actions">
             <div class="pp-actions-right"><button class="pp-cancel" id="pp-cancel">${L('Cancel', 'Cancelar')}</button><button class="pp-apply">${L('Apply changes', 'Aplicar cambios')} ${I.arrow}</button></div>
@@ -1424,7 +1424,7 @@ function abrirPanelPerfil() {
   ov.querySelector('#pp-x').onclick = cerrar;
   ov.querySelector('#pp-cancel').onclick = cerrar;
   ov.onclick = (e) => { if (e.target === ov) cerrar(); };
-  ov.querySelector('.pp-eye').onclick = (e) => { const i = e.currentTarget.previousElementSibling; i.type = i.type === 'password' ? 'text' : 'password'; };
+  ov.querySelectorAll('.pp-eye').forEach(btn => btn.onclick = (e) => { const b = e.currentTarget, i = b.previousElementSibling; if (b.hasAttribute('data-mask')) { i.classList.toggle('oculto'); b.classList.toggle('viendo', !i.classList.contains('oculto')); } else { i.type = i.type === 'password' ? 'text' : 'password'; } });
 
   const apply = ov.querySelector('.pp-apply');
   if (apply) apply.onclick = async () => {
