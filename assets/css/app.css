@@ -1546,3 +1546,42 @@
 .ctx-stat span { font-size: 12px; color: #9fb0c2; }
 .ctx-stat b { font-size: 13px; color: #fff; font-weight: 700; }
 .ctx-logo { display: block; height: 40px; width: auto; max-width: 80%; margin: 0 auto 14px; object-fit: contain; }
+
+/* ===== Ventana de cobro (seguir analista) ===== */
+.cobro-ov { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 20px; background: rgba(4,7,12,.8); backdrop-filter: blur(6px); opacity: 0; transition: opacity .2s; }
+.cobro-ov.on { opacity: 1; }
+.cobro { position: relative; width: 100%; max-width: 400px; border-radius: 20px; overflow: hidden; border: 1px solid rgba(232,196,106,.28); box-shadow: 0 30px 70px -20px rgba(0,0,0,.85); transform: scale(.95) translateY(6px); transition: transform .22s cubic-bezier(.2,.7,.3,1); }
+.cobro-ov.on .cobro { transform: scale(1) translateY(0); }
+.cobro-bg { position: absolute; inset: 0; background: url('../imagenes/fondos/fondo-pagina.webp') center/cover; filter: blur(10px) brightness(.42); transform: scale(1.25); }
+.cobro-veil { position: absolute; inset: 0; background: linear-gradient(165deg, rgba(16,22,34,.82), rgba(8,11,18,.94)); }
+.cobro-in { position: relative; padding: 26px 24px 22px; }
+.cobro-head { text-align: center; margin-bottom: 16px; }
+.cobro-badge { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #e8c46a; background: rgba(232,196,106,.12); border: 1px solid rgba(232,196,106,.32); border-radius: 999px; padding: 5px 13px; margin-bottom: 12px; }
+.cobro-head h3 { font-family: "Poppins",sans-serif; font-weight: 700; font-size: 19px; color: #fff; margin: 0; }
+.cobro-head h3 em { font-style: normal; color: #e8c46a; }
+.cobro-price { text-align: center; margin: 4px 0 18px; }
+.cobro-price b { font-family: "Chakra Petch",sans-serif; font-size: 46px; font-weight: 800; background: linear-gradient(180deg,#f6e2a6,#d4a53f); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.cobro-price span { font-size: 14px; color: #9fb0c2; margin-left: 4px; }
+.cobro-list { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.cobro-list li { position: relative; padding-left: 26px; font-size: 13px; line-height: 1.5; color: #cdd6e2; }
+.cobro-list li::before { content: ''; position: absolute; left: 0; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: rgba(62,207,142,.16); border: 1px solid rgba(62,207,142,.5); }
+.cobro-list li::after { content: ''; position: absolute; left: 5px; top: 7px; width: 5px; height: 8px; border: solid #3ecf8e; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.cobro-note { font-size: 11.5px; line-height: 1.55; color: #8a94a3; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 11px; padding: 11px 13px; margin: 0 0 18px; }
+.cobro-btns { display: flex; gap: 10px; }
+.cobro-cancel { flex: 1; padding: 13px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.05); color: #cdd6e2; font-family: "Poppins",sans-serif; font-weight: 600; font-size: 14px; transition: background .15s; }
+.cobro-cancel:hover { background: rgba(255,255,255,.1); }
+.cobro-go { flex: 1.4; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(232,184,75,.55); background: linear-gradient(180deg,#9a2530,#5e141c); color: #ffe6c4; font-family: "Poppins",sans-serif; font-weight: 700; font-size: 14px; box-shadow: 0 6px 18px rgba(120,20,30,.4), inset 0 1px 0 rgba(255,255,255,.15); transition: all .16s; }
+.cobro-go:hover { background: linear-gradient(180deg,#b02c38,#6e1720); box-shadow: 0 8px 22px rgba(150,30,40,.5); }
+.cobro-go svg { width: 16px; height: 16px; }
+.cobro-soon { text-align: center; padding: 8px 4px; }
+.cobro-soon-ic { width: 54px; height: 54px; margin: 0 auto 14px; border-radius: 50%; display: grid; place-items: center; color: #e8c46a; background: rgba(232,196,106,.12); border: 1px solid rgba(232,196,106,.32); }
+.cobro-soon-ic svg { width: 28px; height: 28px; }
+.cobro-soon h3 { font-family: "Poppins",sans-serif; font-size: 18px; color: #fff; margin: 0 0 8px; }
+.cobro-soon p { font-size: 13px; line-height: 1.55; color: #b6c0cd; margin: 0 0 18px; }
+.cobro-soon .cobro-go { width: 100%; }
+
+/* Móvil: X del perfil siempre visible (fija, respeta el notch/barra de estado) */
+@media (max-width: 560px) {
+  .pp-modal { padding-top: env(safe-area-inset-top, 0px); }
+  .pp-x { position: fixed; top: max(12px, calc(env(safe-area-inset-top, 0px) + 8px)); right: 12px; z-index: 10; box-shadow: 0 4px 14px rgba(0,0,0,.5); background: rgba(20,26,36,.9); }
+}
