@@ -8,7 +8,7 @@ import { IC } from './ui/iconos.js';
 import { initTema } from './ui/tema.js';
 import { initIdioma, fijarIdioma, idiomaActual, t } from './ui/idioma.js';
 import { compartirPartido } from './ui/compartir.js';
-import { iniciarAuth, registrarCorreo, entrarCorreo, entrarGoogle, salir, mensajeError, estaConfigurado, actualizarPerfil, esCuentaGoogle } from './auth/auth.js';
+import { iniciarAuth, registrarCorreo, entrarCorreo, entrarGoogle, salir, mensajeError, estaConfigurado, actualizarPerfil, esCuentaGoogle, usuarioActual } from './auth/auth.js';
 import { initAuthUI, abrirAuth } from './auth/auth-ui.js';
 import { initNavegacion, mostrarPantalla, aplicarI18n } from './ui/navegacion.js';
 import { fijarSuscripcion, tieneAcceso, limpiarVistaPrevia, marcarVistaPrevia, planActual } from './auth/estado-pago.js';
@@ -496,8 +496,82 @@ function initProyeccion() {
 }
 
 /* -------- Arranque -------- */
+
+/* ============================================================
+   Menú contextual propio (clic derecho) — solo escritorio.
+   Glass + imagen de fondo del footer. Contenido según el plan.
+   ============================================================ */
+function _diasRestantes() {
+  try {
+    const u = usuarioActual(); const s = u && u.suscripcion;
+    const v = s && (s.vence || s.expira || s.hasta);
+    if (!v) return null;
+    const ms = (typeof v === 'number' ? v : (v.seconds ? v.seconds * 1000 : Date.parse(v))) - Date.now();
+    return ms > 0 ? Math.ceil(ms / 86400000) : 0;
+  } catch (_) { return null; }
+}
+function initMenuContextual() {
+  const esTactil = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+  if (esTactil) return;   // en móvil no hay clic derecho
+  let menu = null;
+  const cerrar = () => { if (menu) { menu.classList.remove('on'); const m = menu; menu = null; setTimeout(() => m.remove(), 160); } };
+  document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    cerrar();
+    const ES = idiomaActual() === 'es', L = (en, es) => ES ? es : en;
+    const u = usuarioActual();
+    const plan = (typeof _esAdmin !== 'undefined' && _esAdmin) ? 'premium' : planActual();
+    const trofeo = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0zM7 4H4v2a3 3 0 003 3M17 4h3v2a3 3 0 01-3 3"/></svg>';
+    const estrella = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.9L22 9.3l-5.3 4.5L18.4 21 12 17.1 5.6 21l1.7-7.2L2 9.3l7.1-.4z"/></svg>';
+    let cuerpo, clase = '';
+    if (!u) {
+      clase = 'ctx-center';
+      cuerpo = `<div class="ctx-ic">${estrella}</div>
+        <h4>${L('Welcome to Sports Expectations', 'Bienvenido a Sports Expectations')}</h4>
+        <p>${L('Sign up and pick a plan to unlock the picks, analysts and the daily Elite.', 'Regístrate y elige un plan para desbloquear los picks, los analistas y la Élite del día.')}</p>
+        <button class="ctx-btn" data-ctx="registrar">${L('Sign up', 'Regístrate')}</button>`;
+    } else if (plan === 'premium') {
+      const d = _diasRestantes();
+      const rows = [
+        ['premium', L('Your plan', 'Tu plan'), 'Premium'],
+        (d != null ? ['dias', L('Days left', 'Días restantes'), d === 0 ? L('Expires today', 'Vence hoy') : `${d} ${L('days', 'días')}`] : null),
+      ].filter(Boolean);
+      cuerpo = `<div class="ctx-head"><span class="ctx-badge prem">${estrella}Premium</span></div>
+        <p class="ctx-thanks">${L('You have full access. Thanks for being Premium.', 'Tienes acceso total. Gracias por ser Premium.')}</p>
+        <div class="ctx-stats">${rows.map(r => `<div class="ctx-stat"><span>${esc(r[1])}</span><b>${esc(r[2])}</b></div>`).join('')}</div>`;
+    } else {
+      const nom = plan === 'pro' ? 'Pro' : (ES ? 'Básico' : 'Basic');
+      cuerpo = `<div class="ctx-head"><span class="ctx-badge">${esc(nom)}</span></div>
+        <div class="ctx-ic gold">${trofeo}</div>
+        <h4>${L('Want more?', '¿Deseas mejorar tu plan?')}</h4>
+        <p>${L(`You're on ${nom}. Upgrade to unlock more picks and the daily Elite.`, `Tienes el plan ${nom}. Mejóralo para desbloquear más picks y la Élite del día.`)}</p>
+        <button class="ctx-btn" data-ctx="planes">${L('Upgrade plan', 'Mejorar plan')}</button>`;
+    }
+    menu = document.createElement('div');
+    menu.className = 'ctx-menu ' + clase;
+    menu.innerHTML = `<div class="ctx-bg"></div><div class="ctx-veil"></div><div class="ctx-in">${cuerpo}</div>`;
+    document.body.appendChild(menu);
+    // posicionar en el cursor, dentro del viewport
+    const w = menu.offsetWidth || 260, h = menu.offsetHeight || 200;
+    let x = e.clientX, y = e.clientY;
+    if (x + w + 12 > innerWidth) x = innerWidth - w - 12;
+    if (y + h + 12 > innerHeight) y = innerHeight - h - 12;
+    menu.style.left = Math.max(8, x) + 'px'; menu.style.top = Math.max(8, y) + 'px';
+    requestAnimationFrame(() => menu.classList.add('on'));
+    menu.querySelectorAll('[data-ctx]').forEach(b => b.addEventListener('click', () => {
+      const a = b.dataset.ctx; cerrar();
+      if (a === 'registrar') abrirAuth('registrar');
+      else if (a === 'planes') mostrarPantalla('pricing');
+    }));
+  });
+  document.addEventListener('click', cerrar);
+  document.addEventListener('scroll', cerrar, true);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrar(); });
+}
+
 function init() {
   initTema();
+  initMenuContextual();
   window.__pintarJesus = function () {
     const f = window.__jesusFoto;
     document.querySelectorAll('[data-jesus-ava]').forEach(el => { el.innerHTML = f ? `<img src="${f}" alt="Jesús">` : 'J'; });
