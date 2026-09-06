@@ -570,7 +570,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
   let yaReporte = false;
   try { yaReporte = !!(await miReporte()); } catch (_) {}
   let fotoPorUid = {}; let analistasLista = []; let analistaPorUid = {};
-  try { analistasLista = await listarAnalistas(); analistasLista.forEach(an => { if (an.foto) fotoPorUid[an.uid] = an.foto; analistaPorUid[an.uid] = an; }); try { console.log('[PRESTIGIO]', analistasLista.filter(x=>botPorUid(x.uid)).map(x=>`${x.uid} base=${baseDe(x.uid)} ajuste=${x.prestigioAjuste} => ${prestigioReal(x)}`).join(' | ')); } catch(_){} } catch (_) {}
+  try { analistasLista = await listarAnalistas(); analistasLista.forEach(an => { if (an.foto) fotoPorUid[an.uid] = an.foto; analistaPorUid[an.uid] = an; }); } catch (_) {}
   const ctx = { premium: esPremium, nivel: nivelReal, nClaras, me, sigo, votos, apoyos, conteos: {}, yaReporte, fotoPorUid };
 
   // Conteos de like/dislike de todas las señales (para mostrar y para ordenar "Populares")
@@ -602,7 +602,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
 
   // Descubrir analistas: uno por firma, a partir de las señales
   const vistos = new Set(); const analistas = [];
-  inicio.forEach(a => { if (a.autorUid && !vistos.has(a.autorUid)) { vistos.add(a.autorUid); analistas.push({ uid: a.autorUid, firma: a.firma || a.autor || '', deporte: a.deporte, estilo: a.estilo, foto: fotoPorUid[a.autorUid] || null }); } });
+  inicio.forEach(a => { if (a.autorUid && !vistos.has(a.autorUid)) { vistos.add(a.autorUid); analistas.push({ uid: a.autorUid, firma: a.firma || a.autor || '', deporte: a.deporte, estilo: a.estilo, foto: fotoPorUid[a.autorUid] || null, prestigio: prestigioReal(analistaPorUid[a.autorUid] || { uid: a.autorUid }) }); } });
   // Incluir también analistas/bots registrados aunque aún no tengan señales publicadas
   analistasLista.forEach(an => { if (an.uid && an.activo !== false && an.deporte && !vistos.has(an.uid)) { vistos.add(an.uid); analistas.push({ uid: an.uid, firma: an.firma || an.nombre || '', deporte: an.deporte, estilo: an.estilo, foto: an.foto || null, prestigio: prestigioReal(an) }); } });
   const discover = analistas.length ? bloqueDescubrir(analistas, ctx) : '';
