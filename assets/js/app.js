@@ -724,7 +724,7 @@ async function abrirDirectorioSenales() {
       <span class="sd-sport">${esc(DEP[a.deporte] || a.deporte || '')}</span>
       <div class="sd-stats">
         <div><b>${f.toLocaleString()}</b><em>${Lp('Followers','Seguidores')}</em></div>
-        <div><b class="sd-prest ${(Number(a.prestigio)||0) < 0 ? 'neg' : ''}">${(Number(a.prestigio)||0) > 0 ? '+' : ''}${Number(a.prestigio)||0}</b><em>${Lp('Prestige','Prestigio')}</em></div>
+        <div>${(() => { const pv = bots.prestigioReal(a); return `<b class="sd-prest ${pv<0?'neg':''}">${pv>0?'+':''}${pv}</b>`; })()}<em>${Lp('Prestige','Prestigio')}</em></div>
       </div>
       <button class="sd-follow ${sig ? 'on' : ''}" data-sdfollow="${esc(a.uid)}" data-sdfirma="${esc(a.firma || '')}">${sig ? Lp('Following','Siguiendo') : Lp('Follow','Seguir')}</button>
     </div>`;
