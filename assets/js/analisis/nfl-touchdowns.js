@@ -135,6 +135,32 @@ async function rosterConTD(teamId) {
   } catch (_) { return []; }
 }
 
+/* Respaldo robusto: líderes de TD de la LIGA (carrera + recepción), agrupados por equipo. */
+async function leadersLigaNFL() {
+  const porEquipo = new Map();
+  try {
+    const d = await pedir(`${API}/leaders`);
+    const cats = (d && d.leaders && d.leaders.categories) || (d && d.categories) || [];
+    cats.forEach(c => {
+      const k = (c.name || c.displayName || c.abbreviation || '').toLowerCase();
+      if (!/touchdown|scoring|rushing|receiving/.test(k)) return;
+      ((c && c.leaders) || []).forEach(ld => {
+        const at = ld.athlete || {};
+        const tid = String((ld.team && ld.team.id) || (at.team && at.team.id) || '');
+        const pos = (at.position && at.position.abbreviation) || '';
+        if (!at.id || !tid || !/RB|WR|TE|QB|FB/i.test(pos)) return;
+        const val = num(ld.value != null ? ld.value : ld.displayValue);
+        if (val == null || val <= 0) return;
+        const tdRate = Math.min(0.75, /touchdown/.test(k) ? val / 14 : 0.45);   // TD totales -> tasa aprox; yardas -> base
+        if (!porEquipo.has(tid)) porEquipo.set(tid, []);
+        const arr = porEquipo.get(tid);
+        if (!arr.some(x => x.id === at.id)) arr.push({ id: at.id, nombre: at.displayName || at.shortName, pos, tdRate, gp: null, tdTot: null });
+      });
+    });
+  } catch (_) {}
+  return porEquipo;
+}
+
 /* --------- Orquestador --------- */
 export async function topTouchdownProjection({ fecha, n = 9, maxPorEquipo = 5 } = {}) {
   const avisos = [];
@@ -145,7 +171,7 @@ export async function topTouchdownProjection({ fecha, n = 9, maxPorEquipo = 5 } 
   const eventos = data?.events || [];
   if (!eventos.length) return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['Sin juegos NFL hoy'] } };
 
-  const defensas = await defensasNFL();
+  const [defensas, ligaLeaders] = await Promise.all([defensasNFL(), leadersLigaNFL()]);
 
   for (const ev of eventos) {
     const comp = ev?.competitions?.[0]; if (!comp) continue;
@@ -159,7 +185,8 @@ export async function topTouchdownProjection({ fecha, n = 9, maxPorEquipo = 5 } 
     for (const lado of lados) {
       let roster = (await rosterConTD(lado.equipo.id)).filter(x => (x.tdRate || 0) > 0);
       let _f = 'roster';
-      if (!roster.length) { roster = lideresTD(lado.comp); _f = 'leaders'; }
+      if (!roster.length) { roster = (ligaLeaders.get(String(lado.equipo.id)) || []).slice(); _f = 'leaders-liga'; }
+      if (!roster.length) { roster = lideresTD(lado.comp); _f = 'leaders-cal'; }
       try { console.log(`[NFL-DIAG] ${lado.equipo.abbreviation}: ${roster.length} (fuente=${_f})`); } catch(_){}
       if (!roster.length) { avisos.push(`Sin datos de jugadores para ${lado.equipo?.displayName || '—'}`); continue; }
       roster.sort((a, b) => (b.tdRate || 0) - (a.tdRate || 0));

@@ -165,6 +165,27 @@ async function rosterConPuntos(teamId) {
   } catch (_) { return []; }
 }
 
+/* Respaldo robusto: líderes de puntos de la LIGA (agrupa por equipo). Suele estar
+   poblado aunque el roster no traiga stats; y en pretemporada trae los del año previo. */
+async function leadersLigaNBA() {
+  const porEquipo = new Map();
+  try {
+    const d = await pedir(`${API}/leaders`);
+    const cats = (d && d.leaders && d.leaders.categories) || (d && d.categories) || [];
+    const cat = cats.find(c => /point|scoring|avgpoint/i.test(c.name || c.displayName || c.abbreviation || '')) || cats[0];
+    ((cat && cat.leaders) || []).forEach(ld => {
+      const at = ld.athlete || {};
+      const tid = String((ld.team && ld.team.id) || (at.team && at.team.id) || '');
+      if (!at.id || !tid) return;
+      const ppg = num(ld.value != null ? ld.value : ld.displayValue);
+      if (ppg == null || ppg <= 0) return;
+      if (!porEquipo.has(tid)) porEquipo.set(tid, []);
+      porEquipo.get(tid).push({ id: at.id, nombre: at.displayName || at.shortName, pos: at.position && at.position.abbreviation, ppg, mpg: null });
+    });
+  } catch (_) {}
+  return porEquipo;
+}
+
 /* --------- Orquestador --------- */
 export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}) {
   const avisos = [];
@@ -175,7 +196,7 @@ export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {
   const eventos = data?.events || [];
   if (!eventos.length) return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['Sin juegos NBA hoy'] } };
 
-  const defensas = await defensasNBA();
+  const [defensas, ligaLeaders] = await Promise.all([defensasNBA(), leadersLigaNBA()]);
 
   for (const ev of eventos) {
     const comp = ev?.competitions?.[0]; if (!comp) continue;
@@ -190,7 +211,8 @@ export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {
       // 1) Los LÍDERES del calendario traen el promedio real (crème de la crème).
       //    2) Si no hay, se intenta el roster como respaldo.
       let roster = leadersPuntos(lado.comp);
-      let _fuente = 'leaders';
+      let _fuente = 'leaders-cal';
+      if (!roster.length) { roster = (ligaLeaders.get(String(lado.equipo.id)) || []).slice(); _fuente = 'leaders-liga'; }
       if (!roster.length) { const r = await rosterConPuntos(lado.equipo.id); roster = r.filter(x => x.ppg != null); _fuente = 'roster'; }
       try { console.log(`[NBA-DIAG] ${lado.equipo.abbreviation}: ${roster.length} jugadores (fuente=${_fuente}, top ppg=${roster[0]?.ppg ?? '-'})`); } catch(_){}
       if (!roster.length) { avisos.push(`Sin datos de jugadores para ${lado.equipo?.displayName || '—'}`); continue; }
