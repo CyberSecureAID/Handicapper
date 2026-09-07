@@ -1,5 +1,5 @@
 /* ============================================================
-   MESA — panel de administración a pantalla completa
+   MESA — panel de administración a pantalla completa.
    ============================================================ */
 #mesa-screen { position: fixed; inset: 0; z-index: 200; overflow: hidden;
   background: #0b0f14; color: #eef3f8;
@@ -1076,3 +1076,6 @@ body.en-mesa { overflow: hidden; }
 .dg-calc-in span { color: #e8c46a; font-weight: 800; }
 .dg-calc-in input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: #fff; font-family: "Chakra Petch",sans-serif; font-size: 17px; font-weight: 700; }
 @media (max-width: 620px) { .dg-cols { flex-direction: column; } .dg.dg-wide { max-width: 440px; } }
+
+/* Pill de Visitante (acceso de cortesía, sin cobro) */
+.pill.on.vis { background: rgba(139,92,246,.16); color: #b79cff; border-color: rgba(139,92,246,.4); }
