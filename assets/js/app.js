@@ -1244,12 +1244,36 @@ function _abrirBuzonModal(signals) {
   ov.querySelector('.bz-x').onclick = () => ov.remove();
   ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
 }
+/* Muestra una notificación del sistema. Usa el service worker (funciona en móvil PWA
+   y escritorio); respaldo a new Notification() solo en escritorio. Con vibración + badge. */
+async function mostrarNotiSistema(titulo, opciones) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const opts = Object.assign({
+    icon: 'assets/imagenes/apple-touch-icon.png',
+    badge: 'assets/imagenes/favicon-32.png',
+    vibrate: [200, 100, 200],
+    tag: 'se-senal', renotify: true, silent: false,
+    data: { url: './' },
+  }, opciones || {});
+  try {
+    if ('serviceWorker' in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg && reg.showNotification) { await reg.showNotification(titulo, opts); return; }
+    }
+    new Notification(titulo, opts);
+  } catch (_) {}
+}
 function _notificarNuevas(signals) {
   try {
     if (localStorage.getItem('pp-push') !== '1' || !('Notification' in window) || Notification.permission !== 'granted') { localStorage.setItem('pp-vistos', JSON.stringify(signals.map(a => a.matchId || a.id).slice(0, 60))); return; }
     const vistos = JSON.parse(localStorage.getItem('pp-vistos') || '[]');
     const nuevos = signals.filter(a => !vistos.includes(a.matchId || a.id));
-    nuevos.slice(0, 3).forEach(a => { try { new Notification('Sports Expectations', { body: (a.firma || a.autor || '') + ': ' + (a.favorito || a.equipos || ''), icon: 'assets/imagenes/logo-h-oscuro.png' }); } catch (_) {} });
+    const ES = idiomaActual() === 'es';
+    nuevos.slice(0, 3).forEach(a => {
+      const firma = a.firma || a.autor || '';
+      const cuerpo = (firma ? firma + ': ' : '') + (a.favorito || a.equipos || (ES ? 'Nueva señal disponible' : 'New signal available'));
+      mostrarNotiSistema('Sports Expectations', { body: cuerpo, tag: 'se-' + (a.matchId || a.id), data: { url: './' } });
+    });
     localStorage.setItem('pp-vistos', JSON.stringify(signals.map(a => a.matchId || a.id).slice(0, 60)));
   } catch (_) {}
 }
@@ -1455,7 +1479,7 @@ function abrirPanelPerfil() {
         if (!('Notification' in window)) { pchk.checked = false; avisoToast(ES ? 'Tu navegador no soporta notificaciones.' : 'Notifications not supported.'); return; }
         let perm = Notification.permission;
         if (perm !== 'granted') { try { perm = await Notification.requestPermission(); } catch (_) {} }
-        if (perm === 'granted') { try { localStorage.setItem('pp-push', '1'); } catch (_) {} avisoToast(ES ? 'Notificaciones push activadas \u2713' : 'Push notifications on \u2713'); }
+        if (perm === 'granted') { try { localStorage.setItem('pp-push', '1'); } catch (_) {} avisoToast(ES ? 'Notificaciones push activadas \u2713' : 'Push notifications on \u2713'); mostrarNotiSistema('Sports Expectations', { body: ES ? 'Notificaciones activadas. As\u00ed se ver\u00e1n tus avisos.' : 'Notifications on. This is how your alerts will look.', tag: 'se-welcome' }); }
         else { pchk.checked = false; avisoToast(ES ? 'Permiso denegado. Actívalo en el navegador.' : 'Permission denied.'); }
       } else { try { localStorage.setItem('pp-push', '0'); } catch (_) {} }
     });
