@@ -3,7 +3,7 @@
    Secciones: Overview · Users · Analysis.
    Solo visible si esAdmin() (verificado en Firestore).
    ============================================================ */
-import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte, asignarFotoAnalista, quitarFotoAnalista, ajustarContadorAnalista, leerFichaAnalista, guardarPerfilAnalista, leerConfigContacto, guardarConfigContacto } from './mesa-datos.js';
+import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte, asignarFotoAnalista, quitarFotoAnalista, ajustarContadorAnalista, leerFichaAnalista, guardarPerfilAnalista, leerConfigContacto, guardarConfigContacto, listarSeguidoresDe } from './mesa-datos.js';
 import { rutaFotoAnalista } from '../datos/fotos-analistas.js';
 import { seguidoresBot, likesDe, dislikesDe, botPorUid, prestigioReal, baseDe } from '../datos/bots.js';
 import { abrirSelectorFotos } from '../ui/selector-fotos.js';
@@ -579,6 +579,7 @@ function filaUsuario(u) {
       <option value="">${ML('Inactive','Inactivo')}</option>
       ${PLANES.map(p => `<option value="${p.id}" ${sub.activo && sub.plan === p.id ? 'selected' : ''}>${p.nombre}</option>`).join('')}
       <option value="visitante" ${sub.activo && sub.plan === 'visitante' ? 'selected' : ''}>${ML('Visitor (full access, no charge)','Visitante (acceso total, sin cobro)')}</option>
+      <option value="temporal">${ML('Temporary (timed access…)','Temporal (acceso con tiempo…)')}</option>
     </select></td>
     <td data-l="${ML('Action','Acción')}"><button class="u-bloq ${u.bloqueado ? 'activo' : ''}" data-bloq="${u.uid}">${u.bloqueado ? ML('Unblock','Desbloquear') : ML('Block','Bloquear')}</button></td>
   </tr>`;
@@ -623,6 +624,7 @@ function pintarUsuariosTabla() {
   tbody.querySelectorAll('[data-plan]').forEach(sel => sel.onchange = async () => {
     const uid = sel.dataset.plan, u = _usuarios.find(x => x.uid === uid); if (!u) return;
     const planId = sel.value;
+    if (planId === 'temporal') { if (_ro()) { pintarUsuariosTabla(); return; } abrirTemporal(uid, u); pintarUsuariosTabla(); return; }
     let sub;
     if (!planId) sub = { activo: false, plan: null, vence: null, metodo: 'manual' };
     else if (planId === 'visitante') { sub = { activo: true, plan: 'visitante', vence: null, metodo: 'cortesia' }; }
@@ -984,6 +986,84 @@ function _monDatos() {
   }).sort((x, y) => y.sig - x.sig || y.seguidores - x.seguidores);
 }
 
+
+
+function abrirTemporal(uid, u) {
+  const ES = _mesaLang === 'es', L = (en, es) => ES ? es : en;
+  document.getElementById('tmp-ov')?.remove();
+  const ov = document.createElement('div'); ov.className = 'dg-ov'; ov.id = 'tmp-ov';
+  const cerrar = () => { ov.classList.remove('on'); setTimeout(() => ov.remove(), 200); };
+  const niveles = [['basic', 'Basic'], ['pro', 'Pro'], ['premium', 'Premium'], ['visitante', L('Visitor','Visitante')]];
+  const nom = (u && (u.nombre || u.usuario || u.email)) || '';
+  ov.innerHTML = `<div class="dg" role="dialog" aria-modal="true" style="max-width:420px">
+    <div class="dg-bg"></div><div class="dg-veil"></div>
+    <button class="dg-x" aria-label="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="dg-in">
+      <div class="dg-head"><span class="dg-badge">${L('Timed access','Acceso temporal')}</span><h3>${esc(nom)}</h3></div>
+      <div class="tmp-lab">${L('Access level','Nivel de acceso')}</div>
+      <div class="tmp-niv">${niveles.map((n, i) => `<button class="tmp-n ${i === 2 ? 'on' : ''}" data-niv="${n[0]}">${esc(n[1])}</button>`).join('')}</div>
+      <div class="tmp-lab">${L('Duration (days)','Duración (días)')}</div>
+      <div class="tmp-dias"><button class="tmp-q" data-d="7">7</button><button class="tmp-q on" data-d="30">30</button><button class="tmp-q" data-d="90">90</button><input id="tmp-in" type="number" min="1" max="3650" value="30"></div>
+      <button class="dg-go" id="tmp-ok" style="width:100%;margin-top:16px">${L('Grant access','Conceder acceso')}</button>
+      <p class="dg-note" id="tmp-msg">${L('Access is granted now and expires automatically. No manual tracking needed.','El acceso se concede ahora y caduca solo. Sin llevar la cuenta a mano.')}</p>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('on'));
+  ov.querySelector('.dg-x').onclick = cerrar;
+  ov.onclick = (e) => { if (e.target === ov) cerrar(); };
+  let nivel = 'premium';
+  ov.querySelectorAll('.tmp-n').forEach(b => b.onclick = () => { nivel = b.dataset.niv; ov.querySelectorAll('.tmp-n').forEach(x => x.classList.toggle('on', x === b)); });
+  const inp = ov.querySelector('#tmp-in');
+  ov.querySelectorAll('.tmp-q').forEach(b => b.onclick = () => { inp.value = b.dataset.d; ov.querySelectorAll('.tmp-q').forEach(x => x.classList.toggle('on', x === b)); });
+  inp.oninput = () => ov.querySelectorAll('.tmp-q').forEach(x => x.classList.toggle('on', x.dataset.d === inp.value));
+  ov.querySelector('#tmp-ok').onclick = async () => {
+    if (_ro()) return;
+    const dias = Math.max(1, Math.min(3650, parseInt(inp.value, 10) || 30));
+    const v = new Date(); v.setDate(v.getDate() + dias);
+    const sub = { activo: true, plan: nivel, vence: v.toISOString(), metodo: 'temporal' };
+    const msg = ov.querySelector('#tmp-msg');
+    msg.textContent = L('Saving…', 'Guardando…');
+    try { await fijarSuscripcionUsuario(uid, sub); u.suscripcion = sub; pintarUsuariosTabla(); cerrar(); }
+    catch (_) { msg.textContent = L('Error saving', 'Error al guardar'); }
+  };
+}
+
+function abrirSeguidores(uid, nombre) {
+  const ES = _mesaLang === 'es', L = (en, es) => ES ? es : en;
+  document.getElementById('seg-ov')?.remove();
+  const ov = document.createElement('div'); ov.className = 'dg-ov'; ov.id = 'seg-ov';
+  const cerrar = () => { ov.classList.remove('on'); setTimeout(() => ov.remove(), 200); };
+  ov.innerHTML = `<div class="dg" role="dialog" aria-modal="true" style="max-width:440px">
+    <div class="dg-bg"></div><div class="dg-veil"></div>
+    <button class="dg-x" aria-label="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="dg-in">
+      <div class="dg-head"><span class="dg-badge">${L('Followers','Seguidores')}</span><h3>${esc(nombre || '')}</h3></div>
+      <div id="seg-lista" class="seg-lista"><div class="seg-load">${L('Loading…','Cargando…')}</div></div>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('on'));
+  ov.querySelector('.dg-x').onclick = cerrar;
+  ov.onclick = (e) => { if (e.target === ov) cerrar(); };
+  (async () => {
+    let lista = [];
+    try { lista = await listarSeguidoresDe(uid); } catch (_) {}
+    const cont = ov.querySelector('#seg-lista');
+    if (!cont) return;
+    if (!lista.length) { cont.innerHTML = `<div class="seg-empty">${L('No followers yet.','Aún no hay seguidores.')}</div>`; return; }
+    const filas = lista.map((s, i) => {
+      const u = _usuarios.find(x => x.uid === s.uid) || {};
+      const nom = u.nombre || u.usuario || s.firma || (ES ? 'Usuario' : 'User');
+      const mail = u.email || '';
+      const fecha = s.fecha ? new Date(s.fecha).toLocaleDateString(ES ? 'es' : 'en', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+      const ini = (nom[0] || '?').toUpperCase();
+      return `<div class="seg-row"><span class="seg-av">${esc(ini)}</span><div class="seg-mid"><b>${esc(nom)}</b><span>${esc(mail)}</span></div>${fecha ? `<em class="seg-f">${esc(fecha)}</em>` : ''}</div>`;
+    }).join('');
+    cont.innerHTML = `<div class="seg-count">${lista.length} ${lista.length === 1 ? L('follower','seguidor') : L('followers','seguidores')}</div>${filas}`;
+  })();
+}
+
 function _bloqueIngresos() {
   const ES = _mesaLang === 'es';
   const L = (en, es) => ES ? es : en;
@@ -993,7 +1073,7 @@ function _bloqueIngresos() {
   const paraAnalistas = totSub * 1, paraPlataforma = totSub * 1, total = totSub * 2;
   const kpi = (cls, val, lab) => `<div class="mon-kpi ${cls}"><b>${val}</b><span>${esc(lab)}</span></div>`;
   const filas = datos.length ? datos.map(d => `
-    <div class="ing-row">
+    <div class="ing-row ver-seg" data-ver-seg="${esc(d.uid)}" data-seg-nom="${esc(d.nombre)}" role="button" tabindex="0">
       <div class="ing-who"><b>${esc(d.nombre)}</b><span>${esc(depNombre(d.deporte))}</span></div>
       <div class="ing-sub">${d.apoyos} <span>${ML('followers', 'seguidores')}</span></div>
       <div class="ing-amt an pot">$${d.apoyos}<span>${ML('analyst*', 'analista*')}</span></div>
@@ -1077,6 +1157,11 @@ function pintarMonitoreo() {
 }
 
 function enlazarMonitoreo() {
+  _cont.querySelectorAll('[data-ver-seg]').forEach(el => {
+    const abrir = () => abrirSeguidores(el.dataset.verSeg, el.dataset.segNom);
+    el.addEventListener('click', abrir);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } });
+  });
   _cont.querySelectorAll('#mon-chips [data-monf]').forEach(b => b.onclick = () => {
     _monFiltro = b.dataset.monf;
     _cont.querySelectorAll('#mon-chips [data-monf]').forEach(x => x.classList.toggle('on', x === b));

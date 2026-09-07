@@ -333,6 +333,19 @@ export async function contarSeguidores(analistaUid) {
   try { const snap = await S.getDocs(q); return snap.size || 0; } catch (_) { return 0; }
 }
 
+/* Lista los seguidores de un analista (para el panel admin). Devuelve [{uid, firma, fecha}]. */
+export async function listarSeguidoresDe(analistaUid) {
+  if (!analistaUid || !await _asegurarListo()) return [];
+  const S = _obtenerStore(), db = _obtenerDB();
+  const q = S.query(S.collection(db, 'seguimientos'), S.where('analistaUid', '==', analistaUid));
+  try {
+    const snap = await S.getDocs(q);
+    const out = [];
+    snap.forEach(d => { const x = d.data() || {}; out.push({ uid: x.seguidorUid || null, firma: x.firma || null, fecha: x.fecha && x.fecha.toDate ? x.fecha.toDate().toISOString() : (x.fecha || null) }); });
+    return out;
+  } catch (_) { return []; }
+}
+
 /* ============================================================
    FASE 6 — MODERACIÓN (doc 'config/moderacion' = { palabras: [...] })
    Admin lee/escribe; el analista solo lee (para validar al publicar).
