@@ -320,7 +320,7 @@ function vistaResumen() {
       ${kpi('blue', ML('Registered','Registrados'), total, ML('Paying customers only','Solo clientes'))}
       ${kpi('green', ML('Active','Activos'), act, ML('With paid plan','Con plan de pago'))}
       ${kpi('muted', ML('Inactive','Inactivos'), inactivos, ML('No active plan','Sin plan activo'))}
-      ${kpi('gold', ML('Monthly revenue','Ingresos mensuales'), '$' + mrr.toFixed(2), ML('MRR estimate','MRR estimado'))}
+      ${kpi('gold', ML('Revenue / mo','Ingresos / M'), '$' + mrr.toFixed(2), ML('MRR estimate','MRR estimado'))}
       ${kpi('staff', ML('Staff','Personal'), nStaff, ML('Hired analysts','Analistas contratados'))}
       ${kpi('blue', ML('Admins','Admins'), nAdmins, ML('Owners','Dueños'))}
     </div>
