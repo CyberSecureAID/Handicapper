@@ -10,6 +10,7 @@
    ============================================================ */
 
 import * as N from './nucleo.js';
+import { detallePartido } from '../datos/proveedor-api.js';
 
 const API = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl';
 const UMBRAL = 1;              // línea de referencia: 1+ touchdown
@@ -169,6 +170,21 @@ function _rango(fecha, dias) {
   return `${f0}-${f1}`;
 }
 
+/* Extrae amenazas de TD (carrera/recepción/TD) de los líderes reales del partido. */
+function tdDeDetalle(lista) {
+  const out = []; const seen = new Set();
+  (lista || []).forEach(j => {
+    const e = (j.etiqueta || '').toLowerCase(); const pos = (j.pos || '').toUpperCase();
+    const val = parseFloat(String(j.dato).replace(/[^0-9.]/g, '')) || 0;
+    let tdRate = null;
+    if (/touchdown|td/.test(e)) tdRate = Math.min(0.75, val / 12);
+    else if (/rush/.test(e)) tdRate = 0.55;
+    else if (/receiv|recep/.test(e)) tdRate = 0.45;
+    if (tdRate && j.nombre && j.id && !seen.has(j.id) && /RB|WR|TE|QB|FB|-|^$/.test(pos)) { seen.add(j.id); out.push({ id: j.id, nombre: j.nombre, pos, tdRate, gp: null, tdTot: null, foto: j.foto || null }); }
+  });
+  return out;
+}
+
 /* --------- Orquestador --------- */
 export async function topTouchdownProjection({ fecha, n = 9, maxPorEquipo = 5 } = {}) {
   const avisos = [];
@@ -190,9 +206,11 @@ export async function topTouchdownProjection({ fecha, n = 9, maxPorEquipo = 5 } 
       { comp: home, equipo: home.team, rival: away.team, local: true },
       { comp: away, equipo: away.team, rival: home.team, local: false },
     ];
+    let det = null; try { det = await detallePartido('nfl:' + ev.id); } catch (_) {}
     for (const lado of lados) {
-      let roster = (await rosterConTD(lado.equipo.id)).filter(x => (x.tdRate || 0) > 0);
-      let _f = 'roster';
+      let roster = tdDeDetalle(det && det.jugadores && det.jugadores[lado.local ? 'local' : 'visita']);
+      let _f = 'detalle';
+      if (!roster.length) { roster = (await rosterConTD(lado.equipo.id)).filter(x => (x.tdRate || 0) > 0); _f = 'roster'; }
       if (!roster.length) { roster = (ligaLeaders.get(String(lado.equipo.id)) || []).slice(); _f = 'leaders-liga'; }
       if (!roster.length) { roster = lideresTD(lado.comp); _f = 'leaders-cal'; }
       try { console.log(`[NFL-DIAG] ${lado.equipo.abbreviation}: ${roster.length} (fuente=${_f})`); } catch(_){}

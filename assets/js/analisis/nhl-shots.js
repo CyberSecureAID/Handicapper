@@ -9,6 +9,7 @@
    ============================================================ */
 
 import * as N from './nucleo.js';
+import { detallePartido, listarPartidos } from '../datos/proveedor-api.js';
 
 const WEB = 'https://api-web.nhle.com/v1';
 const STATS = 'https://api.nhle.com/stats/rest/en';
@@ -152,45 +153,51 @@ async function tiradoresPorEquipo(sid) {
 }
 
 /* --------- Orquestador --------- */
+function shotsDeDetalle(lista) {
+  const out = []; const seen = new Set();
+  (lista || []).forEach(j => {
+    const e = (j.etiqueta || '').toLowerCase();
+    const val = parseFloat(String(j.dato).replace(/[^0-9.]/g, '')) || 0;
+    let spg = null;
+    if (/shot|sog|tiro/.test(e)) spg = val;                       // tiros a puerta reales
+    else if (/goal|gol/.test(e)) spg = Math.max(2.5, val * 1.2 + 2);   // goleador -> estima volumen de tiro
+    else if (/point|pts|assist/.test(e)) spg = Math.max(2, val * 0.7 + 1.5);
+    if (spg && j.nombre && j.id && !seen.has(j.id)) { seen.add(j.id); out.push({ id: j.id, nombre: j.nombre, pos: j.pos, spg: +spg.toFixed(1), gp: null, foto: j.foto || null }); }
+  });
+  out.sort((a, b) => b.spg - a.spg);
+  return out;
+}
+
 export async function topShotsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}) {
   const avisos = [];
-  const sid = seasonId(fecha);
-  let sched;
-  try { sched = await pedir(`${WEB}/schedule/${fecha}`); }
-  catch (_) { return { jugadores: [], meta: { fecha, fuente: 'NHL', avisos: ['No se pudo leer el calendario NHL'] } }; }
-
-  const semana = sched?.gameWeek || [];
-  // Toda la semana (hoy + próximos), ordenados por cercanía.
-  let juegos = [];
-  semana.forEach(d => (d.games || []).forEach(g => { if (!g.gameDate && d.date) g.gameDate = d.date; juegos.push(g); }));
-  juegos.sort((a, b) => new Date(a.startTimeUTC || a.gameDate) - new Date(b.startTimeUTC || b.gameDate));
-  juegos = juegos.slice(0, 12);
-  if (!juegos.length) return { jugadores: [], meta: { fecha, fuente: 'NHL', avisos: ['Sin juegos NHL esta semana'] } };
-
-  const [defensas, tiradores] = await Promise.all([defensasNHL(sid), tiradoresPorEquipo(sid)]);
-  try { console.log(`[NHL-DIAG] juegos=${juegos.length} equipos con tiradores=${tiradores.size} sid=${sid}`); } catch(_){}
+  let partidos = [];
+  try { partidos = await listarPartidos('nhl'); } catch (_) { return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['No se pudo leer el calendario NHL'] } }; }
+  if (!partidos.length) return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['Sin juegos NHL'] } };
+  partidos.sort((a, b) => new Date(a.cuando || 0) - new Date(b.cuando || 0));
+  const cercanos = partidos.slice(0, 6);
   const candidatos = [];
 
-  for (const g of juegos) {
-    const home = g.homeTeam, away = g.awayTeam;
-    if (!home || !away) continue;
+  for (const p of cercanos) {
+    let det = null; try { det = await detallePartido(p.id); } catch (_) {}
+    if (!det || !det.jugadores) { avisos.push(`Sin datos de jugadores para ${p.local && p.local.nombre || '—'}`); continue; }
     const lados = [
-      { equipo: home, rival: away, local: true },
-      { equipo: away, rival: home, local: false },
+      { j: det.jugadores.local, equipo: p.local, rival: p.visita, local: true },
+      { j: det.jugadores.visita, equipo: p.visita, rival: p.local, local: false },
     ];
     for (const lado of lados) {
-      const ab = lado.equipo.abbrev;
-      const lista = tiradores.get(ab) || [];
-      if (!lista.length) { avisos.push(`Sin tiradores para ${ab || '—'}`); continue; }
-      const oponente = { saPorPartido: defensas.get(String(lado.rival.id)) };
+      const lista = shotsDeDetalle(lado.j);
+      if (!lista.length) { avisos.push(`Sin datos de jugadores para ${lado.equipo && lado.equipo.nombre || '—'}`); continue; }
       let count = 0;
       for (const jug of lista) {
         if (count >= maxPorEquipo) break;
-        if (jug.spg < 1) continue;   // descarta poco volumen de tiro
-        const est = estimarTiros({ jugador: { ...jug, titular: true }, oponente, local: lado.local, lineupConfirmado: false });
+        if (jug.spg < 1.5) continue;
+        const est = estimarTiros({ jugador: { ...jug, titular: true }, oponente: {}, local: lado.local, lineupConfirmado: false });
         candidatos.push({
-          id: jug.id, nombre: jug.nombre, equipoAbrev: ab, rivalAbrev: lado.rival.abbrev, logoLocal: (lado.equipo.logo || lado.equipo.darkLogo) || null, logoVisita: (lado.rival.logo || lado.rival.darkLogo) || null, nomLocal: (lado.equipo.name && (lado.equipo.name.default || lado.equipo.name)) || lado.equipo.abbrev, nomVisita: (lado.rival.name && (lado.rival.name.default || lado.rival.name)) || lado.rival.abbrev,
-          pos: jug.pos, spg: jug.spg, local: lado.local, cuando: g.startTimeUTC || g.gameDate, saRival: oponente.saPorPartido, ...est,
+          id: jug.id, nombre: jug.nombre, foto: jug.foto,
+          equipoAbrev: lado.equipo.abrev, rivalAbrev: lado.rival.abrev,
+          nomLocal: lado.equipo.nombre, nomVisita: lado.rival.nombre,
+          logoLocal: lado.equipo.logo, logoVisita: lado.rival.logo,
+          pos: jug.pos, spg: jug.spg, local: lado.local, cuando: p.cuando, ...est,
         });
         count++;
       }
@@ -198,14 +205,9 @@ export async function topShotsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}
   }
 
   candidatos.sort((a, b) => (new Date(a.cuando) - new Date(b.cuando)) || (b.prob - a.prob) || (b.proj - a.proj));
-  // Calidad: prioriza a los tiradores de volumen (evita relleno de bajo tiro).
   let elegidos = candidatos.filter(c => (c.spg || 0) >= 2.5);
   if (elegidos.length < 4) elegidos = candidatos.filter(c => (c.spg || 0) >= 2);
   if (elegidos.length < 3) elegidos = candidatos;
   const top = elegidos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
-  try { console.log(`[NHL-DIAG] candidatos=${candidatos.length}`); } catch(_){}
-  return {
-    jugadores: top,
-    meta: { fecha, fuente: 'NHL', modelo: `P(${UMBRAL}+ tiros) = 1 − e^(−λ)(1+λ) · estimación propia`, candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)] },
-  };
+  return { jugadores: top, meta: { fecha, fuente: 'ESPN', modelo: 'P(2+ tiros) = 1 - e^(-λ)(1+λ)', candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)] } };
 }

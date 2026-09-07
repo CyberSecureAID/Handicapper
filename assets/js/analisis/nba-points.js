@@ -8,6 +8,7 @@
    ============================================================ */
 
 import * as N from './nucleo.js';
+import { detallePartido } from '../datos/proveedor-api.js';
 
 const API = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
 const UMBRAL = 20;               // línea de referencia (puntos)
@@ -194,6 +195,14 @@ function _rango(fecha, dias) {
   return `${f0}-${f1}`;
 }
 
+/* Extrae anotadores (ppg) de los líderes reales del partido (detallePartido, la fuente que funciona). */
+function puntosDeDetalle(lista) {
+  return (lista || []).filter(j => /point|pts|ppg|anot/i.test(j.etiqueta || '')).map(j => ({
+    id: j.id, nombre: j.nombre, pos: j.pos, foto: j.foto || null,
+    ppg: parseFloat(String(j.dato).replace(/[^0-9.]/g, '')) || null, mpg: null,
+  })).filter(x => x.ppg && x.ppg >= 1);
+}
+
 /* --------- Orquestador --------- */
 export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}) {
   const avisos = [];
@@ -216,11 +225,11 @@ export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {
       { comp: home, equipo: home.team, rival: away.team, local: true },
       { comp: away, equipo: away.team, rival: home.team, local: false },
     ];
+    let det = null; try { det = await detallePartido('nba:' + ev.id); } catch (_) {}
     for (const lado of lados) {
-      // 1) Los LÍDERES del calendario traen el promedio real (crème de la crème).
-      //    2) Si no hay, se intenta el roster como respaldo.
-      let roster = leadersPuntos(lado.comp);
-      let _fuente = 'leaders-cal';
+      let roster = puntosDeDetalle(det && det.jugadores && det.jugadores[lado.local ? 'local' : 'visita']);
+      let _fuente = 'detalle';
+      if (!roster.length) { roster = leadersPuntos(lado.comp); _fuente = 'leaders-cal'; }
       if (!roster.length) { roster = (ligaLeaders.get(String(lado.equipo.id)) || []).slice(); _fuente = 'leaders-liga'; }
       if (!roster.length) { const r = await rosterConPuntos(lado.equipo.id); roster = r.filter(x => x.ppg != null); _fuente = 'roster'; }
       try { console.log(`[NBA-DIAG] ${lado.equipo.abbreviation}: ${roster.length} jugadores (fuente=${_fuente}, top ppg=${roster[0]?.ppg ?? '-'})`); } catch(_){}
