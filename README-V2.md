@@ -1,8 +1,8 @@
-# Handicapper — README V2 (Estado, sistema social y hoja de ruta por fases)
+# Sports Expectations — README V2 (Estado, sistema social y hoja de ruta por fases)
 
 > **Cómo leer este documento.** Este README V2 **complementa** al `README.md`
 > original (V1), no lo reemplaza. En **V1** está el contexto base y **no se repite
-> aquí**: qué es Handicapper, filosofía de trabajo, equipo/negocio, planes/precios,
+> aquí**: qué es Sports Expectations, filosofía de trabajo, equipo/negocio, planes/precios,
 > stack, capa de datos (ESPN + TheSportsDB), `firebase-config`, el **motor de
 > probabilidad** y el **dashboard 16:9** de detalle.
 >

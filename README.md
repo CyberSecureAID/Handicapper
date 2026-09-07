@@ -1,13 +1,15 @@
-# Handicapper — README maestro
+# Sports Expectations — README maestro
+
+> **Nota de nombre:** el nombre público del producto es **Sports Expectations**. El repositorio, algunas claves de `localStorage` (`handicapper-idioma`) y el proyecto Firebase (`handicappper`) conservan el nombre-código histórico `handicapper` por compatibilidad — NO cambiarlos.
 
 > Documento de contexto **completo** del proyecto. Está escrito para que cualquier
 > chat nuevo (o cualquier colaborador) entienda **desde cero hasta hoy** qué es
-> Handicapper, cómo está construido, qué reglas seguimos, qué falta y hacia dónde
+> Sports Expectations, cómo está construido, qué reglas seguimos, qué falta y hacia dónde
 > vamos. Si lees esto, ya tienes todo el contexto: no hace falta nada más.
 
 ---
 
-## 0. Qué es Handicapper
+## 0. Qué es Sports Expectations
 
 Plataforma web de **análisis y datos deportivos por suscripción**. El usuario abre
 un partido y ve: datos públicos y verificables de ambos equipos, una **probabilidad**
@@ -378,7 +380,7 @@ Ruta interna, abierta desde el perfil del admin. Secciones:
 
 > Sección añadida tras una auditoría archivo por archivo. Recoge TODO lo implementado
 > desde las secciones anteriores. La marca del producto de cara al público es
-> **Sports Expectations** (el repo y algunos textos internos aún dicen "Handicapper").
+> **Sports Expectations** (el repo y algunos textos internos aún dicen "Sports Expectations").
 
 ### 17.1 Nuevos archivos (desde la última edición)
 - `assets/js/landing-lang.js` — traductor ligero standalone para páginas secundarias (usa el diccionario de `idioma.js`, sin Firebase).
@@ -410,7 +412,7 @@ Ruta interna, abierta desde el perfil del admin. Secciones:
 ### 17.4 SEO (sin dominio propio aún)
 - `index.html` + 6 páginas principales: `<title>`, `meta description`, `keywords`, Open Graph, Twitter Card, `canonical`, JSON-LD (Organization + WebSite).
 - `robots.txt` (permite todo + apunta al sitemap) y `sitemap.xml` (15 URLs).
-- URLs usan la URL real de GitHub Pages `cybersecureaid.github.io/Handicapper` (buscar/reemplazar cuando haya dominio).
+- URLs usan la URL real de GitHub Pages `cybersecureaid.github.io/Sports Expectations` (buscar/reemplazar cuando haya dominio).
 - REGLA: sin guiones en texto visible (se usa `·` como separador, no `—`).
 
 ### 17.5 Páginas legales (7) — Florida / EE.UU.
@@ -446,6 +448,6 @@ Ruta interna, abierta desde el perfil del admin. Secciones:
 1. **Stripe** — integración real (lo último). Sistema ya preparado.
 2. **Points / Shots / Touchdown vacíos** — REVISAR: el lunes seguían sin picks aunque hay partidos. Probable que ESPN no publique stats de jugador hasta cerca del juego. Confirmar con `[NBA-DIAG]`/`[NFL-DIAG]` en consola.
 3. **i18n** — traducir páginas secundarias restantes + legales (legales con revisión de abogado).
-4. **Firebase** — cambiar "Public-facing name" de "Handicapper" a "Sports Expectations".
-5. **Dominio** — al adquirirlo, reemplazar `cybersecureaid.github.io/Handicapper` en SEO/sitemap/robots + registrar en Google Search Console.
+4. **Firebase** — cambiar "Public-facing name" de "Sports Expectations" a "Sports Expectations".
+5. **Dominio** — al adquirirlo, reemplazar `cybersecureaid.github.io/Sports Expectations` en SEO/sitemap/robots + registrar en Google Search Console.
 6. **Push notifications** en segundo plano (VAPID) — pendiente.

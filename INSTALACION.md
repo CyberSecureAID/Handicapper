@@ -1,4 +1,4 @@
-# Instalacion — Handicapper
+# Instalacion — Sports Expectations
 
 ## Repositorio
 Nombre del repo en GitHub: `handicapper`  ·  rama `main`  ·  privado al inicio.
@@ -43,7 +43,7 @@ Debes subir TUS 5 imagenes reales con EXACTAMENTE estos nombres (PNG sin fondo):
 - `favicon.png`
 
 El codigo las coloca solo (segun tema y si es movil o web). Mientras no existan,
-se muestra el nombre "Handicapper" estilizado como respaldo (no se ve roto).
+se muestra el nombre "Sports Expectations" estilizado como respaldo (no se ve roto).
 
 Formato: PNG con fondo TRANSPARENTE esta perfecto y carga rapido. No hace falta webp.
 Tamanos sugeridos: nombre completo ~560x140, la H ~120x120, favicon 64x64 (o 256x256).
