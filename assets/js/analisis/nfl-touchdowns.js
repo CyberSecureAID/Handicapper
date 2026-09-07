@@ -161,14 +161,22 @@ async function leadersLigaNFL() {
   return porEquipo;
 }
 
+/* Rango de fechas YYYYMMDD-YYYYMMDD: hoy + N días (para mostrar próximos juegos). */
+function _rango(fecha, dias) {
+  const f0 = (fecha || '').replace(/-/g, '');
+  const d = new Date((fecha || new Date().toISOString().slice(0,10)) + 'T12:00:00'); d.setDate(d.getDate() + (dias || 10));
+  const f1 = d.toISOString().slice(0, 10).replace(/-/g, '');
+  return `${f0}-${f1}`;
+}
+
 /* --------- Orquestador --------- */
 export async function topTouchdownProjection({ fecha, n = 9, maxPorEquipo = 5 } = {}) {
   const avisos = [];
   const candidatos = [];
   let data;
-  try { data = await pedir(`${API}/scoreboard?dates=${fecha.replace(/-/g, '')}`); }
+  try { data = await pedir(`${API}/scoreboard?dates=${_rango(fecha, 12)}`); }
   catch (_) { return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['No se pudo leer el calendario NFL'] } }; }
-  const eventos = data?.events || [];
+  let eventos = (data?.events || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 10);
   if (!eventos.length) return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['Sin juegos NFL hoy'] } };
 
   const [defensas, ligaLeaders] = await Promise.all([defensasNFL(), leadersLigaNFL()]);
@@ -207,7 +215,7 @@ export async function topTouchdownProjection({ fecha, n = 9, maxPorEquipo = 5 } 
     }
   }
 
-  candidatos.sort((a, b) => b.prob - a.prob || (b.tdRate || 0) - (a.tdRate || 0));
+  candidatos.sort((a, b) => (new Date(a.cuando) - new Date(b.cuando)) || (b.prob - a.prob) || ((b.tdRate || 0) - (a.tdRate || 0)));
   const top = candidatos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
   return {
     jugadores: top,

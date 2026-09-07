@@ -160,9 +160,12 @@ export async function topShotsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}
   catch (_) { return { jugadores: [], meta: { fecha, fuente: 'NHL', avisos: ['No se pudo leer el calendario NHL'] } }; }
 
   const semana = sched?.gameWeek || [];
-  const dia = semana.find(d => d.date === fecha) || semana[0];
-  const juegos = (dia && dia.games) || [];
-  if (!juegos.length) return { jugadores: [], meta: { fecha, fuente: 'NHL', avisos: ['Sin juegos NHL hoy'] } };
+  // Toda la semana (hoy + próximos), ordenados por cercanía.
+  let juegos = [];
+  semana.forEach(d => (d.games || []).forEach(g => { if (!g.gameDate && d.date) g.gameDate = d.date; juegos.push(g); }));
+  juegos.sort((a, b) => new Date(a.startTimeUTC || a.gameDate) - new Date(b.startTimeUTC || b.gameDate));
+  juegos = juegos.slice(0, 12);
+  if (!juegos.length) return { jugadores: [], meta: { fecha, fuente: 'NHL', avisos: ['Sin juegos NHL esta semana'] } };
 
   const [defensas, tiradores] = await Promise.all([defensasNHL(sid), tiradoresPorEquipo(sid)]);
   try { console.log(`[NHL-DIAG] juegos=${juegos.length} equipos con tiradores=${tiradores.size} sid=${sid}`); } catch(_){}
@@ -194,7 +197,7 @@ export async function topShotsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}
     }
   }
 
-  candidatos.sort((a, b) => b.prob - a.prob || b.proj - a.proj);
+  candidatos.sort((a, b) => (new Date(a.cuando) - new Date(b.cuando)) || (b.prob - a.prob) || (b.proj - a.proj));
   // Calidad: prioriza a los tiradores de volumen (evita relleno de bajo tiro).
   let elegidos = candidatos.filter(c => (c.spg || 0) >= 2.5);
   if (elegidos.length < 4) elegidos = candidatos.filter(c => (c.spg || 0) >= 2);

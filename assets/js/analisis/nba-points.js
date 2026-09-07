@@ -186,14 +186,23 @@ async function leadersLigaNBA() {
   return porEquipo;
 }
 
+/* Rango de fechas YYYYMMDD-YYYYMMDD: hoy + N días (para mostrar próximos juegos). */
+function _rango(fecha, dias) {
+  const f0 = (fecha || '').replace(/-/g, '');
+  const d = new Date((fecha || new Date().toISOString().slice(0,10)) + 'T12:00:00'); d.setDate(d.getDate() + (dias || 10));
+  const f1 = d.toISOString().slice(0, 10).replace(/-/g, '');
+  return `${f0}-${f1}`;
+}
+
 /* --------- Orquestador --------- */
 export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}) {
   const avisos = [];
   const candidatos = [];
   let data;
-  try { data = await pedir(`${API}/scoreboard?dates=${fecha.replace(/-/g, '')}`); }
+  try { data = await pedir(`${API}/scoreboard?dates=${_rango(fecha, 10)}`); }
   catch (_) { return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['No se pudo leer el calendario NBA'] } }; }
-  const eventos = data?.events || [];
+  let eventos = (data?.events || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+  eventos = eventos.slice(0, 8);   // los 8 juegos más cercanos
   if (!eventos.length) return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['Sin juegos NBA hoy'] } };
 
   const [defensas, ligaLeaders] = await Promise.all([defensasNBA(), leadersLigaNBA()]);
@@ -232,7 +241,7 @@ export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {
     }
   }
 
-  candidatos.sort((a, b) => b.prob - a.prob || b.proj - a.proj);
+  candidatos.sort((a, b) => (new Date(a.cuando) - new Date(b.cuando)) || (b.prob - a.prob) || (b.proj - a.proj));
   // Calidad: prioriza a los anotadores de verdad (evita relleno de bajo promedio).
   let elegidos = candidatos.filter(c => (c.ppg || 0) >= 15);
   if (elegidos.length < 4) elegidos = candidatos.filter(c => (c.ppg || 0) >= 12);

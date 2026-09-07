@@ -171,15 +171,23 @@ export function estimarOver15({ home, away }) {
   };
 }
 
+/* Rango de fechas YYYYMMDD-YYYYMMDD: hoy + N días (para mostrar próximos juegos). */
+function _rango(fecha, dias) {
+  const f0 = (fecha || '').replace(/-/g, '');
+  const d = new Date((fecha || new Date().toISOString().slice(0,10)) + 'T12:00:00'); d.setDate(d.getDate() + (dias || 10));
+  const f1 = d.toISOString().slice(0, 10).replace(/-/g, '');
+  return `${f0}-${f1}`;
+}
+
 export async function topGoalsMatchProjection({ fecha, n = 9, ligas } = {}) {
   const ids = ligas || ['epl', 'laliga', 'seriea', 'bundes', 'ucl', 'ligue1'];
   const candidatos = [];
   for (const ligaId of ids) {
     const ruta = LIGAS[ligaId]; if (!ruta) continue;
     let data;
-    try { data = await pedir(`${API}/${ruta}/scoreboard?dates=${fecha.replace(/-/g, '')}`); }
+    try { data = await pedir(`${API}/${ruta}/scoreboard?dates=${_rango(fecha, 8)}`); }
     catch (_) { continue; }
-    const eventos = data?.events || [];
+    let eventos = (data?.events || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 12);
     if (!eventos.length) continue;
     const goles = await golesDeLiga(ruta);
     for (const ev of eventos) {
@@ -205,7 +213,7 @@ export async function topGoalsMatchProjection({ fecha, n = 9, ligas } = {}) {
       });
     }
   }
-  candidatos.sort((a, b) => b.prob - a.prob || b.proj - a.proj);
+  candidatos.sort((a, b) => (new Date(a.cuando) - new Date(b.cuando)) || (b.prob - a.prob) || (b.proj - a.proj));
   const top = candidatos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
   return { jugadores: top, meta: { fecha, fuente: 'ESPN', modelo: 'Over 1.5 (Poisson sobre goles esperados)', candidatosEvaluados: candidatos.length } };
 }

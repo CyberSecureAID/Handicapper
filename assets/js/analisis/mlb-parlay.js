@@ -38,11 +38,15 @@ const PA_SLOT = [4.65, 4.55, 4.45, 4.35, 4.22, 4.08, 3.95, 3.82, 3.70];
 
 /* ---------- 1) CARTELERA + PROBABLES + LINEUPS ---------- */
 async function cartelera(fecha, proxy) {
-  const url = `${API}/schedule?sportId=1&date=${fecha}&hydrate=team,venue,probablePitcher,lineups,linescore`;
+  // Rango: hoy + 7 días, para mostrar próximos juegos si hoy no hay.
+  const dE = new Date((fecha || new Date().toISOString().slice(0,10)) + 'T12:00:00'); dE.setDate(dE.getDate() + 7);
+  const fin = dE.toISOString().slice(0, 10);
+  const url = `${API}/schedule?sportId=1&startDate=${fecha}&endDate=${fin}&hydrate=team,venue,probablePitcher,lineups,linescore`;
   const d = await pedir(url, proxy);
-  const juegos = [];
+  let juegos = [];
   (d?.dates || []).forEach(day => (day.games || []).forEach(g => juegos.push(g)));
-  return juegos;
+  juegos.sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
+  return juegos.slice(0, 10);   // los 10 juegos más cercanos
 }
 
 /* ---------- 2) STATS DE PITCHER (temporada + vs mano) ---------- */
@@ -265,7 +269,7 @@ export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 6
   }));
 
   const candidatos = porJuego.flat();
-  candidatos.sort((a, b) => b.prob - a.prob || b.pHit - a.pHit);
+  candidatos.sort((a, b) => (new Date(a.cuando) - new Date(b.cuando)) || (b.prob - a.prob) || (b.pHit - a.pHit));
 
   // ---- ETAPA 2: re-rankear los mejores por TASA REAL de "juegos con hit" (últimos 10) ----
   // Así mandan los que de verdad conectan seguido (7/10, 8/10), no los de buen AVG con mala racha.
