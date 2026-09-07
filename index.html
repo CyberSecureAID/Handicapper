@@ -10,6 +10,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d1421">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Sports Expectations">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -234,7 +235,7 @@
         <h4 data-i18n="foot.stay">Stay updated</h4>
         <p data-i18n="foot.newsletter">Get the latest updates and insights delivered to your inbox.</p>
         <div class="foot-email">
-          <input type="email" placeholder="Enter your email" data-i18n-ph="foot.email">
+          <input type="email" name="newsletter-email" placeholder="Enter your email" data-i18n-ph="foot.email" autocomplete="email">
           <button aria-label="Subscribe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
         </div>
       </div>
