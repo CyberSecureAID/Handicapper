@@ -9,8 +9,8 @@ export const PLANES = [
     id: 'basic',
     nombre: 'Basic',
     destacado: false,
-    mensual: 1.99,
-    anual: 19.90,
+    mensual: 2.99,
+    anual: 29.90,
     resumen: { en: 'General access to the platform.', es: 'Acceso general a la plataforma.' },
     incluye: [
       { en: 'All leagues & categories', es: 'Todas las ligas y categorías' },
@@ -23,8 +23,8 @@ export const PLANES = [
     nombre: 'Pro',
     destacado: true,
     etiqueta: { en: 'Most popular', es: 'Más popular' },
-    mensual: 3.99,
-    anual: 39.90,
+    mensual: 7.99,
+    anual: 79.90,
     resumen: { en: 'Intermediate access, a step deeper.', es: 'Acceso intermedio, un paso más a fondo.' },
     incluye: [
       { en: 'Everything in Basic', es: 'Todo lo de Basic' },
@@ -38,8 +38,8 @@ export const PLANES = [
     id: 'premium',
     nombre: 'Premium',
     destacado: false,
-    mensual: 8.99,
-    anual: 89.90,
+    mensual: 14.99,
+    anual: 149.90,
     resumen: { en: 'The most complete access on the platform.', es: 'El acceso más completo de la plataforma.' },
     incluye: [
       { en: 'Everything in Pro', es: 'Todo lo de Pro' },
