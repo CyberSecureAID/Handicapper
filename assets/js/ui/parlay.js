@@ -113,8 +113,8 @@ function VISTA(sport) {
       eyebrow: L('Premium · Points Projection', 'Premium · Proyección de Puntos'),
       titulo: `${L('Top picks · Best', 'Top del día · Mejores')} <em>${L('20+ point chances', 'opciones de 20+ pts')}</em>`,
       metric: 'P(20+ pts)', metricLabel: L('Chance of<br>20+ pts', 'Opción de<br>20+ pts'),
-      lead: L('The nine players with the highest estimated probability of scoring 20 or more points today.',
-              'Los nueve jugadores con mayor probabilidad estimada de anotar 20 o más puntos hoy.'),
+      lead: L('The players with the highest estimated probability of scoring 20 or more points.',
+              'Los jugadores con mayor probabilidad estimada de anotar 20 o más puntos.'),
       foot: L('Model probability estimates, not betting advice. Basketball is high-variance: a high probability is not a certainty.',
               'Estimaciones probabilísticas del modelo, no asesoría de apuestas. El baloncesto es de alta varianza: una probabilidad alta no es certeza.'),
       toCard: (p) => ({ ...p, tags: p.tags || [ `${p.proj} ${L('proj', 'proy')}`, (p.ptsPermRival != null ? `${L('vs', 'vs')} ${p.rivalAbrev} · ${(+p.ptsPermRival).toFixed(0)} ${L('allowed', 'perm.')}` : `${L('vs', 'vs')} ${p.rivalAbrev || ''}`), (p.ppg != null ? `${(+p.ppg).toFixed(1)} PPG` : '') ].filter(Boolean) }),
@@ -124,8 +124,8 @@ function VISTA(sport) {
       eyebrow: L('Premium · Shots Projection', 'Premium · Proyección de Tiros'),
       titulo: `${L('Top picks · Best', 'Top del día · Mejores')} <em>${L('2+ shot chances', 'opciones de 2+ tiros')}</em>`,
       metric: 'P(2+ SOG)', metricLabel: L('Chance of<br>2+ shots', 'Opción de<br>2+ tiros'),
-      lead: L('The nine players with the highest estimated probability of registering 2 or more shots on goal today.',
-              'Los nueve jugadores con mayor probabilidad estimada de registrar 2 o más tiros a puerta hoy.'),
+      lead: L('The players with the highest estimated probability of registering 2 or more shots on goal.',
+              'Los jugadores con mayor probabilidad estimada de registrar 2 o más tiros a puerta.'),
       foot: L('Model probability estimates, not betting advice. Hockey is high-variance: a high probability is not a certainty.',
               'Estimaciones probabilísticas del modelo, no asesoría de apuestas. El hockey es de alta varianza: una probabilidad alta no es certeza.'),
       toCard: (p) => ({ ...p, tags: p.tags || [ `${p.proj} ${L('proj', 'proy')}`, (p.saRival != null ? `${L('vs', 'vs')} ${p.rivalAbrev} · ${(+p.saRival).toFixed(0)} ${L('SA', 'TC')}` : `${L('vs', 'vs')} ${p.rivalAbrev || ''}`), (p.spg != null ? `${(+p.spg).toFixed(1)} S/G` : '') ].filter(Boolean) }),
@@ -135,8 +135,8 @@ function VISTA(sport) {
       eyebrow: L('Premium · Touchdown Projection', 'Premium · Proyección de Touchdowns'),
       titulo: `${L('Top picks · Best', 'Top del día · Mejores')} <em>${L('touchdown chances', 'opciones de touchdown')}</em>`,
       metric: 'P(1+ TD)', metricLabel: L('Chance of<br>a TD', 'Opción de<br>un TD'),
-      lead: L('The nine players with the highest estimated probability of scoring a touchdown today (anytime TD scorer).',
-              'Los nueve jugadores con mayor probabilidad estimada de anotar un touchdown hoy (anytime TD scorer).'),
+      lead: L('The players with the highest estimated probability of scoring a touchdown (anytime TD scorer).',
+              'Los jugadores con mayor probabilidad estimada de anotar un touchdown (anytime TD scorer).'),
       foot: L('Model probability estimates, not betting advice. Football is high-variance: a high probability is not a certainty.',
               'Estimaciones probabilísticas del modelo, no asesoría de apuestas. El fútbol americano es de alta varianza: una probabilidad alta no es certeza.'),
       toCard: (p) => ({ ...p, tags: p.tags || [ p.pos || 'RB', (p.tdPermRival != null ? `${L('vs', 'vs')} ${p.rivalAbrev} · ${(+p.tdPermRival).toFixed(1)} ${L('TD/g', 'TD/j')}` : `${L('vs', 'vs')} ${p.rivalAbrev || ''}`), (p.tdTot != null ? `${p.tdTot} TD` : '') ].filter(Boolean) }),
@@ -310,11 +310,11 @@ function betTabsHTML(activo) {
 
 function heroHTML(cfg, meta, cargando, variante) {
   const noun = String(cfg.metricLabel || '').replace(/<br>/g, ' ').trim();
-  const nMostrar = cfg._count != null ? cfg._count : (cfg._modo === 'pro' ? 1 : 9);
+  const nMostrar = cfg._count != null ? cfg._count : (cargando ? null : 0);
   const chips = [
     `<span>${L('Date', 'Fecha')} · <b>${esc(meta.fecha)}</b></span>`,
-    `<span class="ply-count-chip"><b>${nMostrar}</b> ${L('players', 'jugadores')} · ${esc(noun)}</span>`,
-  ].join('');
+    (nMostrar > 0 ? `<span class="ply-count-chip"><b>${nMostrar}</b> ${L('players', 'jugadores')} · ${esc(noun)}</span>` : ''),
+  ].filter(Boolean).join('');
   const posBg = cfg._sport === 'mlb' ? '75%' : '72%';   // móvil: mueve la foto para que salga el atleta
   const corona = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18h16l-1.2-8-4.3 3-2.5-5-2.5 5-4.3-3z"/></svg>';
   const badge = cfg._modo === 'pro'
@@ -665,7 +665,7 @@ function wireBets(cont) {
     panels.forEach(p => { p.hidden = (p.getAttribute('data-bet-panel') !== bet); });
 
     const chip = cont.querySelector('.ply-count-chip');
-    if (chip && bet === 'hits') chip.innerHTML = `<b>9</b> ${L('players', 'jugadores')} · ${L('Chance of a hit', 'Opción de hit')}`;
+    if (chip && bet === 'hits') chip.innerHTML = `<b>${cfg._count != null ? cfg._count : ''}</b> ${L('players', 'jugadores')} · ${L('Chance of a hit', 'Opción de hit')}`;
     if (chip && bet === 'tb') chip.innerHTML = `${L('Total bases', 'Bases totales')} · ${L('coming soon', 'muy pronto')}`;
     if (chip && bet === 'hr') chip.innerHTML = hrCount != null
       ? `<b>${hrCount}</b> ${L('players', 'jugadores')} · ${L('Chance of a HR', 'Opción de HR')}`
@@ -700,6 +700,7 @@ function wireBets(cont) {
 }
 
 function sinJuegosHTML(cont, cfg, meta, brutos) {
+  cfg._count = 0;   // sin picks -> sin chip de número
   const ES = idiomaActual() === 'es';
   const avisos = (meta && meta.avisos) || [];
   const av = avisos.join(' · ');
@@ -717,7 +718,7 @@ function sinJuegosHTML(cont, cfg, meta, brutos) {
     msg = L('No picks to show right now. Check back shortly.', 'No hay picks que mostrar ahora mismo. Vuelve en un rato.');
   }
   // Línea de diagnóstico discreta (para depurar sin F12).
-  const diag = av ? `<div class="ply-diag">Diagnóstico: ${esc(av)}${meta && meta.candidatosEvaluados != null ? ` · candidatos: ${meta.candidatosEvaluados}` : ''}</div>` : '';
+  const diag = '';   // diagnóstico oculto para el usuario (queda en la consola)
   cont.innerHTML = `<div class="ply">${heroHTML(cfg, { fecha: hoyISO() }, false)}<div class="ply-note ply-note-big"><i></i>${msg}</div>${diag}</div>`;
 }
 function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
