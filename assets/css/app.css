@@ -1604,12 +1604,12 @@
 .disc-ov.on { opacity: 1; }
 .disc { display: flex; width: 100%; max-width: 780px; height: 468px; max-height: 92vh; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.14); box-shadow: 0 40px 90px -25px rgba(0,0,0,.9); transform: scale(.96) translateY(6px); transition: transform .22s cubic-bezier(.2,.7,.3,1); }
 .disc-ov.on .disc { transform: scale(1) translateY(0); }
-.disc-img { flex: 0 0 35%; background-image: url('../imagenes/disclaimer-web.webp'); background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #06090f; }
+.disc-img { position: relative; flex: 0 0 38%; background-image: url('../imagenes/disclaimer-web.webp'); background-size: cover; background-position: 34% center; background-repeat: no-repeat; background-color: #06090f; }
 .disc-imgm { display: none; }
 .disc-body { position: relative; flex: 1 1 auto; min-width: 0; }
 .disc-bg { position: absolute; inset: 0; background: url('../imagenes/fondos/fondo-pagina.webp') center/cover; filter: blur(11px) brightness(.4); transform: scale(1.25); }
 .disc-veil { position: absolute; inset: 0; background: linear-gradient(160deg, rgba(15,21,33,.84), rgba(8,11,18,.95)); }
-.disc-in { position: relative; padding: 30px 28px; overflow-y: auto; max-height: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; }
+.disc-in { position: relative; padding: 30px 28px; overflow-y: auto; max-height: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; }
 .disc-badge { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #e8c46a; background: rgba(232,196,106,.12); border: 1px solid rgba(232,196,106,.32); border-radius: 999px; padding: 5px 13px; margin-bottom: 14px; }
 .disc h3 { font-family: "Poppins",sans-serif; font-weight: 700; font-size: 22px; color: #fff; margin: 0 0 12px; }
 .disc-in p { font-size: 13.5px; line-height: 1.6; color: #cdd6e2; margin: 0 0 4px; }
@@ -1627,3 +1627,8 @@
   .disc-in { padding: 22px 20px; }
   .disc h3 { font-size: 19px; }
 }
+
+.disc-top { flex: none; }
+.disc-mid { flex: 0 1 auto; }
+.disc-mid .disc-links { margin: 14px 0 0; }
+.disc-bot { flex: none; }
