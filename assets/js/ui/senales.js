@@ -843,8 +843,8 @@ function abrirModalInfoSenales() {
   const ov = document.createElement('div'); ov.className = 'disc-ov'; ov.id = 'sni-ov';
   const cerrar = () => { ov.classList.remove('on'); document.body.style.overflow = ''; setTimeout(() => ov.remove(), 200); };
   ov.innerHTML = `<div class="disc" role="dialog" aria-modal="true">
-    <div class="disc-img" style="background-image:url('assets/imagenes/disclaimer-web.webp')"></div>
-    <div class="disc-imgm" style="background-image:url('assets/imagenes/disclaimer-movil.webp')"></div>
+    <img class="disc-img" src="assets/imagenes/disclaimer-web.webp" alt="">
+    <img class="disc-imgm" src="assets/imagenes/disclaimer-movil.webp" alt="">
     <div class="disc-body"><div class="disc-bg"></div><div class="disc-veil"></div><div class="disc-in">
       <div class="disc-top"><span class="disc-badge">${L('Analyst signals', 'Se\u00f1ales del analista')}</span>
       <h3>${L('Follow the pros', 'Sigue a los pros')}</h3></div>
