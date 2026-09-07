@@ -1039,3 +1039,40 @@ body.en-mesa { overflow: hidden; }
 .rs-tog span::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .18s; }
 .rs-tog input:checked + span { background: linear-gradient(180deg,#3ecf8e,#2a9d6a); }
 .rs-tog input:checked + span::after { transform: translateX(18px); }
+
+/* Fila: input de soporte + botón Redes al lado */
+.ct-support-row { display: flex; gap: 10px; align-items: stretch; margin-top: 6px; }
+.ct-support-row .u-input { flex: 1; min-width: 0; }
+.ct-support-row .mesa-btn { flex: none; white-space: nowrap; }
+@media (max-width: 560px) { .ct-support-row { flex-direction: column; } .ct-support-row .mesa-btn { width: 100%; } }
+/* Guardar centrado en el modal de redes */
+.rs-save { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 16px; }
+/* Input del modal de redes: estilo oscuro (no blanco) */
+.rs-url { background: rgba(255,255,255,.06) !important; border: 1px solid rgba(255,255,255,.14) !important; color: #e9eef5 !important; border-radius: 8px; padding: 8px 10px; }
+.rs-url::placeholder { color: #6b7683; }
+
+/* Desglose horizontal (2 columnas) + calculadora */
+.dg.dg-wide { max-width: 720px; }
+.dg-cols { display: flex; gap: 14px; }
+.dg-col { flex: 1; min-width: 0; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 14px 15px; }
+.dg-col.calc { background: rgba(232,196,106,.06); border-color: rgba(232,196,106,.22); }
+.dg-col-t { font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #e8c46a; margin-bottom: 10px; }
+.dg-line { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 12.5px; color: #cdd6e2; }
+.dg-line span { min-width: 0; }
+.dg-line i { font-style: normal; font-size: 9.5px; color: #6b7683; margin-left: 4px; }
+.dg-line b { font-family: "Chakra Petch",sans-serif; font-weight: 700; color: #e9eef5; white-space: nowrap; }
+.dg-line.neg b { color: #f0888f; }
+.dg-line.zero b { color: #3ecf8e; }
+.dg-line.tot { border-bottom: 0; margin-top: 2px; padding-top: 8px; }
+.dg-line.tot span { font-weight: 700; color: #fff; }
+.dg-line.tot b { font-size: 15px; color: #e8c46a; }
+.dg-split { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.dg-sp { display: flex; justify-content: space-between; font-size: 11.5px; color: #9aa4b2; padding: 5px 9px; border-radius: 8px; background: rgba(255,255,255,.04); }
+.dg-sp b { font-family: "Chakra Petch",sans-serif; color: #e9eef5; }
+.dg-sp.hi { background: rgba(62,207,142,.14); border: 1px solid rgba(62,207,142,.3); }
+.dg-sp.hi span { color: #b6f0d3; } .dg-sp.hi b { color: #8ff0c0; }
+.dg-calc-lab { display: block; font-size: 11.5px; color: #9aa4b2; margin-bottom: 6px; }
+.dg-calc-in { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,.06); border: 1px solid rgba(232,196,106,.3); border-radius: 9px; padding: 6px 10px; margin-bottom: 12px; }
+.dg-calc-in span { color: #e8c46a; font-weight: 800; }
+.dg-calc-in input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: #fff; font-family: "Chakra Petch",sans-serif; font-size: 17px; font-weight: 700; }
+@media (max-width: 620px) { .dg-cols { flex-direction: column; } .dg.dg-wide { max-width: 440px; } }
