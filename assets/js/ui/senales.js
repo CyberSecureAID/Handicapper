@@ -846,11 +846,11 @@ function abrirModalInfoSenales() {
     <div class="disc-img" style="background-image:url('assets/imagenes/disclaimer-web.webp')"></div>
     <div class="disc-imgm" style="background-image:url('assets/imagenes/disclaimer-movil.webp')"></div>
     <div class="disc-body"><div class="disc-bg"></div><div class="disc-veil"></div><div class="disc-in">
-      <span class="disc-badge">${L('Analyst signals', 'Se\u00f1ales del analista')}</span>
-      <h3>${L('Follow the pros', 'Sigue a los pros')}</h3>
-      <p>${L('Follow analysts, see who is hot, and get their published calls first. Signals are posted only when there is a real edge, not every day.', 'Sigue analistas, mira qui\u00e9n est\u00e1 en racha y recibe sus pron\u00f3sticos primero. Las se\u00f1ales se publican solo cuando hay una ventaja real, no todos los d\u00edas.')}</p>
-      <p class="disc-fine" style="text-align:left">${L('These are the analyst\u2019s opinions for informational purposes, not betting advice. A high probability is never a guarantee.', 'Son opiniones del analista con fines informativos, no asesor\u00eda de apuestas. Una probabilidad alta nunca es garant\u00eda.')}</p>
-      <button class="disc-go" id="sni-ok">${L('Got it', 'Entendido')}</button>
+      <div class="disc-top"><span class="disc-badge">${L('Analyst signals', 'Se\u00f1ales del analista')}</span>
+      <h3>${L('Follow the pros', 'Sigue a los pros')}</h3></div>
+      <div class="disc-mid"><p>${L('Follow analysts, see who is hot, and get their published calls first. Signals are posted only when there is a real edge, not every day.', 'Sigue analistas, mira qui\u00e9n est\u00e1 en racha y recibe sus pron\u00f3sticos primero. Las se\u00f1ales se publican solo cuando hay una ventaja real, no todos los d\u00edas.')}</p>
+      <p class="disc-fine" style="text-align:left">${L('These are the analyst\u2019s opinions for informational purposes, not betting advice. A high probability is never a guarantee.', 'Son opiniones del analista con fines informativos, no asesor\u00eda de apuestas. Una probabilidad alta nunca es garant\u00eda.')}</p></div>
+      <div class="disc-bot"><button class="disc-go" id="sni-ok">${L('Got it', 'Entendido')}</button></div>
     </div></div>
   </div>`;
   document.body.appendChild(ov);
