@@ -18,10 +18,18 @@ const SA_LIGA = 29.5;         // tiros en contra por partido, media aproximada d
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const num = (v) => { const n = Number(v); return isFinite(n) ? n : null; };
 
+const _PROXIES_NHL = ['', 'https://corsproxy.io/?url=', 'https://api.allorigins.win/raw?url='];
 async function pedir(url) {
-  const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  return r.json();
+  let ultimo;
+  for (const px of _PROXIES_NHL) {
+    try {
+      const u = px ? px + encodeURIComponent(url) : url;
+      const r = await fetch(u, { headers: { 'Accept': 'application/json' } });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return await r.json();
+    } catch (e) { ultimo = e; }
+  }
+  throw ultimo || new Error('fetch NHL falló');
 }
 
 /* Temporada NHL en formato 20252026 según el mes actual. */
