@@ -731,6 +731,7 @@ async function publicarBotsSiEsNuevoDia() {
 
 /* -------- Directorio de analistas (botón "Signals") -------- */
 async function abrirDirectorioSenales() {
+  try { if (!localStorage.getItem('sn_info_visto') && window.__infoSenales) { window.__infoSenales(); localStorage.setItem('sn_info_visto', '1'); } } catch (_) {}
   const ES = idiomaActual() === 'es';
   const Lp = (en, es) => ES ? es : en;
   const DEP = { futbol: Lp('Soccer','Fútbol'), beisbol: Lp('Baseball','Béisbol'), basket: Lp('Basketball','Básquet'), hockey: Lp('Ice hockey','Hockey'), americano: Lp('American football','Fútbol americano') };
