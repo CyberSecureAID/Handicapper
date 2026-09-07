@@ -223,7 +223,7 @@ function vistaContacto() {
       <button class="mesa-btn ghost sm ct-del" data-mdel="${i}">${ML('Remove', 'Quitar')}</button>
     </div>`;
   return `
-    <div class="mesa-head"><div><h1>${ML('Contact', 'Contacto')}</h1><p>${ML('Edit the public Contact page and the support channel. Saved to Firebase, live on the site.', 'Edita la página de Contacto pública y el canal de soporte. Se guarda en Firebase y aparece en el sitio.')}</p></div></div>
+    <div class="mesa-head"><div><h1>${ML('Contact', 'Contacto')}</h1><p>${ML('Edit the public Contact page and the support channel. Saved to Firebase, live on the site.', 'Edita la página de Contacto pública y el canal de soporte. Se guarda en Firebase y aparece en el sitio.')}</p></div><button class="mesa-btn oro" id="ct-redes">${ML('Social networks', 'Redes sociales')}</button></div>
     <div class="ct-card">
       <label class="ct-label">${ML('Support channel link (Contact support button)', 'Enlace del canal de soporte (botón Contact support)')}</label>
       <input class="u-input" id="ct-support" placeholder="https://t.me/TradeRecord" value="${esc(cfg.supportLink || '')}">
@@ -247,6 +247,7 @@ function _recogerContacto() {
   return { supportLink, miembros };
 }
 function enlazarContacto() {
+  { const rb = _cont.querySelector('#ct-redes'); if (rb) rb.onclick = abrirRedesSociales; }
   _cont.querySelector('#ct-add') && (_cont.querySelector('#ct-add').onclick = () => {
     const cfg = _recogerContacto(); cfg.miembros.push({ nombre: '', cargo: '', whatsapp: '', telegram: '' }); _contactoCfg = cfg; pintarTab();
   });
@@ -280,6 +281,12 @@ function pintarTab() {
 function activo(u) { return !!(u.suscripcion && u.suscripcion.activo); }function precioMensual(planId) { const p = planPorId(planId); return p ? p.mensual : 0; }
 
 function enlazarResumen() {
+  _cont.querySelectorAll('[data-adm]').forEach(b => b.onclick = () => {
+    const a = b.dataset.adm;
+    if (a === 'desglose') abrirDesglose();
+    else if (a === 'registro') exportarRegistroLegal();
+    else if (a === 'csv') exportarUsuariosCSV();
+  });
   _cont.querySelectorAll('[data-goto]').forEach(b => b.onclick = () => {
     _tab = b.dataset.goto;
     _cont.querySelectorAll('.mesa-nav button[data-tab]').forEach(x => x.classList.toggle('on', x.dataset.tab === _tab));
@@ -338,11 +345,184 @@ function vistaResumen() {
     </div>
     <div class="ov-band"><div class="ov-band-t">${ML('Admin only','Solo admin')}</div>
       <div class="ov-band-grid">
-        <button class="ov-adm" data-goto="usuarios"><span class="ov-adm-ic">${ICu}</span><span class="ov-adm-tx"><b>${ML('Manage users','Gestionar usuarios')}</b><em>${ML('Users, plans and blocks.','Usuarios, planes y bloqueos.')}</em></span><span class="ov-adm-go">›</span></button>
-        <button class="ov-adm" data-goto="analisis"><span class="ov-adm-ic gear">${ICp}</span><span class="ov-adm-tx"><b>${ML('Analysis','Análisis')}</b><em>${ML('Published analysis &amp; signals.','Análisis y señales publicados.')}</em></span><span class="ov-adm-go">›</span></button>
-        <button class="ov-adm" data-goto="analistas"><span class="ov-adm-ic">${IC.contrato}</span><span class="ov-adm-tx"><b>${ML('Staff','Personal')}</b><em>${ML('Hire &amp; manage analysts.','Contrata y gestiona analistas.')}</em></span><span class="ov-adm-go">›</span></button>
+        <button class="ov-adm" data-adm="csv"><span class="ov-adm-ic">${ICu}</span><span class="ov-adm-tx"><b>${ML('Export users','Exportar usuarios')}</b><em>${ML('Download the list as CSV.','Descarga la lista en CSV.')}</em></span><span class="ov-adm-go">↓</span></button>
+        <button class="ov-adm" data-adm="desglose"><span class="ov-adm-ic gear">${ICp}</span><span class="ov-adm-tx"><b>${ML('Breakdown','Desglose')}</b><em>${ML('Taxes, Stripe &amp; profit split.','Impuestos, Stripe y reparto.')}</em></span><span class="ov-adm-go">›</span></button>
+        <button class="ov-adm" data-adm="registro"><span class="ov-adm-ic">${IC.contrato}</span><span class="ov-adm-tx"><b>${ML('Legal record','Registro legal')}</b><em>${ML('Economy + users (document).','Economía + usuarios (documento).')}</em></span><span class="ov-adm-go">↓</span></button>
       </div>
     </div>`;
+}
+
+
+
+/* ============ REDES SOCIALES (admin) ============ */
+const REDES_META = [
+  { id: 'x', nombre: 'X', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7 8 8.2 12h-6.3l-5-7-5.7 7H2l7.5-9L1.6 2h6.5l4.5 6.3z"/></svg>' },
+  { id: 'instagram', nombre: 'Instagram', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>' },
+  { id: 'youtube', nombre: 'YouTube', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.4-.4-5c-.2-.9-1-1.6-1.9-1.8C18.9 5 12 5 12 5s-6.9 0-8.7.2C2.4 5.4 1.6 6.1 1.4 7 1 8.6 1 12 1 12s0 3.4.4 5c.2.9 1 1.6 1.9 1.8C5.1 19 12 19 12 19s6.9 0 8.7-.2c.9-.2 1.7-.9 1.9-1.8.4-1.6.4-5 .4-5zM10 15V9l5 3z"/></svg>' },
+  { id: 'facebook', nombre: 'Facebook', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 10-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.8 3.7-3.8 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.5V12h2.7l-.4 2.9h-2.3v7A10 10 0 0022 12z"/></svg>' },
+  { id: 'tiktok', nombre: 'TikTok', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 2h-3v13a2.5 2.5 0 11-2.5-2.5c.2 0 .4 0 .5.1V9.5a5.6 5.6 0 00-.5 0 5.5 5.5 0 105.5 5.5V8.3a7.2 7.2 0 004 1.2V6.5a4 4 0 01-4-4z"/></svg>' },
+];
+function _redesActuales() {
+  const r = (_contactoCfg && _contactoCfg.redes) || {};
+  const visDef = ['x', 'instagram', 'youtube'];
+  return REDES_META.map(m => ({
+    ...m,
+    url: (r[m.id] && r[m.id].url) || '',
+    visible: r[m.id] ? !!r[m.id].visible : visDef.includes(m.id),
+  }));
+}
+function abrirRedesSociales() {
+  const ES = _mesaLang === 'es', L = (en, es) => ES ? es : en;
+  const lista = _redesActuales();
+  document.getElementById('rs-ov')?.remove();
+  const ov = document.createElement('div'); ov.className = 'dg-ov'; ov.id = 'rs-ov';
+  const cerrar = () => { ov.classList.remove('on'); setTimeout(() => ov.remove(), 200); };
+  const filas = lista.map(r => `
+    <div class="rs-row" data-rs="${r.id}">
+      <span class="rs-ic">${r.svg}</span>
+      <div class="rs-mid"><b>${r.nombre}</b><input class="u-input rs-url" placeholder="https://..." value="${esc(r.url)}"></div>
+      <label class="rs-tog"><input type="checkbox" class="rs-vis" ${r.visible ? 'checked' : ''}><span></span></label>
+    </div>`).join('');
+  ov.innerHTML = `<div class="dg" role="dialog" aria-modal="true" style="max-width:460px">
+    <div class="dg-bg"></div><div class="dg-veil"></div>
+    <button class="dg-x" aria-label="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="dg-in">
+      <div class="dg-head"><span class="dg-badge">${L('Footer links','Enlaces del pie')}</span><h3>${L('Social networks','Redes sociales')}</h3><p>${L('Set the link and choose which show in the footer.','Pon el enlace y elige cuáles se ven en el pie de página.')}</p></div>
+      <div class="rs-list">${filas}</div>
+      <div class="ct-save-row" style="margin-top:16px"><button class="mesa-btn oro" id="rs-save">${L('Save changes','Guardar cambios')}</button><span id="rs-status" class="ct-status"></span></div>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('on'));
+  ov.querySelector('.dg-x').onclick = cerrar;
+  ov.onclick = (e) => { if (e.target === ov) cerrar(); };
+  ov.querySelector('#rs-save').onclick = async () => {
+    const st = ov.querySelector('#rs-status');
+    const redes = {};
+    ov.querySelectorAll('.rs-row').forEach(row => {
+      redes[row.dataset.rs] = { url: row.querySelector('.rs-url').value.trim(), visible: row.querySelector('.rs-vis').checked };
+    });
+    const cfg = Object.assign({}, _contactoCfg || {}, { redes });
+    st.textContent = L('Saving…', 'Guardando…'); st.className = 'ct-status';
+    try { await guardarConfigContacto(cfg); _contactoCfg = cfg; st.textContent = L('Saved ✓', 'Guardado ✓'); st.className = 'ct-status ok'; setTimeout(cerrar, 700); }
+    catch (_) { st.textContent = L('Error saving', 'Error al guardar'); st.className = 'ct-status err'; }
+  };
+}
+
+/* ============ HERRAMIENTAS DE ADMIN (Desglose, exports, redes) ============ */
+/* Impuesto federal EE.UU. 2025 (tramos declarante soltero, dato público y estable). */
+function _impFederal(ing) {
+  const B = [[0,.10],[11925,.12],[48475,.22],[103350,.24],[197300,.32],[250525,.35],[626350,.37]];
+  let t = 0;
+  for (let i = 0; i < B.length; i++) {
+    const desde = B[i][0], hasta = B[i+1] ? B[i+1][0] : Infinity;
+    if (ing > desde) t += (Math.min(ing, hasta) - desde) * B[i][1];
+  }
+  return t;
+}
+/* Impuesto de trabajo por cuenta propia (Self-Employment): 15.3% (12.4% SS hasta el tope + 2.9% Medicare). */
+function _impSE(ing) {
+  const base = Math.max(0, ing) * 0.9235;
+  return Math.min(base, 168600) * 0.124 + base * 0.029;
+}
+function _calcularDesglose() {
+  const conPlan = _usuarios.filter(u => u.suscripcion && u.suscripcion.activo);
+  const mrr = conPlan.reduce((s, u) => s + precioMensual(u.suscripcion.plan), 0);
+  const totSub = _monDatos().reduce((s, d) => s + (d.apoyos || 0), 0);
+  const brutoMes = mrr + totSub;                 // plataforma: planes + $1 por follow
+  const brutoAnual = brutoMes * 12;
+  const nTxMes = conPlan.length + totSub;         // transacciones mensuales
+  const stripe = brutoAnual * 0.029 + 0.30 * nTxMes * 12;   // Stripe: 2.9% + $0.30/tx
+  const netoStripe = Math.max(0, brutoAnual - stripe);
+  const se = _impSE(netoStripe);
+  const fed = _impFederal(Math.max(0, netoStripe - se / 2));
+  const flEstatal = 0;                            // Florida NO tiene impuesto estatal sobre la renta
+  const impuestos = se + fed + flEstatal;
+  const neto = Math.max(0, netoStripe - impuestos);
+  const ads = neto * 0.15, mant = neto * 0.10, reparto = neto * 0.75;
+  return { mrr, totSub, brutoMes, brutoAnual, stripe, netoStripe, se, fed, flEstatal, impuestos, neto, ads, mant, reparto, porEmpleado: reparto / 2, nTxMes };
+}
+
+function abrirDesglose() {
+  const ES = _mesaLang === 'es', L = (en, es) => ES ? es : en;
+  const d = _calcularDesglose();
+  const $ = (n) => '$' + (n || 0).toLocaleString(ES ? 'es' : 'en', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  document.getElementById('dg-ov')?.remove();
+  const ov = document.createElement('div'); ov.className = 'dg-ov'; ov.id = 'dg-ov';
+  const cerrar = () => { ov.classList.remove('on'); setTimeout(() => ov.remove(), 200); };
+  const fila = (lab, val, cls, nota) => `<div class="dg-row ${cls || ''}"><span class="dg-lab">${lab}${nota ? `<i>${nota}</i>` : ''}</span><span class="dg-val">${val}</span></div>`;
+  ov.innerHTML = `<div class="dg" role="dialog" aria-modal="true">
+    <div class="dg-bg"></div><div class="dg-veil"></div>
+    <button class="dg-x" aria-label="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="dg-in">
+      <div class="dg-head"><span class="dg-badge">${L('Financial breakdown','Desglose financiero')}</span><h3>${L('Breakdown','Desglose')}</h3><p>${L('Estimated annual figures, based on current subscriptions.','Cifras anuales estimadas, según las suscripciones actuales.')}</p></div>
+      <div class="dg-hero"><div class="dg-hero-b"><b>${$(d.brutoAnual)}</b><span>${L('Gross / year','Bruto / año')}</span></div><div class="dg-hero-b ok"><b>${$(d.neto)}</b><span>${L('Net after tax','Neto tras impuestos')}</span></div></div>
+      <div class="dg-sec">${L('Costs and taxes','Costos e impuestos')}</div>
+      ${fila(L('Stripe fees','Comisión Stripe'), '− ' + $(d.stripe), 'neg', '2.9% + $0.30/tx')}
+      ${fila(L('Self-employment tax','Impuesto por cuenta propia'), '− ' + $(d.se), 'neg', '15.3%')}
+      ${fila(L('Federal income tax','Impuesto federal'), '− ' + $(d.fed), 'neg', L('2025 brackets','tramos 2025'))}
+      ${fila(L('Florida state income tax','Impuesto estatal de Florida'), $(0), 'zero', L('none in FL','no existe en FL'))}
+      ${fila(L('Net profit','Beneficio neto'), $(d.neto), 'tot')}
+      <div class="dg-sec">${L('Distribution of net profit','Reparto del beneficio neto')}</div>
+      ${fila(L('Advertising','Publicidad'), $(d.ads), '', '15%')}
+      ${fila(L('Maintenance','Mantenimiento'), $(d.mant), '', '10%')}
+      ${fila(L('Split (2 partners)','Reparto (2 socios)'), $(d.reparto), '', '75%')}
+      ${fila(L('Each partner','Cada socio'), $(d.porEmpleado), 'tot', '37.5%')}
+      <p class="dg-note">${L('Estimate only, not tax advice. Florida has no state income tax; federal rates are 2025 published brackets and Stripe is 2.9% + $0.30 per charge. Confirm with an accountant.','Solo una estimación, no es asesoría fiscal. Florida no cobra impuesto estatal sobre la renta; las tasas federales son los tramos publicados de 2025 y Stripe es 2.9% + $0.30 por cobro. Confírmalo con un contador.')}</p>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('on'));
+  ov.querySelector('.dg-x').onclick = cerrar;
+  ov.onclick = (e) => { if (e.target === ov) cerrar(); };
+}
+
+/* Descarga un documento (HTML imprimible) con el registro económico + todos los usuarios. */
+function exportarRegistroLegal() {
+  const ES = _mesaLang === 'es';
+  const d = _calcularDesglose();
+  const fecha = new Date().toLocaleString(ES ? 'es' : 'en');
+  const filasU = _usuarios.map((u, i) => {
+    const sub = u.suscripcion || {};
+    return `<tr><td>${i + 1}</td><td>${esc(u.nombre || u.usuario || '')}</td><td>${esc(u.email || '')}</td><td>${sub.activo ? esc(sub.plan || '') : (ES ? 'sin plan' : 'no plan')}</td><td>${u.uid || ''}</td></tr>`;
+  }).join('');
+  const doc = `<!DOCTYPE html><html lang="${ES ? 'es' : 'en'}"><head><meta charset="utf-8"><title>Sports Expectations — ${ES ? 'Registro legal' : 'Legal record'}</title>
+  <style>body{font-family:Arial,sans-serif;color:#111;padding:32px;max-width:900px;margin:0 auto}h1{font-size:20px}h2{font-size:15px;border-bottom:2px solid #333;padding-bottom:4px;margin-top:28px}table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}th{background:#f0f0f0}.k{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #eee;font-size:13px}small{color:#666}</style></head><body>
+  <h1>Sports Expectations LLC — ${ES ? 'Registro oficial' : 'Official record'}</h1>
+  <small>${ES ? 'Generado' : 'Generated'}: ${fecha} · Florida, USA</small>
+  <h2>${ES ? 'Resumen económico (anual estimado)' : 'Economic summary (annual estimate)'}</h2>
+  <div class="k"><span>${ES ? 'Ingreso bruto anual' : 'Gross annual revenue'}</span><b>$${d.brutoAnual.toFixed(2)}</b></div>
+  <div class="k"><span>Stripe (2.9% + $0.30/tx)</span><b>-$${d.stripe.toFixed(2)}</b></div>
+  <div class="k"><span>${ES ? 'Impuesto por cuenta propia' : 'Self-employment tax'}</span><b>-$${d.se.toFixed(2)}</b></div>
+  <div class="k"><span>${ES ? 'Impuesto federal' : 'Federal income tax'}</span><b>-$${d.fed.toFixed(2)}</b></div>
+  <div class="k"><span>${ES ? 'Impuesto estatal Florida' : 'Florida state income tax'}</span><b>$0.00</b></div>
+  <div class="k"><span><b>${ES ? 'Beneficio neto' : 'Net profit'}</b></span><b>$${d.neto.toFixed(2)}</b></div>
+  <h2>${ES ? 'Usuarios registrados' : 'Registered users'} (${_usuarios.length})</h2>
+  <table><thead><tr><th>#</th><th>${ES ? 'Nombre' : 'Name'}</th><th>Email</th><th>${ES ? 'Plan' : 'Plan'}</th><th>UID</th></tr></thead><tbody>${filasU}</tbody></table>
+  <p><small>${ES ? 'Documento generado automáticamente para fines de registro y cumplimiento. Estimaciones fiscales, no asesoría legal.' : 'Auto-generated for record-keeping and compliance. Tax figures are estimates, not legal advice.'}</small></p>
+  </body></html>`;
+  const blob = new Blob([doc], { type: 'text/html' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `sports-expectations-registro-${new Date().toISOString().slice(0,10)}.html`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* Exporta la lista de usuarios en CSV (para abrir en Excel). */
+function exportarUsuariosCSV() {
+  const ES = _mesaLang === 'es';
+  const cab = ['#', ES ? 'Nombre' : 'Name', 'Email', ES ? 'Usuario' : 'Username', 'Plan', ES ? 'Activo' : 'Active', 'UID'];
+  const esc2 = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+  const filas = _usuarios.map((u, i) => {
+    const sub = u.suscripcion || {};
+    return [i + 1, u.nombre || '', u.email || '', u.usuario || '', sub.plan || '', sub.activo ? (ES ? 'sí' : 'yes') : 'no', u.uid || ''].map(esc2).join(',');
+  });
+  const csv = '\uFEFF' + [cab.map(esc2).join(','), ...filas].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `usuarios-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
 /* ================= USERS ================= */
