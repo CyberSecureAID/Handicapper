@@ -1,5 +1,5 @@
 /* ============================================================
-   MESA — panel de administración a pantalla completa.
+   MESA — panel de administración a pantalla completa
    ============================================================ */
 #mesa-screen { position: fixed; inset: 0; z-index: 200; overflow: hidden;
   background: #0b0f14; color: #eef3f8;
