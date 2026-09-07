@@ -1011,8 +1011,8 @@ function mostrarDisclaimerEntrada() {
   ov.className = 'disc-ov'; ov.id = 'disc-ov';
   ov.innerHTML = `
     <div class="disc" role="dialog" aria-modal="true">
-      <div class="disc-img" style="background-image:url('assets/imagenes/disclaimer-web.webp')"></div>
-      <div class="disc-imgm" style="background-image:url('assets/imagenes/disclaimer-movil.webp')"></div>
+      <img class="disc-img" src="assets/imagenes/disclaimer-web.webp" alt="">
+      <img class="disc-imgm" src="assets/imagenes/disclaimer-movil.webp" alt="">
       <div class="disc-body">
         <div class="disc-bg"></div><div class="disc-veil"></div>
         <div class="disc-in">
