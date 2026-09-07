@@ -1016,17 +1016,17 @@ function mostrarDisclaimerEntrada() {
       <div class="disc-body">
         <div class="disc-bg"></div><div class="disc-veil"></div>
         <div class="disc-in">
-          <span class="disc-badge">${L('Important notice', 'Aviso importante')}</span>
-          <h3>${L('Before you step in', 'Antes de entrar')}</h3>
-          <p>${L('Sports Expectations is a sports information and analytics platform. We are <b>not a sportsbook</b>: we do not accept bets or pay winnings. Our signals and probabilities are opinions and estimates, <b>not guarantees</b>. Any decision you make is yours and at your own risk.', 'Sports Expectations es una plataforma de información y análisis deportivo. <b>No somos una casa de apuestas</b>: no aceptamos apuestas ni pagamos premios. Nuestras señales y probabilidades son opiniones y estimaciones, <b>no garantías</b>. Las decisiones que tomes son tuyas y bajo tu propia responsabilidad.')}</p>
+          <div class="disc-top"><span class="disc-badge">${L('Important notice', 'Aviso importante')}</span>
+          <h3>${L('Before you step in', 'Antes de entrar')}</h3></div>
+          <div class="disc-mid"><p>${L('Sports Expectations is a sports information and analytics platform. We are <b>not a sportsbook</b>: we do not accept bets or pay winnings. Our signals and probabilities are opinions and estimates, <b>not guarantees</b>. Any decision you make is yours and at your own risk.', 'Sports Expectations es una plataforma de información y análisis deportivo. <b>No somos una casa de apuestas</b>: no aceptamos apuestas ni pagamos premios. Nuestras señales y probabilidades son opiniones y estimaciones, <b>no garantías</b>. Las decisiones que tomes son tuyas y bajo tu propia responsabilidad.')}</p>
           <div class="disc-links">
             <a href="terms.html" target="_blank" rel="noopener">${L('Terms', 'Términos')}</a>
             <a href="privacy.html" target="_blank" rel="noopener">${L('Privacy', 'Privacidad')}</a>
             <a href="disclaimer.html" target="_blank" rel="noopener">${L('Disclaimer', 'Descargo')}</a>
             <a href="responsible.html" target="_blank" rel="noopener">${L('Responsible play', 'Juego responsable')}</a>
-          </div>
-          <button class="disc-go" id="disc-go">${L('I understand and agree', 'Entiendo y acepto')}</button>
-          <p class="disc-fine">${L('By continuing you confirm you are of legal age and accept our Terms.', 'Al continuar confirmas que eres mayor de edad y aceptas nuestros Términos.')}</p>
+          </div></div>
+          <div class="disc-bot"><button class="disc-go" id="disc-go">${L('I understand and agree', 'Entiendo y acepto')}</button>
+          <p class="disc-fine">${L('By continuing you confirm you are of legal age and accept our Terms.', 'Al continuar confirmas que eres mayor de edad y aceptas nuestros Términos.')}</p></div>
         </div>
       </div>
     </div>`;
