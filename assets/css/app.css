@@ -1595,3 +1595,6 @@
 /* Campos del perfil ocultos por defecto (puntos), el ojito los revela */
 .pp-pass input.oculto { -webkit-text-security: disc; text-security: disc; }
 .pp-eye.viendo { color: #e8c46a; }
+
+/* Línea de diagnóstico discreta en secciones vacías */
+.ply-diag { text-align: center; font-size: 11px; color: #5c6675; margin-top: 12px; font-family: monospace; opacity: .8; }
