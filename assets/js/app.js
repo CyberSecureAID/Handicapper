@@ -1000,9 +1000,49 @@ function avisarBloqueo() {
 }
 
 /* Entra a la plataforma (y arranca la app la primera vez) */
+/* Disclaimer obligatorio de entrada: se muestra una sola vez (hasta que el usuario acepta).
+   Imagen integrada (paralaweb izq en web / mage arriba en móvil) + fondo del pie de página. */
+function mostrarDisclaimerEntrada() {
+  try { if (localStorage.getItem('se-disclaimer-ok') === '1') return; } catch (_) {}
+  if (document.getElementById('disc-ov')) return;
+  const ES = idiomaActual() === 'es', L = (en, es) => ES ? es : en;
+  const ov = document.createElement('div');
+  ov.className = 'disc-ov'; ov.id = 'disc-ov';
+  ov.innerHTML = `
+    <div class="disc" role="dialog" aria-modal="true">
+      <div class="disc-img" style="background-image:url('assets/imagenes/disclaimer-web.webp')"></div>
+      <div class="disc-imgm" style="background-image:url('assets/imagenes/disclaimer-movil.webp')"></div>
+      <div class="disc-body">
+        <div class="disc-bg"></div><div class="disc-veil"></div>
+        <div class="disc-in">
+          <span class="disc-badge">${L('Important notice', 'Aviso importante')}</span>
+          <h3>${L('Before you step in', 'Antes de entrar')}</h3>
+          <p>${L('Sports Expectations is a sports information and analytics platform. We are <b>not a sportsbook</b>: we do not accept bets or pay winnings. Our signals and probabilities are opinions and estimates, <b>not guarantees</b>. Any decision you make is yours and at your own risk.', 'Sports Expectations es una plataforma de información y análisis deportivo. <b>No somos una casa de apuestas</b>: no aceptamos apuestas ni pagamos premios. Nuestras señales y probabilidades son opiniones y estimaciones, <b>no garantías</b>. Las decisiones que tomes son tuyas y bajo tu propia responsabilidad.')}</p>
+          <div class="disc-links">
+            <a href="terms.html" target="_blank" rel="noopener">${L('Terms', 'Términos')}</a>
+            <a href="privacy.html" target="_blank" rel="noopener">${L('Privacy', 'Privacidad')}</a>
+            <a href="disclaimer.html" target="_blank" rel="noopener">${L('Disclaimer', 'Descargo')}</a>
+            <a href="responsible.html" target="_blank" rel="noopener">${L('Responsible play', 'Juego responsable')}</a>
+          </div>
+          <button class="disc-go" id="disc-go">${L('I understand and agree', 'Entiendo y acepto')}</button>
+          <p class="disc-fine">${L('By continuing you confirm you are of legal age and accept our Terms.', 'Al continuar confirmas que eres mayor de edad y aceptas nuestros Términos.')}</p>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => ov.classList.add('on'));
+  ov.querySelector('#disc-go').onclick = () => {
+    try { localStorage.setItem('se-disclaimer-ok', '1'); } catch (_) {}
+    ov.classList.remove('on'); document.body.style.overflow = '';
+    setTimeout(() => ov.remove(), 220);
+  };
+}
+
 function entrarPlataforma() {
   try { localStorage.setItem('se-en-app', '1'); localStorage.setItem('se-vista', 'partidos'); } catch (_) {}
   mostrarPantalla('app');
+  setTimeout(mostrarDisclaimerEntrada, 200);
   if (!_appArrancada) {
     _appArrancada = true;
     actualizarLogo(); pintarLigas(); pintarPestanas(); pintarDrawer(); cargarLista();
