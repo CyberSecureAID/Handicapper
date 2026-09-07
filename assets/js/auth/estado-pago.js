@@ -50,6 +50,14 @@ export function tieneAcceso() {
 
 /* Plan efectivo actual */
 export function planActual() {
-  if (suscripcionActiva()) return _sub.plan || 'basic';
+  if (suscripcionActiva()) {
+    // "Visitante": acceso total tipo Premium, pero NO cuenta como pago (se excluye de ingresos).
+    if (_sub.plan === 'visitante') return 'premium';
+    return _sub.plan || 'basic';
+  }
   return planVistaPrevia();
+}
+/* ¿Es un usuario Visitante? (acceso completo de cortesía, sin cobro) */
+export function esVisitante() {
+  return !!(_sub && _sub.activo && _sub.plan === 'visitante');
 }
