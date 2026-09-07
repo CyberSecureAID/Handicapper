@@ -1604,7 +1604,7 @@
 .disc-ov.on { opacity: 1; }
 .disc { display: flex; width: 100%; max-width: 780px; height: 468px; max-height: 92vh; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.14); box-shadow: 0 40px 90px -25px rgba(0,0,0,.9); transform: scale(.96) translateY(6px); transition: transform .22s cubic-bezier(.2,.7,.3,1); }
 .disc-ov.on .disc { transform: scale(1) translateY(0); }
-.disc-img { position: relative; flex: 0 0 38%; background-image: url('../imagenes/disclaimer-web.webp'); background-size: cover; background-position: 34% center; background-repeat: no-repeat; background-color: #06090f; }
+.disc-img { flex: 0 0 38%; height: 100%; object-fit: cover; object-position: center; display: block; }
 .disc-imgm { display: none; }
 .disc-body { position: relative; flex: 1 1 auto; min-width: 0; }
 .disc-bg { position: absolute; inset: 0; background: url('../imagenes/fondos/fondo-pagina.webp') center/cover; filter: blur(11px) brightness(.4); transform: scale(1.25); }
@@ -1623,7 +1623,7 @@
 @media (max-width: 640px) {
   .disc { flex-direction: column; max-width: 420px; height: auto; }
   .disc-img { display: none; }
-  .disc-imgm { display: block; width: 100%; aspect-ratio: 1672 / 941; flex: none; background-image: url('../imagenes/disclaimer-movil.webp'); background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #06090f; }
+  .disc-imgm { display: block; width: 100%; aspect-ratio: 1672 / 941; flex: none; object-fit: cover; object-position: center; }
   .disc-in { padding: 22px 20px; }
   .disc h3 { font-size: 19px; }
 }
