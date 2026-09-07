@@ -158,8 +158,9 @@ export async function topTouchdownProjection({ fecha, n = 9, maxPorEquipo = 5 } 
     ];
     for (const lado of lados) {
       let roster = (await rosterConTD(lado.equipo.id)).filter(x => (x.tdRate || 0) > 0);
-      // Respaldo: si el roster no trae stats, se usan los líderes de carrera/recepción (los que anotan TD).
-      if (!roster.length) roster = lideresTD(lado.comp);
+      let _f = 'roster';
+      if (!roster.length) { roster = lideresTD(lado.comp); _f = 'leaders'; }
+      try { console.log(`[NFL-DIAG] ${lado.equipo.abbreviation}: ${roster.length} (fuente=${_f})`); } catch(_){}
       if (!roster.length) { avisos.push(`Sin datos de jugadores para ${lado.equipo?.displayName || '—'}`); continue; }
       roster.sort((a, b) => (b.tdRate || 0) - (a.tdRate || 0));
       const oponente = defensas.get(String(lado.rival.id)) || {};

@@ -157,6 +157,7 @@ export async function topShotsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}
   if (!juegos.length) return { jugadores: [], meta: { fecha, fuente: 'NHL', avisos: ['Sin juegos NHL hoy'] } };
 
   const [defensas, tiradores] = await Promise.all([defensasNHL(sid), tiradoresPorEquipo(sid)]);
+  try { console.log(`[NHL-DIAG] juegos=${juegos.length} equipos con tiradores=${tiradores.size} sid=${sid}`); } catch(_){}
   const candidatos = [];
 
   for (const g of juegos) {
@@ -191,6 +192,7 @@ export async function topShotsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}
   if (elegidos.length < 4) elegidos = candidatos.filter(c => (c.spg || 0) >= 2);
   if (elegidos.length < 3) elegidos = candidatos;
   const top = elegidos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
+  try { console.log(`[NHL-DIAG] candidatos=${candidatos.length}`); } catch(_){}
   return {
     jugadores: top,
     meta: { fecha, fuente: 'NHL', modelo: `P(${UMBRAL}+ tiros) = 1 − e^(−λ)(1+λ) · estimación propia`, candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)] },

@@ -190,7 +190,9 @@ export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {
       // 1) Los LÍDERES del calendario traen el promedio real (crème de la crème).
       //    2) Si no hay, se intenta el roster como respaldo.
       let roster = leadersPuntos(lado.comp);
-      if (!roster.length) { const r = await rosterConPuntos(lado.equipo.id); roster = r.filter(x => x.ppg != null); }
+      let _fuente = 'leaders';
+      if (!roster.length) { const r = await rosterConPuntos(lado.equipo.id); roster = r.filter(x => x.ppg != null); _fuente = 'roster'; }
+      try { console.log(`[NBA-DIAG] ${lado.equipo.abbreviation}: ${roster.length} jugadores (fuente=${_fuente}, top ppg=${roster[0]?.ppg ?? '-'})`); } catch(_){}
       if (!roster.length) { avisos.push(`Sin datos de jugadores para ${lado.equipo?.displayName || '—'}`); continue; }
       roster.sort((a, b) => (b.ppg || 0) - (a.ppg || 0));
       const oponente = defensas.get(String(lado.rival.id)) || {};
@@ -214,6 +216,7 @@ export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {
   if (elegidos.length < 4) elegidos = candidatos.filter(c => (c.ppg || 0) >= 12);
   if (elegidos.length < 3) elegidos = candidatos;
   const top = elegidos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
+  try { console.log(`[NBA-DIAG] eventos=${eventos.length} candidatos=${candidatos.length} elegidos=${elegidos.length}`); } catch(_){}
   return {
     jugadores: top,
     meta: { fecha, fuente: 'ESPN', modelo: `P(${UMBRAL}+ pts) = Φ((μ − ${UMBRAL})/σ) · estimación propia`, candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)] },
