@@ -1271,11 +1271,6 @@ function vistaAnalisis() {
     <div class="ah2">
       <div class="ah2-top">
         <div class="ah2-titles"><h1>Analysis Hub</h1></div>
-        <div class="ah2-bots-box">
-          <button class="mesa-btn oro" id="ah2-bots">${L('Publish bot signals now', 'Publicar señales de bots ahora')}</button>
-          <button class="mesa-btn" id="ah2-audit">${L('Audit engine', 'Auditar motor')}</button>
-          <span id="ah2-bots-st" class="ah2-bots-st"></span>
-        </div>
       </div>
       <div class="ah2-metrics">
         <div class="ah2-metric"><b>${LIGAS.length}</b><span>${L('Leagues', 'Ligas')}</span></div>
