@@ -93,7 +93,6 @@ const DIC = {
     'pl.choose':'Choose','pl.save2':'2 months free','pl.mostpop':'Most popular',
     'tema.claro':       'Switch to light mode',
     'tema.oscuro':      'Switch to dark mode',
-  },
     'lp2.h1':'Real data<br>Smart analysis<br><em>Better decisions</em>',
     'lp2.sub':'Access verified sports statistics, advanced analytics and powerful tools to analyze, compare and understand every detail that makes the difference.',
     'lp2.start':'Get started','lp2.plans':'View plans','lp2.explore':'Explore plans',
@@ -157,6 +156,7 @@ const DIC = {
     'sp.h5':'⚽ Soccer',
     'sp.p5':'Premier League, LaLiga, Serie A, Bundesliga and the Champions League, with goal projections and probabilities.',
     'sp.close':'More leagues are added as reliable data becomes available.',
+  },
   es: {
     'foot.tagline': 'Tu fuente definitiva de datos deportivos verificados, an\u00e1lisis avanzado e informaci\u00f3n inteligente.',
     'foot.product': 'Producto', 'foot.features': 'Caracter\u00edsticas', 'foot.sports': 'Deportes', 'foot.plans': 'Planes y precios', 'foot.updates': 'Actualizaciones en directo',
