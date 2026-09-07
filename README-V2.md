@@ -469,3 +469,52 @@ No es testeable en el sandbox (sin acceso a Firebase/APIs); verificar en la web 
 - **Prioridad 1 real hoy:** arreglar el área de proyecciones (§11). Es lo que más
   daña la percepción del producto.
 - Continuar por **Fase 3** (Discover escalable) salvo que el dueño indique otra cosa.
+
+---
+
+## 15. ACTUALIZACIÓN — rondas completadas desde V2 (2026-09-07)
+
+> Continúa la hoja por fases. Todo lo de abajo está **HECHO** salvo lo marcado como PENDIENTE.
+> No repite lo ya documentado arriba; aquí van las rondas nuevas.
+
+### Ronda "Élite y proyecciones" — HECHO
+- **La Élite del Día** (`assets/js/analisis/elite.js` + `parlay.js`): motor que toma el mejor pick por deporte con umbrales por liga; solo Premium; sección vacía honesta si nada supera el umbral. Banner + tarjetas con logos + icono del deporte + `vs.png`. Botón entre Pro y Premium.
+- **Goals** rediseñado a Over 1.5 (Poisson) con tarjeta de dos barras (1+ gol / 2+ goles) y análisis humano por partido.
+- **Tarjetas de jugador** (Hits/Points/Shots/TD) rediseñadas: nombre + matchup con logos + `vs.png`, probabilidad grande + veredicto + botón Analizar. Logos añadidos a todos los motores.
+
+### Ronda "Motores: fuente que funciona" — HECHO (con pendiente de datos)
+- **Points (NBA) / Shots (NHL) / Touchdown (NFL)** reescritos para tomar los jugadores de `detallePartido` (proveedor-api) — la misma fuente que usa el cerebro y sí devuelve jugadores. Respaldo: líderes de liga (ESPN `/leaders`).
+- **NHL migrado a ESPN** (`hockey/nhl`) para esquivar el bloqueo CORS de `api-web.nhle.com`.
+- **Rango de fechas** en los 5 motores (hoy + próximos días) + orden por cercanía; la fecha se muestra en la tarjeta (Hoy / Mañana / Sáb 17).
+- **Diagnóstico** en consola + mensaje en pantalla (`sinJuegosHTML` distingue: sin juegos / sin datos de jugadores / filtrados por umbral).
+- PENDIENTE: Points/Shots/TD siguen vacíos aunque haya partidos (ver §16).
+
+### Ronda "Cobro para seguir analistas" — HECHO
+- `abrirCobroSeguir()` (`app.js`): ventana de cobro ($2/mes) al tocar "Seguir" en el **directorio (botón Signals)** y en **Analysis Signals**. El admin sigue directo. Descargo breve incluido. Integración Stripe queda en `_procesarPagoSeguir()` (hoy → "pagos muy pronto", sin seguir gratis).
+- Prestigio de analistas: base en `bots.js` + `prestigioAjuste` (Firestore, `increment()` atómico) → `prestigioReal()`. Sin race conditions.
+
+### Ronda "i18n bilingüe" — HECHO (parcial)
+- Diccionario en `idioma.js` (`DIC.en`/`DIC.es`, 192 c/u). Default inglés, toggle a español, persiste.
+- `data-i18n` (texto) + `data-i18n-html` (preserva `<br>`/`<em>`/`<b>`/enlaces). Aplicadores: `navegacion.js` (app/portada) y `landing-lang.js` (secundarias, standalone sin Firebase).
+- HECHO: portada, app, About, Features, Sports. PENDIENTE: how-it-works, plans, contact, updates, help, status, faq, contact-support + 7 legales.
+- Bug resuelto: el objeto `en` cerraba antes de tiempo y 73 claves quedaban fuera → no revertía a inglés. Corregido.
+
+### Ronda "SEO + legales + disclaimers" — HECHO
+- **SEO**: meta/description/keywords/OG/Twitter/JSON-LD en index + 6 páginas; `robots.txt` + `sitemap.xml` (URL de GitHub Pages, cambiar al tener dominio). Sin guiones (usar `·`).
+- **Legales (7)**: terms, privacy, disclaimer, responsible, cookies, acceptable-use, dmca — Sports Expectations LLC (Florida), no-sportsbook, sin garantías, 18+, renovación automática, arbitraje, juego responsable (1-800-GAMBLER + FL 888-ADMIT-IT).
+- **Favicon** en todas las páginas; "Back to home" con `history.back()` (preserva scroll).
+- **FAQ** ampliado a 18 preguntas.
+- **Disclaimer de entrada** obligatorio (una vez) + modal de Signals, ambos con imagen integrada (`<img>` real, sin sombra) y distribución `space-between`.
+
+### Ronda "Panel administrativo v2" — HECHO
+- Resumen: 3 botones renombrados con función real → **Exportar usuarios** (CSV), **Desglose** (modal), **Registro legal** (documento economía + usuarios). "Ingresos / M".
+- **Desglose**: modal horizontal + calculadora; impuestos federales EE.UU. **2026** (tramos reales), SS 2026 ($184,500), Stripe 2.9%+$0.30, Florida $0 estatal; reparto 15/10/75 (75% entre 2 socios). `TAX_YEAR = 2026`.
+- **Redes sociales** (Contacto): modal 5 redes (X, IG, YouTube + Facebook, TikTok) con enlace + interruptor; el pie lee la config.
+- Quitados botones de prueba del Analysis Hub ("Publicar señales ahora", "Auditar motor").
+- Service worker corregido: solo cachea GET del mismo origen (adiós errores de consola por POST/APIs externas).
+
+## 16. PRIORIDAD 1 (actualizada) — a revisar
+1. **Points / Shots / Touchdown vacíos** aunque haya partidos (lunes incluido). Hipótesis: ESPN no publica stats de jugador hasta cerca del juego / pretemporada NBA-NHL. Confirmar con `[NBA-DIAG]` / `[NFL-DIAG]` en consola y decidir fuente/umbral.
+2. **Stripe** — integrar en `_procesarPagoSeguir()` y en el paywall de planes.
+3. **i18n** — completar páginas secundarias + legales (legales con revisión legal).
+4. **Firebase** — "Public-facing name" a "Sports Expectations".

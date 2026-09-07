@@ -371,3 +371,81 @@ Ruta interna, abierta desde el perfil del admin. Secciones:
   no justificar con "no se puede".
 - No tocar el **motor** a la ligera sin plan; cuando se toque, que sea para
   **rehacerlo bien** (deuda #1).
+
+---
+
+## 17. AUDITORÍA COMPLETA — Estado actual (2026-09-07)
+
+> Sección añadida tras una auditoría archivo por archivo. Recoge TODO lo implementado
+> desde las secciones anteriores. La marca del producto de cara al público es
+> **Sports Expectations** (el repo y algunos textos internos aún dicen "Handicapper").
+
+### 17.1 Nuevos archivos (desde la última edición)
+- `assets/js/landing-lang.js` — traductor ligero standalone para páginas secundarias (usa el diccionario de `idioma.js`, sin Firebase).
+- `assets/js/analisis/elite.js` — motor de "La Élite del Día" (mejor pick por deporte).
+- `sitemap.xml`, `robots.txt` — SEO (raíz).
+- `assets/imagenes/disclaimer-web.webp` (póster vertical) y `disclaimer-movil.webp` (horizontal) — imágenes del disclaimer, optimizadas de `paralaweb.png` y `mage.png` (ambos en la raíz).
+- `assets/imagenes/muestras/muestra-1..6.webp` — capturas reales para Advanced Analytics.
+- `assets/imagenes/favicon-32.png`, `favicon.png`, `apple-touch-icon.png` — favicon (en todas las páginas).
+
+### 17.2 APIs e integraciones externas (TODAS)
+- **ESPN** — `site.api.espn.com` (scoreboard/summary), `site.web.api.espn.com`, `sports.core.api.espn.com` (stats de equipo/atleta; algunos 404 en pretemporada), `a.espncdn.com` (logos). Deportes: NBA, NFL, NHL (hockey/nhl), soccer.
+- **MLB Stats API** — `statsapi.mlb.com` (schedule + gameLog); logos en `img.mlbstatic.com` / `www.mlbstatic.com`.
+- **NHL** — `api.nhle.com/stats/rest` y `api-web.nhle.com` (BLOQUEADOS por CORS desde el navegador). Assets en `assets.nhle.com`. Por eso NHL ahora pasa por ESPN vía `detallePartido`.
+- **Proxies CORS** (mejor esfuerzo, solo NHL API directa): `corsproxy.io`, `api.allorigins.win`.
+- **TheSportsDB** — `www.thesportsdb.com` (proveedor alterno / fotos).
+- **Wikipedia / Wikimedia** — fotos de jugadores/analistas (`fotos-wiki.js`).
+- **Firebase** — `www.gstatic.com/firebasejs` (Auth + Firestore). Proyecto `handicappper`.
+- **Stripe** — PENDIENTE (sin claves). El sistema ya está preparado (ver 17.9).
+
+### 17.3 Sistema de idioma (i18n) — inglés por defecto, toggle a español
+- Diccionario único en `assets/js/ui/idioma.js` (`DIC.en` / `DIC.es`, **192 claves cada uno, balanceado**).
+- `t(clave)`, `fijarIdioma()`, `idiomaActual()`, `initIdioma()` (default `en`, persiste en `localStorage['handicapper-idioma']`).
+- Aplicadores: `aplicarI18n()` en `navegacion.js` (app + portada) y `landing-lang.js` (páginas secundarias).
+- Atributos: `data-i18n` (texto) y `data-i18n-html` (preserva markup: `<br>`, `<em>`, `<b>`, enlaces).
+- **Traducido 100%:** portada (index), app interna, About, Features, Sports.
+- **PENDIENTE:** how-it-works, plans, contact, updates, help, status, faq, contact-support + 7 legales.
+- BUG HISTÓRICO YA RESUELTO: el objeto `en` se cerraba antes de tiempo y 73 claves caían fuera → el inglés no revertía. Corregido (cierre del objeto movido).
+
+### 17.4 SEO (sin dominio propio aún)
+- `index.html` + 6 páginas principales: `<title>`, `meta description`, `keywords`, Open Graph, Twitter Card, `canonical`, JSON-LD (Organization + WebSite).
+- `robots.txt` (permite todo + apunta al sitemap) y `sitemap.xml` (15 URLs).
+- URLs usan la URL real de GitHub Pages `cybersecureaid.github.io/Handicapper` (buscar/reemplazar cuando haya dominio).
+- REGLA: sin guiones en texto visible (se usa `·` como separador, no `—`).
+
+### 17.5 Páginas legales (7) — Florida / EE.UU.
+`terms.html`, `privacy.html`, `disclaimer.html`, `responsible.html`, `cookies.html`, `acceptable-use.html`, `dmca.html`.
+- Entidad: **Sports Expectations LLC** (Florida). Ley de Florida + Miami-Dade, arbitraje AAA + renuncia a demanda colectiva (opt-out 30 días).
+- "No somos casa de apuestas" (lenguaje fuerte), sin garantías, edad 18+, renovación automática (cumple Ley de Florida), reembolsos, analistas como contratistas independientes.
+- Juego responsable: 1-800-GAMBLER (+1-800-522-4700) y, por Florida, 888-ADMIT-IT.
+- Todas con favicon; "Back to home" usa `history.back()` (preserva el scroll).
+
+### 17.6 Disclaimers / consentimiento (imagen integrada)
+- **Disclaimer de entrada obligatorio** (`mostrarDisclaimerEntrada` en `app.js`): sale una vez antes de entrar al lobby, "acepto y entro", se guarda en `localStorage['se-disclaimer-ok']`.
+- **Modal de Signals / Analytics Signals** (`abrirModalInfoSenales` en `senales.js`): también aparece en el botón Signals (directorio), flag `sn_info_visto`.
+- Ambos usan `<img>` real (no background) → sin la "sombra" del color de fondo. Web: `disclaimer-web.webp` a la izquierda; móvil: `disclaimer-movil.webp` arriba. Distribución `space-between` (título arriba, texto centro, botón abajo).
+
+### 17.7 Motores de análisis (estado REAL)
+- **Hits (MLB)** y **Goals (soccer)**: funcionan (deportes en temporada). Goals usa Poisson Over 1.5.
+- **Points (NBA)**, **Shots (NHL)**, **Touchdown (NFL)**: reescritos para tomar jugadores de `detallePartido` (la fuente que SÍ funciona), con respaldo a líderes de liga. NHL migrado a ESPN (evita CORS).
+- Todos: **rango de fechas** (hoy + próximos días) y orden por cercanía; muestran la fecha en la tarjeta.
+- Diagnóstico en consola (`[NBA-DIAG]`, etc.) + mensaje en pantalla que distingue "sin juegos" / "sin datos de jugadores (pretemporada)" / "hay juegos pero no superan el umbral".
+- **PENDIENTE (ver 17.10):** Points/Shots/TD siguen saliendo vacíos aunque haya partidos (probable falta de stats de jugador que ESPN publica cerca del juego).
+
+### 17.8 Panel administrativo — nuevas herramientas (`mesa.js`)
+- Botones del resumen renombrados y con función real: **Exportar usuarios** (CSV), **Desglose** (modal financiero), **Registro legal** (documento con economía + todos los usuarios).
+- **Desglose**: modal horizontal + calculadora. Impuestos federales EE.UU. 2026 (tramos reales), Seguridad Social 2026 ($184,500), Stripe 2.9% + $0.30, Florida sin impuesto estatal. Reparto: 15% publicidad, 10% mantenimiento, 75% entre 2 socios. Constante `TAX_YEAR = 2026` (actualizar cada año). No es asesoría fiscal.
+- **Redes sociales** (sección Contacto): modal con 5 redes (X, Instagram, YouTube + Facebook, TikTok), enlace + interruptor por red; el pie de página lee esa config (`landing-movil.js`).
+- "Ingresos / M" (antes "Ingresos mensuales", se montaba).
+
+### 17.9 Cobro por seguir analista + La Élite del Día
+- **Cobro** (`abrirCobroSeguir` en `app.js`): al tocar "Seguir" (directorio o Analysis Signals), ventana de cobro ($2/mes) con descargo. Admin sigue directo. Punto de integración Stripe: `_procesarPagoSeguir()` (hoy devuelve false → "pagos muy pronto").
+- **La Élite del Día** (`elite.js` + `parlay.js`): solo Premium; el mejor pick por deporte; sección vacía honesta si nada supera el umbral.
+
+### 17.10 PENDIENTES (actualizado)
+1. **Stripe** — integración real (lo último). Sistema ya preparado.
+2. **Points / Shots / Touchdown vacíos** — REVISAR: el lunes seguían sin picks aunque hay partidos. Probable que ESPN no publique stats de jugador hasta cerca del juego. Confirmar con `[NBA-DIAG]`/`[NFL-DIAG]` en consola.
+3. **i18n** — traducir páginas secundarias restantes + legales (legales con revisión de abogado).
+4. **Firebase** — cambiar "Public-facing name" de "Handicapper" a "Sports Expectations".
+5. **Dominio** — al adquirirlo, reemplazar `cybersecureaid.github.io/Handicapper` en SEO/sitemap/robots + registrar en Google Search Console.
+6. **Push notifications** en segundo plano (VAPID) — pendiente.
