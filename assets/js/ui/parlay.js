@@ -699,9 +699,26 @@ function wireBets(cont) {
   }));
 }
 
-function sinJuegosHTML(cont, cfg) {
-  const msg = L('No games for this sport today, so there are no picks to show. Check back on a game day.', 'Hoy no hay partidos de este deporte, así que no hay picks que mostrar. Vuelve un día de juego.');
-  cont.innerHTML = `<div class="ply">${heroHTML(cfg, { fecha: hoyISO() }, false)}<div class="ply-note ply-note-big"><i></i>${msg}</div></div>`;
+function sinJuegosHTML(cont, cfg, meta, brutos) {
+  const ES = idiomaActual() === 'es';
+  const avisos = (meta && meta.avisos) || [];
+  const av = avisos.join(' · ');
+  let msg;
+  if (brutos > 0) {
+    // Hay jugadores candidatos, pero ninguno superó el umbral de alta confianza.
+    msg = L(`There are games, but no pick clears our high-confidence bar today. We only show the very best, never filler.`,
+            `Hay partidos, pero hoy ningún pick supera nuestro umbral de alta confianza. Solo mostramos lo mejor, nunca relleno.`);
+  } else if (/sin juegos|no games/i.test(av)) {
+    msg = L('No games for this sport today. Check back on a game day.', 'Hoy no hay partidos de este deporte. Vuelve un día de juego.');
+  } else if (/sin datos de jugadores|sin roster|sin tiradores/i.test(av)) {
+    msg = L('There are games, but player season stats are not available yet (likely preseason). This fills in once the season is underway.',
+            'Hay partidos, pero aún no hay estadísticas de jugadores de la temporada (probablemente pretemporada). Se llenará cuando arranque la temporada.');
+  } else {
+    msg = L('No picks to show right now. Check back shortly.', 'No hay picks que mostrar ahora mismo. Vuelve en un rato.');
+  }
+  // Línea de diagnóstico discreta (para depurar sin F12).
+  const diag = av ? `<div class="ply-diag">Diagnóstico: ${esc(av)}${meta && meta.candidatosEvaluados != null ? ` · candidatos: ${meta.candidatosEvaluados}` : ''}</div>` : '';
+  cont.innerHTML = `<div class="ply">${heroHTML(cfg, { fecha: hoyISO() }, false)}<div class="ply-note ply-note-big"><i></i>${msg}</div>${diag}</div>`;
 }
 function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
   cfg._count = jugadores.length;
@@ -773,15 +790,20 @@ export async function pintarParlay(cont, { sport = 'mlb', nivel = 'basic', modo 
   if (!fresco) {
     try {
       const r = await conTimeout(cfg.run(), 25000);
-      if (r && r.jugadores && r.jugadores.length) {
-        const jug = curar(r.jugadores, cfg);
-        CACHE.set(sport, { jugadores: jug, meta: r.meta, ts: Date.now() });
-        pintarGrid(cont, cfg, limitarPro(jug, modo), r.meta, false);
+      const bruto = (r && r.jugadores) || [];
+      if (bruto.length) {
+        const jug = curar(bruto, cfg);
+        if (jug.length) {
+          CACHE.set(sport, { jugadores: jug, meta: r.meta, ts: Date.now() });
+          pintarGrid(cont, cfg, limitarPro(jug, modo), r.meta, false);
+        } else {
+          sinJuegosHTML(cont, cfg, r.meta, bruto.length);   // hay candidatos pero ninguno pasa el umbral
+        }
       } else {
-        sinJuegosHTML(cont, cfg);
+        sinJuegosHTML(cont, cfg, r && r.meta, 0);
       }
     } catch (_) {
-      sinJuegosHTML(cont, cfg);
+      sinJuegosHTML(cont, cfg, { avisos: ['Error al leer los datos'] }, 0);
     }
   }
 }
