@@ -1079,3 +1079,6 @@ body.en-mesa { overflow: hidden; }
 
 /* Pill de Visitante (acceso de cortesía, sin cobro) */
 .pill.on.vis { background: rgba(139,92,246,.16); color: #b79cff; border-color: rgba(139,92,246,.4); }
+
+/* Montos potenciales (no cobrados aún) en monitoreo */
+.ing-amt.pot { opacity: .6; }
