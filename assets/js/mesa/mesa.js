@@ -415,7 +415,7 @@ function abrirRedesSociales() {
 /* ============ HERRAMIENTAS DE ADMIN (Desglose, exports, redes) ============ */
 /* Impuesto federal EE.UU. 2025 (tramos declarante soltero, dato público y estable). */
 function _impFederal(ing) {
-  const B = [[0,.10],[11925,.12],[48475,.22],[103350,.24],[197300,.32],[250525,.35],[626350,.37]];
+  const B = [[0,.10],[12400,.12],[50400,.22],[105700,.24],[201775,.32],[256225,.35],[640600,.37]];
   let t = 0;
   for (let i = 0; i < B.length; i++) {
     const desde = B[i][0], hasta = B[i+1] ? B[i+1][0] : Infinity;
@@ -426,9 +426,9 @@ function _impFederal(ing) {
 /* Impuesto de trabajo por cuenta propia (Self-Employment): 15.3% (12.4% SS hasta el tope + 2.9% Medicare). */
 function _impSE(ing) {
   const base = Math.max(0, ing) * 0.9235;
-  return Math.min(base, 168600) * 0.124 + base * 0.029;
+  return Math.min(base, 184500) * 0.124 + base * 0.029;
 }
-const TAX_YEAR = 2025;
+const TAX_YEAR = 2026;
 function _desglosarBruto(brutoAnual, nTxAnual) {
   brutoAnual = Math.max(0, +brutoAnual || 0);
   const stripe = brutoAnual * 0.029 + 0.30 * Math.max(0, nTxAnual || 0);
