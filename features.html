@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/imagenes/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/imagenes/favicon.png">
+  <link rel="apple-touch-icon" href="assets/imagenes/apple-touch-icon.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Features · Sports Expectations</title>
   <meta name="description" content="Explore Sports Expectations features: win probabilities, player props, analyst signals, live updates and advanced sports analytics.">
@@ -62,7 +65,7 @@
   <canvas id="lg-particles"></canvas>
   <nav class="lg-nav">
     <a href="index.html" class="lg-brand"><img src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations"></a>
-    <a href="index.html" class="lg-back">← Back to home</a>
+    <a href="index.html" class="lg-back" onclick="if(history.length>1){history.back();return false;}">← Back to home</a>
   </nav>
   <style>
     .lg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:8px 0 40px}

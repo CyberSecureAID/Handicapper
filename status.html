@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/imagenes/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/imagenes/favicon.png">
+  <link rel="apple-touch-icon" href="assets/imagenes/apple-touch-icon.png">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>System status · Sports Expectations</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -49,7 +52,7 @@
   <canvas id="lg-particles"></canvas>
   <nav class="lg-nav">
     <a href="index.html" class="lg-brand"><img src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations"></a>
-    <a href="index.html" class="lg-back">← Back to home</a>
+    <a href="index.html" class="lg-back" onclick="if(history.length>1){history.back();return false;}">← Back to home</a>
   </nav>
   <style>
     .st-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
