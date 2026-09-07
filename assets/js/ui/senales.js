@@ -839,21 +839,25 @@ const ICheckMini = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 function abrirModalInfoSenales() {
   const es = idiomaActual() === 'es';
   const L = (en, esx) => es ? esx : en;
-  document.getElementById('rep-bg')?.remove();
-  const bg = document.createElement('div'); bg.id = 'rep-bg'; bg.className = 'rep-bg';
-  const cerrar = () => bg.remove();
-  bg.innerHTML = `<div class="rep-card" role="dialog" aria-modal="true" style="max-width:430px">
-    <div class="rep-head"><h3>${L('Analyst signals', 'Señales del analista')}</h3><button class="rep-x" aria-label="close">✕</button></div>
-    <div class="rep-body">
-      <p class="rep-sub">${L('Follow analysts, see who is hot, and get their published calls first. Signals are posted only when there is a real edge, not every day.', 'Sigue analistas, mira quién está en racha y recibe sus pronósticos primero. Las señales se publican solo cuando hay una ventaja real, no todos los días.')}</p>
-      <div class="sni-disc">${IC.info}<p>${L('These are the analyst\u2019s opinions for informational purposes, not betting advice. High variance: a high probability is never a guarantee.', 'Son opiniones del analista con fines informativos, no asesoría de apuestas. Alta varianza: una probabilidad alta nunca es garantía.')}</p></div>
-    </div>
-    <div class="rep-foot"><button class="rep-send" style="flex:1">${L('Got it', 'Entendido')}</button></div>
+  document.getElementById('sni-ov')?.remove();
+  const ov = document.createElement('div'); ov.className = 'disc-ov'; ov.id = 'sni-ov';
+  const cerrar = () => { ov.classList.remove('on'); document.body.style.overflow = ''; setTimeout(() => ov.remove(), 200); };
+  ov.innerHTML = `<div class="disc" role="dialog" aria-modal="true">
+    <div class="disc-img" style="background-image:url('assets/imagenes/disclaimer-web.webp')"></div>
+    <div class="disc-imgm" style="background-image:url('assets/imagenes/disclaimer-movil.webp')"></div>
+    <div class="disc-body"><div class="disc-bg"></div><div class="disc-veil"></div><div class="disc-in">
+      <span class="disc-badge">${L('Analyst signals', 'Se\u00f1ales del analista')}</span>
+      <h3>${L('Follow the pros', 'Sigue a los pros')}</h3>
+      <p>${L('Follow analysts, see who is hot, and get their published calls first. Signals are posted only when there is a real edge, not every day.', 'Sigue analistas, mira qui\u00e9n est\u00e1 en racha y recibe sus pron\u00f3sticos primero. Las se\u00f1ales se publican solo cuando hay una ventaja real, no todos los d\u00edas.')}</p>
+      <p class="disc-fine" style="text-align:left">${L('These are the analyst\u2019s opinions for informational purposes, not betting advice. A high probability is never a guarantee.', 'Son opiniones del analista con fines informativos, no asesor\u00eda de apuestas. Una probabilidad alta nunca es garant\u00eda.')}</p>
+      <button class="disc-go" id="sni-ok">${L('Got it', 'Entendido')}</button>
+    </div></div>
   </div>`;
-  document.body.appendChild(bg);
-  bg.querySelector('.rep-x').onclick = cerrar;
-  bg.querySelector('.rep-send').onclick = cerrar;
-  bg.onclick = (e) => { if (e.target === bg) cerrar(); };
+  document.body.appendChild(ov);
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => ov.classList.add('on'));
+  ov.querySelector('#sni-ok').onclick = cerrar;
+  ov.onclick = (e) => { if (e.target === ov) cerrar(); };
 }
 
 function abrirModalTelegram() {
