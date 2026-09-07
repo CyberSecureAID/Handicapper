@@ -134,6 +134,16 @@ async function defensasNBA() {
 }
 
 /* --------- Roster con PPG/MPG por equipo (best-effort) --------- */
+/* Extrae los máximos anotadores (con su promedio real) de los leaders del calendario. */
+function leadersPuntos(comp) {
+  const cats = (comp && comp.leaders) || [];
+  const cat = cats.find(l => { const k = (l.name || l.abbreviation || l.shortDisplayName || '').toLowerCase(); return k === 'points' || k === 'pts' || k.includes('point'); });
+  return ((cat && cat.leaders) || []).map(ld => {
+    const at = ld.athlete || {};
+    return { id: at.id, nombre: at.displayName || at.shortName || at.fullName, pos: at.position && at.position.abbreviation, ppg: num(ld.value != null ? ld.value : ld.displayValue), mpg: null };
+  }).filter(j => j.id && j.ppg != null && j.ppg > 0);
+}
+
 async function rosterConPuntos(teamId) {
   try {
     const d = await pedir(`${API}/teams/${teamId}/roster`);
@@ -173,12 +183,15 @@ export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {
     const home = cs.find(c => c.homeAway === 'home'), away = cs.find(c => c.homeAway === 'away');
     if (!home || !away) continue;
     const lados = [
-      { equipo: home.team, rival: away.team, local: true },
-      { equipo: away.team, rival: home.team, local: false },
+      { comp: home, equipo: home.team, rival: away.team, local: true },
+      { comp: away, equipo: away.team, rival: home.team, local: false },
     ];
     for (const lado of lados) {
-      const roster = await rosterConPuntos(lado.equipo.id);
-      if (!roster.length) { avisos.push(`Sin roster para ${lado.equipo?.displayName || '—'}`); continue; }
+      // 1) Los LÍDERES del calendario traen el promedio real (crème de la crème).
+      //    2) Si no hay, se intenta el roster como respaldo.
+      let roster = leadersPuntos(lado.comp);
+      if (!roster.length) { const r = await rosterConPuntos(lado.equipo.id); roster = r.filter(x => x.ppg != null); }
+      if (!roster.length) { avisos.push(`Sin datos de jugadores para ${lado.equipo?.displayName || '—'}`); continue; }
       roster.sort((a, b) => (b.ppg || 0) - (a.ppg || 0));
       const oponente = defensas.get(String(lado.rival.id)) || {};
       let count = 0;

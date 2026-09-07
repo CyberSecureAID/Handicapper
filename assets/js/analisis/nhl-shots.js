@@ -115,14 +115,14 @@ async function defensasNHL(sid) {
 }
 
 /* --------- Tiros por jugador (abbrev de equipo -> lista de tiradores) --------- */
-async function tiradoresPorEquipo(sid) {
+async function _fetchSkaters(sid) {
   const porAbbrev = new Map();
   try {
     const d = await pedir(`${STATS}/skater/summary?limit=-1&cayenneExp=seasonId=${sid}%20and%20gameTypeId=2`);
     (d?.data || []).forEach(s => {
       const gp = num(s.gamesPlayed); const shots = num(s.shots);
       if (!gp || shots == null) return;
-      const ab = (s.teamAbbrevs || '').split(/[,\s]+/).filter(Boolean).pop();   // último equipo si fue cambiado
+      const ab = (s.teamAbbrevs || '').split(/[,\s]+/).filter(Boolean).pop();
       if (!ab) return;
       const row = { id: s.playerId, nombre: s.skaterFullName, pos: s.positionCode, spg: shots / gp, gp, goles: num(s.goals) };
       if (!porAbbrev.has(ab)) porAbbrev.set(ab, []);
@@ -131,6 +131,16 @@ async function tiradoresPorEquipo(sid) {
     for (const arr of porAbbrev.values()) arr.sort((a, b) => b.spg - a.spg);
   } catch (_) {}
   return porAbbrev;
+}
+async function tiradoresPorEquipo(sid) {
+  let m = await _fetchSkaters(sid);
+  // Pretemporada / inicio: la temporada nueva aún no tiene datos -> usar la anterior.
+  if (m.size < 4) {
+    const prev = String(Number(sid) - 10001);
+    const alt = await _fetchSkaters(prev);
+    if (alt.size > m.size) m = alt;
+  }
+  return m;
 }
 
 /* --------- Orquestador --------- */
