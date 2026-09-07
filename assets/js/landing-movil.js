@@ -106,3 +106,29 @@ function botonCTA(){
 function init(){ pintarPartidos(); pintarDestacado(); tabs(); botonCTA(); }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
+
+/* ============ Pie de página: redes sociales desde la config del panel ============ */
+(async () => {
+  const cont = document.querySelector('.foot-social');
+  if (!cont) return;
+  const META = [
+    { id: 'x', nombre: 'X', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7 8 8.2 12h-6.3l-5-7-5.7 7H2l7.5-9L1.6 2h6.5l4.5 6.3z"/></svg>' },
+    { id: 'instagram', nombre: 'Instagram', svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>' },
+    { id: 'youtube', nombre: 'YouTube', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.4-.4-5c-.2-.9-1-1.6-1.9-1.8C18.9 5 12 5 12 5s-6.9 0-8.7.2C2.4 5.4 1.6 6.1 1.4 7 1 8.6 1 12 1 12s0 3.4.4 5c.2.9 1 1.6 1.9 1.8C5.1 19 12 19 12 19s6.9 0 8.7-.2c.9-.2 1.7-.9 1.9-1.8.4-1.6.4-5 .4-5zM10 15V9l5 3z"/></svg>' },
+    { id: 'facebook', nombre: 'Facebook', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 10-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.8 3.7-3.8 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.5V12h2.7l-.4 2.9h-2.3v7A10 10 0 0022 12z"/></svg>' },
+    { id: 'tiktok', nombre: 'TikTok', svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 2h-3v13a2.5 2.5 0 11-2.5-2.5c.2 0 .4 0 .5.1V9.5a5.6 5.6 0 00-.5 0 5.5 5.5 0 105.5 5.5V8.3a7.2 7.2 0 004 1.2V6.5a4 4 0 01-4-4z"/></svg>' },
+  ];
+  try {
+    const { initializeApp, getApps, getApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+    const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    const cfgFb = { apiKey: 'AIzaSyAbJ9RBm-91N4TRg02Wjv4RzsaUAO1LdsA', authDomain: 'handicappper.firebaseapp.com', projectId: 'handicappper', storageBucket: 'handicappper.firebasestorage.app', messagingSenderId: '279849310534', appId: '1:279849310534:web:94cde85a27b336b8632d47' };
+    const app = getApps().length ? getApp() : initializeApp(cfgFb);
+    const db = getFirestore(app);
+    const snap = await getDoc(doc(db, 'config', 'contacto'));
+    const redes = (snap.exists() && snap.data().redes) || null;
+    if (!redes) return;   // sin config -> deja las 3 estáticas que ya están
+    const html = META.filter(m => { const r = redes[m.id]; return r && r.visible && r.url; })
+      .map(m => `<a href="${redes[m.id].url}" aria-label="${m.nombre}" target="_blank" rel="noopener">${m.svg}</a>`).join('');
+    if (html) cont.innerHTML = html;   // solo reemplaza si hay al menos una configurada visible
+  } catch (_) { /* si algo falla, se quedan las redes estáticas */ }
+})();
