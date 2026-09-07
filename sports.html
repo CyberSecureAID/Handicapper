@@ -65,7 +65,7 @@
   <canvas id="lg-particles"></canvas>
   <nav class="lg-nav">
     <a href="index.html" class="lg-brand"><img src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations"></a>
-    <a href="index.html" class="lg-back" onclick="if(history.length>1){history.back();return false;}">← Back to home</a>
+    <span style="display:flex;gap:8px;align-items:center"><button id="lang-toggle" class="lg-back" style="cursor:pointer" aria-label="Language">EN</button><a href="index.html" class="lg-back" onclick="if(history.length>1){history.back();return false;}">← Back to home</a></span>
   </nav>
   <style>
     .lg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:8px 0 40px}
@@ -77,17 +77,17 @@
   </style>
   <main class="lg-wrap">
     <span class="lg-eyebrow">Product</span>
-    <h1>Sports we cover</h1>
+    <h1 data-i18n="sp.title">Sports we cover</h1>
     
-    <div class="lg-note">The leagues and competitions Sports Expectations tracks and analyzes.</div>
+    <div class="lg-note" data-i18n="sp.intro">The leagues and competitions Sports Expectations tracks and analyzes.</div>
     <div class="lg-grid">
-      <div class="lg-card"><h3>⚾ Baseball · MLB</h3><p>Full Major League Baseball coverage, with hit projections and matchup analysis.</p></div>
-      <div class="lg-card"><h3>🏀 Basketball · NBA</h3><p>NBA games with points projections and team-versus-team statistical breakdowns.</p></div>
-      <div class="lg-card"><h3>🏒 Ice hockey · NHL</h3><p>National Hockey League coverage with shots projections and form analysis.</p></div>
-      <div class="lg-card"><h3>🏈 American football · NFL</h3><p>NFL matchups with win probabilities and performance comparisons.</p></div>
-      <div class="lg-card"><h3>⚽ Soccer</h3><p>Premier League, LaLiga, Serie A, Bundesliga and the Champions League, with goal projections and probabilities.</p></div>
+      <div class="lg-card"><h3 data-i18n="sp.h1">⚾ Baseball · MLB</h3><p data-i18n="sp.p1">Full Major League Baseball coverage, with hit projections and matchup analysis.</p></div>
+      <div class="lg-card"><h3 data-i18n="sp.h2">🏀 Basketball · NBA</h3><p data-i18n="sp.p2">NBA games with points projections and team-versus-team statistical breakdowns.</p></div>
+      <div class="lg-card"><h3 data-i18n="sp.h3">🏒 Ice hockey · NHL</h3><p data-i18n="sp.p3">National Hockey League coverage with shots projections and form analysis.</p></div>
+      <div class="lg-card"><h3 data-i18n="sp.h4">🏈 American football · NFL</h3><p data-i18n="sp.p4">NFL matchups with win probabilities and performance comparisons.</p></div>
+      <div class="lg-card"><h3 data-i18n="sp.h5">⚽ Soccer</h3><p data-i18n="sp.p5">Premier League, LaLiga, Serie A, Bundesliga and the Champions League, with goal projections and probabilities.</p></div>
     </div>
-    <p style="text-align:center;color:var(--tx3)">More leagues are added as reliable data becomes available.</p>
+    <p style="text-align:center;color:var(--tx3)" data-i18n="sp.close">More leagues are added as reliable data becomes available.</p>
   </main>
 
 </main>
@@ -104,5 +104,6 @@ function rs(){W=c.width=innerWidth;H=c.height=innerHeight;}rs();addEventListener
 for(var i=0;i<44;i++)P.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.4,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,a:Math.random()*.35+.08});
 function loop(){x.clearRect(0,0,W,H);for(var i=0;i<P.length;i++){var p=P[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;x.beginPath();x.arc(p.x,p.y,p.r,0,6.283);x.fillStyle='rgba(232,196,106,'+p.a+')';x.fill();}requestAnimationFrame(loop);}loop();})();
 </script>
+  <script type="module" src="assets/js/landing-lang.js"></script>
 </body>
 </html>

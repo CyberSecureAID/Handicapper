@@ -65,40 +65,40 @@
   <canvas id="lg-particles"></canvas>
   <nav class="lg-nav">
     <a href="index.html" class="lg-brand"><img src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations"></a>
-    <a href="index.html" class="lg-back">&larr; Back to home</a>
+    <span style="display:flex;gap:8px;align-items:center"><button id="lang-toggle" class="lg-back" style="cursor:pointer" aria-label="Language">EN</button><a href="index.html" class="lg-back" onclick="if(history.length>1){history.back();return false;}">&larr; Back to home</a></span>
   </nav>
   <main class="lg-wrap">
     <span class="lg-eyebrow">Company</span>
-    <h1>About Sports Expectations</h1>
-    <div class="lg-note"><strong>Sports Expectations LLC</strong> is a technology company that turns public sports data into clear, verifiable, and useful information. We are an analytics and information platform, not a sportsbook, not a betting operator, and not a financial advisor.</div>
+    <h1 data-i18n="ab.title">About Sports Expectations</h1>
+    <div class="lg-note" data-i18n-html="ab.intro"><strong>Sports Expectations LLC</strong> is a technology company that turns public sports data into clear, verifiable, and useful information. We are an analytics and information platform, not a sportsbook, not a betting operator, and not a financial advisor.</div>
 
-    <h2><span class="num">·</span>Who we are</h2>
-    <p>Sports Expectations is a digital platform dedicated to the collection, organization, and presentation of sports statistics and probability estimates. We monitor competitions in real time across multiple sports and leagues, structure the data, run it through consistent analytical methods, and deliver it in a format anyone can understand in seconds rather than hours.</p>
-    <p>Our work is strictly <strong>informational</strong>. We do not accept, place, hold, or facilitate wagers of any kind, and nothing on our platform should be interpreted as a recommendation to bet or as a guarantee of any result.</p>
+    <h2 data-i18n-html="ab.hwho"><span class="num">·</span>Who we are</h2>
+    <p data-i18n-html="ab.pwho1">Sports Expectations is a digital platform dedicated to the collection, organization, and presentation of sports statistics and probability estimates. We monitor competitions in real time across multiple sports and leagues, structure the data, run it through consistent analytical methods, and deliver it in a format anyone can understand in seconds rather than hours.</p>
+    <p data-i18n-html="ab.pwho2">Our work is strictly <strong>informational</strong>. We do not accept, place, hold, or facilitate wagers of any kind, and nothing on our platform should be interpreted as a recommendation to bet or as a guarantee of any result.</p>
 
-    <h2><span class="num">·</span>Our mission</h2>
-    <p>To make sports data <strong>honest, accessible, and measurable</strong>. In an industry crowded with inflated claims and false certainty, our commitment is the opposite: show the real numbers, explain how they are derived, present probabilities as the estimates they are, and let people make their own informed decisions.</p>
+    <h2 data-i18n-html="ab.hmis"><span class="num">·</span>Our mission</h2>
+    <p data-i18n-html="ab.pmis">To make sports data <strong>honest, accessible, and measurable</strong>. In an industry crowded with inflated claims and false certainty, our commitment is the opposite: show the real numbers, explain how they are derived, present probabilities as the estimates they are, and let people make their own informed decisions.</p>
 
-    <h2><span class="num">·</span>The people behind it</h2>
-    <p>Sports Expectations was founded by two professionals whose partnership predates the company by more than a decade.</p>
-    <p><strong>Oscar Luis</strong>, based in the United States, leads the company&rsquo;s vision and operations. He originated the business concept and works hands-on as a baseball data analyst, a discipline he has developed over years of studying the numbers that drive the sport.</p>
-    <p><strong>Jesús Pérez</strong> serves as the founder and developer of the platform. Over the past decade he has built expertise across multiple programming languages, from Python and JavaScript to blockchain, along with graphic design and hands-on experience as a trader. He designed and engineered the entire ecosystem that powers the product today.</p>
-    <p>What began as a friendship between two colleagues, going back more than a decade, became a company built on a simple division of strengths: one who reads the data, one who builds the systems that make it useful.</p>
+    <h2 data-i18n-html="ab.hppl"><span class="num">·</span>The people behind it</h2>
+    <p data-i18n-html="ab.pppl1">Sports Expectations was founded by two professionals whose partnership predates the company by more than a decade.</p>
+    <p data-i18n-html="ab.posc"><strong>Oscar Luis</strong>, based in the United States, leads the company&rsquo;s vision and operations. He originated the business concept and works hands-on as a baseball data analyst, a discipline he has developed over years of studying the numbers that drive the sport.</p>
+    <p data-i18n-html="ab.pjes"><strong>Jesús Pérez</strong> serves as the founder and developer of the platform. Over the past decade he has built expertise across multiple programming languages, from Python and JavaScript to blockchain, along with graphic design and hands-on experience as a trader. He designed and engineered the entire ecosystem that powers the product today.</p>
+    <p data-i18n-html="ab.pppl2">What began as a friendship between two colleagues, going back more than a decade, became a company built on a simple division of strengths: one who reads the data, one who builds the systems that make it useful.</p>
 
-    <h2><span class="num">·</span>What we build</h2>
-    <p>Our platform combines two things. First, an <strong>automated analytics engine</strong> that ingests public data, records, standings, form, and match context, and produces clear statistical comparisons and win-probability estimates for upcoming and live games. Second, a <strong>network of independent analysts</strong> who publish their own sports analysis and signals, and whose track record is measured objectively through a public prestige system.</p>
-    <p>Together, these give our users a transparent picture of what the data says and of who, among our analysts, has actually been getting it right.</p>
+    <h2 data-i18n-html="ab.hbld"><span class="num">·</span>What we build</h2>
+    <p data-i18n-html="ab.pbld1">Our platform combines two things. First, an <strong>automated analytics engine</strong> that ingests public data, records, standings, form, and match context, and produces clear statistical comparisons and win-probability estimates for upcoming and live games. Second, a <strong>network of independent analysts</strong> who publish their own sports analysis and signals, and whose track record is measured objectively through a public prestige system.</p>
+    <p data-i18n-html="ab.pbld2">Together, these give our users a transparent picture of what the data says and of who, among our analysts, has actually been getting it right.</p>
 
-    <h2><span class="num">·</span>Our principles</h2>
+    <h2 data-i18n-html="ab.hpri"><span class="num">·</span>Our principles</h2>
     <ul>
-      <li><strong>Honesty over hype.</strong> We present estimates, not promises. We never guarantee an outcome.</li>
-      <li><strong>Transparency.</strong> Our probabilities come from real, public data, and our analysts are held to a measurable, public accountability system.</li>
-      <li><strong>We are not a betting service.</strong> We do not take wagers or advise anyone to gamble. What people do with information is their own decision and their own responsibility.</li>
-      <li><strong>Responsibility.</strong> We encourage responsible, lawful use of our platform and provide clear guidance and resources on the subject.</li>
+      <li data-i18n-html="ab.li1"><strong>Honesty over hype.</strong> We present estimates, not promises. We never guarantee an outcome.</li>
+      <li data-i18n-html="ab.li2"><strong>Transparency.</strong> Our probabilities come from real, public data, and our analysts are held to a measurable, public accountability system.</li>
+      <li data-i18n-html="ab.li3"><strong>We are not a betting service.</strong> We do not take wagers or advise anyone to gamble. What people do with information is their own decision and their own responsibility.</li>
+      <li data-i18n-html="ab.li4"><strong>Responsibility.</strong> We encourage responsible, lawful use of our platform and provide clear guidance and resources on the subject.</li>
     </ul>
 
-    <h2><span class="num">·</span>Company &amp; jurisdiction</h2>
-    <p>Sports Expectations operates as <strong>Sports Expectations LLC</strong>, organized under the laws of the State of Florida, United States. For legal terms governing your use of the platform, please see our <a href="terms.html">Terms of Service</a>, <a href="privacy.html">Privacy Policy</a>, and <a href="disclaimer.html">Disclaimer</a>. To learn how the platform, the plans, and the analyst program work in detail, visit <a href="how-it-works.html">How it works</a>.</p>
+    <h2 data-i18n-html="ab.hcom"><span class="num">·</span>Company &amp; jurisdiction</h2>
+    <p data-i18n-html="ab.pcom">Sports Expectations operates as <strong>Sports Expectations LLC</strong>, organized under the laws of the State of Florida, United States. For legal terms governing your use of the platform, please see our <a href="terms.html">Terms of Service</a>, <a href="privacy.html">Privacy Policy</a>, and <a href="disclaimer.html">Disclaimer</a>. To learn how the platform, the plans, and the analyst program work in detail, visit <a href="how-it-works.html">How it works</a>.</p>
   </main>
   <footer class="lg-foot">
     <div style="max-width:900px;margin:0 auto 14px;display:flex;flex-wrap:wrap;justify-content:center;gap:9px 8px;font-size:13px">
@@ -112,5 +112,6 @@
   for(var i=0;i<44;i++)P.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.4,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,a:Math.random()*.35+.08});
   function loop(){x.clearRect(0,0,W,H);for(var i=0;i<P.length;i++){var p=P[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;x.beginPath();x.arc(p.x,p.y,p.r,0,6.283);x.fillStyle='rgba(232,196,106,'+p.a+')';x.fill();}requestAnimationFrame(loop);}loop();})();
   </script>
+  <script type="module" src="assets/js/landing-lang.js"></script>
 </body>
 </html>

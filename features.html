@@ -65,7 +65,7 @@
   <canvas id="lg-particles"></canvas>
   <nav class="lg-nav">
     <a href="index.html" class="lg-brand"><img src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations"></a>
-    <a href="index.html" class="lg-back" onclick="if(history.length>1){history.back();return false;}">← Back to home</a>
+    <span style="display:flex;gap:8px;align-items:center"><button id="lang-toggle" class="lg-back" style="cursor:pointer" aria-label="Language">EN</button><a href="index.html" class="lg-back" onclick="if(history.length>1){history.back();return false;}">← Back to home</a></span>
   </nav>
   <style>
     .lg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:8px 0 40px}
@@ -77,18 +77,18 @@
   </style>
   <main class="lg-wrap">
     <span class="lg-eyebrow">Product</span>
-    <h1>Features</h1>
+    <h1 data-i18n="ft.title">Features</h1>
     
-    <div class="lg-note">Everything Sports Expectations does, in one place. Organized information, built to save you hours.</div>
+    <div class="lg-note" data-i18n="ft.intro">Everything Sports Expectations does, in one place. Organized information, built to save you hours.</div>
     <div class="lg-grid">
-      <div class="lg-card"><div class="lg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l5-9 4 5 3-7 6 11z"/><circle cx="18" cy="5" r="2"/></svg></div><h3>Advanced analytics</h3><p>We take public sports data and run it through statistical models, so you see clean comparisons instead of raw noise.</p></div>
-      <div class="lg-card"><div class="lg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/></svg></div><h3>Win probability estimates</h3><p>Clear probability estimates for upcoming and live games, built from records, standings and form. Estimates, never a promise of results.</p></div>
-      <div class="lg-card"><div class="lg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><path d="M3 20c0-3 2.7-5 6-5M15 20c0-3 2.7-5 6-5"/></svg></div><h3>Player comparisons</h3><p>Compare teams and players side by side across the stats that actually matter for each sport.</p></div>
-      <div class="lg-card"><div class="lg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v16M16 4v16"/></svg></div><h3>Daily projections</h3><p>Every day, curated projections for hits, goals, points and shots, ranked by probability.</p></div>
-      <div class="lg-card"><div class="lg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg></div><h3>Analyst signals</h3><p>Follow real analysts and get their picks in your inbox, published only when they see a clear edge.</p></div>
-      <div class="lg-card"><div class="lg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3>Real-time monitoring</h3><p>Live data keeps the board current as games approach and unfold, so your information stays fresh.</p></div>
+      <div class="lg-card"><div class="lg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l5-9 4 5 3-7 6 11z"/><circle cx="18" cy="5" r="2"/></svg></div><h3 data-i18n="ft.h1">Advanced analytics</h3><p data-i18n="ft.p1">We take public sports data and run it through statistical models, so you see clean comparisons instead of raw noise.</p></div>
+      <div class="lg-card"><div class="lg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/></svg></div><h3 data-i18n="ft.h2">Win probability estimates</h3><p data-i18n="ft.p2">Clear probability estimates for upcoming and live games, built from records, standings and form. Estimates, never a promise of results.</p></div>
+      <div class="lg-card"><div class="lg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><path d="M3 20c0-3 2.7-5 6-5M15 20c0-3 2.7-5 6-5"/></svg></div><h3 data-i18n="ft.h3">Player comparisons</h3><p data-i18n="ft.p3">Compare teams and players side by side across the stats that actually matter for each sport.</p></div>
+      <div class="lg-card"><div class="lg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v16M16 4v16"/></svg></div><h3 data-i18n="ft.h4">Daily projections</h3><p data-i18n="ft.p4">Every day, curated projections for hits, goals, points and shots, ranked by probability.</p></div>
+      <div class="lg-card"><div class="lg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg></div><h3 data-i18n="ft.h5">Analyst signals</h3><p data-i18n="ft.p5">Follow real analysts and get their picks in your inbox, published only when they see a clear edge.</p></div>
+      <div class="lg-card"><div class="lg-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3 data-i18n="ft.h6">Real-time monitoring</h3><p data-i18n="ft.p6">Live data keeps the board current as games approach and unfold, so your information stays fresh.</p></div>
     </div>
-    <p style="text-align:center;color:var(--tx3)">Every feature exists for one purpose: to save you time and help you stay informed.</p>
+    <p style="text-align:center;color:var(--tx3)" data-i18n="ft.close">Every feature exists for one purpose: to save you time and help you stay informed.</p>
   </main>
 
 </main>
@@ -105,5 +105,6 @@ function rs(){W=c.width=innerWidth;H=c.height=innerHeight;}rs();addEventListener
 for(var i=0;i<44;i++)P.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.4,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,a:Math.random()*.35+.08});
 function loop(){x.clearRect(0,0,W,H);for(var i=0;i<P.length;i++){var p=P[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;x.beginPath();x.arc(p.x,p.y,p.r,0,6.283);x.fillStyle='rgba(232,196,106,'+p.a+')';x.fill();}requestAnimationFrame(loop);}loop();})();
 </script>
+  <script type="module" src="assets/js/landing-lang.js"></script>
 </body>
 </html>
