@@ -1598,3 +1598,32 @@
 
 /* Línea de diagnóstico discreta en secciones vacías */
 .ply-diag { text-align: center; font-size: 11px; color: #5c6675; margin-top: 12px; font-family: monospace; opacity: .8; }
+
+/* ===== Disclaimer de entrada (imagen integrada) ===== */
+.disc-ov { position: fixed; inset: 0; z-index: 10001; display: grid; place-items: center; padding: 20px; background: rgba(4,7,12,.82); backdrop-filter: blur(6px); opacity: 0; transition: opacity .22s ease; }
+.disc-ov.on { opacity: 1; }
+.disc { display: flex; width: 100%; max-width: 780px; max-height: 92vh; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.14); box-shadow: 0 40px 90px -25px rgba(0,0,0,.9); transform: scale(.96) translateY(6px); transition: transform .22s cubic-bezier(.2,.7,.3,1); }
+.disc-ov.on .disc { transform: scale(1) translateY(0); }
+.disc-img { flex: 0 0 42%; background: center/cover no-repeat; }
+.disc-imgm { display: none; }
+.disc-body { position: relative; flex: 1 1 auto; min-width: 0; }
+.disc-bg { position: absolute; inset: 0; background: url('../imagenes/fondos/fondo-pagina.webp') center/cover; filter: blur(11px) brightness(.4); transform: scale(1.25); }
+.disc-veil { position: absolute; inset: 0; background: linear-gradient(160deg, rgba(15,21,33,.84), rgba(8,11,18,.95)); }
+.disc-in { position: relative; padding: 30px 28px; overflow-y: auto; max-height: 92vh; }
+.disc-badge { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #e8c46a; background: rgba(232,196,106,.12); border: 1px solid rgba(232,196,106,.32); border-radius: 999px; padding: 5px 13px; margin-bottom: 14px; }
+.disc h3 { font-family: "Poppins",sans-serif; font-weight: 700; font-size: 22px; color: #fff; margin: 0 0 12px; }
+.disc-in p { font-size: 13.5px; line-height: 1.6; color: #cdd6e2; margin: 0 0 4px; }
+.disc-in p b { color: #fff; }
+.disc-links { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 16px 0 20px; }
+.disc-links a { font-size: 12.5px; color: #e8c46a; text-decoration: none; border-bottom: 1px solid rgba(232,196,106,.4); }
+.disc-links a:hover { color: #f6e2a6; }
+.disc-go { width: 100%; padding: 14px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(232,184,75,.55); background: linear-gradient(180deg,#9a2530,#5e141c); color: #ffe6c4; font-family: "Poppins",sans-serif; font-weight: 700; font-size: 14px; box-shadow: 0 6px 18px rgba(120,20,30,.4), inset 0 1px 0 rgba(255,255,255,.15); transition: all .16s; }
+.disc-go:hover { background: linear-gradient(180deg,#b02c38,#6e1720); box-shadow: 0 9px 24px rgba(150,30,40,.55); }
+.disc-fine { font-size: 11px !important; color: #8a94a3 !important; margin-top: 12px !important; text-align: center; }
+@media (max-width: 640px) {
+  .disc { flex-direction: column; max-width: 420px; }
+  .disc-img { display: none; }
+  .disc-imgm { display: block; width: 100%; height: 150px; flex: none; background: center/cover no-repeat; }
+  .disc-in { padding: 22px 20px; }
+  .disc h3 { font-size: 19px; }
+}
