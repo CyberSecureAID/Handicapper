@@ -192,10 +192,12 @@ export async function topTouchdownProjection({ fecha, n = 9, maxPorEquipo = 5 } 
   let data;
   try { data = await pedir(`${API}/scoreboard?dates=${_rango(fecha, 12)}`); }
   catch (_) { return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['No se pudo leer el calendario NFL'] } }; }
-  let eventos = (data?.events || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 10);
+  let eventos = (data?.events || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 5);
   if (!eventos.length) return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['Sin juegos NFL hoy'] } };
 
   const [defensas, ligaLeaders] = await Promise.all([defensasNFL(), leadersLigaNFL()]);
+  const _det = {};
+  await Promise.all(eventos.map(async ev => { try { _det[ev.id] = await detallePartido('nfl:' + ev.id); } catch (_) {} }));
 
   for (const ev of eventos) {
     const comp = ev?.competitions?.[0]; if (!comp) continue;
@@ -206,7 +208,7 @@ export async function topTouchdownProjection({ fecha, n = 9, maxPorEquipo = 5 } 
       { comp: home, equipo: home.team, rival: away.team, local: true },
       { comp: away, equipo: away.team, rival: home.team, local: false },
     ];
-    let det = null; try { det = await detallePartido('nfl:' + ev.id); } catch (_) {}
+    const det = _det[ev.id] || null;
     for (const lado of lados) {
       let roster = tdDeDetalle(det && det.jugadores && det.jugadores[lado.local ? 'local' : 'visita']);
       let _f = 'detalle';

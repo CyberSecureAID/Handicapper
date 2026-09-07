@@ -174,11 +174,13 @@ export async function topShotsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}
   try { partidos = await listarPartidos('nhl'); } catch (_) { return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['No se pudo leer el calendario NHL'] } }; }
   if (!partidos.length) return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['Sin juegos NHL'] } };
   partidos.sort((a, b) => new Date(a.cuando || 0) - new Date(b.cuando || 0));
-  const cercanos = partidos.slice(0, 6);
+  const cercanos = partidos.slice(0, 5);
   const candidatos = [];
+  const _det = {};
+  await Promise.all(cercanos.map(async p => { try { _det[p.id] = await detallePartido(p.id); } catch (_) {} }));
 
   for (const p of cercanos) {
-    let det = null; try { det = await detallePartido(p.id); } catch (_) {}
+    const det = _det[p.id] || null;
     if (!det || !det.jugadores) { avisos.push(`Sin datos de jugadores para ${p.local && p.local.nombre || '—'}`); continue; }
     const lados = [
       { j: det.jugadores.local, equipo: p.local, rival: p.visita, local: true },

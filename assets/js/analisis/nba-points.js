@@ -211,10 +211,12 @@ export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {
   try { data = await pedir(`${API}/scoreboard?dates=${_rango(fecha, 10)}`); }
   catch (_) { return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['No se pudo leer el calendario NBA'] } }; }
   let eventos = (data?.events || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
-  eventos = eventos.slice(0, 8);   // los 8 juegos más cercanos
+  eventos = eventos.slice(0, 5);   // los 5 juegos más cercanos
   if (!eventos.length) return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['Sin juegos NBA hoy'] } };
 
   const [defensas, ligaLeaders] = await Promise.all([defensasNBA(), leadersLigaNBA()]);
+  const _det = {};
+  await Promise.all(eventos.map(async ev => { try { _det[ev.id] = await detallePartido('nba:' + ev.id); } catch (_) {} }));
 
   for (const ev of eventos) {
     const comp = ev?.competitions?.[0]; if (!comp) continue;
@@ -225,7 +227,7 @@ export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {
       { comp: home, equipo: home.team, rival: away.team, local: true },
       { comp: away, equipo: away.team, rival: home.team, local: false },
     ];
-    let det = null; try { det = await detallePartido('nba:' + ev.id); } catch (_) {}
+    const det = _det[ev.id] || null;
     for (const lado of lados) {
       let roster = puntosDeDetalle(det && det.jugadores && det.jugadores[lado.local ? 'local' : 'visita']);
       let _fuente = 'detalle';
