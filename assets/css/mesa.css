@@ -1082,3 +1082,32 @@ body.en-mesa { overflow: hidden; }
 
 /* Montos potenciales (no cobrados aún) en monitoreo */
 .ing-amt.pot { opacity: .6; }
+
+/* Fila de ingresos clicable (ver seguidores) */
+.ing-row.ver-seg { cursor: pointer; transition: background .15s; border-radius: 10px; }
+.ing-row.ver-seg:hover { background: rgba(232,196,106,.06); }
+/* Lista de seguidores (popup glass) */
+.seg-lista { max-height: 52vh; overflow-y: auto; }
+.seg-count { font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #8a94a3; margin: 0 0 10px; }
+.seg-load, .seg-empty { text-align: center; color: #8a94a3; font-size: 13px; padding: 22px 0; }
+.seg-row { display: flex; align-items: center; gap: 12px; padding: 9px 4px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.seg-av { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #0f1622; background: linear-gradient(180deg,#f6e2a6,#d4a53f); }
+.seg-mid { flex: 1; min-width: 0; }
+.seg-mid b { display: block; font-size: 13px; color: #eef3f9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seg-mid span { display: block; font-size: 11px; color: #9aa4b2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seg-f { flex: none; font-size: 10.5px; color: #6b7683; }
+
+/* Popup de acceso temporal */
+.tmp-lab { font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #8a94a3; margin: 16px 0 8px; }
+.tmp-niv { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.tmp-n { padding: 10px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: #cdd6e2; font-family: "Poppins",sans-serif; font-weight: 600; font-size: 13px; transition: all .15s; }
+.tmp-n.on { background: rgba(232,196,106,.14); border-color: rgba(232,196,106,.5); color: #f6e2a6; }
+.tmp-dias { display: flex; gap: 8px; align-items: center; }
+.tmp-q { flex: none; width: 46px; padding: 9px 0; border-radius: 9px; cursor: pointer; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: #cdd6e2; font-family: "Chakra Petch",sans-serif; font-weight: 700; transition: all .15s; }
+.tmp-q.on { background: rgba(62,207,142,.16); border-color: rgba(62,207,142,.45); color: #8ff0c0; }
+#tmp-in { flex: 1; min-width: 0; background: rgba(255,255,255,.06); border: 1px solid rgba(232,196,106,.3); border-radius: 9px; padding: 9px 12px; color: #fff; font-family: "Chakra Petch",sans-serif; font-size: 16px; font-weight: 700; outline: none; }
+
+/* Botón de acción en modales glass del panel (Desglose, Temporal, etc.) */
+.dg-go { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(232,184,75,.55); background: linear-gradient(180deg,#9a2530,#5e141c); color: #ffe6c4; font-family: "Poppins",sans-serif; font-weight: 700; font-size: 14px; box-shadow: 0 6px 18px rgba(120,20,30,.4), inset 0 1px 0 rgba(255,255,255,.15); transition: all .16s; }
+.dg-go:hover { background: linear-gradient(180deg,#b02c38,#6e1720); box-shadow: 0 9px 24px rgba(150,30,40,.55); }
+.dg-go:disabled { opacity: .6; cursor: default; }
