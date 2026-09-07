@@ -859,6 +859,7 @@ function abrirModalInfoSenales() {
   ov.querySelector('#sni-ok').onclick = cerrar;
   ov.onclick = (e) => { if (e.target === ov) cerrar(); };
 }
+if (typeof window !== 'undefined') window.__infoSenales = abrirModalInfoSenales;
 
 function abrirModalTelegram() {
   const es = idiomaActual() === 'es';
