@@ -16,9 +16,11 @@ import { salir, usuarioActual } from '../auth/auth.js';
 import { marcarVistaPrevia } from '../auth/estado-pago.js';
 import { idiomaActual } from '../ui/idioma.js';
 
-let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = [], _contactoCfg = null;
+let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = [], _contactoCfg = null, _soloLectura = false;
 let _ligaSel = null, _partidos = [], _cargandoPart = false;
 let _rol = 'admin', _deporteAnalista = null, _analistas = [];
+/* Candado de solo lectura para Visitantes: bloquea cualquier acción que mute datos. */
+function _ro() { if (_soloLectura) { try { avisoToast(_mesaLang === 'es' ? 'Modo visitante: solo lectura' : 'Visitor mode: read-only'); } catch (_) {} return true; } return false; }
 let _miFirma = null, _miNombre = null, _miUid = null, _miEstilo = null, _estiloAuto = false, _miFoto = null;
 let _mesaLang = 'es';
 let _uBusqueda = '', _uFiltro = 'todos', _uPagina = 1;
@@ -53,13 +55,18 @@ export async function abrirMesa() {
   const admin = await esAdmin();
   let analista = null;
   if (!admin) { try { analista = await esAnalista(); } catch (_) { analista = null; } }
+  let visitante = false;
   if (!admin && !analista) {
-    _cont.innerHTML = accesoDenegado();
-    _cont.querySelector('#mesa-volver')?.addEventListener('click', () => { location.hash = ''; location.reload(); });
-    return;
+    try { const { esVisitante } = await import('../auth/estado-pago.js'); visitante = esVisitante(); } catch (_) {}
+    if (!visitante) {
+      _cont.innerHTML = accesoDenegado();
+      _cont.querySelector('#mesa-volver')?.addEventListener('click', () => { location.hash = ''; location.reload(); });
+      return;
+    }
   }
-  if (admin) {
-    _rol = 'admin'; _deporteAnalista = null;
+  _soloLectura = visitante;
+  if (admin || visitante) {
+    _rol = visitante ? 'visitante' : 'admin'; _deporteAnalista = null;
     const _u = usuarioActual(); _miUid = _u && _u.uid;
     _miFirma = _miFirma || (_u && (_u.nombre || _u.email)) || 'Admin';
     try { const _f = await leerFichaAnalista(_miUid); if (_f) { if (_f.firma) _miFirma = _f.firma; if (_f.nombre) _miNombre = _f.nombre; if (_f.estilo) _miEstilo = estiloSeguro(_f.estilo); _miFoto = _f.foto || null; } } catch (_) {}
@@ -261,7 +268,7 @@ function enlazarContacto() {
     const btn = _cont.querySelector('#ct-save'), st = _cont.querySelector('#ct-status');
     const cfg = _recogerContacto();
     btn.disabled = true; st.textContent = ML('Saving…', 'Guardando…'); st.className = 'ct-status';
-    try { await guardarConfigContacto(cfg); _contactoCfg = cfg; st.textContent = ML('Saved ✓', 'Guardado ✓'); st.className = 'ct-status ok'; }
+    try { if (_ro()) return; await guardarConfigContacto(cfg); _contactoCfg = cfg; st.textContent = ML('Saved ✓', 'Guardado ✓'); st.className = 'ct-status ok'; }
     catch (_) { st.textContent = ML('Error saving', 'Error al guardar'); st.className = 'ct-status err'; }
     btn.disabled = false;
   });
@@ -407,7 +414,7 @@ function abrirRedesSociales() {
     });
     const cfg = Object.assign({}, _contactoCfg || {}, { redes });
     st.textContent = L('Saving…', 'Guardando…'); st.className = 'ct-status';
-    try { await guardarConfigContacto(cfg); _contactoCfg = cfg; st.textContent = L('Saved ✓', 'Guardado ✓'); st.className = 'ct-status ok'; setTimeout(cerrar, 700); }
+    try { if (_ro()) return; await guardarConfigContacto(cfg); _contactoCfg = cfg; st.textContent = L('Saved ✓', 'Guardado ✓'); st.className = 'ct-status ok'; setTimeout(cerrar, 700); }
     catch (_) { st.textContent = L('Error saving', 'Error al guardar'); st.className = 'ct-status err'; }
   };
 }
@@ -620,7 +627,7 @@ function pintarUsuariosTabla() {
     if (!planId) sub = { activo: false, plan: null, vence: null, metodo: 'manual' };
     else if (planId === 'visitante') { sub = { activo: true, plan: 'visitante', vence: null, metodo: 'cortesia' }; }
     else { const v = new Date(); v.setMonth(v.getMonth() + 1); sub = { activo: true, plan: planId, vence: v.toISOString(), metodo: 'manual' }; }
-    try { await fijarSuscripcionUsuario(uid, sub); u.suscripcion = sub; pintarUsuariosTabla(); } catch (_) {}
+    try { if (_ro()) return; await fijarSuscripcionUsuario(uid, sub); u.suscripcion = sub; pintarUsuariosTabla(); } catch (_) {}
   });
 }
 
@@ -657,7 +664,7 @@ function enlazarUsuarios() {
 async function toggleBloqueo(uid, btn) {
   const u = _usuarios.find(x => x.uid === uid); if (!u) return;
   if (btn) btn.disabled = true;
-  try { await fijarBloqueo(uid, !u.bloqueado); u.bloqueado = !u.bloqueado; if (_cont.querySelector('#u-tbody')) pintarUsuariosTabla(); else pintarTab(); } catch (_) { if (btn) btn.disabled = false; }
+  try { if (_ro()) return; await fijarBloqueo(uid, !u.bloqueado); u.bloqueado = !u.bloqueado; if (_cont.querySelector('#u-tbody')) pintarUsuariosTabla(); else pintarTab(); } catch (_) { if (btn) btn.disabled = false; }
 }
 
 /* ================= ANALYSTS (contratación) ================= */
@@ -709,7 +716,7 @@ function pintarCandidatos() {
     const nomI = cont.querySelector(`[data-cand-nombre="${uid}"]`);
     const nombre = (nomI && nomI.value.trim()) || (mail.split('@')[0]) || 'Analyst';
     b.disabled = true;
-    try { await guardarAnalista(uid, { email: mail, deporte: dep, activo: true, nombre, firma: nombre, configurado: false }); _analistas = await listarAnalistas(); pintarTab(); }
+    try { if (_ro()) return; await guardarAnalista(uid, { email: mail, deporte: dep, activo: true, nombre, firma: nombre, configurado: false }); _analistas = await listarAnalistas(); pintarTab(); }
     catch (_) { b.disabled = false; }
   });
 }
@@ -853,7 +860,7 @@ function _pintarChipsMod() {
 }
 function _guardarMod() {
   clearTimeout(_modGuardar);
-  _modGuardar = setTimeout(async () => { try { await guardarModeracion(_moderacion); } catch (_) {} }, 500);
+  _modGuardar = setTimeout(async () => { if (_soloLectura) return; try { await guardarModeracion(_moderacion); } catch (_) {} }, 500);
 }
 function enlazarModeracion() {
   _pintarChipsMod();
@@ -923,13 +930,13 @@ function enlazarReportes() {
     const id = b.dataset.repok; const r = _reportes.find(x => x.id === id); if (!r) return;
     const nuevo = (r.estado || 'abierto') === 'resuelto' ? 'abierto' : 'resuelto';
     b.disabled = true;
-    try { await resolverReporte(id, nuevo); r.estado = nuevo; } catch (_) {}
+    try { if (_ro()) return; await resolverReporte(id, nuevo); r.estado = nuevo; } catch (_) {}
     refrescarMain();
   });
   _cont.querySelectorAll('[data-repdel]').forEach(b => b.onclick = () => {
     const id = b.dataset.repdel;
     confirmar(ML('Delete this report? The user will be able to send a new one.', '¿Eliminar este reporte? El usuario podrá enviar uno nuevo.'), ML('Yes, delete', 'Sí, eliminar'), async () => {
-      try { await borrarReporte(id); _reportes = _reportes.filter(x => x.id !== id); } catch (_) {}
+      try { if (_ro()) return; await borrarReporte(id); _reportes = _reportes.filter(x => x.id !== id); } catch (_) {}
       refrescarMain();
     });
   });
@@ -988,21 +995,21 @@ function _bloqueIngresos() {
   const filas = datos.length ? datos.map(d => `
     <div class="ing-row">
       <div class="ing-who"><b>${esc(d.nombre)}</b><span>${esc(depNombre(d.deporte))}</span></div>
-      <div class="ing-sub">${d.apoyos} <span>${ML('supporters', 'suscriptores')}</span></div>
-      <div class="ing-amt an">$${d.apoyos}<span>${ML('analyst', 'analista')}</span></div>
-      <div class="ing-amt pl">$${d.apoyos}<span>${ML('platform', 'plataforma')}</span></div>
-      <div class="ing-amt tot">$${d.apoyos * 2}<span>${ML('total', 'total')}</span></div>
-    </div>`).join('') : `<div class="ing-empty">${ML('No paid supporters yet.', 'Aún no hay suscriptores de pago.')}</div>`;
+      <div class="ing-sub">${d.apoyos} <span>${ML('followers', 'seguidores')}</span></div>
+      <div class="ing-amt an pot">$${d.apoyos}<span>${ML('analyst*', 'analista*')}</span></div>
+      <div class="ing-amt pl pot">$${d.apoyos}<span>${ML('platform*', 'plataforma*')}</span></div>
+      <div class="ing-amt tot pot">$${d.apoyos * 2}<span>${ML('potential*', 'potencial*')}</span></div>
+    </div>`).join('') : `<div class="ing-empty">${ML('No followers yet.', 'Aún no hay seguidores.')}</div>`;
   return `<div class="mesa-card mon-ing">
-    <div class="mc-t">${Icoin} ${L('Monthly earnings · paid supporters', 'Ingresos mensuales · suscriptores de pago')}</div>
+    <div class="mc-t">${Icoin} ${L('Followers per analyst · potential (not charged yet)', 'Seguidores por analista · potencial (aún sin cobro)')}</div>
     <div class="mon-kpis ing-kpis">
-      ${kpi('', totSub, L('Paid supporters', 'Suscriptores'))}
-      ${kpi('ok', '$' + paraAnalistas, L('To analysts', 'Para analistas'))}
-      ${kpi('', '$' + paraPlataforma, L('Platform revenue', 'Para la plataforma'))}
-      ${kpi('warn', '$' + total, L('Total generated', 'Total generado'))}
+      ${kpi('', totSub, L('Followers', 'Seguidores'))}
+      ${kpi('ok', '$' + paraAnalistas, L('To analysts*', 'Para analistas*'))}
+      ${kpi('', '$' + paraPlataforma, L('Platform*', 'Plataforma*'))}
+      ${kpi('warn', '$' + total, L('Potential*', 'Potencial*'))}
     </div>
     <div class="ing-list">${filas}</div>
-    <p class="mon-note">${Icoin} ${L('Each supporter pays $2/mo → $1 analyst + $1 platform. Figures are in preview until the payment gateway (Stripe) is connected.', 'Cada suscriptor paga $2/mes → $1 analista + $1 plataforma. Las cifras son de vista previa hasta conectar la pasarela de pago (Stripe).')}</p>
+    <p class="mon-note">${Icoin} ${L('* Potential, not charged. These are free followers; real billing ($2/mo = $1 analyst + $1 platform) starts once Stripe is connected. Actually charged so far: $0.', '* Potencial, no cobrado. Estos son seguidores gratuitos; el cobro real ($2/mes = $1 analista + $1 plataforma) empieza al conectar Stripe. Cobrado real hasta ahora: $0.')}</p>
   </div>`;
 }
 
@@ -1151,6 +1158,7 @@ function enlazarAnalistas() {
     b.disabled = true;
     const nuevoActivo = a.activo === false;   // estado tras el toggle
     try {
+      if (_ro()) return;
       await fijarAnalista(uid, { activo: nuevoActivo });
       if (!nuevoActivo && !(a && a.esBot)) { try { await quitarFotoAnalista(uid); } catch (_) {} }   // suspendido (no bot) → libera su foto
       _analistas = await listarAnalistas(); pintarTab();
@@ -1159,6 +1167,7 @@ function enlazarAnalistas() {
   _cont.querySelectorAll('[data-anc]').forEach(b => b.onclick = async () => {
     const uid = b.dataset.ancuid, campo = b.dataset.anc, d = Number(b.dataset.d);
     b.disabled = true;
+    if (_ro()) return;
     const nuevo = await ajustarContadorAnalista(uid, campo, d);
     b.disabled = false;
     if (nuevo == null) return;
@@ -1175,6 +1184,7 @@ function enlazarAnalistas() {
       txtOk: ML('Assign', 'Asignar'), txtCancel: ML('Cancel', 'Cancelar'),
       secHombres: ML('Men', 'Hombres'), secMujeres: ML('Women', 'Mujeres'),
       onGuardar: async (foto) => {
+        if (_ro()) return;
         const ok = await asignarFotoAnalista(uid, foto, a.firma || a.nombre || null);
         if (ok) { _analistas = await listarAnalistas(); pintarTab(); }
         return ok;
@@ -1183,11 +1193,11 @@ function enlazarAnalistas() {
   });
   _cont.querySelectorAll('[data-an-dep]').forEach(sel => sel.onchange = async () => {
     const uid = sel.dataset.anDep;
-    try { await fijarAnalista(uid, { deporte: sel.value }); const a = _analistas.find(x => x.uid === uid); if (a) a.deporte = sel.value; } catch (_) {}
+    try { if (_ro()) return; await fijarAnalista(uid, { deporte: sel.value }); const a = _analistas.find(x => x.uid === uid); if (a) a.deporte = sel.value; } catch (_) {}
   });
   _cont.querySelectorAll('[data-an-nombre]').forEach(inp => inp.onchange = async () => {
     const uid = inp.dataset.anNombre, val = inp.value.trim().slice(0, 40);
-    try { await fijarAnalista(uid, { nombre: val }); const a = _analistas.find(x => x.uid === uid); if (a) a.nombre = val; } catch (_) {}
+    try { if (_ro()) return; await fijarAnalista(uid, { nombre: val }); const a = _analistas.find(x => x.uid === uid); if (a) a.nombre = val; } catch (_) {}
   });
   _cont.querySelectorAll('[data-an-firma]').forEach(inp => inp.onchange = async () => {
     const uid = inp.dataset.anFirma, val = inp.value.trim().slice(0, 24);
@@ -1200,7 +1210,7 @@ function enlazarAnalistas() {
       alert(ML('That signature is already taken by another analyst.', 'Esa firma ya está en uso por otro analista.'));
       return;
     }
-    try { await fijarAnalista(uid, { firma: val }); const a = _analistas.find(x => x.uid === uid); if (a) a.firma = val; } catch (_) {}
+    try { if (_ro()) return; await fijarAnalista(uid, { firma: val }); const a = _analistas.find(x => x.uid === uid); if (a) a.firma = val; } catch (_) {}
   });
   _cont.querySelectorAll('[data-an-del]').forEach(b => b.onclick = async () => {
     const uid = b.dataset.anDel;
@@ -1210,7 +1220,7 @@ function enlazarAnalistas() {
       return;
     }
     b.disabled = true;
-    try { await quitarFotoAnalista(uid); await eliminarAnalista(uid); _analistas = await listarAnalistas(); pintarTab(); } catch (_) { b.disabled = false; }
+    try { if (_ro()) return; await quitarFotoAnalista(uid); await eliminarAnalista(uid); _analistas = await listarAnalistas(); pintarTab(); } catch (_) { b.disabled = false; }
   });
 }
 
