@@ -13,7 +13,7 @@ export const BOTS = [
     firma: 'Alejandro R.',
     deporte: 'futbol',
     foto: 's',                       // assets/imagenes/analistas/s.webp
-    email: 'alejandro@sportsexpectations.io',
+    email: 'alejandro@bot.local',
     activo: true,
     configurado: true,
     esBot: true,
@@ -27,7 +27,7 @@ export const BOTS = [
     firma: 'Miguel S.',
     deporte: 'beisbol',
     foto: 't',                       // assets/imagenes/analistas/t.webp
-    email: 'miguel@sportsexpectations.io',
+    email: 'miguel@bot.local',
     activo: true,
     configurado: true,
     esBot: true,
@@ -41,7 +41,7 @@ export const BOTS = [
     firma: 'Daniel V.',
     deporte: 'basket',
     foto: 'r',                       // assets/imagenes/analistas/r.webp
-    email: 'daniel@sportsexpectations.io',
+    email: 'daniel@bot.local',
     activo: true,
     configurado: true,
     esBot: true,
@@ -55,7 +55,7 @@ export const BOTS = [
     firma: 'Iván T.',
     deporte: 'hockey',
     foto: 'q',                       // assets/imagenes/analistas/q.webp
-    email: 'ivan@sportsexpectations.io',
+    email: 'ivan@bot.local',
     activo: true,
     configurado: true,
     esBot: true,
@@ -69,7 +69,7 @@ export const BOTS = [
     firma: 'Ricardo M.',
     deporte: 'americano',
     foto: 'p',                       // assets/imagenes/analistas/p.webp
-    email: 'ricardo@sportsexpectations.io',
+    email: 'ricardo@bot.local',
     activo: true,
     configurado: true,
     esBot: true,
