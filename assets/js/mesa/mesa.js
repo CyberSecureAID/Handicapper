@@ -303,7 +303,7 @@ function vistaResumen() {
   const total = clientes.length;
   const conPlan = clientes.filter(activo);
   const inactivos = total - conPlan.length;
-  const mrr = conPlan.reduce((s, u) => s + precioMensual(u.suscripcion.plan), 0);
+  const mrr = _usuarios.filter(_esClientePago).reduce((s, u) => s + precioMensual(u.suscripcion.plan), 0);
   const bloqueados = clientes.filter(u => u.bloqueado).length;
   const act = conPlan.length;
   const conv = total ? Math.round(act / total * 100) : 0;
@@ -439,12 +439,23 @@ function _desglosarBruto(brutoAnual, nTxAnual) {
   const neto = Math.max(0, netoStripe - impuestos);
   return { brutoAnual, stripe, netoStripe, se, fed, flEstatal: 0, impuestos, neto, ads: neto * 0.15, mant: neto * 0.10, reparto: neto * 0.75, porEmpleado: neto * 0.75 / 2 };
 }
+/* ¿Este usuario es un CLIENTE que paga de verdad? Excluye admins, staff/bots,
+   Visitantes (acceso de cortesía) y sin-plan. Solo cuenta planes pagados reales. */
+function _rolAdminU(u) { return _admins.some(a => a.uid === u.uid || (a.email && u.email && a.email.toLowerCase() === u.email.toLowerCase())); }
+function _esStaffU(u) { return _analistas.some(a => a.uid === u.uid) || !!botPorUid(u.uid); }
+function _esClientePago(u) {
+  const sub = u.suscripcion;
+  if (!sub || !sub.activo || !sub.plan) return false;
+  if (sub.plan === 'visitante') return false;         // cortesía, no cobra
+  if (_rolAdminU(u) || _esStaffU(u)) return false;    // admins, CEO-staff y bots no cuentan
+  return ['basic', 'pro', 'premium'].includes(sub.plan);
+}
 function _desgloseActual() {
-  const conPlan = _usuarios.filter(u => u.suscripcion && u.suscripcion.activo);
+  const conPlan = _usuarios.filter(_esClientePago);
   const mrr = conPlan.reduce((s, u) => s + precioMensual(u.suscripcion.plan), 0);
-  const totSub = _monDatos().reduce((s, d) => s + (d.apoyos || 0), 0);
+  const totSub = 0;   // los follows aún no generan cobro real (Stripe pendiente); cuando entre Stripe, sumar aquí lo cobrado
   const brutoAnual = (mrr + totSub) * 12;
-  const nTx = (conPlan.length + totSub) * 12;
+  const nTx = conPlan.length * 12;
   return _desglosarBruto(brutoAnual, nTx);
 }
 
@@ -551,7 +562,7 @@ function filaUsuario(u) {
     ? `<span class="pill admin">${esc(rol)}</span>`
     : (u.bloqueado
       ? `<span class="pill red">${ML('Blocked','Bloqueado')}</span>`
-      : (sub.activo ? `<span class="pill on">${(planPorId(sub.plan)?.nombre || ML('Active','Activo'))}</span>` : `<span class="pill">${ML('Inactive','Inactivo')}</span>`));
+      : (sub.activo ? `<span class="pill on${sub.plan==='visitante'?' vis':''}">${sub.plan==='visitante' ? ML('Visitor','Visitante') : (planPorId(sub.plan)?.nombre || ML('Active','Activo'))}</span>` : `<span class="pill">${ML('Inactive','Inactivo')}</span>`));
   const vence = sub.vence ? new Date(sub.vence).toLocaleDateString() : '—';
   return `<tr class="${u.bloqueado ? 'blocked' : ''}">
     <td data-l="${ML('User','Usuario')}"><div class="u-nom">${esc(u.nombre || (u.email || '').split('@')[0] || '—')}</div><div class="u-mail">${esc(correoCorto(u.email || ''))}</div></td>
@@ -560,6 +571,7 @@ function filaUsuario(u) {
     <td data-l="${ML('Plan','Plan')}"><select data-plan="${u.uid}" class="u-select">
       <option value="">${ML('Inactive','Inactivo')}</option>
       ${PLANES.map(p => `<option value="${p.id}" ${sub.activo && sub.plan === p.id ? 'selected' : ''}>${p.nombre}</option>`).join('')}
+      <option value="visitante" ${sub.activo && sub.plan === 'visitante' ? 'selected' : ''}>${ML('Visitor (full access, no charge)','Visitante (acceso total, sin cobro)')}</option>
     </select></td>
     <td data-l="${ML('Action','Acción')}"><button class="u-bloq ${u.bloqueado ? 'activo' : ''}" data-bloq="${u.uid}">${u.bloqueado ? ML('Unblock','Desbloquear') : ML('Block','Bloquear')}</button></td>
   </tr>`;
@@ -606,6 +618,7 @@ function pintarUsuariosTabla() {
     const planId = sel.value;
     let sub;
     if (!planId) sub = { activo: false, plan: null, vence: null, metodo: 'manual' };
+    else if (planId === 'visitante') { sub = { activo: true, plan: 'visitante', vence: null, metodo: 'cortesia' }; }
     else { const v = new Date(); v.setMonth(v.getMonth() + 1); sub = { activo: true, plan: planId, vence: v.toISOString(), metodo: 'manual' }; }
     try { await fijarSuscripcionUsuario(uid, sub); u.suscripcion = sub; pintarUsuariosTabla(); } catch (_) {}
   });
@@ -614,7 +627,7 @@ function pintarUsuariosTabla() {
 function vistaUsuarios() {
   const Ilupa = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`;
   const act = _usuarios.filter(esActivoReciente).length;
-  const filtros = [['todos', ML('All', 'Todos')], ['con', ML('With plan', 'Con plan')], ['sin', ML('No plan', 'Sin plan')], ['bloq', ML('Blocked', 'Bloqueados')]].concat(PLANES.map(p => ['plan:' + p.id, p.nombre]));
+  const filtros = [['todos', ML('All', 'Todos')], ['con', ML('With plan', 'Con plan')], ['sin', ML('No plan', 'Sin plan')], ['bloq', ML('Blocked', 'Bloqueados')]].concat(PLANES.map(p => ['plan:' + p.id, p.nombre])).concat([['plan:visitante', ML('Visitor','Visitante')]]);
   const chips = filtros.map(([k, l]) => `<button data-uf="${k}" class="u-chip ${_uFiltro === k ? 'on' : ''}">${esc(l)}</button>`).join('');
   return `
     <div class="mesa-head"><h1>${ML('Users', 'Usuarios')}</h1><p>${_usuarios.length} ${ML('registered', 'registrados')} · ${act} ${ML('active', 'activos')} · ${_usuarios.length - act} ${ML('inactive', 'inactivos')}.</p></div>
