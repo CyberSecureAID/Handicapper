@@ -223,10 +223,13 @@ function vistaContacto() {
       <button class="mesa-btn ghost sm ct-del" data-mdel="${i}">${ML('Remove', 'Quitar')}</button>
     </div>`;
   return `
-    <div class="mesa-head"><div><h1>${ML('Contact', 'Contacto')}</h1><p>${ML('Edit the public Contact page and the support channel. Saved to Firebase, live on the site.', 'Edita la página de Contacto pública y el canal de soporte. Se guarda en Firebase y aparece en el sitio.')}</p></div><button class="mesa-btn oro" id="ct-redes">${ML('Social networks', 'Redes sociales')}</button></div>
+    <div class="mesa-head"><div><h1>${ML('Contact', 'Contacto')}</h1><p>${ML('Edit the public Contact page and the support channel. Saved to Firebase, live on the site.', 'Edita la página de Contacto pública y el canal de soporte. Se guarda en Firebase y aparece en el sitio.')}</p></div></div>
     <div class="ct-card">
       <label class="ct-label">${ML('Support channel link (Contact support button)', 'Enlace del canal de soporte (botón Contact support)')}</label>
-      <input class="u-input" id="ct-support" placeholder="https://t.me/TradeRecord" value="${esc(cfg.supportLink || '')}">
+      <div class="ct-support-row">
+        <input class="u-input" id="ct-support" placeholder="https://t.me/TradeRecord" value="${esc(cfg.supportLink || '')}">
+        <button class="mesa-btn oro" id="ct-redes">${ML('Social networks', 'Redes sociales')}</button>
+      </div>
     </div>
     <div class="ct-card">
       <label class="ct-label">${ML('Team members shown on the Contact page', 'Miembros del equipo en la página de Contacto')}</label>
@@ -387,9 +390,9 @@ function abrirRedesSociales() {
     <div class="dg-bg"></div><div class="dg-veil"></div>
     <button class="dg-x" aria-label="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div class="dg-in">
-      <div class="dg-head"><span class="dg-badge">${L('Footer links','Enlaces del pie')}</span><h3>${L('Social networks','Redes sociales')}</h3><p>${L('Set the link and choose which show in the footer.','Pon el enlace y elige cuáles se ven en el pie de página.')}</p></div>
+      <div class="dg-head"><span class="dg-badge">${L('Footer links','Enlaces del pie')}</span><h3>${L('Social networks','Redes sociales')}</h3></div>
       <div class="rs-list">${filas}</div>
-      <div class="ct-save-row" style="margin-top:16px"><button class="mesa-btn oro" id="rs-save">${L('Save changes','Guardar cambios')}</button><span id="rs-status" class="ct-status"></span></div>
+      <div class="rs-save"><button class="mesa-btn oro" id="rs-save">${L('Save changes','Guardar cambios')}</button><span id="rs-status" class="ct-status"></span></div>
     </div>
   </div>`;
   document.body.appendChild(ov);
@@ -425,58 +428,69 @@ function _impSE(ing) {
   const base = Math.max(0, ing) * 0.9235;
   return Math.min(base, 168600) * 0.124 + base * 0.029;
 }
-function _calcularDesglose() {
-  const conPlan = _usuarios.filter(u => u.suscripcion && u.suscripcion.activo);
-  const mrr = conPlan.reduce((s, u) => s + precioMensual(u.suscripcion.plan), 0);
-  const totSub = _monDatos().reduce((s, d) => s + (d.apoyos || 0), 0);
-  const brutoMes = mrr + totSub;                 // plataforma: planes + $1 por follow
-  const brutoAnual = brutoMes * 12;
-  const nTxMes = conPlan.length + totSub;         // transacciones mensuales
-  const stripe = brutoAnual * 0.029 + 0.30 * nTxMes * 12;   // Stripe: 2.9% + $0.30/tx
+const TAX_YEAR = 2025;
+function _desglosarBruto(brutoAnual, nTxAnual) {
+  brutoAnual = Math.max(0, +brutoAnual || 0);
+  const stripe = brutoAnual * 0.029 + 0.30 * Math.max(0, nTxAnual || 0);
   const netoStripe = Math.max(0, brutoAnual - stripe);
   const se = _impSE(netoStripe);
   const fed = _impFederal(Math.max(0, netoStripe - se / 2));
-  const flEstatal = 0;                            // Florida NO tiene impuesto estatal sobre la renta
-  const impuestos = se + fed + flEstatal;
+  const impuestos = se + fed;
   const neto = Math.max(0, netoStripe - impuestos);
-  const ads = neto * 0.15, mant = neto * 0.10, reparto = neto * 0.75;
-  return { mrr, totSub, brutoMes, brutoAnual, stripe, netoStripe, se, fed, flEstatal, impuestos, neto, ads, mant, reparto, porEmpleado: reparto / 2, nTxMes };
+  return { brutoAnual, stripe, netoStripe, se, fed, flEstatal: 0, impuestos, neto, ads: neto * 0.15, mant: neto * 0.10, reparto: neto * 0.75, porEmpleado: neto * 0.75 / 2 };
+}
+function _desgloseActual() {
+  const conPlan = _usuarios.filter(u => u.suscripcion && u.suscripcion.activo);
+  const mrr = conPlan.reduce((s, u) => s + precioMensual(u.suscripcion.plan), 0);
+  const totSub = _monDatos().reduce((s, d) => s + (d.apoyos || 0), 0);
+  const brutoAnual = (mrr + totSub) * 12;
+  const nTx = (conPlan.length + totSub) * 12;
+  return _desglosarBruto(brutoAnual, nTx);
 }
 
 function abrirDesglose() {
   const ES = _mesaLang === 'es', L = (en, es) => ES ? es : en;
-  const d = _calcularDesglose();
-  const $ = (n) => '$' + (n || 0).toLocaleString(ES ? 'es' : 'en', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const $ = (n) => '$' + Math.round(+n || 0).toLocaleString(ES ? 'es' : 'en');
+  const real = _desgloseActual();
   document.getElementById('dg-ov')?.remove();
   const ov = document.createElement('div'); ov.className = 'dg-ov'; ov.id = 'dg-ov';
   const cerrar = () => { ov.classList.remove('on'); setTimeout(() => ov.remove(), 200); };
-  const fila = (lab, val, cls, nota) => `<div class="dg-row ${cls || ''}"><span class="dg-lab">${lab}${nota ? `<i>${nota}</i>` : ''}</span><span class="dg-val">${val}</span></div>`;
-  ov.innerHTML = `<div class="dg" role="dialog" aria-modal="true">
+  const cuerpo = (d) => `
+    <div class="dg-line"><span>${L('Gross / year','Bruto / año')}</span><b>${$(d.brutoAnual)}</b></div>
+    <div class="dg-line neg"><span>Stripe <i>2.9% + $0.30</i></span><b>&minus; ${$(d.stripe)}</b></div>
+    <div class="dg-line neg"><span>${L('Self-employment','Cuenta propia')} <i>15.3%</i></span><b>&minus; ${$(d.se)}</b></div>
+    <div class="dg-line neg"><span>${L('Federal tax','Federal')} <i>${TAX_YEAR}</i></span><b>&minus; ${$(d.fed)}</b></div>
+    <div class="dg-line zero"><span>${L('Florida state','Estatal FL')}</span><b>$0</b></div>
+    <div class="dg-line tot"><span>${L('Net profit','Beneficio neto')}</span><b>${$(d.neto)}</b></div>
+    <div class="dg-split">
+      <div class="dg-sp"><span>${L('Ads','Publicidad')} 15%</span><b>${$(d.ads)}</b></div>
+      <div class="dg-sp"><span>${L('Maint.','Manten.')} 10%</span><b>${$(d.mant)}</b></div>
+      <div class="dg-sp hi"><span>${L('Each partner','Cada socio')}</span><b>${$(d.porEmpleado)}</b></div>
+    </div>`;
+  ov.innerHTML = `<div class="dg dg-wide" role="dialog" aria-modal="true">
     <div class="dg-bg"></div><div class="dg-veil"></div>
     <button class="dg-x" aria-label="close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div class="dg-in">
-      <div class="dg-head"><span class="dg-badge">${L('Financial breakdown','Desglose financiero')}</span><h3>${L('Breakdown','Desglose')}</h3><p>${L('Estimated annual figures, based on current subscriptions.','Cifras anuales estimadas, según las suscripciones actuales.')}</p></div>
-      <div class="dg-hero"><div class="dg-hero-b"><b>${$(d.brutoAnual)}</b><span>${L('Gross / year','Bruto / año')}</span></div><div class="dg-hero-b ok"><b>${$(d.neto)}</b><span>${L('Net after tax','Neto tras impuestos')}</span></div></div>
-      <div class="dg-sec">${L('Costs and taxes','Costos e impuestos')}</div>
-      ${fila(L('Stripe fees','Comisión Stripe'), '− ' + $(d.stripe), 'neg', '2.9% + $0.30/tx')}
-      ${fila(L('Self-employment tax','Impuesto por cuenta propia'), '− ' + $(d.se), 'neg', '15.3%')}
-      ${fila(L('Federal income tax','Impuesto federal'), '− ' + $(d.fed), 'neg', L('2025 brackets','tramos 2025'))}
-      ${fila(L('Florida state income tax','Impuesto estatal de Florida'), $(0), 'zero', L('none in FL','no existe en FL'))}
-      ${fila(L('Net profit','Beneficio neto'), $(d.neto), 'tot')}
-      <div class="dg-sec">${L('Distribution of net profit','Reparto del beneficio neto')}</div>
-      ${fila(L('Advertising','Publicidad'), $(d.ads), '', '15%')}
-      ${fila(L('Maintenance','Mantenimiento'), $(d.mant), '', '10%')}
-      ${fila(L('Split (2 partners)','Reparto (2 socios)'), $(d.reparto), '', '75%')}
-      ${fila(L('Each partner','Cada socio'), $(d.porEmpleado), 'tot', '37.5%')}
-      <p class="dg-note">${L('Estimate only, not tax advice. Florida has no state income tax; federal rates are 2025 published brackets and Stripe is 2.9% + $0.30 per charge. Confirm with an accountant.','Solo una estimación, no es asesoría fiscal. Florida no cobra impuesto estatal sobre la renta; las tasas federales son los tramos publicados de 2025 y Stripe es 2.9% + $0.30 por cobro. Confírmalo con un contador.')}</p>
+      <div class="dg-head"><span class="dg-badge">${L('Financial breakdown','Desglose financiero')} · ${TAX_YEAR}</span><h3>${L('Breakdown','Desglose')}</h3></div>
+      <div class="dg-cols">
+        <div class="dg-col"><div class="dg-col-t">${L('Current (real)','Actual (real)')}</div>${cuerpo(real)}</div>
+        <div class="dg-col calc"><div class="dg-col-t">${L('Calculator','Calculadora')}</div>
+          <label class="dg-calc-lab">${L('If we earn (gross / year)','Si ganamos (bruto / año)')}</label>
+          <div class="dg-calc-in"><span>$</span><input id="dg-calc" type="number" min="0" step="1000" value="50000" inputmode="numeric"></div>
+          <div id="dg-calc-out">${cuerpo(_desglosarBruto(50000, 50000 / 3))}</div>
+        </div>
+      </div>
+      <p class="dg-note">${L('Estimate only, not tax advice. Florida has no state income tax; federal rates are the published ' + TAX_YEAR + ' brackets and Stripe is 2.9% + $0.30 per charge. Confirm with an accountant.','Solo una estimación, no es asesoría fiscal. Florida no cobra impuesto estatal sobre la renta; las tasas son los tramos federales publicados de ' + TAX_YEAR + ' y Stripe es 2.9% + $0.30 por cobro. Confírmalo con un contador.')}</p>
     </div>
   </div>`;
   document.body.appendChild(ov);
   requestAnimationFrame(() => ov.classList.add('on'));
   ov.querySelector('.dg-x').onclick = cerrar;
   ov.onclick = (e) => { if (e.target === ov) cerrar(); };
+  const inp = ov.querySelector('#dg-calc'), out = ov.querySelector('#dg-calc-out');
+  const recalc = () => { const v = +inp.value || 0; out.innerHTML = cuerpo(_desglosarBruto(v, v / 3)); };
+  inp.oninput = recalc;
 }
-
 /* Descarga un documento (HTML imprimible) con el registro económico + todos los usuarios. */
 function exportarRegistroLegal() {
   const ES = _mesaLang === 'es';
