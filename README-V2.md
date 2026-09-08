@@ -544,3 +544,33 @@ No es testeable en el sandbox (sin acceso a Firebase/APIs); verificar en la web 
 Los stickers son **emojis Noto (Google)** servidos por CDN de jsDelivr — no se sube ninguna carpeta al repo. Fuente: `https://cdn.jsdelivr.net/gh/svgmoji/svgmoji/packages/svgmoji__noto/svg/{CODIGO}.svg`. Set curado de fútbol/deportes en `chat.js` (`STICKERS`). Si el CDN falla, cada sticker cae al **emoji unicode** de respaldo (`onerror`), así nunca se rompe.
 
 **Licencia / atribución:** los emojis Noto de Google están bajo **Apache 2.0 / OFL** (uso comercial permitido). Recomendado dejar una mención de "Emojis por Noto (Google)" en una sección de créditos/legal por buena práctica. Un mensaje-sticker se guarda en Firestore como `{ ..., texto: '⚽', sticker: '26BD' }` (el `texto` con el emoji cumple la regla de Firestore; no hizo falta cambiarla).
+
+## §20 · ESTADO FINAL Y CORRECCIONES (última actualización, 2026)
+
+**Correcciones a secciones anteriores de este V2 (lo que ya NO está pendiente):**
+- §16.4 "Firebase Public-facing name" → HECHO hace tiempo.
+- §16.3 / i18n → **contact.html ya está traducida** (bilingüe). Faltan otras secundarias; legales esperan a la abogada.
+- §18 "Ícono PWA: pendiente regenerar" → **HECHO**: íconos regenerados en HD (símbolo SE recortado del logo horizontal 940px) sobre fondo sólido `#010006` = mismo color que el splash → sin caja fea ni borrosidad. Splash de carga usa el logo horizontal.
+- §18 acciones del chat → ahora también incluyen **Traducir** (además de Responder/Copiar/Eliminar).
+- El struct del mensaje del chat ahora también puede tener `sticker` y `respuestaA`.
+
+**Todo lo construido después de §19 (ver README.md §18 para el detalle completo):**
+- **Traducción en el chat** (Google gtx + MyMemory, siempre cambia de idioma, funciona en iPhone).
+- **Avisos de bots en el chat** 1/día si publicaron, mensajes variados, con nombre+foto del bot, auto-borrado a 24h (`avisarBotsEnChat`, `limpiarAvisosBotViejos` en app.js).
+- **Punto de notificación** en el tab del chat (Premium/seguidores) + **campana** de avisos con notificación del sistema (`vigilarChatAvisos`, `se_notif.bots`).
+- **Planes con el chat** en los 3 lugares (planes.js, matriz de navegacion.js con Basic tachado, plans.html).
+- **Rol Visitante** reforzado: `_ro()` bloquea TODA mutación (incl. publicar señales) + popup bonito `_avisoVisitante`. **Rol Temporal** (nivel + días, caduca solo).
+- **Bug de prestigio ARREGLADO:** `prestigioReal` ahora suma `prestigioAuto` (aciertos/fallos). Afecta a todos los analistas.
+- **Service Worker `se-v4`** + timeout (arregla login colgado por caché). `chat.js` carga mesa-datos diferido.
+- **Responsivo:** filtros desplegables (usuarios/personal), monitoreo 2×2, tarjeta de usuario rediseñada, notch en panel, dropdown de mercado bottom-sheet, salvaguarda universal de modales.
+- **Legal multi-estatal** (privacy/terms/disclaimer) + correos inventados `@sportsexpectations.io` eliminados (→ página de Contacto; bots usan `@bot.local`).
+
+**PENDIENTE FINAL (único para lanzar) — ver README.md §19 para el detalle:**
+1. **Stripe** (A: Cloud Functions/Blaze automático; B: Payment Links manual). Clave secreta NUNCA en el navegador.
+2. **Web3Forms** u otro backend para el formulario de contacto.
+3. **+50.000 usuarios en el chat:** Blaze para escalar Firestore, o migrar el chat a **Realtime Database**.
+4. **Dominio propio + correo corporativo** (+ Search Console; hoy todo apunta a Contacto).
+5. **Motores Points/Shots/Touchdown/béisbol** vacíos (bug de datos).
+6. **i18n** secundarias restantes + legales (tras revisión legal).
+
+**Regla de oro para el próximo asistente:** este proyecto se construyó con MUCHÍSIMO cuidado por la estabilidad (el dueño ha sufrido roturas repetidas). Antes de tocar CSS/JS: renderizar con la estructura REAL (no aproximada), probar a 360px y 320px, y verificar que nada se desborde, se desfase ni quede por detrás. Entregar solo archivos cambiados con su ruta exacta. Nunca inventar dominios/correos. Español, respuestas concisas.

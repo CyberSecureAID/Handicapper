@@ -451,3 +451,80 @@ Ruta interna, abierta desde el perfil del admin. Secciones:
 4. **Firebase** — cambiar "Public-facing name" de "Sports Expectations" a "Sports Expectations".
 5. **Dominio** — al adquirirlo, reemplazar `cybersecureaid.github.io/Sports Expectations` en SEO/sitemap/robots + registrar en Google Search Console.
 6. **Push notifications** en segundo plano (VAPID) — pendiente.
+
+---
+
+## 18. SISTEMA DE CHAT + TODO LO CONSTRUIDO (actualización mayor, 2026)
+
+Esta sección documenta TODO lo implementado después de la §17. Es el estado más reciente y completo.
+
+### 18.1 Chat de comunidad (NUEVO, función mayor) — `assets/js/ui/chat.js`
+- **Colección Firestore:** `chat` con docs `{ uid, nombre, foto, nivel, texto, ts, respuestaA?, sticker? }`.
+- **Acceso (gating):** solo **Pro, Premium, Visitante y admin**. Los Básicos ven una pantalla "mejora tu plan". Doble control: cliente (`nivelChat`) + servidor (regla `puedeChatear()` que cubre `pro`/`premium`/`visitante`).
+- **Ligero para escalar:** escucha SOLO los últimos 50 mensajes (`orderBy ts desc, limit 50`). Anti-spam 1 msg/4 s. Máx. 400 caracteres.
+- **Moderación:** filtra groserías (lista base ampliada LatAm/Cuba/Miami en `moderacion.js` + palabras del panel admin) y publicidad/enlaces, antes de enviar.
+- **Acciones al tocar/clic-derecho un mensaje:** Responder (cita), Copiar, **Traducir**, Eliminar. El menú se contiene DENTRO del chat (no sale por detrás) y el clic derecho cancela el menú nativo del navegador + el menú global de estatus (`stopPropagation`). Cada usuario borra solo lo suyo; admin borra cualquiera (regla `delete: esAdmin() || uid propio`).
+- **Traducción en el chat:** por mensaje, con Google Translate (endpoint público `gtx`, gratis, auto-detecta) + respaldo MyMemory. Si el mensaje ya está en el idioma de la app, traduce al OTRO idioma (siempre cambia). Funciona en todo navegador (incl. iPhone). En `chat.js` → `traducirMensaje` + `_gTraducir`.
+- **Stickers de fútbol/deportes:** emojis Noto (Google) por CDN jsDelivr — NO se suben carpetas. Set curado en `STICKERS`. Botón en la barra + panel. Fallback al emoji unicode si el CDN falla. Licencia Apache/OFL (uso comercial OK).
+- **Estilo:** móvil = tab inmersivo a pantalla fija (fondo del pie de página, `position: fixed` exacto entre header y tabbar). Escritorio = modal desde el perfil (botón de idioma partido en dos: banderita EN/ES + "Chat"). Estilo tipo Telegram (burbujas, avatares, foto de Premium / iniciales).
+
+### 18.2 Avisos de bots en el chat — `app.js` (`avisarBotsEnChat`, `_plantillaAvisoBot`)
+- Los bots publican en el chat 1 vez al día (enganchado a `publicarBotsSiEsNuevoDia`), SOLO si publicaron señales ese día. Mensajes variados/joviales (4 plantillas por deporte, ES/EN) invitando a Analytics Signals.
+- El mensaje se guarda con el uid del admin (para cumplir la regla) pero muestra nombre + foto del bot (foto resuelta por nombre → `assets/imagenes/analistas/<id>.webp`). En `chat.js`, un mensaje `nivel:'bot'` NUNCA se marca como "propio".
+- **Auto-borrado a las 24h:** `limpiarAvisosBotViejos` borra avisos de bot con +24h (sus señales ya caducaron). Corre al iniciar sesión el admin y al publicar bots.
+- **Punto de notificación en el tab del Chat:** aparece para Premium/admin o quien sigue a un analista, cuando un bot avisa (`vigilarChatAvisos`, listener ligero). Se apaga al abrir el chat.
+- **Campana de avisos** en el header del chat: activa/desactiva notificaciones de analistas (bots) → notificación del sistema (con vibración) al llegar un aviso nuevo. Guardado en `se_notif.bots`.
+
+### 18.3 Limpieza del chat (evitar saturar Firebase)
+- **Cliente (admin):** `limpiarViejos` en chat.js poda mensajes que pasan de 150.
+- **Cloud Function (para Blaze):** `functions/index.js` + `functions/package.json` — borra cada 6 h dejando 200 mensajes. **REQUIERE plan Blaze** (las Cloud Functions no existen en el plan gratis Spark). Desplegar con `firebase deploy --only functions`.
+- **IMPORTANTE (escala):** Firestore no es ideal para chat de altísimo volumen. El plan gratis (Spark) da ~50.000 lecturas/día y un chat en vivo las consume rápido (cada mensaje = 1 lectura por oyente). Para miles de usuarios se necesita **Blaze**. TODO futuro: si el chat supera ~50–100 msg/seg sostenidos, **migrar el chat a Firebase Realtime Database** (mucho más barata para chat de alta frecuencia); el resto de la app se queda en Firestore.
+
+### 18.4 Planes actualizados con el chat (3 lugares)
+- `planes.js`: chat en Pro y Premium.
+- Matriz de planes en `navegacion.js` (app + "mejorar plan" del perfil): fila "Acceso al chat de la comunidad" → **Basic tachado (X)**, **Pro ✓**, **Premium ✓**. El tachado real es `text-decoration: line-through` en `.plan-feats li.off span` (landing.css).
+- `plans.html` (página pública): chat tachado en Basic, ✓ en Pro/Premium.
+- El pie de página son solo enlaces (no lista beneficios).
+
+### 18.5 Rol Visitante — restricciones (solo lectura) y rol Temporal
+- El Visitante entra al panel admin con `_soloLectura = true`. Candado central `_ro()` bloquea TODA acción que mute: bloquear usuarios, cambiar plan, guardar contacto, moderación, reportes, prestigio/likes/dislikes, activar/pausar analistas, cambiar deporte/nombre/firma, eliminar analistas, contratar, y **publicar señales** (bots + editor anm2).
+- En el chat, un visitante/temporal NO puede borrar mensajes de otros (regla + cliente: solo admin o autor).
+- **Aviso bonito:** `_avisoVisitante()` muestra un popup responsivo ("Rol de visitante: no puedes alterar el estado, el plan, bloquear usuarios ni realizar cambios que afecten el sistema. Puedes verlo todo, pero no modificar."). CSS `.vis-alert-*` en mesa.css.
+- **Rol Temporal:** al asignarlo se abre un popup (nivel Básico/Pro/Premium/Visitante + duración en días) → concede acceso con caducidad automática (usa `vence` de `suscripcionActiva`). Para campañas.
+
+### 18.6 PWA / íconos / splash — experiencia app
+- `manifest.json`: `display: fullscreen` + `display_override`, `background_color: #010006`.
+- **Íconos:** el símbolo "SE" recortado del logo horizontal HD (940px) sobre fondo sólido `#010006` (mismo color que el splash) → en el splash nativo se ve solo el logo, sin caja. `icon-192/512` (any) + `icon-*-maskable` + `apple-touch-icon`.
+- **Splash de carga** (`#splash-restaurar` en index.html): logo horizontal `logo-nombre-oscuro.png` + spinner, sobre `#010006` (mismo color, sin salto).
+- **Banner de instalación** (index.html): en móvil, promueve instalar para pantalla completa. iOS muestra "Añadir a inicio".
+- **Notch / área segura:** `.top` (lobby) y `.mesa-side` (panel) respetan `env(safe-area-inset-top)`. Tabbar respeta `safe-area-inset-bottom`. Chat usa `100dvh`.
+- **Barra de estado iOS translúcida** (`apple-mobile-web-app-status-bar-style: black-translucent`).
+
+### 18.7 Correcciones importantes
+- **Prestigio (bug grave):** `prestigioReal` (bots.js) ahora incluye `prestigioAuto` (aciertos/fallos), no solo base + ajuste manual. Antes se calculaba pero no se veía. Afecta a TODOS los analistas.
+- **Service Worker:** subido a `se-v4` + network-first con timeout 6 s (arregla el login colgado en la app instalada por caché viejo). `chat.js` carga `mesa-datos.js` de forma diferida (el login no depende del módulo del panel).
+- **Responsivo móvil (muchos):** filtros desplegables (usuarios/personal) con icono en la barra de búsqueda, monitoreo 2×2, tarjeta de usuario rediseñada (avatar + nombre + correo), tarjeta de analista, dropdown de mercado como bottom-sheet, y auditoría de todos los modales/overlays (salvaguarda de scroll móvil universal).
+
+### 18.8 Legal — cobertura multi-estatal EE.UU.
+- `privacy.html`: sección de derechos de privacidad de otros estados (Virginia, Colorado, etc.), no solo California.
+- `terms.html`: cláusula de salvaguarda (derechos no renunciables del estado del usuario).
+- `disclaimer.html`: responsabilidad de cumplir la ley del estado del usuario.
+- **Correos inventados eliminados:** ya NO hay `@sportsexpectations.io` en ningún lado (no tenemos ese dominio); todo apunta a la página de Contacto. Bots usan `@bot.local`.
+
+### 18.9 i18n páginas secundarias
+- Traducidas (bilingües EN/ES con toggle): index, about, features, sports, **contact** (nueva).
+- Faltan secundarias: contact-support, updates, status, plans, help, faq, how-it-works.
+- **Legales (7): NO traducir hasta la revisión de la abogada** (traducir antes = trabajo perdido + riesgo de responsabilidad por traducción imprecisa).
+
+---
+
+## 19. PENDIENTE FINAL (lo único que queda para lanzar)
+
+1. **Stripe (pasarela de pago)** — 2 caminos: (A) automático con **Cloud Functions (Blaze)** que crean sesiones de checkout + reciben webhooks y activan el plan en Firestore; (B) **Stripe Payment Links** (Stripe aloja el pago) + activación manual desde el panel (dropdown de planes). El sistema ya está preparado (`_procesarPagoSeguir`, planes, roles). NUNCA poner la clave secreta en el navegador → necesita backend (Cloud Functions).
+2. **Web3Forms** (u otro backend de formularios) — para que el formulario de contacto envíe de verdad sin servidor propio. Alternativa a Cloud Functions para el contacto.
+3. **Sistema para +50.000 usuarios en el chat** — el plan gratis de Firebase no aguanta un chat en vivo masivo. Opciones: **Blaze** (pago por uso) para escalar Firestore, o migrar el chat a **Firebase Realtime Database** (más barata para chat de altísima frecuencia). Decidir al acercarse a esa escala.
+4. **Dominio propio + correo corporativo** — reemplazar la URL de GitHub Pages en SEO/sitemap/robots/canonical + configurar el correo oficial (hoy todo apunta a la página de Contacto por no tener dominio). Registrar en Google Search Console.
+5. **Motores Points/Shots/Touchdown/béisbol vacíos** — los bots de básquet/hockey/americano/béisbol salen "inactivos" porque esos motores no generan señales aunque haya partidos (ESPN puede no publicar stats de jugadores hasta cerca del juego). Pendiente de revisar con los diagnósticos `[NBA-DIAG]` etc. en consola.
+6. **i18n secundarias restantes** + legales (estas últimas tras revisión legal).
+
+Con Stripe + Blaze + dominio, la plataforma queda 100% lista para lanzar y cobrar.
