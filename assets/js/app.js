@@ -316,6 +316,7 @@ function initTabbar() {
   bar.innerHTML = tabs.map((tb, i) => `
     <button class="t ${i===0?'on':''}" data-vista="${tb.v}"><span class="ic">${IC[tb.ic]}</span>${t(tb.k)}${tb.v === 'analisis' ? '<span class="t-dot" id="tab-dot"></span>' : ''}</button>`).join('');
   bar.querySelectorAll('.t').forEach(b => b.onclick = () => {
+    if (b.dataset.vista === 'perfil') { abrirPanelPerfil(); return; }   // abre el modal de perfil real, no el buzón
     bar.querySelectorAll('.t').forEach(x => x.classList.toggle('on', x === b));
     cerrarHoja(); window.scrollTo({ top: 0, behavior: 'smooth' });
     mostrarVista(b.dataset.vista);
