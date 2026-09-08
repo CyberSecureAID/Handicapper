@@ -641,8 +641,8 @@ function vistaUsuarios() {
   return `
     <div class="mesa-head"><h1>${ML('Users', 'Usuarios')}</h1><p>${_usuarios.length} ${ML('registered', 'registrados')} · ${act} ${ML('active', 'activos')} · ${_usuarios.length - act} ${ML('inactive', 'inactivos')}.</p></div>
     <div class="u-toolbar">
-      <div class="u-search">${Ilupa}<input id="u-buscar" type="text" placeholder="${ML('Search by name or email…', 'Buscar por nombre o correo…')}" value="${esc(_uBusqueda)}"></div>
-      <div class="u-chips" id="u-chips">${chips}</div>
+      <div class="u-search">${Ilupa}<input id="u-buscar" type="text" placeholder="${ML('Search by name or email…', 'Buscar por nombre o correo…')}" value="${esc(_uBusqueda)}"><button class="u-filtro-btn" id="u-filtro-btn" aria-label="Filter"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" width=\"18\" height=\"18\"><path d=\"M3 5h18M6 12h12M10 19h4\"/></svg></button></div>
+      <div class="u-filtro-menu" id="u-chips" hidden>${chips}</div>
     </div>
     <div class="mesa-card mesa-card-tabla">
       <table class="mesa-tabla">
@@ -652,12 +652,23 @@ function vistaUsuarios() {
       <div class="u-pager" id="u-pager"></div>
     </div>`;
 }
+/* Filtro desplegable: abre/cierra el menú, se cierra al tocar fuera. Respeta [hidden]. */
+function _wireFiltroMenu(btnId, menuId) {
+  const btn = _cont.querySelector('#' + btnId), menu = _cont.querySelector('#' + menuId);
+  if (!btn || !menu) return;
+  btn.onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; btn.classList.toggle('on', !menu.hidden); };
+  const fuera = (e) => { if (!menu || menu.hidden) return; if (!menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) { menu.hidden = true; btn.classList.remove('on'); } };
+  document.removeEventListener('click', menu._fuera || (() => {}));
+  menu._fuera = fuera; document.addEventListener('click', fuera);
+}
 function enlazarUsuarios() {
   const buscar = _cont.querySelector('#u-buscar');
   if (buscar) buscar.oninput = () => { _uBusqueda = buscar.value; _uPagina = 1; pintarUsuariosTabla(); };
+  _wireFiltroMenu('u-filtro-btn', 'u-chips');
   _cont.querySelectorAll('#u-chips [data-uf]').forEach(b => b.onclick = () => {
     _uFiltro = b.dataset.uf; _uPagina = 1;
     _cont.querySelectorAll('#u-chips [data-uf]').forEach(x => x.classList.toggle('on', x === b));
+    const mn = _cont.querySelector('#u-chips'); if (mn) mn.hidden = true;
     pintarUsuariosTabla();
   });
   pintarUsuariosTabla();
@@ -1070,26 +1081,20 @@ function _bloqueIngresos() {
   const Icoin = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><circle cx="12" cy="12" r="9"/><path d="M15 9.5A2.5 2.5 0 0012.5 8h-1a2 2 0 000 4h1a2 2 0 010 4h-1A2.5 2.5 0 019 14.5M12 6.5v11"/></svg>`;
   const datos = _monDatos().filter(d => d.apoyos > 0).sort((a, b) => b.apoyos - a.apoyos);
   const totSub = _monDatos().reduce((s, d) => s + d.apoyos, 0);
-  const paraAnalistas = totSub * 1, paraPlataforma = totSub * 1, total = totSub * 2;
   const kpi = (cls, val, lab) => `<div class="mon-kpi ${cls}"><b>${val}</b><span>${esc(lab)}</span></div>`;
   const filas = datos.length ? datos.map(d => `
     <div class="ing-row ver-seg" data-ver-seg="${esc(d.uid)}" data-seg-nom="${esc(d.nombre)}" role="button" tabindex="0">
       <div class="ing-who"><b>${esc(d.nombre)}</b><span>${esc(depNombre(d.deporte))}</span></div>
       <div class="ing-sub">${d.apoyos} <span>${ML('followers', 'seguidores')}</span></div>
-      <div class="ing-amt an pot">$${d.apoyos}<span>${ML('analyst*', 'analista*')}</span></div>
-      <div class="ing-amt pl pot">$${d.apoyos}<span>${ML('platform*', 'plataforma*')}</span></div>
-      <div class="ing-amt tot pot">$${d.apoyos * 2}<span>${ML('potential*', 'potencial*')}</span></div>
     </div>`).join('') : `<div class="ing-empty">${ML('No followers yet.', 'Aún no hay seguidores.')}</div>`;
   return `<div class="mesa-card mon-ing">
-    <div class="mc-t">${Icoin} ${L('Followers per analyst · potential (not charged yet)', 'Seguidores por analista · potencial (aún sin cobro)')}</div>
+    <div class="mc-t">${Icoin} ${L('Followers per analyst', 'Seguidores por analista')}</div>
     <div class="mon-kpis ing-kpis">
-      ${kpi('', totSub, L('Followers', 'Seguidores'))}
-      ${kpi('ok', '$' + paraAnalistas, L('To analysts*', 'Para analistas*'))}
-      ${kpi('', '$' + paraPlataforma, L('Platform*', 'Plataforma*'))}
-      ${kpi('warn', '$' + total, L('Potential*', 'Potencial*'))}
+      ${kpi('', totSub, L('Total followers', 'Seguidores totales'))}
+      ${kpi('', '$0', L('Charged so far', 'Cobrado hasta ahora'))}
     </div>
     <div class="ing-list">${filas}</div>
-    <p class="mon-note">${Icoin} ${L('* Potential, not charged. These are free followers; real billing ($2/mo = $1 analyst + $1 platform) starts once Stripe is connected. Actually charged so far: $0.', '* Potencial, no cobrado. Estos son seguidores gratuitos; el cobro real ($2/mes = $1 analista + $1 plataforma) empieza al conectar Stripe. Cobrado real hasta ahora: $0.')}</p>
+    <p class="mon-note">${Icoin} ${L('These are free followers — no charges yet. Revenue will appear here once the payment gateway (Stripe) is connected.', 'Son seguidores gratuitos, aún sin ningún cobro. Los ingresos aparecerán aquí cuando se conecte la pasarela de pago (Stripe).')}</p>
   </div>`;
 }
 
@@ -1204,8 +1209,8 @@ function vistaAnalistas() {
       <div class="mc-t">${IC.contrato} ${ML('Add analyst', 'Agregar analista')}</div>
       <p class="an-mng-sub">${ML('Search a registered user and assign a sport. You only see who matches, so you won\u2019t add the wrong person by mistake.', 'Busca un usuario registrado y asígnale un deporte. Solo ves a quién coincide, para no agregar a la persona equivocada.')}</p>
       <div class="an-add-tools">
-        <div class="u-search">${Ilupa}<input id="an-buscar" type="text" autocomplete="off" spellcheck="false" placeholder="${ML('Search by name, username or email…', 'Buscar por nombre, usuario o correo…')}" value="${esc(_anBusqueda)}"></div>
-        <div class="u-chips" id="an-chips">${chips}</div>
+        <div class="u-search">${Ilupa}<input id="an-buscar" type="text" autocomplete="off" spellcheck="false" placeholder="${ML('Search by name, username or email…', 'Buscar por nombre, usuario o correo…')}" value="${esc(_anBusqueda)}"><button class="u-filtro-btn" id="an-filtro-btn" aria-label="Filter"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" width=\"18\" height=\"18\"><path d=\"M3 5h18M6 12h12M10 19h4\"/></svg></button></div>
+        <div class="u-filtro-menu" id="an-chips" hidden>${chips}</div>
       </div>
       <div class="an-cands" id="an-cands"></div>
     </div>
@@ -1232,9 +1237,11 @@ function enlazarAnalistas() {
   };
   const buscar = _cont.querySelector('#an-buscar');
   if (buscar) buscar.oninput = () => { _anBusqueda = buscar.value; pintarCandidatos(); };
+  _wireFiltroMenu('an-filtro-btn', 'an-chips');
   _cont.querySelectorAll('#an-chips [data-anf]').forEach(b => b.onclick = () => {
     _anFiltro = b.dataset.anf;
     _cont.querySelectorAll('#an-chips [data-anf]').forEach(x => x.classList.toggle('on', x === b));
+    const mn = _cont.querySelector('#an-chips'); if (mn) mn.hidden = true;
     pintarCandidatos();
   });
   pintarCandidatos();
