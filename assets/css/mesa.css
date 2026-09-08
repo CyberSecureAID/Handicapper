@@ -427,7 +427,9 @@ body.en-mesa { overflow: hidden; }
 .ah2-sec-h span svg { width: 17px; height: 17px; color: var(--g); }
 .ah2-sec-h em { font-style: normal; font-family: 'Chakra Petch',sans-serif; font-weight: 800; color: var(--g); font-size: 16px; }
 
-.ah2-filter { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 6px; scrollbar-width: thin; }
+.ah2-filter { display: block; white-space: nowrap; overflow-x: auto; padding-bottom: 10px; margin-bottom: 6px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+.ah2-filter .ah2-ft { display: inline-flex; vertical-align: top; }
+.ah2-filter .ah2-ft + .ah2-ft { margin-left: 8px; }
 .ah2-ft { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 10px; border: 1px solid var(--m-linea); background: rgba(255,255,255,.02); color: #9aa6b2; font-weight: 700; font-size: 12.5px; cursor: pointer; text-transform: capitalize; }
 .ah2-ft em { font-style: normal; font-size: 11px; background: rgba(255,255,255,.08); color: #c3ccd6; padding: 1px 7px; border-radius: 20px; }
 .ah2-ft.on { border-color: var(--g); background: rgba(232,184,75,.12); color: var(--g); } .ah2-ft.on em { background: rgba(232,184,75,.25); color: #fff; }
@@ -731,9 +733,10 @@ body.en-mesa { overflow: hidden; }
 .ing-amt.an { color: #2fd07f; } .ing-amt.pl { color: #7cc7f7; } .ing-amt.tot { color: var(--m-oro); }
 .ing-empty { color: var(--m-tinta-3); font-size: 13px; padding: 8px 2px; }
 @media (max-width: 720px) {
-  .ing-row { grid-template-columns: 1fr 1fr 1fr; row-gap: 12px; }
-  .ing-who { grid-column: 1 / -1; }
-  .ing-amt, .ing-sub { text-align: left; }
+  .ing-row { grid-template-columns: 1fr 1fr; row-gap: 10px; column-gap: 8px; padding: 14px; }
+  .ing-who { grid-column: 1 / -1; margin-bottom: 2px; }
+  .ing-amt, .ing-sub { text-align: left; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 8px 11px; font-size: 15px; }
+  .ing-amt span, .ing-sub span { margin-top: 2px; }
 }
 
 /* ===== Fase 5 (revisado) — editor colapsable + Aplicar ===== */
@@ -1142,3 +1145,20 @@ body.en-mesa { overflow: hidden; }
   .an-mng-add, .an-add-tools { justify-content: center; }
   .rs-save { align-items: center; }
 }
+
+/* ===== FIX desbordamiento del modal de análisis (anm2 + editor) =====
+   Los hijos de grid/flex necesitan min-width:0 para poder encoger;
+   sin esto, un nombre largo revienta el ancho hacia la derecha en móvil. */
+.anm2-col, .anm2-card, .anm2-slider, .anm2-sl-top, .anm2-total, .anm2-info-btn { min-width: 0; }
+.anm2-sl-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.anm2 input, .anm2 select, .anm2 textarea { max-width: 100%; box-sizing: border-box; }
+.edit-modal input, .edit-modal select, .edit-modal textarea, .edit-team, .edit-cf { max-width: 100%; box-sizing: border-box; }
+.edit-pick, .edit-conf { flex-wrap: wrap; }
+@media (max-width: 620px) {
+  .anm2-body, .edit-body { overflow-x: hidden; }
+  .anm2-banner { min-width: 0; }
+}
+
+/* Los contenedores del hub permiten encoger para que el scroll de fechas funcione */
+.ah2-board, .ah2-sec, .ah2-days, .ah2-day { min-width: 0; }
+.ah2-day { max-width: 100%; }
