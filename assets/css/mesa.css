@@ -1122,3 +1122,23 @@ body.en-mesa { overflow: hidden; }
 
 /* Salvaguarda: palabras de moderación largas envuelven, no desbordan */
 .mod-chip { overflow-wrap: anywhere; max-width: 100%; }
+
+/* ===== PERSONAL: tarjeta de analista con diseño de app en móvil ===== */
+@media (max-width: 620px) {
+  .an-mng-row { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 16px; }
+  .an-mng-foto { order: 1; }
+  .an-mng-who { order: 2; flex: 1 1 0; min-width: 0; }
+  .an-mng-id { order: 3; flex: 1 1 100%; display: flex; flex-direction: column; gap: 8px; }
+  .an-mng-id .an-mng-inp { width: 100%; box-sizing: border-box; }
+  .an-mng-sel { order: 4; flex: 1 1 100%; min-width: 0; }
+  .an-mng-toggle { order: 5; flex: 1 1 0; text-align: center; }
+  .an-mng-del { order: 6; flex: 1 1 0; text-align: center; }
+  .an-mng-counters { order: 7; flex: 1 1 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px; }
+}
+
+/* Botones/acciones centrados en móvil */
+@media (max-width: 620px) {
+  .ct-save-row { justify-content: center; flex-wrap: wrap; }
+  .an-mng-add, .an-add-tools { justify-content: center; }
+  .rs-save { align-items: center; }
+}
