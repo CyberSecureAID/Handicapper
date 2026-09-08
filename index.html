@@ -36,6 +36,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0d1421">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Sports Expectations">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -430,5 +431,35 @@
   if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
 })();
 </script>
+  <script>
+  (function(){
+    // Banner de instalación: solo en móvil, si NO está instalada, y no fue descartado.
+    if (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches) return;
+    if (window.innerWidth > 600) return;
+    try { if (localStorage.getItem('se-pwa-descartado') === '1') return; } catch(e){}
+    var esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    function crear(){
+      if (document.querySelector('.pwa-banner')) return;
+      var es = (localStorage.getItem('handicapper-idioma')||'en') === 'es';
+      var b = document.createElement('div'); b.className = 'pwa-banner';
+      var titulo = es ? 'Pantalla completa' : 'Full screen';
+      var sub = esIOS ? (es ? 'Toca Compartir y "Añadir a inicio"' : 'Tap Share, then "Add to Home Screen"')
+                      : (es ? 'Instala para la experiencia inmersiva' : 'Install for the immersive experience');
+      var cta = es ? 'Instalar' : 'Install';
+      b.innerHTML = '<span class="pwa-banner-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg></span>'
+        + '<span class="pwa-banner-tx"><b>'+titulo+'</b><span>'+sub+'</span></span>'
+        + (esIOS ? '' : '<button class="pwa-banner-go">'+cta+'</button>')
+        + '<button class="pwa-banner-x" aria-label="Close">&times;</button>';
+      document.body.appendChild(b);
+      requestAnimationFrame(function(){ b.classList.add('on'); });
+      var cerrar = function(){ b.classList.remove('on'); setTimeout(function(){ b.remove(); }, 300); };
+      b.querySelector('.pwa-banner-x').onclick = function(){ try{localStorage.setItem('se-pwa-descartado','1');}catch(e){} cerrar(); };
+      var go = b.querySelector('.pwa-banner-go');
+      if (go) go.onclick = function(){ if (window.__mostrarModalInstalar) window.__mostrarModalInstalar(); else if (window.__pwaPrompt) window.__pwaPrompt.prompt(); cerrar(); };
+    }
+    // esperar un poco para no molestar al entrar; en iOS siempre; en Android si hay prompt
+    setTimeout(function(){ if (esIOS || window.__pwaPrompt) crear(); else window.addEventListener('beforeinstallprompt', function(){ setTimeout(crear, 300); }); }, 2500);
+  })();
+  </script>
 </body>
 </html>
