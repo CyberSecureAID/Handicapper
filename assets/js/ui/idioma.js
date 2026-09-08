@@ -106,6 +106,10 @@ const DIC = {
     'lp2.ctabtn':'Get started now',
     'lp2.m1':'Explore stats','lp2.m2':'Featured matches','lp2.m3':'Key stats','lp2.m4':'Season leader','lp2.m5':'Compare the starters',
     'ab.title':'About Sports Expectations',
+    'nav.back':'← Back to home',
+    'ct.eyebrow':'Company',
+    'ct.title':'Contact us',
+    'ct.note':'<strong>We are the founders and owners of Sports Expectations.</strong> These lines are for meaningful matters, partnerships or serious enquiries only. For everyday questions, refunds or help, please use our <a href="contact-support.html">support channel</a>. Contact buttons are active only during the hours shown on each card — outside those hours they are disabled.',
     'ab.intro':'<strong>Sports Expectations LLC</strong> is a technology company that turns public sports data into clear, verifiable, and useful information. We are an analytics and information platform, not a sportsbook, not a betting operator, and not a financial advisor.',
 
     'ab.hwho':'<span class="num">·</span>Who we are',
@@ -254,6 +258,10 @@ const DIC = {
     'lp2.ctap':'Únete a miles de usuarios que confían en nuestros datos y toman mejores decisiones cada día.',
     'lp2.ctabtn':'Comenzar ahora',
     'ab.title':'Sobre Sports Expectations',
+    'nav.back':'← Volver al inicio',
+    'ct.eyebrow':'Empresa',
+    'ct.title':'Contáctanos',
+    'ct.note':'<strong>Somos los fundadores y dueños de Sports Expectations.</strong> Estas vías son para asuntos importantes, alianzas o consultas serias. Para preguntas cotidianas, reembolsos o ayuda, usa nuestro <a href="contact-support.html">canal de soporte</a>. Los botones de contacto solo están activos en los horarios que muestra cada tarjeta; fuera de ese horario están deshabilitados.',
     'ab.intro':'<strong>Sports Expectations LLC</strong> es una empresa de tecnolog\u00eda que convierte datos deportivos p\u00fablicos en informaci\u00f3n clara, verificable y \u00fatil. Somos una plataforma de an\u00e1lisis e informaci\u00f3n, no una casa de apuestas, no un operador de apuestas y no un asesor financiero.',
 
     'ab.hwho':'<span class="num">·</span>Quiénes somos',
