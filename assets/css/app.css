@@ -458,7 +458,7 @@
   .pestanas { display: none; }
   .hamb { display: inline-flex; }
 
-  .top { padding: 0 12px; gap: 10px; }
+  .top { padding: env(safe-area-inset-top, 0px) 12px 0; gap: 10px; }
   .top .buscar { display: none; }
   .marca { margin: 0 auto 0 4px; }        /* logo pegado al inicio, junto a la hamburguesa */
   .marca .logo-img { height: 28px; }
@@ -1678,7 +1678,14 @@
 /* ============================================================
    CHAT DE COMUNIDAD (estilo mensajería, paleta de la plataforma)
    ============================================================ */
-.chat { display: flex; flex-direction: column; height: calc(100dvh - var(--cab-alta) - var(--barra-alta) - env(safe-area-inset-top,0) - env(safe-area-inset-bottom,0)); min-height: 400px; }
+.chat { display: flex; flex-direction: column; position: fixed; left: 0; right: 0;
+  top: calc(var(--cab-alta) + env(safe-area-inset-top, 0px));
+  bottom: calc(var(--barra-alta) + env(safe-area-inset-bottom, 0px));
+  z-index: 40; overflow: hidden; }
+.chat::before { content: ''; position: absolute; inset: 0; z-index: -2; background: url('../imagenes/fondos/fondo-pagina.webp') center/cover no-repeat; }
+.chat::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(8,11,18,.90), rgba(6,9,15,.94)); }
+/* Dentro del modal de escritorio, el chat llena el modal (no fijo) */
+.chatm .chat { position: static; inset: auto; height: 100%; }
 .chat-head { flex: none; padding: 12px 16px; border-bottom: 1px solid var(--linea); background: rgba(10,14,22,.6); }
 .chat-live { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; color: #fff; }
 .chat-live i { width: 8px; height: 8px; border-radius: 50%; background: #3ecf8e; box-shadow: 0 0 0 0 rgba(62,207,142,.6); animation: chatPulse 2s infinite; }
@@ -1711,3 +1718,7 @@
 .chat-lock h3 { font-size: 19px; color: #fff; margin: 0 0 8px; }
 .chat-lock p { font-size: 13.5px; color: var(--tinta-2); line-height: 1.55; margin: 0 0 20px; }
 .chat-lock-btn { padding: 12px 26px; border-radius: 12px; cursor: pointer; border: 1px solid rgba(232,184,75,.55); background: linear-gradient(180deg,#9a2530,#5e141c); color: #ffe6c4; font-weight: 700; font-size: 14px; }
+
+/* El chat lleva su propio fondo; header y barra flotan encima translúcidos */
+.chat .chat-head { background: rgba(10,14,22,.55); backdrop-filter: blur(8px); }
+.chat .chat-bar { background: rgba(10,14,22,.6); backdrop-filter: blur(8px); }
