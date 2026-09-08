@@ -51,14 +51,16 @@
   <script>try{if(localStorage.getItem('se-en-app')==='1'){document.documentElement.classList.add('restaurando');setTimeout(function(){document.documentElement.classList.remove('restaurando')},7000);}}catch(e){}</script>
   <style>
     .restaurando #landing-screen,.restaurando #pricing-screen{display:none!important}
-    #splash-restaurar{display:none;position:fixed;inset:0;z-index:99999;background:#010006;align-items:center;justify-content:center}
+    #splash-restaurar{display:none;position:fixed;inset:0;z-index:99999;background:#010006;flex-direction:column;gap:30px;align-items:center;justify-content:center;padding:24px}
     .restaurando #splash-restaurar{display:flex}
-    .spl-spin{width:42px;height:42px;border:3px solid rgba(255,255,255,.14);border-top-color:#e8c46a;border-radius:50%;animation:spl-rot .8s linear infinite}
+    .spl-logo{width:min(70%,320px);height:auto;object-fit:contain;filter:drop-shadow(0 6px 24px rgba(0,0,0,.5));animation:spl-fade .6s ease}
+    @keyframes spl-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .spl-spin{width:34px;height:34px;border:3px solid rgba(255,255,255,.12);border-top-color:#e8c46a;border-radius:50%;animation:spl-rot .8s linear infinite}
     @keyframes spl-rot{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
-<div id="splash-restaurar"><div class="spl-spin"></div></div>
+<div id="splash-restaurar"><img class="spl-logo" src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations"><div class="spl-spin"></div></div>
 
 <!-- ============================ LANDING ============================ -->
 <section id="landing-screen" class="pantalla">
