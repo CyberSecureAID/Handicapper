@@ -81,10 +81,16 @@ export function pintarChat(cont, { esAdmin = false, abrirPlanes = null } = {}) {
     _msgs = arr; pintarMensajes(msgsEl, arr);
   }, () => { msgsEl.innerHTML = `<div class="chat-cargando">${L('Could not load the chat.', 'No se pudo cargar el chat.')}</div>`; });
 
-  // Tocar/clic un mensaje -> menú de acciones
+  // Tocar/clic izquierdo un mensaje -> menú de acciones
   msgsEl.addEventListener('click', (e) => {
     const el = e.target.closest('.chat-m'); if (!el) return;
     abrirMenu(el, el.dataset.id);
+  });
+  // Clic DERECHO sobre un mensaje -> nuestro menú (no el del navegador)
+  msgsEl.addEventListener('contextmenu', (e) => {
+    const el = e.target.closest('.chat-m'); if (!el) return;
+    e.preventDefault();
+    abrirMenu(el, el.dataset.id, e);
   });
 
   // Cancelar respuesta
@@ -166,7 +172,7 @@ function pintarMensajes(cont, arr) {
 
 /* ---- Menú de acciones al tocar un mensaje ---- */
 function cerrarMenu() { document.getElementById('chat-menu')?.remove(); }
-function abrirMenu(el, id) {
+function abrirMenu(el, id, ev) {
   cerrarMenu();
   const m = _msgs.find(x => x.id === id); if (!m) return;
   const L = _L;
@@ -179,15 +185,16 @@ function abrirMenu(el, id) {
     ${(m.texto && !m.sticker) ? `<button data-act="traducir">${L('Translate', 'Traducir')}</button>` : ''}
     ${puedeBorrar ? `<button data-act="borrar" class="del">${L('Delete', 'Eliminar')}</button>` : ''}`;
   document.body.appendChild(menu);
-  // Posicionar cerca del mensaje pero SIEMPRE dentro del área del chat (no del viewport)
+  // Posicionar: en el cursor si es clic derecho; si no, cerca del mensaje. SIEMPRE dentro del chat.
   const r = el.getBoundingClientRect();
   const box = el.closest('.chat');
   const cr = box ? box.getBoundingClientRect() : { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight };
   const mh = menu.offsetHeight, mw = menu.offsetWidth;
-  let top = r.top - mh - 6;
-  if (top < cr.top + 6) top = Math.min(r.bottom + 6, cr.bottom - mh - 6);
+  let top, left;
+  if (ev && typeof ev.clientX === 'number') { top = ev.clientY; left = ev.clientX; }
+  else { top = r.top - mh - 6; if (top < cr.top + 6) top = r.bottom + 6; left = r.left; }
   top = Math.max(cr.top + 6, Math.min(top, cr.bottom - mh - 6));
-  let left = Math.min(Math.max(cr.left + 6, r.left), cr.right - mw - 6);
+  left = Math.max(cr.left + 6, Math.min(left, cr.right - mw - 6));
   menu.style.top = top + 'px'; menu.style.left = left + 'px';
   requestAnimationFrame(() => menu.classList.add('on'));
   menu.querySelectorAll('button').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); accion(b.dataset.act, m); cerrarMenu(); });
