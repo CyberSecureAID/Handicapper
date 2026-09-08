@@ -1,25 +1,34 @@
 /* Service worker: instalación PWA, caché de estáticos propios, y notificaciones
    (clic, push para VAPID futuro, y mostrar notificación pedida por la página).
    Compatible con PWA en móvil, app de escritorio y navegador. */
-const CACHE = 'se-v3';
+const CACHE = 'se-v4';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(
   caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())
 ));
 
-/* --- Caché: solo GET del mismo origen (estáticos). Lo demás pasa directo. --- */
+/* --- Caché: solo GET del mismo origen (estáticos). Lo demás pasa directo. ---
+   Network-first con timeout: nunca se queda colgado esperando la red; si tarda
+   demasiado o falla, usa la copia en caché. Así la app instalada siempre arranca. */
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   let mismoOrigen = false;
   try { mismoOrigen = new URL(req.url).origin === self.location.origin; } catch (_) {}
   if (req.method !== 'GET' || !mismoOrigen) return;
-  e.respondWith(
-    fetch(req).then(r => {
-      if (r && r.ok && r.type === 'basic') { const copia = r.clone(); caches.open(CACHE).then(c => c.put(req, copia)).catch(() => {}); }
-      return r;
-    }).catch(() => caches.match(req))
-  );
+  e.respondWith((async () => {
+    try {
+      const red = fetch(req).then(r => {
+        if (r && r.ok && r.type === 'basic') { const copia = r.clone(); caches.open(CACHE).then(c => c.put(req, copia)).catch(() => {}); }
+        return r;
+      });
+      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000));
+      return await Promise.race([red, timeout]);
+    } catch (_) {
+      const cache = await caches.match(req);
+      return cache || Promise.reject(new Error('sin red ni caché'));
+    }
+  })());
 });
 
 /* --- Opciones por defecto de notificación (vibración, icono, badge) --- */
