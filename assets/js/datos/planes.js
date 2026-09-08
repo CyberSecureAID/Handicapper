@@ -32,6 +32,7 @@ export const PLANES = [
       { en: 'Limited access to Fútbol Rubio', es: 'Acceso limitado a Fútbol Rubio' },
       { en: 'A reduced selection of advanced content', es: 'Una selección reducida del contenido avanzado' },
       { en: 'Limited access to specialized analyst signals', es: 'Acceso limitado a señales de analistas especializados' },
+      { en: 'Access to the community chat', es: 'Acceso al chat de la comunidad' },
     ],
   },
   {
@@ -50,6 +51,7 @@ export const PLANES = [
       { en: 'Broad access to analyst signals (about 50% of what is available)', es: 'Acceso amplio a señales de analistas (aprox. el 50% de lo disponible)' },
       { en: 'Push notifications & alerts', es: 'Notificaciones push y avisos' },
       { en: 'Profile photo to share your stats showing they come from you', es: 'Foto de perfil para compartir tus estadísticas mostrando que provienen de ti' },
+      { en: 'Community chat with your profile photo', es: 'Chat de la comunidad con tu foto de perfil' },
       { en: 'Option to hire additional analyst services for higher access', es: 'Posibilidad de contratar servicios adicionales de analistas para mayor acceso' },
     ],
   },
