@@ -39,14 +39,14 @@ const PA_SLOT = [4.65, 4.55, 4.45, 4.35, 4.22, 4.08, 3.95, 3.82, 3.70];
 /* ---------- 1) CARTELERA + PROBABLES + LINEUPS ---------- */
 async function cartelera(fecha, proxy) {
   // Rango: hoy + 7 días, para mostrar próximos juegos si hoy no hay.
-  const dE = new Date((fecha || new Date().toISOString().slice(0,10)) + 'T12:00:00'); dE.setDate(dE.getDate() + 7);
+  const dE = new Date((fecha || new Date().toISOString().slice(0,10)) + 'T12:00:00'); dE.setDate(dE.getDate() + 3);
   const fin = dE.toISOString().slice(0, 10);
   const url = `${API}/schedule?sportId=1&startDate=${fecha}&endDate=${fin}&hydrate=team,venue,probablePitcher,lineups,linescore`;
   const d = await pedir(url, proxy);
   let juegos = [];
   (d?.dates || []).forEach(day => (day.games || []).forEach(g => juegos.push(g)));
   juegos.sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
-  return juegos.slice(0, 10);   // los 10 juegos más cercanos
+  return juegos.slice(0, 4);   // los 4 juegos más cercanos (rendimiento)
 }
 
 /* ---------- 2) STATS DE PITCHER (temporada + vs mano) ---------- */
