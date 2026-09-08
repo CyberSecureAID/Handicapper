@@ -1399,7 +1399,10 @@ function abrirPanelPerfil() {
   const banderaEN = `<svg viewBox="0 0 30 20" width="21" height="14" style="border-radius:3px;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.4)"><rect width="30" height="20" fill="#fff"/><rect width="30" height="1.54" y="0.00" fill="#b22234"/><rect width="30" height="1.54" y="3.08" fill="#b22234"/><rect width="30" height="1.54" y="6.15" fill="#b22234"/><rect width="30" height="1.54" y="9.23" fill="#b22234"/><rect width="30" height="1.54" y="12.31" fill="#b22234"/><rect width="30" height="1.54" y="15.38" fill="#b22234"/><rect width="30" height="1.54" y="18.46" fill="#b22234"/><rect width="13" height="10.77" fill="#3c3b6e"/></svg>`;
   const flag = idiomaActual() === 'es' ? banderaES : banderaEN;
   const menu = `
-    <button class="pp-item" data-pp="idioma">${flag}<span>${L('Language', 'Idioma')} · ${idiomaActual().toUpperCase()}</span></button>
+    <div class="pp-split">
+      <button class="pp-item pp-split-lang" data-pp="idioma">${flag}<span>${idiomaActual().toUpperCase()}</span></button>
+      <button class="pp-item pp-split-chat" data-pp="chat">${IC.chat}<span>${L('Chat', 'Chat')}</span></button>
+    </div>
     ${(window.__pwaPrompt || window.matchMedia('(display-mode: browser)').matches) ? `<button class="pp-item pp-install" data-install><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg><span>${L('Install app', 'Instalar app')}</span></button>` : ''}
     ${_esAdmin ? item('panel', I.panel, L('Admin panel', 'Panel administrativo'), '', 'pp-admin') : ''}
     ${item('salir', I.salir, L('Log out', 'Cerrar sesión'), '', 'pp-out')}`;
@@ -1525,6 +1528,7 @@ function abrirPanelPerfil() {
   ov.querySelectorAll('[data-pp]').forEach(b => b.addEventListener('click', () => {
     const k = b.dataset.pp;
     if (k === 'idioma') { fijarIdioma(idiomaActual() === 'en' ? 'es' : 'en'); cerrar(); setTimeout(abrirPanelPerfil, 60); }
+    else if (k === 'chat') { cerrar(); abrirChatModal(); }
     else if (k === 'salir') { try { localStorage.removeItem('se-en-app'); localStorage.removeItem('se-vista'); } catch (_) {} cerrar(); limpiarVistaPrevia(); salir(); }
     else if (k === 'panel') { cerrar(); abrirPanelMesa(); }
     else if (k === 'planes') { cerrar(); mostrarPantalla('pricing'); }
@@ -1537,6 +1541,24 @@ function abrirPanelPerfil() {
       // Fases 3-4: aquí irá el contenido real de cada sección.
     }
   }));
+}
+
+
+/* Modal de chat para escritorio (desde el perfil). En móvil el chat es el tab. */
+function abrirChatModal() {
+  if (document.getElementById('chatm-ov')) return;
+  const ES = idiomaActual() === 'es', L = (en, es) => ES ? es : en;
+  const ov = document.createElement('div'); ov.className = 'chatm-ov'; ov.id = 'chatm-ov';
+  const cerrar = () => { cerrarChat(); ov.classList.remove('on'); setTimeout(() => ov.remove(), 200); };
+  ov.innerHTML = `<div class="chatm" role="dialog" aria-modal="true">
+    <button class="chatm-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="chatm-body" id="chatm-body"></div>
+  </div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('on'));
+  ov.querySelector('.chatm-x').onclick = cerrar;
+  ov.onclick = (e) => { if (e.target === ov) cerrar(); };
+  pintarChat(ov.querySelector('#chatm-body'), { esAdmin: _esAdmin, abrirPlanes: () => { cerrar(); mostrarPantalla('pricing'); } });
 }
 
 function onCuentaClick(e) {
