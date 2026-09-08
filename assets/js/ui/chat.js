@@ -179,11 +179,15 @@ function abrirMenu(el, id) {
     ${(m.texto && !m.sticker) ? `<button data-act="traducir">${L('Translate', 'Traducir')}</button>` : ''}
     ${puedeBorrar ? `<button data-act="borrar" class="del">${L('Delete', 'Eliminar')}</button>` : ''}`;
   document.body.appendChild(menu);
-  // posicionar cerca del mensaje
+  // Posicionar cerca del mensaje pero SIEMPRE dentro del área del chat (no del viewport)
   const r = el.getBoundingClientRect();
+  const box = el.closest('.chat');
+  const cr = box ? box.getBoundingClientRect() : { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight };
   const mh = menu.offsetHeight, mw = menu.offsetWidth;
-  let top = r.top - mh - 6; if (top < 10) top = Math.min(r.bottom + 6, window.innerHeight - mh - 10);
-  let left = Math.min(Math.max(10, r.left), window.innerWidth - mw - 10);
+  let top = r.top - mh - 6;
+  if (top < cr.top + 6) top = Math.min(r.bottom + 6, cr.bottom - mh - 6);
+  top = Math.max(cr.top + 6, Math.min(top, cr.bottom - mh - 6));
+  let left = Math.min(Math.max(cr.left + 6, r.left), cr.right - mw - 6);
   menu.style.top = top + 'px'; menu.style.left = left + 'px';
   requestAnimationFrame(() => menu.classList.add('on'));
   menu.querySelectorAll('button').forEach(b => b.onclick = (ev) => { ev.stopPropagation(); accion(b.dataset.act, m); cerrarMenu(); });
