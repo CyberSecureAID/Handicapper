@@ -315,7 +315,7 @@ function initTabbar() {
     { ic: 'estrella', k: 'tab.analisis', v: 'analisis' }, { ic: 'perfil', k: 'tab.perfil', v: 'perfil' },
   ];
   bar.innerHTML = tabs.map((tb, i) => `
-    <button class="t ${i===0?'on':''}" data-vista="${tb.v}"><span class="ic">${IC[tb.ic]}</span>${t(tb.k)}${tb.v === 'analisis' ? '<span class="t-dot" id="tab-dot"></span>' : ''}</button>`).join('');
+    <button class="t ${i===0?'on':''}" data-vista="${tb.v}"><span class="ic">${IC[tb.ic]}</span>${t(tb.k)}${tb.v === 'analisis' ? '<span class="t-dot" id="tab-dot"></span>' : ''}${tb.v === 'vivo' ? '<span class="t-dot" id="tab-dot-chat"></span>' : ''}</button>`).join('');
   bar.querySelectorAll('.t').forEach(b => b.onclick = () => {
     if (b.dataset.vista === 'perfil') { abrirPanelPerfil(); return; }   // abre el modal de perfil real, no el buzón
     bar.querySelectorAll('.t').forEach(x => x.classList.toggle('on', x === b));
@@ -330,6 +330,8 @@ function mostrarVista(v) {
   const cont = $('lista');
   if (!cont) return;
   try { if (v) localStorage.setItem('se-vista', v); } catch (_) {}
+  _vistaActual = v;
+  if (v === 'vivo') { $('tab-dot-chat')?.classList.remove('on'); try { localStorage.setItem('chat-visto-ts', String(Date.now())); } catch (_) {} }
   if (v !== 'vivo') cerrarChat();
   if (v === 'analisis') {
     pintarSenales(cont, { esPremium: _esAdmin || planActual() === 'premium', nivel: _esAdmin ? 'admin' : planActual(), abrirPlanes: () => mostrarPantalla('pricing') });
@@ -720,6 +722,38 @@ async function resolverPrestigioSiToca() {
   } catch (_) {}
 }
 
+let _vistaActual = 'partidos', _chatWatch = null;
+
+/* Vigila el chat en segundo plano para mostrar un punto en el tab cuando un BOT
+   publica un aviso. Solo para quien califica: Premium/admin o quien sigue a alguien.
+   Ligero (escucha 1 mensaje) y todo en try/catch: nunca rompe la app. */
+async function vigilarChatAvisos() {
+  if (_chatWatch) return;
+  try {
+    const [authMod, datos] = await Promise.all([import('./auth/auth.js'), import('./mesa/mesa-datos.js')]);
+    const yo = authMod.usuarioActual(); if (!yo) return;
+    let califica = _esAdmin || planActual() === 'premium';
+    if (!califica) { try { const sg = await datos.misSeguidos(); califica = Array.isArray(sg) && sg.length > 0; } catch (_) {} }
+    if (!califica) return;
+    const S = authMod._obtenerStore(), db = authMod._obtenerDB();
+    if (!S || !db || !S.onSnapshot) return;
+    let primera = true;
+    const q = S.query(S.collection(db, 'chat'), S.orderBy('ts', 'desc'), S.limit(1));
+    _chatWatch = S.onSnapshot(q, (snap) => {
+      if (primera) { primera = false; return; }
+      try {
+        snap.docChanges().forEach(ch => {
+          if (ch.type !== 'added') return;
+          const d = ch.doc.data();
+          if (d && d.nivel === 'bot' && d.uid !== yo.uid && _vistaActual !== 'vivo') {
+            $('tab-dot-chat')?.classList.add('on');
+          }
+        });
+      } catch (_) {}
+    }, () => {});
+  } catch (_) {}
+}
+
 async function publicarBotsSiEsNuevoDia() {
   // Se re-publica el mismo día. Solo throttle de 45 min entre corridas EXITOSAS (evita spam de API).
   // Si una corrida publica 0 (aún no hay oportunidades), NO se marca el throttle -> reintenta al próximo login.
@@ -912,6 +946,7 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   if ((location.hash || '').toLowerCase() === '#mesa') { try { history.replaceState(null, '', location.pathname); } catch (_) {} }
   if (_esAdmin) marcarVistaPrevia('premium');   // el admin tiene acceso total cuando entre
   if (_esAdmin) publicarBotsSiEsNuevoDia();     // señales de bots automáticas (1 vez al día)
+  vigilarChatAvisos();                          // punto en el tab del chat cuando un bot avisa (Premium o quien sigue)
   if (_esAdmin) resolverPrestigioSiToca();      // resuelve predicciones terminadas -> prestigio
   // Foto de perfil (de la ficha de analista) en el avatar de la esquina superior derecha
   try {
