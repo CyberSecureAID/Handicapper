@@ -538,3 +538,9 @@ No es testeable en el sandbox (sin acceso a Firebase/APIs); verificar en la web 
 - **TODO futuro:** si el chat supera ~50–100 mensajes/segundo sostenidos, **migrar el chat a Firebase Realtime Database** (mucho más barata y eficiente para chat de alta frecuencia que Firestore). El resto de la app (usuarios, análisis, etc.) se queda en Firestore.
 
 **Ícono PWA:** pendiente regenerar los íconos (192/512 + `maskable`) con zona segura/padding para que Android no lo recorte ni se vea borroso.
+
+## §19 · Stickers del chat (sin subir carpetas)
+
+Los stickers son **emojis Noto (Google)** servidos por CDN de jsDelivr — no se sube ninguna carpeta al repo. Fuente: `https://cdn.jsdelivr.net/gh/svgmoji/svgmoji/packages/svgmoji__noto/svg/{CODIGO}.svg`. Set curado de fútbol/deportes en `chat.js` (`STICKERS`). Si el CDN falla, cada sticker cae al **emoji unicode** de respaldo (`onerror`), así nunca se rompe.
+
+**Licencia / atribución:** los emojis Noto de Google están bajo **Apache 2.0 / OFL** (uso comercial permitido). Recomendado dejar una mención de "Emojis por Noto (Google)" en una sección de créditos/legal por buena práctica. Un mensaje-sticker se guarda en Firestore como `{ ..., texto: '⚽', sticker: '26BD' }` (el `texto` con el emoji cumple la regla de Firestore; no hizo falta cambiarla).
