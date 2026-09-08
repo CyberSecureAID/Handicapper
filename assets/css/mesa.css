@@ -196,7 +196,7 @@ body.en-mesa { overflow: hidden; }
   #mesa-screen { overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .mesa { grid-template-columns: 1fr; display: block; height: auto; min-height: 100vh; }
   .mesa-main { overflow: visible; }
-  .mesa-side { border-right: 0; border-bottom: 1px solid var(--m-linea); padding: 14px 16px; position: sticky; top: 0; z-index: 60; background: #0e141b; overflow: visible; }
+  .mesa-side { border-right: 0; border-bottom: 1px solid var(--m-linea); padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 14px; position: sticky; top: 0; z-index: 60; background: #0e141b; overflow: visible; }
   .mesa-side-top { position: relative; }
   .mesa-burger { display: inline-flex; position: absolute; right: 0; top: 50%; transform: translateY(-50%); margin: 0; }
   .mesa-nav { position: absolute; top: 60px; right: 12px; left: 12px; background: #141a22; border: 1px solid var(--m-linea);
@@ -1173,4 +1173,23 @@ body.en-mesa { overflow: hidden; }
     border-radius: 18px 18px 0 0; padding: 10px 10px calc(14px + env(safe-area-inset-bottom,0)); z-index: 400 !important;
     box-shadow: 0 -20px 60px rgba(0,0,0,.6); }
   .anm2-dd-list button { padding: 14px 14px; font-size: 15px; }
+}
+
+/* ===== Filtro desplegable (usuarios y personal) ===== */
+.u-toolbar, .an-add-tools { position: relative; }
+.u-search { position: relative; }
+.u-search input { padding-right: 46px; }
+.u-filtro-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 9px;
+  border: 1px solid var(--m-linea); background: rgba(255,255,255,.05); color: #9aa6b2; cursor: pointer; display: grid; place-items: center; transition: all .14s; }
+.u-filtro-btn:hover, .u-filtro-btn.on { color: var(--m-oro); border-color: rgba(232,184,75,.5); background: rgba(232,184,75,.14); }
+.u-filtro-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 200; min-width: 250px; max-width: min(340px, 90vw);
+  background: #141b26; border: 1px solid var(--m-linea); border-radius: 14px; padding: 8px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px; box-shadow: 0 20px 50px rgba(0,0,0,.55); }
+.u-filtro-menu[hidden] { display: none !important; }
+.u-filtro-menu .u-chip { width: auto; margin: 0; justify-content: center; }
+
+/* ===== Monitoreo: filtros 2×2 en móvil ===== */
+@media (max-width: 620px) {
+  #mon-chips { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #mon-chips .u-chip { width: auto; margin: 0; justify-content: center; }
 }
