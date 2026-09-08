@@ -779,11 +779,11 @@ async function avisarBotsEnChat(porDeporte) {
     const hoy = new Date().toISOString().slice(0, 10);
     const ES = idiomaActual() === 'es';
     const BOTS = [
-      { uid: 'bot-alejandro', nombre: 'Alejandro Ruiz', dep: 'futbol', depNom: ES ? 'fútbol' : 'soccer' },
-      { uid: 'bot-miguel', nombre: 'Miguel Santos', dep: 'beisbol', depNom: ES ? 'béisbol' : 'baseball' },
-      { uid: 'bot-daniel', nombre: 'Daniel Vega', dep: 'basket', depNom: ES ? 'básquet' : 'basketball' },
-      { uid: 'bot-ivan', nombre: 'Iván Torres', dep: 'hockey', depNom: 'hockey' },
-      { uid: 'bot-ricardo', nombre: 'Ricardo Méndez', dep: 'americano', depNom: ES ? 'fútbol americano' : 'football' },
+      { uid: 'bot-alejandro', nombre: 'Alejandro Ruiz', dep: 'futbol', foto: 's', depNom: ES ? 'fútbol' : 'soccer' },
+      { uid: 'bot-miguel', nombre: 'Miguel Santos', dep: 'beisbol', foto: 't', depNom: ES ? 'béisbol' : 'baseball' },
+      { uid: 'bot-daniel', nombre: 'Daniel Vega', dep: 'basket', foto: 'r', depNom: ES ? 'básquet' : 'basketball' },
+      { uid: 'bot-ivan', nombre: 'Iván Torres', dep: 'hockey', foto: 'q', depNom: 'hockey' },
+      { uid: 'bot-ricardo', nombre: 'Ricardo Méndez', dep: 'americano', foto: 'p', depNom: ES ? 'fútbol americano' : 'football' },
     ];
     for (const b of BOTS) {
       const n = (porDeporte[b.dep] && porDeporte[b.dep].publicadas) || 0;
@@ -791,7 +791,7 @@ async function avisarBotsEnChat(porDeporte) {
       try { if (localStorage.getItem('bot-aviso-' + b.uid) === hoy) continue; } catch (_) {}
       const texto = _plantillaAvisoBot(b.depNom, n, ES);
       try {
-        await S.addDoc(S.collection(db, 'chat'), { uid: yo.uid, nombre: b.nombre, foto: null, nivel: 'bot', texto, ts: S.serverTimestamp() });
+        await S.addDoc(S.collection(db, 'chat'), { uid: yo.uid, nombre: b.nombre, foto: 'assets/imagenes/analistas/' + b.foto + '.webp', nivel: 'bot', texto, ts: S.serverTimestamp() });
         try { localStorage.setItem('bot-aviso-' + b.uid, hoy); } catch (_) {}
       } catch (_) {}
     }
