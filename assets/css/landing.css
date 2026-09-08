@@ -338,6 +338,7 @@ body.en-app #landing-screen, body.en-app #pricing-screen { display: none; }
 .plan-nom { text-align: center; }
 .plan-precio { text-align: center; justify-content: center; }
 .plan-feats li.off { color: #6b7683; }
+.plan-feats li.off span { text-decoration: line-through; text-decoration-thickness: 1px; }
 .plan-feats li .pl-no { color: #56606e !important; flex: 0 0 auto; margin-top: 2px; }
 .plan-feats li i { font-style: normal; color: #8fb3ff; font-weight: 700; font-size: 12px; margin-left: 4px; }
 .plan-feats li span { flex: 1; }
