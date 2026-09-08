@@ -1126,17 +1126,20 @@ body.en-mesa { overflow: hidden; }
 /* Salvaguarda: palabras de moderación largas envuelven, no desbordan */
 .mod-chip { overflow-wrap: anywhere; max-width: 100%; }
 
-/* ===== PERSONAL: tarjeta de analista con diseño de app en móvil ===== */
+/* ===== PERSONAL: tarjeta de analista con diseño de app en móvil (grid robusto) ===== */
 @media (max-width: 620px) {
-  .an-mng-row { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 16px; }
-  .an-mng-foto { order: 1; }
-  .an-mng-who { order: 2; flex: 1 1 0; min-width: 0; }
-  .an-mng-id { order: 3; flex: 1 1 100%; display: flex; flex-direction: column; gap: 8px; }
-  .an-mng-id .an-mng-inp { width: 100%; box-sizing: border-box; }
-  .an-mng-sel { order: 4; flex: 1 1 100%; min-width: 0; }
-  .an-mng-toggle { order: 5; flex: 1 1 0; text-align: center; }
-  .an-mng-del { order: 6; flex: 1 1 0; text-align: center; }
-  .an-mng-counters { order: 7; flex: 1 1 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px; }
+  .an-mng-row { display: grid !important; grid-template-columns: 46px 1fr !important; gap: 10px 12px !important; align-items: center !important; flex-wrap: initial; padding: 16px !important; }
+  .an-mng-foto { grid-column: 1 !important; grid-row: 1 !important; margin: 0 !important; }
+  .an-mng-who { grid-column: 2 !important; grid-row: 1 !important; min-width: 0 !important; flex: initial !important; }
+  .an-mng-id { grid-column: 1 / -1 !important; grid-row: auto !important; flex: initial !important; display: flex !important; flex-direction: column !important; gap: 8px !important; }
+  .an-mng-id .an-mng-inp { width: 100% !important; box-sizing: border-box; }
+  .an-mng-sel { grid-column: 1 / -1 !important; width: 100% !important; flex: initial !important; box-sizing: border-box; }
+  .an-mng-toggle { grid-column: 1 / -1 !important; flex: initial !important; text-align: center; }
+  .an-mng-del { grid-column: 1 / -1 !important; flex: initial !important; text-align: center; }
+  .an-mng-counters { grid-column: 1 / -1 !important; display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .an-mng-counters .anc { min-width: 0; justify-content: space-between; padding: 6px 8px; }
+  .an-mng-counters .anc-lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .an-mng-counters .anc-v { min-width: 26px; }
 }
 
 /* Botones/acciones centrados en móvil */
@@ -1162,3 +1165,12 @@ body.en-mesa { overflow: hidden; }
 /* Los contenedores del hub permiten encoger para que el scroll de fechas funcione */
 .ah2-board, .ah2-sec, .ah2-days, .ah2-day { min-width: 0; }
 .ah2-day { max-width: 100%; }
+
+/* Dropdown de mercado (anm2): en móvil, bottom-sheet fijo para que NO lo corte el overflow del modal */
+@media (max-width: 620px) {
+  .anm2-dd-list { position: fixed !important; left: 0 !important; right: 0 !important; top: auto !important; bottom: 0 !important;
+    max-height: 60vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    border-radius: 18px 18px 0 0; padding: 10px 10px calc(14px + env(safe-area-inset-bottom,0)); z-index: 400 !important;
+    box-shadow: 0 -20px 60px rgba(0,0,0,.6); }
+  .anm2-dd-list button { padding: 14px 14px; font-size: 15px; }
+}
