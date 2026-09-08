@@ -71,7 +71,7 @@ service cloud.firestore {
         && request.resource.data.texto.size() > 0
         && request.resource.data.texto.size() <= 400;
       allow update: if false;
-      allow delete: if esAdmin();
+      allow delete: if esAdmin() || (request.auth != null && resource.data.uid == request.auth.uid);
     }
     match /seguimientos/{id} {
       allow read: if request.auth != null;
@@ -81,6 +81,10 @@ service cloud.firestore {
     }
     match /config/contacto {
       allow read: if true;
+      allow write: if esAdmin();
+    }
+    match /config/moderacion {
+      allow read: if puedeChatear();   // el chat necesita las palabras prohibidas para filtrar
       allow write: if esAdmin();
     }
     match /config/analista {
