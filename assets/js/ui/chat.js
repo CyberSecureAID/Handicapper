@@ -8,6 +8,10 @@
    ============================================================ */
 import { _obtenerStore, _obtenerDB, usuarioActual } from '../auth/auth.js';
 import { planActual } from '../auth/estado-pago.js';
+import { PALABRAS_DEFECTO, terminoProhibido, detectarPublicidad } from '../datos/moderacion.js';
+import { leerModeracion } from '../mesa/mesa-datos.js';
+
+let _palabras = [...PALABRAS_DEFECTO];   // lista base + las del admin (se cargan al abrir)
 
 const LIMITE = 50;          // mensajes que se muestran
 const ANTISPAM_MS = 4000;   // 1 mensaje cada 4 segundos
@@ -68,6 +72,9 @@ export function pintarChat(cont, { esAdmin = false, abrirPlanes = null } = {}) {
   const input = cont.querySelector('#chat-in');
   const yo = usuarioActual() || {};
 
+  // Cargar las palabras prohibidas del admin (se suman a la lista base)
+  leerModeracion().then(w => { if (Array.isArray(w) && w.length) _palabras = [...PALABRAS_DEFECTO, ...w]; }).catch(() => {});
+
   // ---- Escuchar los últimos mensajes en tiempo real ----
   let S, db;
   try { S = _obtenerStore(); db = _obtenerDB(); } catch (_) {}
@@ -91,6 +98,8 @@ export function pintarChat(cont, { esAdmin = false, abrirPlanes = null } = {}) {
       avisoChat(input, L('Wait a moment before sending again.', 'Espera un momento antes de enviar de nuevo.'));
       return;
     }
+    if (terminoProhibido(texto, _palabras)) { avisoChat(input, L('That language is not allowed here.', 'Ese lenguaje no está permitido aquí.')); return; }
+    if (detectarPublicidad(texto)) { avisoChat(input, L('Links and ads are not allowed.', 'No se permiten enlaces ni publicidad.')); return; }
     _ultimoEnvio = ahora;
     input.value = '';
     try {
@@ -102,8 +111,26 @@ export function pintarChat(cont, { esAdmin = false, abrirPlanes = null } = {}) {
         texto: texto.slice(0, MAX_LEN),
         ts: S.serverTimestamp(),
       });
+      limpiarViejos(S, db, nivel);   // poda mensajes viejos (solo si es admin; regla lo exige)
     } catch (_) { avisoChat(input, L('Could not send. Try again.', 'No se pudo enviar. Intenta de nuevo.')); }
   };
+}
+
+/* Poda los mensajes que exceden el tope, para que la colección no crezca infinito.
+   Solo el admin puede borrar (regla de Firestore). Se ejecuta de vez en cuando. */
+const TOPE_CHAT = 150;
+async function limpiarViejos(S, db, nivel) {
+  if (nivel !== 'admin') return;               // la regla solo permite borrar al admin
+  if (Math.random() > 0.25) return;            // no en cada mensaje, para no gastar de más
+  try {
+    const q = S.query(S.collection(db, 'chat'), S.orderBy('ts', 'desc'), S.limit(TOPE_CHAT + 80));
+    const snap = await S.getDocs(q);
+    const docs = []; snap.forEach(d => docs.push(d));
+    if (docs.length > TOPE_CHAT) {
+      const sobra = docs.slice(TOPE_CHAT);       // los más viejos
+      for (const d of sobra) { try { await S.deleteDoc(d.ref); } catch (_) {} }
+    }
+  } catch (_) {}
 }
 
 function pintarMensajes(cont, arr, yo, L) {
