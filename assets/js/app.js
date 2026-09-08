@@ -771,11 +771,28 @@ async function publicarBotsSiEsNuevoDia() {
 
 /* Aviso en el chat público: si un bot publicó señales hoy, avisa UNA vez al día
    con un mensaje variado invitando a Analytics Signals. Nunca rompe el flujo (todo en try/catch). */
+/* Borra del chat los avisos de BOTS con más de 24h (sus señales ya caducaron).
+   Solo el admin puede borrar; se llama en contexto admin. Ligero y en try/catch. */
+async function limpiarAvisosBotViejos(S, db) {
+  try {
+    if (!S || !db || !S.getDocs) return;
+    const limite = Date.now() - 24 * 60 * 60 * 1000;
+    const q = S.query(S.collection(db, 'chat'), S.orderBy('ts', 'desc'), S.limit(80));
+    const snap = await S.getDocs(q);
+    for (const d of snap.docs) {
+      const m = d.data();
+      const ts = (m.ts && m.ts.toDate) ? m.ts.toDate().getTime() : 0;
+      if (m.nivel === 'bot' && ts && ts < limite) { try { await S.deleteDoc(d.ref); } catch (_) {} }
+    }
+  } catch (_) {}
+}
+
 async function avisarBotsEnChat(porDeporte) {
   try {
     const { _obtenerStore, _obtenerDB, usuarioActual } = await import('./auth/auth.js');
     const S = _obtenerStore(), db = _obtenerDB(), yo = usuarioActual();
     if (!S || !db || !yo || !S.addDoc) return;
+    await limpiarAvisosBotViejos(S, db);   // borra los avisos de bot cuyas señales ya caducaron (>24h)
     const hoy = new Date().toISOString().slice(0, 10);
     const ES = idiomaActual() === 'es';
     const BOTS = [
@@ -948,6 +965,7 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   if (_esAdmin) publicarBotsSiEsNuevoDia();     // señales de bots automáticas (1 vez al día)
   vigilarChatAvisos();                          // punto en el tab del chat cuando un bot avisa (Premium o quien sigue)
   if (_esAdmin) resolverPrestigioSiToca();      // resuelve predicciones terminadas -> prestigio
+  if (_esAdmin) { import('./auth/auth.js').then(m => limpiarAvisosBotViejos(m._obtenerStore(), m._obtenerDB())).catch(() => {}); }  // borra avisos de bot >24h
   // Foto de perfil (de la ficha de analista) en el avatar de la esquina superior derecha
   try {
     const { leerFichaAnalista } = await import('./mesa/mesa-datos.js');
