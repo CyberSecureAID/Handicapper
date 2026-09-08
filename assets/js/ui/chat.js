@@ -27,7 +27,7 @@ const STICKERS = [
 ];
 
 let _unsub = null, _ultimoEnvio = 0, _palabras = [...PALABRAS_DEFECTO];
-let _S = null, _db = null, _yo = {}, _nivel = 'basic', _msgs = [], _respondiendo = null, _L = (a) => a;
+let _S = null, _db = null, _yo = {}, _nivel = 'basic', _msgs = [], _respondiendo = null, _L = (a) => a, _trad = {};
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
 function iniciales(n) { const p = (n || '?').trim().split(/\s+/); return ((p[0] || '?')[0] + (p[1] ? p[1][0] : '')).toUpperCase(); }
@@ -157,6 +157,7 @@ function pintarMensajes(cont, arr) {
         ${propio ? '' : `<div class="chat-nm">${esc(m.nombre)}${badge}</div>`}
         ${quote}
         <div class="chat-tx">${esc(m.texto)}</div>
+        ${_trad[m.id] ? `<div class="chat-trad"><span>${_L('Translated', 'Traducido')}</span>${esc(_trad[m.id])}</div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -175,6 +176,7 @@ function abrirMenu(el, id) {
   menu.innerHTML = `
     <button data-act="responder">${L('Reply', 'Responder')}</button>
     <button data-act="copiar">${L('Copy', 'Copiar')}</button>
+    ${(m.texto && !m.sticker) ? `<button data-act="traducir">${L('Translate', 'Traducir')}</button>` : ''}
     ${puedeBorrar ? `<button data-act="borrar" class="del">${L('Delete', 'Eliminar')}</button>` : ''}`;
   document.body.appendChild(menu);
   // posicionar cerca del mensaje
@@ -192,10 +194,33 @@ async function accion(act, m) {
   const L = _L;
   if (act === 'copiar') { try { await navigator.clipboard.writeText(m.texto || ''); } catch (_) {} return; }
   if (act === 'responder') { setRespuesta({ nombre: m.nombre, texto: m.texto }); document.getElementById('chat-in')?.focus(); return; }
+  if (act === 'traducir') { traducirMensaje(m); return; }
   if (act === 'borrar') {
     try { await _S.deleteDoc(_S.doc(_db, 'chat', m.id)); }
     catch (_) { const inp = document.getElementById('chat-in'); if (inp) avisoChat(inp, L('Could not delete.', 'No se pudo eliminar.')); }
   }
+}
+
+/* Traduce UN mensaje en el propio dispositivo (API del navegador), gratis y privado.
+   Destino = idioma de la app. Si el navegador no lo soporta (ej. iPhone hoy), avisa sin romper. */
+async function traducirMensaje(m) {
+  const L = _L;
+  const inp = document.getElementById('chat-in');
+  const target = (localStorage.getItem('handicapper-idioma') || 'en') === 'es' ? 'es' : 'en';
+  if (_trad[m.id]) { delete _trad[m.id]; pintarMensajes(document.getElementById('chat-msgs'), _msgs); return; } // segundo toque = quitar traducción
+  if (!('Translator' in self)) { if (inp) avisoChat(inp, L('Translation is not supported on this device yet.', 'Tu dispositivo aún no soporta traducción.')); return; }
+  if (inp) avisoChat(inp, L('Translating…', 'Traduciendo…'));
+  try {
+    let source = target === 'es' ? 'en' : 'es';
+    if ('LanguageDetector' in self) {
+      try { const det = await LanguageDetector.create(); const res = await det.detect(m.texto || ''); if (res && res[0] && res[0].detectedLanguage) source = res[0].detectedLanguage.slice(0, 2); } catch (_) {}
+    }
+    if (source === target) { if (inp) avisoChat(inp, L('Already in your language.', 'Ya está en tu idioma.')); return; }
+    const tr = await Translator.create({ sourceLanguage: source, targetLanguage: target });
+    const out = await tr.translate(m.texto || '');
+    _trad[m.id] = out;
+    pintarMensajes(document.getElementById('chat-msgs'), _msgs);
+  } catch (_) { if (inp) avisoChat(inp, L('Could not translate this message.', 'No se pudo traducir este mensaje.')); }
 }
 
 function setRespuesta(r) {
