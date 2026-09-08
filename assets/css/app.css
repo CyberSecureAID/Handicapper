@@ -10,7 +10,7 @@
 .top {
   position: sticky; top: 0; z-index: 50;
   display: flex; align-items: center; gap: 16px;
-  height: var(--cab-alta); padding: 0 20px;
+  height: calc(var(--cab-alta) + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0px) 20px 0; box-sizing: border-box;
   background: color-mix(in srgb, var(--fondo) 90%, transparent);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--linea);
