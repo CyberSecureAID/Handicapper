@@ -16,6 +16,16 @@ const ANTISPAM_MS = 4000;
 const MAX_LEN = 400;
 const TOPE_CHAT = 150;
 
+/* Stickers de fútbol/deportes: emojis Noto (Google) servidos por CDN, sin subir nada.
+   [código hex para el CDN, carácter emoji de respaldo]. */
+const STK_CDN = (code) => `https://cdn.jsdelivr.net/gh/svgmoji/svgmoji/packages/svgmoji__noto/svg/${code}.svg`;
+const STICKERS = [
+  ['26BD','⚽'], ['1F945','🥅'], ['1F3C6','🏆'], ['1F3C5','🏅'], ['1F451','👑'], ['1F410','🐐'],
+  ['1F525','🔥'], ['1F4AA','💪'], ['1F44F','👏'], ['1F64C','🙌'], ['1F4AF','💯'], ['2B50','⭐'],
+  ['1F3AF','🎯'], ['26A1','⚡'], ['1F389','🎉'], ['1F91D','🤝'], ['1F60E','😎'], ['1F631','😱'],
+  ['1F602','😂'], ['1F62D','😭'], ['1F3C0','🏀'], ['1F3C8','🏈'], ['26BE','⚾'], ['1F3D2','🏒'],
+];
+
 let _unsub = null, _ultimoEnvio = 0, _palabras = [...PALABRAS_DEFECTO];
 let _S = null, _db = null, _yo = {}, _nivel = 'basic', _msgs = [], _respondiendo = null, _L = (a) => a;
 
@@ -47,7 +57,9 @@ export function pintarChat(cont, { esAdmin = false, abrirPlanes = null } = {}) {
     <div class="chat-head"><span class="chat-live"><i></i>${L('Community chat', 'Chat de la comunidad')}</span><span class="chat-head-s">${L('Be respectful. Not betting advice.', 'Sé respetuoso. No es asesoría de apuestas.')}</span></div>
     <div class="chat-msgs" id="chat-msgs"><div class="chat-cargando">${L('Loading messages…', 'Cargando mensajes…')}</div></div>
     <div class="chat-reply" id="chat-reply" hidden><div class="chat-reply-tx"><b id="chat-reply-nm"></b><span id="chat-reply-msg"></span></div><button class="chat-reply-x" id="chat-reply-x" aria-label="Cancel">&times;</button></div>
+    <div class="chat-stk-panel" id="chat-stk-panel" hidden>${STICKERS.map(([c, e]) => `<button class="chat-stk-b" data-stk="${c}" data-emoji="${e}" title="${e}"><img src="${STK_CDN(c)}" alt="${e}" loading="lazy" onerror="this.replaceWith(document.createTextNode('${e}'))"></button>`).join('')}</div>
     <form class="chat-bar" id="chat-bar" autocomplete="off">
+      <button type="button" class="chat-stk-btn" id="chat-stk-btn" aria-label="Stickers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M9 15c.8.7 1.9 1 3 1s2.2-.3 3-1"/></svg></button>
       <input id="chat-in" type="text" maxlength="${MAX_LEN}" placeholder="${L('Write a message…', 'Escribe un mensaje…')}" autocomplete="off" spellcheck="true">
       <button type="submit" class="chat-send" id="chat-send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
     </form>
@@ -78,25 +90,44 @@ export function pintarChat(cont, { esAdmin = false, abrirPlanes = null } = {}) {
   // Cancelar respuesta
   cont.querySelector('#chat-reply-x').onclick = () => setRespuesta(null);
 
+  // Panel de stickers
+  const stkBtn = cont.querySelector('#chat-stk-btn');
+  const stkPanel = cont.querySelector('#chat-stk-panel');
+  stkBtn.onclick = () => { stkPanel.hidden = !stkPanel.hidden; };
+  stkPanel.querySelectorAll('[data-stk]').forEach(b => b.onclick = () => {
+    stkPanel.hidden = true;
+    enviarMsg({ sticker: b.dataset.stk, texto: b.dataset.emoji });
+  });
+
   form.onsubmit = async (e) => {
     e.preventDefault();
     const texto = (input.value || '').trim(); if (!texto) return;
     if (terminoProhibido(texto, _palabras)) { avisoChat(input, L('That language is not allowed here.', 'Ese lenguaje no está permitido aquí.')); return; }
     if (detectarPublicidad(texto)) { avisoChat(input, L('Links and ads are not allowed.', 'No se permiten enlaces ni publicidad.')); return; }
-    const ahora = Date.now();
-    if (ahora - _ultimoEnvio < ANTISPAM_MS) { avisoChat(input, L('Wait a moment before sending again.', 'Espera un momento antes de enviar de nuevo.')); return; }
-    _ultimoEnvio = ahora; input.value = '';
-    const doc = {
-      uid: _yo.uid || null,
-      nombre: _yo.nombre || (ES ? 'Usuario' : 'User'),
-      foto: _nivel === 'premium' ? (_yo.foto || null) : null,
-      nivel: _nivel, texto: texto.slice(0, MAX_LEN), ts: _S.serverTimestamp(),
-    };
-    if (_respondiendo) doc.respuestaA = { nombre: _respondiendo.nombre, texto: (_respondiendo.texto || '').slice(0, 120) };
-    setRespuesta(null);
-    try { await _S.addDoc(_S.collection(_db, 'chat'), doc); limpiarViejos(); }
-    catch (_) { avisoChat(input, L('Could not send. Try again.', 'No se pudo enviar. Intenta de nuevo.')); }
+    input.value = '';
+    enviarMsg({ texto });
   };
+}
+
+/* Envía un mensaje (texto normal o sticker). */
+async function enviarMsg({ texto, sticker = null }) {
+  if (!_S || !_db) return;
+  const ES = (localStorage.getItem('handicapper-idioma') || 'en') === 'es';
+  const input = document.getElementById('chat-in');
+  const ahora = Date.now();
+  if (ahora - _ultimoEnvio < ANTISPAM_MS) { if (input) avisoChat(input, _L('Wait a moment before sending again.', 'Espera un momento antes de enviar de nuevo.')); return; }
+  _ultimoEnvio = ahora;
+  const doc = {
+    uid: _yo.uid || null,
+    nombre: _yo.nombre || (ES ? 'Usuario' : 'User'),
+    foto: _nivel === 'premium' ? (_yo.foto || null) : null,
+    nivel: _nivel, texto: (texto || '').slice(0, MAX_LEN), ts: _S.serverTimestamp(),
+  };
+  if (sticker) doc.sticker = sticker;
+  if (_respondiendo) doc.respuestaA = { nombre: _respondiendo.nombre, texto: (_respondiendo.texto || '').slice(0, 120) };
+  setRespuesta(null);
+  try { await _S.addDoc(_S.collection(_db, 'chat'), doc); limpiarViejos(); }
+  catch (_) { if (input) avisoChat(input, _L('Could not send. Try again.', 'No se pudo enviar. Intenta de nuevo.')); }
 }
 
 function pintarMensajes(cont, arr) {
@@ -109,6 +140,17 @@ function pintarMensajes(cont, arr) {
       : `<span class="chat-av chat-av-ini">${esc(iniciales(m.nombre))}</span>`;
     const badge = m.nivel === 'premium' ? '<span class="chat-badge prem">Premium</span>' : (m.nivel === 'admin' ? '<span class="chat-badge adm">Staff</span>' : '');
     const quote = m.respuestaA ? `<div class="chat-quote"><b>${esc(m.respuestaA.nombre)}</b><span>${esc(m.respuestaA.texto)}</span></div>` : '';
+    // Sticker: emoji grande sin burbuja
+    if (m.sticker && /^[0-9A-Fa-f-]{2,}$/.test(m.sticker)) {
+      return `<div class="chat-m stk ${propio ? 'yo' : ''}" data-id="${esc(m.id)}">
+        ${propio ? '' : av}
+        <div class="chat-stk-msg">
+          ${propio ? '' : `<div class="chat-nm">${esc(m.nombre)}${badge}</div>`}
+          ${quote}
+          <img class="chat-stk-img" src="https://cdn.jsdelivr.net/gh/svgmoji/svgmoji/packages/svgmoji__noto/svg/${esc(m.sticker)}.svg" alt="${esc(m.texto)}" onerror="this.replaceWith(document.createTextNode('${esc(m.texto)}'))">
+        </div>
+      </div>`;
+    }
     return `<div class="chat-m ${propio ? 'yo' : ''}" data-id="${esc(m.id)}">
       ${propio ? '' : av}
       <div class="chat-b">
