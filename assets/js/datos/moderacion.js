@@ -12,9 +12,18 @@ export const PALABRAS_DEFECTO = [
   'cabrón', 'cabron', 'coño', 'mierda', 'puta', 'puto', 'verga', 'mamahuevo',
   'mamaguevo', 'pendejo', 'gilipollas', 'joder', 'polla', 'culero', 'chingada',
   'chinga', 'comemierda', 'hijueputa', 'hdp',
+  // Refuerzo LatAm / Cuba / Miami (fuertes)
+  'puneta', 'puneta', 'punetero', 'malparido', 'malparida', 'gonorrea',
+  'conchatumadre', 'conchetumadre', 'conchesumadre', 'concha de tu madre',
+  'culiao', 'culiado', 'comepinga', 'come pinga', 'chupapinga', 'chupapingas',
+  'come mierda', 'cabronazo', 'putazo', 'hijo de puta', 'hija de puta', 'hijoeputa',
+  'puta madre', 'putamadre', 'me cago en', 'mamon', 'zorra', 'perra', 'pajuo',
+  'maricona', 'pinguero', 'requetesingao', 'huevonazo', 'putico', 'putica',
+  'singa', 'singando', 'singar', 'templeta', 'pajero',
   // Inglés
   'bitch', 'son of a bitch', 'fuck', 'fucking', 'shit', 'asshole', 'bastard',
   'cunt', 'dick', 'faggot', 'motherfucker', 'whore', 'slut', 'nigger',
+  'retard', 'wanker', 'twat', 'prick', 'douchebag', 'jackass', 'cocksucker',
 ];
 
 const norm = (s) => String(s == null ? '' : s).toLowerCase().replace(/\s+/g, ' ').trim();
