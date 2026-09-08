@@ -28,6 +28,7 @@ const STICKERS = [
 
 let _unsub = null, _ultimoEnvio = 0, _palabras = [...PALABRAS_DEFECTO];
 let _S = null, _db = null, _yo = {}, _nivel = 'basic', _msgs = [], _respondiendo = null, _L = (a) => a, _trad = {};
+const BOT_FOTOS = { 'Alejandro Ruiz': 's', 'Miguel Santos': 't', 'Daniel Vega': 'r', 'Iván Torres': 'q', 'Ricardo Méndez': 'p' };
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
 function iniciales(n) { const p = (n || '?').trim().split(/\s+/); return ((p[0] || '?')[0] + (p[1] ? p[1][0] : '')).toUpperCase(); }
@@ -170,8 +171,10 @@ function pintarMensajes(cont, arr) {
   if (!arr.length) { cont.innerHTML = `<div class="chat-cargando">${L('No messages yet. Say hi!', 'Aún no hay mensajes. ¡Saluda!')}</div>`; return; }
   cont.innerHTML = arr.map(m => {
     const propio = m.nivel !== 'bot' && m.uid && _yo.uid && m.uid === _yo.uid;
-    const av = m.foto
-      ? `<span class="chat-av"><img src="${esc(m.foto)}" alt="" onerror="this.parentNode.textContent='${esc(iniciales(m.nombre))}'"></span>`
+    let fotoM = m.foto;
+    if (!fotoM && m.nivel === 'bot' && BOT_FOTOS[m.nombre]) fotoM = 'assets/imagenes/analistas/' + BOT_FOTOS[m.nombre] + '.webp';
+    const av = fotoM
+      ? `<span class="chat-av"><img src="${esc(fotoM)}" alt="" onerror="this.parentNode.textContent='${esc(iniciales(m.nombre))}'"></span>`
       : `<span class="chat-av chat-av-ini">${esc(iniciales(m.nombre))}</span>`;
     const badge = m.nivel === 'premium' ? '<span class="chat-badge prem">Premium</span>' : (m.nivel === 'admin' ? '<span class="chat-badge adm">Staff</span>' : '');
     const quote = m.respuestaA ? `<div class="chat-quote"><b>${esc(m.respuestaA.nombre)}</b><span>${esc(m.respuestaA.texto)}</span></div>` : '';
@@ -246,36 +249,45 @@ async function accion(act, m) {
 async function traducirMensaje(m) {
   const L = _L;
   const inp = document.getElementById('chat-in');
-  const target = (localStorage.getItem('handicapper-idioma') || 'en') === 'es' ? 'es' : 'en';
   if (_trad[m.id]) { delete _trad[m.id]; pintarMensajes(document.getElementById('chat-msgs'), _msgs); return; } // segundo toque = quitar
   const texto = (m.texto || '').trim();
   if (!texto) return;
+  const app = (localStorage.getItem('handicapper-idioma') || 'en') === 'es' ? 'es' : 'en';
+  const otro = app === 'es' ? 'en' : 'es';
   if (inp) avisoChat(inp, L('Translating…', 'Traduciendo…'));
   try {
-    // Google Translate (endpoint público gtx): auto-detecta el idioma de origen. Gratis, sin clave.
-    const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' + target + '&dt=t&q=' + encodeURIComponent(texto.slice(0, 400));
-    const r = await fetch(url);
-    if (!r.ok) throw new Error('http');
-    const d = await r.json();
-    let out = '';
-    if (Array.isArray(d) && Array.isArray(d[0])) out = d[0].map(seg => (seg && seg[0]) ? seg[0] : '').join('');
-    out = (out || '').trim();
-    const idiomaOrigen = (Array.isArray(d) && typeof d[2] === 'string') ? d[2].slice(0, 2) : '';
-    const yaEnTuIdioma = idiomaOrigen === target || out.toLowerCase() === texto.toLowerCase();
-    if (yaEnTuIdioma) { if (inp) avisoChat(inp, L('Already in your language.', 'Ya está en tu idioma.')); return; }
-    if (out) { _trad[m.id] = out; pintarMensajes(document.getElementById('chat-msgs'), _msgs); }
-    else if (inp) { avisoChat(inp, L('Could not translate.', 'No se pudo traducir.')); }
+    // 1) traduce al idioma de la app
+    let res = await _gTraducir(texto, app);
+    // 2) si el mensaje YA estaba en el idioma de la app, tradúcelo al OTRO idioma
+    //    (así "Traducir" SIEMPRE cambia el idioma, nunca deja el texto igual)
+    if (res.origen === app || (res.out && res.out.toLowerCase() === texto.toLowerCase())) {
+      res = await _gTraducir(texto, otro);
+    }
+    if (res.out && res.out.toLowerCase() !== texto.toLowerCase()) {
+      _trad[m.id] = res.out; pintarMensajes(document.getElementById('chat-msgs'), _msgs);
+    } else if (inp) { avisoChat(inp, L('Could not translate.', 'No se pudo traducir.')); }
   } catch (_) {
-    // Respaldo: MyMemory
+    // Respaldo: MyMemory (app<->otro)
     try {
-      const src = target === 'es' ? 'en' : 'es';
-      const r2 = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(texto.slice(0, 400)) + '&langpair=' + src + '|' + target);
+      const r2 = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(texto.slice(0, 400)) + '&langpair=' + otro + '|' + app);
       const d2 = await r2.json();
       const o2 = d2 && d2.responseData && d2.responseData.translatedText;
-      if (o2 && !/^MYMEMORY WARNING/i.test(o2)) { _trad[m.id] = o2; pintarMensajes(document.getElementById('chat-msgs'), _msgs); }
+      if (o2 && !/^MYMEMORY WARNING/i.test(o2) && o2.toLowerCase() !== texto.toLowerCase()) { _trad[m.id] = o2; pintarMensajes(document.getElementById('chat-msgs'), _msgs); }
       else if (inp) avisoChat(inp, L('Could not translate right now.', 'No se pudo traducir ahora.'));
     } catch (__) { if (inp) avisoChat(inp, L('Could not translate right now.', 'No se pudo traducir ahora.')); }
   }
+}
+
+/* Traduce con el endpoint público de Google (gtx). Devuelve { out, origen }. */
+async function _gTraducir(texto, tl) {
+  const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' + tl + '&dt=t&q=' + encodeURIComponent(texto.slice(0, 400));
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('http');
+  const d = await r.json();
+  let out = '';
+  if (Array.isArray(d) && Array.isArray(d[0])) out = d[0].map(seg => (seg && seg[0]) ? seg[0] : '').join('');
+  const origen = (Array.isArray(d) && typeof d[2] === 'string') ? d[2].slice(0, 2) : '';
+  return { out: (out || '').trim(), origen };
 }
 
 function setRespuesta(r) {
