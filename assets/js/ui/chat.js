@@ -169,7 +169,7 @@ function pintarMensajes(cont, arr) {
   const L = _L;
   if (!arr.length) { cont.innerHTML = `<div class="chat-cargando">${L('No messages yet. Say hi!', 'Aún no hay mensajes. ¡Saluda!')}</div>`; return; }
   cont.innerHTML = arr.map(m => {
-    const propio = m.uid && _yo.uid && m.uid === _yo.uid;
+    const propio = m.nivel !== 'bot' && m.uid && _yo.uid && m.uid === _yo.uid;
     const av = m.foto
       ? `<span class="chat-av"><img src="${esc(m.foto)}" alt="" onerror="this.parentNode.textContent='${esc(iniciales(m.nombre))}'"></span>`
       : `<span class="chat-av chat-av-ini">${esc(iniciales(m.nombre))}</span>`;
@@ -260,6 +260,9 @@ async function traducirMensaje(m) {
     let out = '';
     if (Array.isArray(d) && Array.isArray(d[0])) out = d[0].map(seg => (seg && seg[0]) ? seg[0] : '').join('');
     out = (out || '').trim();
+    const idiomaOrigen = (Array.isArray(d) && typeof d[2] === 'string') ? d[2].slice(0, 2) : '';
+    const yaEnTuIdioma = idiomaOrigen === target || out.toLowerCase() === texto.toLowerCase();
+    if (yaEnTuIdioma) { if (inp) avisoChat(inp, L('Already in your language.', 'Ya está en tu idioma.')); return; }
     if (out) { _trad[m.id] = out; pintarMensajes(document.getElementById('chat-msgs'), _msgs); }
     else if (inp) { avisoChat(inp, L('Could not translate.', 'No se pudo traducir.')); }
   } catch (_) {
