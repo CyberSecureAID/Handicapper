@@ -518,3 +518,23 @@ No es testeable en el sandbox (sin acceso a Firebase/APIs); verificar en la web 
 2. **Stripe** — integrar en `_procesarPagoSeguir()` y en el paywall de planes.
 3. **i18n** — completar páginas secundarias + legales (legales con revisión legal).
 4. **Firebase** — "Public-facing name" a "Sports Expectations".
+
+---
+
+## §18 · Chat de comunidad (nuevo)
+
+**Acceso:** solo Pro, Premium, Visitante y administradores (los Básicos ven un aviso para mejorar). Gating en cliente (`chat.js` → `nivelChat`) y en servidor (`firestore.rules` → `puedeChatear()`, que cubre `pro`/`premium`/`visitante`).
+
+**Estructura Firestore:** colección `chat` con docs `{ uid, nombre, foto, nivel, texto, ts, respuestaA? }`. Se escuchan solo los **últimos 50** (`orderBy ts desc, limit 50`) para carga ligera. Anti-spam: 1 mensaje / 4 s. Máx. 400 caracteres. Filtro de groserías + publicidad vía `moderacion.js` (lista base + palabras del panel admin, doc `config/moderacion`).
+
+**Acciones (estilo Telegram):** tocar/clic un mensaje → Responder (cita), Copiar, Eliminar. Cada usuario borra **solo el suyo**; los admins borran cualquiera (regla `delete: esAdmin() || uid propio`).
+
+**Acceso desde escritorio:** botón "Chat" en el perfil (botón de idioma partido en dos) → `abrirChatModal()`. En móvil es el tab "Chat" (inmersivo, fondo del pie, posición fija).
+
+**Limpieza / escala (IMPORTANTE):**
+- En cliente hay auto-poda a 150 mensajes, pero **solo la ejecuta un admin** (la regla exige admin para borrar).
+- La limpieza automática real es una **Cloud Function** (`functions/index.js`, cada 6 h deja 200) que **requiere plan Blaze** (no existe en Spark/gratis).
+- **Firestore no es ideal para chat de altísimo volumen.** El plan gratuito (Spark) da ~50.000 lecturas/día y un chat en vivo las consume rápido (cada mensaje nuevo = una lectura por cada oyente conectado). Para escala real (miles de usuarios) se necesita **Blaze**.
+- **TODO futuro:** si el chat supera ~50–100 mensajes/segundo sostenidos, **migrar el chat a Firebase Realtime Database** (mucho más barata y eficiente para chat de alta frecuencia que Firestore). El resto de la app (usuarios, análisis, etc.) se queda en Firestore.
+
+**Ícono PWA:** pendiente regenerar los íconos (192/512 + `maskable`) con zona segura/padding para que Android no lo recorte ni se vea borroso.
