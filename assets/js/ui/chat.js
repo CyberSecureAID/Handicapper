@@ -219,20 +219,26 @@ async function traducirMensaje(m) {
   const L = _L;
   const inp = document.getElementById('chat-in');
   const target = (localStorage.getItem('handicapper-idioma') || 'en') === 'es' ? 'es' : 'en';
-  if (_trad[m.id]) { delete _trad[m.id]; pintarMensajes(document.getElementById('chat-msgs'), _msgs); return; } // segundo toque = quitar traducción
-  if (!('Translator' in self)) { if (inp) avisoChat(inp, L('Translation is not supported on this device yet.', 'Tu dispositivo aún no soporta traducción.')); return; }
+  if (_trad[m.id]) { delete _trad[m.id]; pintarMensajes(document.getElementById('chat-msgs'), _msgs); return; } // segundo toque = quitar
+  const texto = (m.texto || '').trim();
+  if (!texto) return;
   if (inp) avisoChat(inp, L('Translating…', 'Traduciendo…'));
+  // idioma de origen: detección simple (opuesto al destino por defecto; ajusta con LanguageDetector si existe)
+  let source = target === 'es' ? 'en' : 'es';
+  if ('LanguageDetector' in self) {
+    try { const det = await LanguageDetector.create(); const res = await det.detect(texto); if (res && res[0] && res[0].detectedLanguage) source = res[0].detectedLanguage.slice(0, 2); } catch (_) {}
+  }
+  if (source === target) source = target === 'es' ? 'en' : 'es';
   try {
-    let source = target === 'es' ? 'en' : 'es';
-    if ('LanguageDetector' in self) {
-      try { const det = await LanguageDetector.create(); const res = await det.detect(m.texto || ''); if (res && res[0] && res[0].detectedLanguage) source = res[0].detectedLanguage.slice(0, 2); } catch (_) {}
-    }
-    if (source === target) { if (inp) avisoChat(inp, L('Already in your language.', 'Ya está en tu idioma.')); return; }
-    const tr = await Translator.create({ sourceLanguage: source, targetLanguage: target });
-    const out = await tr.translate(m.texto || '');
-    _trad[m.id] = out;
-    pintarMensajes(document.getElementById('chat-msgs'), _msgs);
-  } catch (_) { if (inp) avisoChat(inp, L('Could not translate this message.', 'No se pudo traducir este mensaje.')); }
+    const url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(texto.slice(0, 400)) + '&langpair=' + source + '|' + target;
+    const r = await fetch(url);
+    const d = await r.json();
+    const out = d && d.responseData && d.responseData.translatedText;
+    if (out && !/^MYMEMORY WARNING/i.test(out)) {
+      _trad[m.id] = out;
+      pintarMensajes(document.getElementById('chat-msgs'), _msgs);
+    } else if (inp) { avisoChat(inp, L('Could not translate.', 'No se pudo traducir.')); }
+  } catch (_) { if (inp) avisoChat(inp, L('Could not translate right now.', 'No se pudo traducir ahora.')); }
 }
 
 function setRespuesta(r) {
