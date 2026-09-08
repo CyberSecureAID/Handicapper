@@ -86,10 +86,11 @@ export function pintarChat(cont, { esAdmin = false, abrirPlanes = null } = {}) {
     const el = e.target.closest('.chat-m'); if (!el) return;
     abrirMenu(el, el.dataset.id);
   });
-  // Clic DERECHO sobre un mensaje -> nuestro menú (no el del navegador)
+  // Clic DERECHO sobre un mensaje -> nuestro menú (no el del navegador ni el de estatus global)
   msgsEl.addEventListener('contextmenu', (e) => {
     const el = e.target.closest('.chat-m'); if (!el) return;
     e.preventDefault();
+    e.stopPropagation();   // evita que salga el menú global de estatus detrás
     abrirMenu(el, el.dataset.id, e);
   });
 
