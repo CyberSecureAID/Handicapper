@@ -1742,3 +1742,29 @@
 .chat-reply-tx b { display: block; font-size: 12px; color: #6aa6ff; }
 .chat-reply-tx span { display: block; font-size: 12.5px; color: var(--tinta-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chat-reply-x { flex: none; width: 30px; height: 30px; border-radius: 8px; border: 0; background: rgba(255,255,255,.06); color: #9aa4b2; cursor: pointer; font-size: 18px; }
+
+/* ===== Perfil: botón de idioma partido (idioma + Chat) ===== */
+.pp-split { display: flex; gap: 8px; }
+.pp-split .pp-item { flex: 1; margin: 0; }
+.pp-split-lang { flex: 0 0 auto !important; }
+.pp-split-lang span { font-weight: 800; letter-spacing: .04em; }
+.pp-split-chat { justify-content: center; }
+
+/* ===== Modal de chat (escritorio) ===== */
+.chatm-ov { position: fixed; inset: 0; z-index: 100001; display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: rgba(4,7,12,.7); backdrop-filter: blur(6px); opacity: 0; transition: opacity .2s; }
+.chatm-ov.on { opacity: 1; }
+.chatm { position: relative; width: 100%; max-width: 480px; height: 82vh; max-height: 760px; border-radius: 20px; overflow: hidden;
+  border: 1px solid rgba(120,170,255,.22); box-shadow: 0 40px 90px -25px rgba(0,0,0,.85);
+  transform: scale(.96) translateY(8px); transition: transform .22s cubic-bezier(.2,.7,.3,1); }
+.chatm-ov.on .chatm { transform: scale(1) translateY(0); }
+.chatm::before { content: ''; position: absolute; inset: 0; z-index: 0; background: url('../imagenes/fondos/fondo-pagina.webp') center/cover no-repeat; }
+.chatm::after { content: ''; position: absolute; inset: 0; z-index: 0; background: linear-gradient(180deg, rgba(8,11,18,.9), rgba(6,9,15,.94)); }
+.chatm-body { position: relative; z-index: 1; height: 100%; }
+.chatm-x { position: absolute; top: 12px; right: 12px; z-index: 5; width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.14); background: rgba(20,26,36,.9); color: #cdd6e2; cursor: pointer; display: grid; place-items: center; }
+.chatm-x:hover { color: #fff; border-color: rgba(240,53,58,.5); background: rgba(240,53,58,.15); }
+.chatm-x svg { width: 17px; height: 17px; }
+/* dentro del modal, el chat llena el modal (no fijo) y su header deja aire para la X */
+.chatm .chat { position: static; inset: auto; height: 100%; }
+.chatm .chat-head { padding-right: 54px; background: rgba(10,14,22,.55); }
