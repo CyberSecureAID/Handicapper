@@ -1791,3 +1791,10 @@
 .chat-trad span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #6aa6ff; margin-bottom: 2px; }
 .chat-m.yo .chat-trad { border-top-color: rgba(255,255,255,.28); }
 .chat-m.yo .chat-trad span { color: #cfe0ff; }
+
+/* ===== Chat: header con campana de avisos de analistas ===== */
+.chat-head { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+.chat-head-l { min-width: 0; }
+.chat-bell { flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color: #9aa4b2; cursor: pointer; display: grid; place-items: center; transition: all .15s; }
+.chat-bell svg { width: 19px; height: 19px; }
+.chat-bell.on { color: #e8c46a; border-color: rgba(232,196,106,.5); background: rgba(232,196,106,.14); }
