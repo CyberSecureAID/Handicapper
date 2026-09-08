@@ -1785,3 +1785,9 @@
 
 /* El atributo hidden debe ocultar de verdad (el display flex/grid lo anulaba) */
 .chat-reply[hidden], .chat-stk-panel[hidden] { display: none !important; }
+
+/* ===== Chat: traducción local bajo el mensaje ===== */
+.chat-trad { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,.14); font-size: 13.5px; line-height: 1.4; color: #eaf1f9; }
+.chat-trad span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #6aa6ff; margin-bottom: 2px; }
+.chat-m.yo .chat-trad { border-top-color: rgba(255,255,255,.28); }
+.chat-m.yo .chat-trad span { color: #cfe0ff; }
