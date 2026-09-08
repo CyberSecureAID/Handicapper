@@ -91,7 +91,7 @@ export function botPorUid(uid) { return BOTS.find(b => b.uid === uid) || null; }
 export function baseDe(uid) { const b = botPorUid(uid); return b ? (Number(b.prestigio) || 0) : 0; }
 export function prestigioReal(a) {
   if (!a) return 0;
-  return baseDe(a.uid) + (Number(a.prestigioAjuste) || 0);
+  return baseDe(a.uid) + (Number(a.prestigioAjuste) || 0) + (Number(a.prestigioAuto) || 0);
 }
 
 /* Seguidores mostrados = base figurativa + 1/semana + ajuste admin + seguidores REALES.
