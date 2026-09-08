@@ -9,7 +9,7 @@
 import { _obtenerStore, _obtenerDB, usuarioActual } from '../auth/auth.js';
 import { planActual } from '../auth/estado-pago.js';
 import { PALABRAS_DEFECTO, terminoProhibido, detectarPublicidad } from '../datos/moderacion.js';
-import { leerModeracion } from '../mesa/mesa-datos.js';
+// mesa-datos.js se carga de forma diferida al abrir el chat (no al arrancar la app)
 
 const LIMITE = 50;
 const ANTISPAM_MS = 4000;
@@ -70,7 +70,7 @@ export function pintarChat(cont, { esAdmin = false, abrirPlanes = null } = {}) {
   const input = cont.querySelector('#chat-in');
   _yo = usuarioActual() || {};
 
-  leerModeracion().then(w => { if (Array.isArray(w) && w.length) _palabras = [...PALABRAS_DEFECTO, ...w]; }).catch(() => {});
+  import('../mesa/mesa-datos.js').then(mod => mod.leerModeracion()).then(w => { if (Array.isArray(w) && w.length) _palabras = [...PALABRAS_DEFECTO, ...w]; }).catch(() => {});
 
   try { _S = _obtenerStore(); _db = _obtenerDB(); } catch (_) {}
   if (!_S || !_db) { msgsEl.innerHTML = `<div class="chat-cargando">${L('Chat unavailable right now.', 'Chat no disponible ahora.')}</div>`; return; }
