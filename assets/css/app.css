@@ -1768,3 +1768,17 @@
 /* dentro del modal, el chat llena el modal (no fijo) y su header deja aire para la X */
 .chatm .chat { position: static; inset: auto; height: 100%; }
 .chatm .chat-head { padding-right: 54px; background: rgba(10,14,22,.55); }
+
+/* ===== Chat: stickers ===== */
+.chat-stk-btn { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; color: #9aa4b2; background: rgba(255,255,255,.06); }
+.chat-stk-btn:hover { color: #e8c46a; }
+.chat-stk-btn svg { width: 22px; height: 22px; }
+.chat-stk-panel { flex: none; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; padding: 10px 12px; max-height: 180px; overflow-y: auto;
+  background: rgba(10,14,22,.85); border-top: 1px solid var(--linea); backdrop-filter: blur(8px); }
+.chat-stk-b { aspect-ratio: 1; border: 0; border-radius: 10px; background: rgba(255,255,255,.04); cursor: pointer; display: grid; place-items: center; padding: 6px; font-size: 22px; transition: background .12s, transform .12s; }
+.chat-stk-b:hover { background: rgba(232,196,106,.14); transform: scale(1.08); }
+.chat-stk-b img { width: 100%; height: 100%; object-fit: contain; }
+.chat-stk-msg { min-width: 0; }
+.chat-stk-img { width: 108px; height: 108px; object-fit: contain; display: block; filter: drop-shadow(0 4px 10px rgba(0,0,0,.4)); }
+.chat-m.stk .chat-nm { margin-bottom: 4px; }
+.chat-m.stk.yo .chat-stk-msg { display: flex; flex-direction: column; align-items: flex-end; }
