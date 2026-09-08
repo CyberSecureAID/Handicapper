@@ -15,6 +15,7 @@ export const IC = {
 
   // Navegación / UI
   buscar:  svg('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>'),
+  chat:    svg('<path d="M21 11.5a8.4 8.4 0 01-8.5 8.4 8.9 8.9 0 01-3.9-.9L3 20l1.1-5.1a8.3 8.3 0 01-.9-3.9A8.4 8.4 0 0111.7 3h.5a8.4 8.4 0 018.8 8z"/>'),
   vivo:    svg('<circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/><path d="M5.5 5.5a9 9 0 000 13M18.5 5.5a9 9 0 010 13"/>'),
   estrella: svg('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8L3.5 9.7l5.9-.9L12 3.5Z"/>'),
   alerta:  svg('<path d="M10.3 4.3 2.5 18a1.5 1.5 0 0 0 1.3 2.3h16.4A1.5 1.5 0 0 0 21.5 18L13.7 4.3a1.5 1.5 0 0 0-2.6 0Z"/><path d="M12 9v4M12 17h.01"/>'),
