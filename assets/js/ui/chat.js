@@ -223,22 +223,28 @@ async function traducirMensaje(m) {
   const texto = (m.texto || '').trim();
   if (!texto) return;
   if (inp) avisoChat(inp, L('Translating…', 'Traduciendo…'));
-  // idioma de origen: detección simple (opuesto al destino por defecto; ajusta con LanguageDetector si existe)
-  let source = target === 'es' ? 'en' : 'es';
-  if ('LanguageDetector' in self) {
-    try { const det = await LanguageDetector.create(); const res = await det.detect(texto); if (res && res[0] && res[0].detectedLanguage) source = res[0].detectedLanguage.slice(0, 2); } catch (_) {}
-  }
-  if (source === target) source = target === 'es' ? 'en' : 'es';
   try {
-    const url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(texto.slice(0, 400)) + '&langpair=' + source + '|' + target;
+    // Google Translate (endpoint público gtx): auto-detecta el idioma de origen. Gratis, sin clave.
+    const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' + target + '&dt=t&q=' + encodeURIComponent(texto.slice(0, 400));
     const r = await fetch(url);
+    if (!r.ok) throw new Error('http');
     const d = await r.json();
-    const out = d && d.responseData && d.responseData.translatedText;
-    if (out && !/^MYMEMORY WARNING/i.test(out)) {
-      _trad[m.id] = out;
-      pintarMensajes(document.getElementById('chat-msgs'), _msgs);
-    } else if (inp) { avisoChat(inp, L('Could not translate.', 'No se pudo traducir.')); }
-  } catch (_) { if (inp) avisoChat(inp, L('Could not translate right now.', 'No se pudo traducir ahora.')); }
+    let out = '';
+    if (Array.isArray(d) && Array.isArray(d[0])) out = d[0].map(seg => (seg && seg[0]) ? seg[0] : '').join('');
+    out = (out || '').trim();
+    if (out) { _trad[m.id] = out; pintarMensajes(document.getElementById('chat-msgs'), _msgs); }
+    else if (inp) { avisoChat(inp, L('Could not translate.', 'No se pudo traducir.')); }
+  } catch (_) {
+    // Respaldo: MyMemory
+    try {
+      const src = target === 'es' ? 'en' : 'es';
+      const r2 = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(texto.slice(0, 400)) + '&langpair=' + src + '|' + target);
+      const d2 = await r2.json();
+      const o2 = d2 && d2.responseData && d2.responseData.translatedText;
+      if (o2 && !/^MYMEMORY WARNING/i.test(o2)) { _trad[m.id] = o2; pintarMensajes(document.getElementById('chat-msgs'), _msgs); }
+      else if (inp) avisoChat(inp, L('Could not translate right now.', 'No se pudo traducir ahora.'));
+    } catch (__) { if (inp) avisoChat(inp, L('Could not translate right now.', 'No se pudo traducir ahora.')); }
+  }
 }
 
 function setRespuesta(r) {
