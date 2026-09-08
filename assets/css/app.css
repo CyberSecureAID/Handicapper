@@ -1213,7 +1213,7 @@
   .pp-grid { max-height: none; }
   .pp-side, .pp-main, .pp-right { overflow-y: visible; max-height: none; }
 }
-@media (max-width: 560px) { .pp-ov { align-items: flex-start !important; } .pp-modal { max-height: none !important; min-height: 100vh !important; border-radius: 0; overflow: visible !important; } }
+@media (max-width: 560px) { .pp-ov { align-items: flex-start !important; } .pp-modal { max-height: none !important; min-height: 100vh; min-height: 100dvh !important; border-radius: 0; overflow: visible !important; } }
 
 /* Modal "necesitas Premium" para la foto */
 .pmf-ov { position: fixed; inset: 0; z-index: 100002; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(3,6,12,.78); backdrop-filter: blur(6px); }
@@ -1645,7 +1645,7 @@
 @media (max-width: 600px) {
   .ap-bg, .aud-ov, .bz-ov, .ca-ov, .cobro-ov, .dg-ov, .disc-ov, .edit-bg,
   .estp-bg, .inst-ov, .mesa-cfm-bg, .pay-ov, .pmf-ov, .pub-bg, .sd-ov, .pp-ov,
-  .rep-bg, .an-modal-bg, .anm2-bg, .seg-ov, .tmp-ov {
+  .rep-bg, .an-modal-bg, .anm2-bg, .seg-ov, .tmp-ov, .auth-bg, .det-modal-bg, .premium-pop {
     align-items: flex-start !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
@@ -1653,3 +1653,24 @@
   /* Que los modales altos no queden fijados a un max-height que los recorte */
   .ap-card, .bz-modal, .cobro, .disc, .rep-card, .anm2 { margin-top: auto; margin-bottom: auto; }
 }
+
+/* Dropdown de planes (Premium): que haga scroll si es más alto que la pantalla en móvil */
+@media (max-width: 600px) { .premium-pop { max-height: calc(100dvh - 84px); overflow-y: auto; -webkit-overflow-scrolling: touch; } }
+
+
+/* ===== Banner de instalación (experiencia app a pantalla completa) ===== */
+.pwa-banner { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom,0)); z-index: 9500;
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px;
+  background: linear-gradient(180deg, rgba(20,27,40,.98), rgba(12,17,26,.98)); border: 1px solid rgba(232,196,106,.32);
+  box-shadow: 0 18px 50px -12px rgba(0,0,0,.7); transform: translateY(140%); transition: transform .3s cubic-bezier(.2,.8,.3,1); }
+.pwa-banner.on { transform: translateY(0); }
+.pwa-banner-ic { flex: none; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; color: #0f1622;
+  background: linear-gradient(180deg,#f6e2a6,#d4a53f); }
+.pwa-banner-ic svg { width: 22px; height: 22px; }
+.pwa-banner-tx { flex: 1; min-width: 0; }
+.pwa-banner-tx b { display: block; font-size: 13.5px; color: #fff; font-weight: 700; }
+.pwa-banner-tx span { display: block; font-size: 11.5px; color: #9aa4b2; margin-top: 1px; }
+.pwa-banner-go { flex: none; padding: 9px 15px; border-radius: 10px; cursor: pointer; border: 1px solid rgba(232,184,75,.55);
+  background: linear-gradient(180deg,#9a2530,#5e141c); color: #ffe6c4; font-weight: 700; font-size: 13px; }
+.pwa-banner-x { flex: none; width: 30px; height: 30px; border-radius: 8px; border: 0; background: rgba(255,255,255,.06); color: #9aa4b2; cursor: pointer; font-size: 16px; }
+@media (min-width: 601px) { .pwa-banner { display: none !important; } }
