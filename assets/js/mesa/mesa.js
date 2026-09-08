@@ -20,7 +20,24 @@ let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = []
 let _ligaSel = null, _partidos = [], _cargandoPart = false;
 let _rol = 'admin', _deporteAnalista = null, _analistas = [];
 /* Candado de solo lectura para Visitantes: bloquea cualquier acción que mute datos. */
-function _ro() { if (_soloLectura) { try { avisoToast(_mesaLang === 'es' ? 'Modo visitante: solo lectura' : 'Visitor mode: read-only'); } catch (_) {} return true; } return false; }
+function _ro() { if (_soloLectura) { _avisoVisitante(); return true; } return false; }
+/* Aviso bonito (no toast) cuando un visitante intenta modificar algo. */
+function _avisoVisitante() {
+  if (document.getElementById('vis-alert')) return;   // no duplicar
+  const ES = _mesaLang === 'es';
+  const ov = document.createElement('div'); ov.className = 'vis-alert-ov'; ov.id = 'vis-alert';
+  const cerrar = () => { ov.classList.remove('on'); setTimeout(() => ov.remove(), 200); };
+  ov.innerHTML = `<div class="vis-alert" role="alertdialog" aria-modal="true">
+    <div class="vis-alert-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V8a5 5 0 0110 0v3"/><rect x="4" y="11" width="16" height="9" rx="2"/></svg></div>
+    <h3>${ES ? 'Rol de visitante' : 'Visitor role'}</h3>
+    <p>${ES ? 'No puedes alterar el estado, el plan, bloquear usuarios ni realizar cambios que afecten el funcionamiento del sistema. Puedes verlo todo, pero no modificar.' : 'You cannot change status, plans, block users or make changes that affect the system. You can view everything, but not modify.'}</p>
+    <button class="vis-alert-btn" id="vis-alert-ok">${ES ? 'Entendido' : 'Got it'}</button>
+  </div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('on'));
+  ov.querySelector('#vis-alert-ok').onclick = cerrar;
+  ov.onclick = (e) => { if (e.target === ov) cerrar(); };
+}
 let _miFirma = null, _miNombre = null, _miUid = null, _miEstilo = null, _estiloAuto = false, _miFoto = null;
 let _mesaLang = 'es';
 let _uBusqueda = '', _uFiltro = 'todos', _uPagina = 1;
@@ -571,8 +588,10 @@ function filaUsuario(u) {
       ? `<span class="pill red">${ML('Blocked','Bloqueado')}</span>`
       : (sub.activo ? `<span class="pill on${sub.plan==='visitante'?' vis':''}">${sub.plan==='visitante' ? ML('Visitor','Visitante') : (planPorId(sub.plan)?.nombre || ML('Active','Activo'))}</span>` : `<span class="pill">${ML('Inactive','Inactivo')}</span>`));
   const vence = sub.vence ? new Date(sub.vence).toLocaleDateString() : '—';
+  const _nom = u.nombre || (u.email || '').split('@')[0] || '—';
+  const _ini = (_nom.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2) || '?').toUpperCase();
   return `<tr class="${u.bloqueado ? 'blocked' : ''}">
-    <td data-l="${ML('User','Usuario')}"><div class="u-nom">${esc(u.nombre || (u.email || '').split('@')[0] || '—')}</div><div class="u-mail">${esc(correoCorto(u.email || ''))}</div></td>
+    <td data-l="${ML('User','Usuario')}" class="u-cel-user"><span class="u-av">${esc(_ini)}</span><div class="u-info"><div class="u-nom">${esc(_nom)}</div><div class="u-mail">${esc(correoCorto(u.email || ''))}</div></div></td>
     <td data-l="${ML('Status','Estado')}">${estado}</td>
     <td data-l="${ML('Expires','Vence')}">${vence}</td>
     <td data-l="${ML('Plan','Plan')}"><select data-plan="${u.uid}" class="u-select">
@@ -1227,6 +1246,7 @@ function enlazarAnalistas() {
   });
   const btnBots = _cont.querySelector('#an-bots-pub');
   if (btnBots) btnBots.onclick = async () => {
+    if (_ro()) return;
     btnBots.disabled = true; const txt = btnBots.textContent; btnBots.textContent = ML('Publishing…', 'Publicando…');
     try {
       const { publicarTodosLosBots, API_FOOTBALL_KEY } = await import('../datos/bots-senales.js');
@@ -1919,6 +1939,7 @@ async function abrirModalSenal(matchId) {
       estilo: _miEstilo ? { color: _miEstilo.color, intensidad: _miEstilo.intensidad, emblema: _miEstilo.emblema } : null,
     };
     const btn = bg.querySelector(estado === 'borrador' ? '#anm-draft' : '#anm-guardar');
+    if (_ro()) return;
     const txtBtn = btn.textContent; btn.disabled = true; btn.textContent = '…';
     try { await guardarAnalisis(matchId, analisis); _analisis = await listarAnalisis(); cerrar(); pintarTab();
       if (estado === 'publicado') {
