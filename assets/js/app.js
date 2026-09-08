@@ -731,7 +731,53 @@ async function publicarBotsSiEsNuevoDia() {
     ]);
     const r = await botMod.publicarTodosLosBots(datosMod.guardarAnalisis);
     if (r && r.ok && r.publicadas > 0) { try { localStorage.setItem('bots-ts', String(Date.now())); } catch (_) {} }
+    if (r && r.ok) avisarBotsEnChat(r.porDeporte || {});   // aviso en el chat (1 vez al día por bot)
   } catch (_) {}
+}
+
+/* Aviso en el chat público: si un bot publicó señales hoy, avisa UNA vez al día
+   con un mensaje variado invitando a Analytics Signals. Nunca rompe el flujo (todo en try/catch). */
+async function avisarBotsEnChat(porDeporte) {
+  try {
+    const { _obtenerStore, _obtenerDB, usuarioActual } = await import('./auth/auth.js');
+    const S = _obtenerStore(), db = _obtenerDB(), yo = usuarioActual();
+    if (!S || !db || !yo || !S.addDoc) return;
+    const hoy = new Date().toISOString().slice(0, 10);
+    const ES = idiomaActual() === 'es';
+    const BOTS = [
+      { uid: 'bot-alejandro', nombre: 'Alejandro Ruiz', dep: 'futbol', depNom: ES ? 'fútbol' : 'soccer' },
+      { uid: 'bot-miguel', nombre: 'Miguel Santos', dep: 'beisbol', depNom: ES ? 'béisbol' : 'baseball' },
+      { uid: 'bot-daniel', nombre: 'Daniel Vega', dep: 'basket', depNom: ES ? 'básquet' : 'basketball' },
+      { uid: 'bot-ivan', nombre: 'Iván Torres', dep: 'hockey', depNom: 'hockey' },
+      { uid: 'bot-ricardo', nombre: 'Ricardo Méndez', dep: 'americano', depNom: ES ? 'fútbol americano' : 'football' },
+    ];
+    for (const b of BOTS) {
+      const n = (porDeporte[b.dep] && porDeporte[b.dep].publicadas) || 0;
+      if (n < 1) continue;
+      try { if (localStorage.getItem('bot-aviso-' + b.uid) === hoy) continue; } catch (_) {}
+      const texto = _plantillaAvisoBot(b.depNom, n, ES);
+      try {
+        await S.addDoc(S.collection(db, 'chat'), { uid: yo.uid, nombre: b.nombre, foto: null, nivel: 'bot', texto, ts: S.serverTimestamp() });
+        try { localStorage.setItem('bot-aviso-' + b.uid, hoy); } catch (_) {}
+      } catch (_) {}
+    }
+  } catch (_) {}
+}
+
+function _plantillaAvisoBot(dep, n, ES) {
+  const plural = n > 1;
+  const ops = ES ? [
+    `¡Hola a todos! Subí ${n} ${plural ? 'señales' : 'señal'} de ${dep} para hoy. Si me sigues, pásate por Analytics Signals para verlas. 🎯`,
+    `Nuevo análisis de ${dep} disponible (${n} ${plural ? 'señales' : 'señal'}). Si te gusta el ${dep}, revisa mis picks en Analytics Signals. 🔥`,
+    `Tengo ${n} ${plural ? 'picks' : 'pick'} de ${dep} listos hoy. Los que me siguen ya pueden verlos en Analytics Signals. 💪`,
+    `Atento al ${dep} de hoy: publiqué ${n} ${plural ? 'señales' : 'señal'}. Pásate por Analytics Signals para no perdértelas. ⚡`,
+  ] : [
+    `Hey everyone! I posted ${n} ${dep} ${plural ? 'signals' : 'signal'} today. If you follow me, check them out in Analytics Signals. 🎯`,
+    `New ${dep} analysis is up (${n} ${plural ? 'signals' : 'signal'}). If you like ${dep}, check my picks in Analytics Signals. 🔥`,
+    `I've got ${n} ${dep} ${plural ? 'picks' : 'pick'} ready today. Followers can already see them in Analytics Signals. 💪`,
+    `Eyes on today's ${dep}: I published ${n} ${plural ? 'signals' : 'signal'}. Head to Analytics Signals so you don't miss them. ⚡`,
+  ];
+  return ops[Math.floor(Math.random() * ops.length)];
 }
 
 /* -------- Directorio de analistas (botón "Signals") -------- */
