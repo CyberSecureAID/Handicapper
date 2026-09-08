@@ -1722,3 +1722,23 @@
 /* El chat lleva su propio fondo; header y barra flotan encima translúcidos */
 .chat .chat-head { background: rgba(10,14,22,.55); backdrop-filter: blur(8px); }
 .chat .chat-bar { background: rgba(10,14,22,.6); backdrop-filter: blur(8px); }
+
+/* ===== Chat: menú de acciones, responder y cita ===== */
+.chat-m { cursor: pointer; }
+.chat-menu { position: fixed; z-index: 9600; display: flex; flex-direction: column; min-width: 150px;
+  background: #1b2431; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 5px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.6); opacity: 0; transform: scale(.94); transition: opacity .13s, transform .13s; }
+.chat-menu.on { opacity: 1; transform: scale(1); }
+.chat-menu button { text-align: left; background: none; border: 0; border-radius: 8px; padding: 11px 14px; color: #e6edf5; font-family: inherit; font-size: 14px; cursor: pointer; }
+.chat-menu button:hover { background: rgba(255,255,255,.07); }
+.chat-menu button.del { color: #ff8a94; }
+.chat-quote { border-left: 3px solid rgba(106,166,255,.7); padding: 3px 0 3px 8px; margin-bottom: 5px; }
+.chat-quote b { display: block; font-size: 11.5px; color: #6aa6ff; }
+.chat-quote span { display: block; font-size: 12px; color: var(--tinta-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.chat-m.yo .chat-quote { border-left-color: rgba(255,255,255,.5); }
+.chat-m.yo .chat-quote b { color: #cfe0ff; }
+.chat-reply { flex: none; display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: rgba(10,14,22,.7); border-top: 1px solid var(--linea); }
+.chat-reply-tx { flex: 1; min-width: 0; border-left: 3px solid #6aa6ff; padding-left: 9px; }
+.chat-reply-tx b { display: block; font-size: 12px; color: #6aa6ff; }
+.chat-reply-tx span { display: block; font-size: 12.5px; color: var(--tinta-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-reply-x { flex: none; width: 30px; height: 30px; border-radius: 8px; border: 0; background: rgba(255,255,255,.06); color: #9aa4b2; cursor: pointer; font-size: 18px; }
