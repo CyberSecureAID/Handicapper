@@ -65,7 +65,7 @@
   <canvas id="lg-particles"></canvas>
   <nav class="lg-nav">
     <a href="index.html" class="lg-brand"><img src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations"></a>
-    <a href="index.html" class="lg-back" onclick="if(history.length>1){history.back();return false;}">← Back to home</a>
+    <span style="display:flex;gap:8px;align-items:center"><button id="lang-toggle" class="lg-back" style="cursor:pointer" aria-label="Language">EN</button><a href="index.html" class="lg-back" data-i18n="nav.back" onclick="if(history.length>1){history.back();return false;}">← Back to home</a></span>
   </nav>
   <style>
     .ct-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:10px 0 30px}
@@ -85,9 +85,9 @@
     .ct-horario b{color:var(--tx2)}
   </style>
   <main class="lg-wrap">
-    <span class="lg-eyebrow">Company</span>
-    <h1>Contact us</h1>
-    <div class="lg-note"><strong>We are the founders and owners of Sports Expectations.</strong> These lines are for meaningful matters, partnerships or serious enquiries only. For everyday questions, refunds or help, please use our <a href="contact-support.html">support channel</a>. Contact buttons are active only during the hours shown on each card &mdash; outside those hours they are disabled.</div>
+    <span class="lg-eyebrow" data-i18n="ct.eyebrow">Company</span>
+    <h1 data-i18n="ct.title">Contact us</h1>
+    <div class="lg-note" data-i18n-html="ct.note"><strong>We are the founders and owners of Sports Expectations.</strong> These lines are for meaningful matters, partnerships or serious enquiries only. For everyday questions, refunds or help, please use our <a href="contact-support.html">support channel</a>. Contact buttons are active only during the hours shown on each card &mdash; outside those hours they are disabled.</div>
     <div class="ct-grid" id="ct-list"></div>
   </main>
 
@@ -154,5 +154,6 @@ pintar(DEFAULT);
 }catch(e){} })();
 setInterval(()=>pintar(_ultimos), 60000);   // re-evalúa el horario cada minuto
 </script>
+  <script type="module" src="assets/js/landing-lang.js"></script>
 </body>
 </html>
