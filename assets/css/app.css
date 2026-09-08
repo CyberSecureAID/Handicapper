@@ -1636,3 +1636,20 @@
 
 /* Salvaguarda móvil: modal de cobro con scroll si el contenido excede la pantalla */
 @media (max-width: 560px) { .cobro-ov { align-items: start; overflow-y: auto; } .cobro { max-height: none; margin: auto; } }
+
+/* ============================================================
+   SALVAGUARDA RESPONSIVA UNIVERSAL (móvil)
+   Todo overlay/modal se alinea arriba y hace scroll si su contenido
+   excede la pantalla -> ningún modal se corta, en ningún tamaño.
+   ============================================================ */
+@media (max-width: 600px) {
+  .ap-bg, .aud-ov, .bz-ov, .ca-ov, .cobro-ov, .dg-ov, .disc-ov, .edit-bg,
+  .estp-bg, .inst-ov, .mesa-cfm-bg, .pay-ov, .pmf-ov, .pub-bg, .sd-ov, .pp-ov,
+  .rep-bg, .an-modal-bg, .anm2-bg, .seg-ov, .tmp-ov {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Que los modales altos no queden fijados a un max-height que los recorte */
+  .ap-card, .bz-modal, .cobro, .disc, .rep-card, .anm2 { margin-top: auto; margin-bottom: auto; }
+}
