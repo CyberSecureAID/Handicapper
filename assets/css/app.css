@@ -1213,7 +1213,7 @@
   .pp-grid { max-height: none; }
   .pp-side, .pp-main, .pp-right { overflow-y: visible; max-height: none; }
 }
-@media (max-width: 560px) { .pp-modal { max-height: 100vh !important; min-height: 100vh !important; border-radius: 0; } }
+@media (max-width: 560px) { .pp-ov { align-items: flex-start !important; } .pp-modal { max-height: none !important; min-height: 100vh !important; border-radius: 0; overflow: visible !important; } }
 
 /* Modal "necesitas Premium" para la foto */
 .pmf-ov { position: fixed; inset: 0; z-index: 100002; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(3,6,12,.78); backdrop-filter: blur(6px); }
@@ -1621,7 +1621,8 @@
 .disc-go:hover { background: linear-gradient(180deg,#b02c38,#6e1720); box-shadow: 0 9px 24px rgba(150,30,40,.55); }
 .disc-fine { font-size: 11px !important; color: #8a94a3 !important; margin-top: 12px !important; text-align: center; }
 @media (max-width: 640px) {
-  .disc { flex-direction: column; max-width: 420px; height: auto; }
+  .disc-ov { align-items: start; overflow-y: auto; padding: 16px; }
+  .disc { flex-direction: column; max-width: 420px; height: auto; max-height: none; margin: auto; }
   .disc-img { display: none; }
   .disc-imgm { display: block; width: 100%; aspect-ratio: 1672 / 941; flex: none; object-fit: cover; object-position: center; }
   .disc-in { padding: 22px 20px; }
@@ -1632,3 +1633,6 @@
 .disc-mid { flex: 0 1 auto; }
 .disc-mid .disc-links { margin: 14px 0 0; }
 .disc-bot { flex: none; }
+
+/* Salvaguarda móvil: modal de cobro con scroll si el contenido excede la pantalla */
+@media (max-width: 560px) { .cobro-ov { align-items: start; overflow-y: auto; } .cobro { max-height: none; margin: auto; } }
