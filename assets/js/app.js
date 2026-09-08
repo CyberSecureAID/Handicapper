@@ -14,6 +14,7 @@ import { initNavegacion, mostrarPantalla, aplicarI18n } from './ui/navegacion.js
 import { fijarSuscripcion, tieneAcceso, limpiarVistaPrevia, marcarVistaPrevia, planActual } from './auth/estado-pago.js';
 import { pintarParlay, pintarElite } from './ui/parlay.js';
 import { pintarSenales, cargarSenales, contarSenales } from './ui/senales.js';
+import { pintarChat, cerrarChat } from './ui/chat.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -310,7 +311,7 @@ function initTabbar() {
   const bar = $('tabbar');
   if (!bar) return;
   const tabs = [
-    { ic: 'diana', k: 'tab.partidos', v: 'partidos' }, { ic: 'vivo', k: 'tab.vivo', v: 'vivo' },
+    { ic: 'diana', k: 'tab.partidos', v: 'partidos' }, { ic: 'chat', k: 'tab.vivo', v: 'vivo' },
     { ic: 'estrella', k: 'tab.analisis', v: 'analisis' }, { ic: 'perfil', k: 'tab.perfil', v: 'perfil' },
   ];
   bar.innerHTML = tabs.map((tb, i) => `
@@ -329,9 +330,12 @@ function mostrarVista(v) {
   const cont = $('lista');
   if (!cont) return;
   try { if (v) localStorage.setItem('se-vista', v); } catch (_) {}
+  if (v !== 'vivo') cerrarChat();
   if (v === 'analisis') {
     pintarSenales(cont, { esPremium: _esAdmin || planActual() === 'premium', nivel: _esAdmin ? 'admin' : planActual(), abrirPlanes: () => mostrarPantalla('pricing') });
-  } else if (v === 'partidos' || v === 'vivo') {
+  } else if (v === 'vivo') {
+    pintarChat(cont, { esAdmin: _esAdmin, abrirPlanes: () => mostrarPantalla('pricing') });
+  } else if (v === 'partidos') {
     proyActiva = null; cargarLista();
   } else if (v === 'perfil') {
     pintarPerfil(cont);
