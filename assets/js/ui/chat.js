@@ -54,7 +54,9 @@ export function pintarChat(cont, { esAdmin = false, abrirPlanes = null } = {}) {
   }
 
   cont.innerHTML = `<div class="chat">
-    <div class="chat-head"><span class="chat-live"><i></i>${L('Community chat', 'Chat de la comunidad')}</span><span class="chat-head-s">${L('Be respectful. Not betting advice.', 'Sé respetuoso. No es asesoría de apuestas.')}</span></div>
+    <div class="chat-head"><div class="chat-head-l"><span class="chat-live"><i></i>${L('Community chat', 'Chat de la comunidad')}</span><span class="chat-head-s">${L('Be respectful. Not betting advice.', 'Sé respetuoso. No es asesoría de apuestas.')}</span></div>
+      <button class="chat-bell" id="chat-bell" title="${L('Analyst alerts', 'Avisos de analistas')}" aria-label="alerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg></button>
+    </div>
     <div class="chat-msgs" id="chat-msgs"><div class="chat-cargando">${L('Loading messages…', 'Cargando mensajes…')}</div></div>
     <div class="chat-reply" id="chat-reply" hidden><div class="chat-reply-tx"><b id="chat-reply-nm"></b><span id="chat-reply-msg"></span></div><button class="chat-reply-x" id="chat-reply-x" aria-label="Cancel">&times;</button></div>
     <div class="chat-stk-panel" id="chat-stk-panel" hidden>${STICKERS.map(([c, e]) => `<button class="chat-stk-b" data-stk="${c}" data-emoji="${e}" title="${e}"><img src="${STK_CDN(c)}" alt="${e}" loading="lazy" onerror="this.replaceWith(document.createTextNode('${e}'))"></button>`).join('')}</div>
@@ -76,10 +78,36 @@ export function pintarChat(cont, { esAdmin = false, abrirPlanes = null } = {}) {
   if (!_S || !_db) { msgsEl.innerHTML = `<div class="chat-cargando">${L('Chat unavailable right now.', 'Chat no disponible ahora.')}</div>`; return; }
 
   const q = _S.query(_S.collection(_db, 'chat'), _S.orderBy('ts', 'desc'), _S.limit(LIMITE));
+  let _primeraCarga = true;
   _unsub = _S.onSnapshot(q, (snap) => {
+    // Notificar avisos de bots NUEVOS (no en la carga inicial)
+    if (!_primeraCarga && _avisosBotsOn()) {
+      try {
+        snap.docChanges().forEach(ch => {
+          if (ch.type === 'added') {
+            const d = ch.doc.data();
+            if (d && d.nivel === 'bot' && d.uid !== _yo.uid) _notiBot(d);
+          }
+        });
+      } catch (_) {}
+    }
+    _primeraCarga = false;
     const arr = []; snap.forEach(d => arr.push({ id: d.id, ...d.data() })); arr.reverse();
     _msgs = arr; pintarMensajes(msgsEl, arr);
   }, () => { msgsEl.innerHTML = `<div class="chat-cargando">${L('Could not load the chat.', 'No se pudo cargar el chat.')}</div>`; });
+
+  // Campana: activar/desactivar avisos de analistas (bots)
+  const bell = cont.querySelector('#chat-bell');
+  if (bell) {
+    bell.classList.toggle('on', _avisosBotsOn());
+    bell.onclick = async () => {
+      const nuevo = !_avisosBotsOn();
+      _setAvisosBots(nuevo);
+      bell.classList.toggle('on', nuevo);
+      if (nuevo && 'Notification' in window && Notification.permission === 'default') { try { await Notification.requestPermission(); } catch (_) {} }
+      avisoChat(input, nuevo ? L('Analyst alerts on', 'Avisos de analistas activados') : L('Analyst alerts off', 'Avisos de analistas desactivados'));
+    };
+  }
 
   // Tocar/clic izquierdo un mensaje -> menú de acciones
   msgsEl.addEventListener('click', (e) => {
@@ -271,4 +299,20 @@ function avisoChat(input, msg) {
   if (!t) { t = document.createElement('div'); t.className = 'chat-toast'; cont.appendChild(t); }
   t.textContent = msg; t.classList.add('on');
   clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+/* --- Avisos de analistas (bots) en el chat: preferencia + notificación --- */
+function _avisosBotsOn() {
+  try { const n = JSON.parse(localStorage.getItem('se_notif') || '{}'); return n.bots !== false; } catch (_) { return true; }
+}
+function _setAvisosBots(v) {
+  try { const n = JSON.parse(localStorage.getItem('se_notif') || '{}'); n.bots = !!v; localStorage.setItem('se_notif', JSON.stringify(n)); } catch (_) {}
+}
+async function _notiBot(d) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const opts = { body: (d.texto || '').slice(0, 140), icon: 'assets/imagenes/apple-touch-icon.png', badge: 'assets/imagenes/favicon-32.png', vibrate: [180, 90, 180], tag: 'se-bot-' + (d.uid || ''), renotify: true, data: { url: './' } };
+  try {
+    if ('serviceWorker' in navigator) { const reg = await navigator.serviceWorker.getRegistration(); if (reg && reg.showNotification) { await reg.showNotification(d.nombre || 'Sports Expectations', opts); return; } }
+    new Notification(d.nombre || 'Sports Expectations', opts);
+  } catch (_) {}
 }
