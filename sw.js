@@ -1,74 +1,113 @@
-/* Service worker: instalación PWA, caché de estáticos propios, y notificaciones
-   (clic, push para VAPID futuro, y mostrar notificación pedida por la página).
-   Compatible con PWA en móvil, app de escritorio y navegador. */
-const CACHE = 'se-v4';
+/* sw.js — Hace que Aurex abra aunque la conexión esté mala o caída.
+ *
+ * QUÉ HACE Y QUÉ NO
+ *   · Guarda una copia de la app (pantalla, código, imágenes) en el teléfono.
+ *     Así abre al instante y funciona aunque la red vaya fatal.
+ *   · NUNCA guarda datos de la blockchain, precios ni saldos: eso se pide
+ *     siempre fresco. Nadie va a ver un saldo viejo por culpa de esto.
+ *   · Si hay versión nueva, se descarga sola y se aplica al recargar.
+ */
 
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (e) => e.waitUntil(
-  caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())
-));
+const VERSION = 'aurex-v385';
+const APP = [
+  './',
+  './index.html',              // la portada
+  './app.html',                // la app
+  './futuros.html',            // sección futuros
+  './aportar.html',            // sección aportar liquidez
+  './manifest-aurex.webmanifest'
+  // El resto (JS, CSS, vendor) se cachea al vuelo con su URL versionada
+  // real cuando la página los pide. Así nunca se guarda una versión que ya
+  // no existe, que era lo que dejaba servir archivos viejos.
+];
 
-/* --- Caché: solo GET del mismo origen (estáticos). Lo demás pasa directo. ---
-   Network-first con timeout: nunca se queda colgado esperando la red; si tarda
-   demasiado o falla, usa la copia en caché. Así la app instalada siempre arranca. */
-self.addEventListener('fetch', (e) => {
-  const req = e.request;
-  let mismoOrigen = false;
-  try { mismoOrigen = new URL(req.url).origin === self.location.origin; } catch (_) {}
-  if (req.method !== 'GET' || !mismoOrigen) return;
-  e.respondWith((async () => {
-    try {
-      const red = fetch(req).then(r => {
-        if (r && r.ok && r.type === 'basic') { const copia = r.clone(); caches.open(CACHE).then(c => c.put(req, copia)).catch(() => {}); }
-        return r;
-      });
-      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000));
-      return await Promise.race([red, timeout]);
-    } catch (_) {
-      const cache = await caches.match(req);
-      return cache || Promise.reject(new Error('sin red ni caché'));
-    }
+self.addEventListener('install', (e) => {
+  e.waitUntil((async () => {
+    const c = await caches.open(VERSION);
+    // Uno a uno: si falta alguno, no tumba la instalación entera.
+    await Promise.all(APP.map((u) => c.add(u).catch(() => {})));
+    self.skipWaiting();
   })());
 });
 
-/* --- Opciones por defecto de notificación (vibración, icono, badge) --- */
-function _opts(d) {
-  return {
-    body: d.body || '',
-    icon: d.icon || 'assets/imagenes/apple-touch-icon.png',
-    badge: d.badge || 'assets/imagenes/favicon-32.png',
-    vibrate: d.vibrate || [200, 100, 200],
-    tag: d.tag || 'se-senal',
-    renotify: true,
-    silent: false,
-    data: { url: d.url || './' },
-  };
-}
+self.addEventListener('activate', (e) => {
+  e.waitUntil((async () => {
+    // Fuera TODO lo guardado de versiones anteriores.
+    const claves = await caches.keys();
+    await Promise.all(claves.filter((k) => k !== VERSION).map((k) => caches.delete(k)));
+    await self.clients.claim();
 
-/* --- Push del servidor (para cuando exista backend VAPID). Hoy no se usa, pero deja listo el terreno. --- */
-self.addEventListener('push', (e) => {
-  let d = {};
-  try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data && e.data.text ? e.data.text() : '' }; }
-  const titulo = d.title || 'Sports Expectations';
-  e.waitUntil(self.registration.showNotification(titulo, _opts(d)));
+    /* Avisar a las pestañas de que hay versión nueva ACTIVA. La página
+       decide si recargar (app.html lo hace una sola vez). Así basta una
+       recarga en vez de dos, y sin el pestañazo del viejo p.navigate():
+       es la página quien controla el momento, no el SW a la fuerza. */
+    const clientes = await self.clients.matchAll({ type: 'window' });
+    clientes.forEach((c) => c.postMessage({ tipo: 'sw-activado', version: VERSION }));
+  })());
 });
 
-/* --- Clic en la notificación: enfoca la app si está abierta, o la abre. --- */
-self.addEventListener('notificationclick', (e) => {
-  e.notification.close();
-  const url = (e.notification.data && e.notification.data.url) || './';
-  e.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(lista => {
-      for (const c of lista) { if ('focus' in c) { c.navigate && c.navigate(url); return c.focus(); } }
-      if (self.clients.openWindow) return self.clients.openWindow(url);
-    })
-  );
-});
+/* Nada de esto se guarda: siempre tiene que venir fresco. */
+const NUNCA_GUARDAR = [
+  'api.binance.com', 'bsc-dataseed', 'rpc.ankr', 'publicnode', '1rpc.io',
+  'defibit.io', 'ninicoin.io', 'coingecko', 'nominatim', 'workers.dev',
+  'bscscan', 'pancakeswap'
+];
 
-/* --- La página pide mostrar una notificación (funciona en móvil PWA y escritorio). --- */
-self.addEventListener('message', (e) => {
-  const m = e.data || {};
-  if (m.type === 'mostrar-noti') {
-    self.registration.showNotification(m.titulo || 'Sports Expectations', _opts(m.opts || {}));
+self.addEventListener('fetch', (e) => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+  if (NUNCA_GUARDAR.some((d) => url.hostname.includes(d))) return;   // va directo a la red
+  // Wallet Shield en desarrollo: SIEMPRE fresco de la red, sin caché (evita que
+  // el service worker sirva versiones viejas mientras lo construimos).
+  // Módulos en desarrollo activo: SIEMPRE frescos de la red, nunca del caché.
+  // Sin esta regla, el service worker guarda su propia copia y el usuario sigue
+  // viendo versiones antiguas aunque borre el caché del navegador.
+  if (url.pathname.includes('/shield/') || url.pathname.includes('/movil/') || url.pathname.includes('gridbot-ui') ||
+      url.pathname.includes('/market/') || url.pathname.endsWith('/wallet.js')) {
+    e.respondWith(fetch(req, { cache: 'no-store' }).catch(() => caches.match(req)));
+    return;
   }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+
+  /* La página: primero la red (para traer novedades), y si falla, la copia
+     guardada. Ahora hay DOS páginas —la portada en './' y la app en
+     './app.html'— así que cada una guarda la suya. Antes todo se guardaba
+     bajo './index.html' y con dos páginas eso haría que una pisara a la
+     otra: sin conexión se abriría la equivocada. */
+  if (req.mode === 'navigate') {
+    e.respondWith((async () => {
+      try {
+        const r = await fetch(req);
+        const c = await caches.open(VERSION);
+        c.put(req, r.clone()).catch(() => {});
+        return r;
+      } catch (_) {
+        return (await caches.match(req))
+            || (await caches.match('./app.html'))
+            || (await caches.match('./index.html'))
+            || Response.error();
+      }
+    })());
+    return;
+  }
+
+  // El resto (código, imágenes de la app): PRIMERO la red, y si falla, la
+  // copia guardada. Antes era al revés (caché primero) y con archivos
+  // versionados eso servía piezas de versiones distintas mezcladas -> la
+  // app cargaba rota. Network-first garantiza que siempre se ve lo último;
+  // la caché queda solo como respaldo para cuando no hay conexión.
+  e.respondWith((async () => {
+    try {
+      const r = await fetch(req);
+      if (r && r.ok && r.type === 'basic') {
+        caches.open(VERSION).then((c) => c.put(req, r.clone())).catch(() => {});
+      }
+      return r;
+    } catch (_) {
+      const guardada = await caches.match(req);
+      return guardada || Response.error();
+    }
+  })());
 });
