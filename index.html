@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en" data-tema="oscuro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sports Expectations · Sports Data, Analytics & Predictions</title>
+  <meta name="description" content="Sports Expectations turns real sports data into clear win probabilities and player prop insights across MLB, NBA, NFL, NHL and soccer. Follow expert analysts and make smarter, informed decisions.">
+  <meta name="keywords" content="sports analytics, sports data, win probability, player props, sports predictions, MLB stats, NBA stats, NFL stats, NHL stats, soccer stats, sports insights, sports signals, hit probability, touchdown odds">
+  <meta name="author" content="Sports Expectations">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://cybersecureaid.github.io/Handicapper/">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Sports Expectations">
+  <meta property="og:title" content="Sports Expectations · Sports Data, Analytics & Predictions">
+  <meta property="og:description" content="Real sports data turned into clear win probabilities and player prop insights across MLB, NBA, NFL, NHL and soccer. Smarter, informed decisions.">
+  <meta property="og:url" content="https://cybersecureaid.github.io/Handicapper/">
+  <meta property="og:image" content="https://cybersecureaid.github.io/Handicapper/mage.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="es_ES">
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Sports Expectations · Sports Data, Analytics & Predictions">
+  <meta name="twitter:description" content="Real sports data turned into clear win probabilities and player prop insights across MLB, NBA, NFL, NHL and soccer.">
+  <meta name="twitter:image" content="https://cybersecureaid.github.io/Handicapper/mage.png">
+  <!-- Datos estructurados -->
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Organization","name":"Sports Expectations","description":"Sports information and analytics platform: verified sports data, win probabilities and player prop insights across MLB, NBA, NFL, NHL and soccer.","url":"https://cybersecureaid.github.io/Handicapper/","logo":"https://cybersecureaid.github.io/Handicapper/assets/imagenes/logo-portada.webp","sameAs":[]}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebSite","name":"Sports Expectations","url":"https://cybersecureaid.github.io/Handicapper/","inLanguage":["en","es"]}
+  </script>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/imagenes/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/imagenes/favicon.png">
+  <link rel="apple-touch-icon" href="assets/imagenes/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d1421">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sports Expectations">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <link rel="stylesheet" href="assets/css/dashboard.css">
+  <link rel="stylesheet" href="assets/css/landing.css">
+  <link rel="stylesheet" href="assets/css/landing-movil.css">
+  <link rel="stylesheet" href="assets/css/mesa.css">
+  <script>try{if(localStorage.getItem('se-en-app')==='1'){document.documentElement.classList.add('restaurando');setTimeout(function(){document.documentElement.classList.remove('restaurando')},7000);}}catch(e){}</script>
+  <style>
+    .restaurando #landing-screen,.restaurando #pricing-screen{display:none!important}
+    #splash-restaurar{display:none;position:fixed;inset:0;z-index:99999;background:#010006;flex-direction:column;gap:30px;align-items:center;justify-content:center;padding:24px}
+    .restaurando #splash-restaurar{display:flex}
+    .spl-logo{width:min(70%,320px);height:auto;object-fit:contain;filter:drop-shadow(0 6px 24px rgba(0,0,0,.5));animation:spl-fade .6s ease}
+    @keyframes spl-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .spl-spin{width:34px;height:34px;border:3px solid rgba(255,255,255,.12);border-top-color:#e8c46a;border-radius:50%;animation:spl-rot .8s linear infinite}
+    @keyframes spl-rot{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+<div id="splash-restaurar"><img class="spl-logo" src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations"><div class="spl-spin"></div></div>
+
+<!-- ============================ LANDING ============================ -->
+<section id="landing-screen" class="pantalla">
+  <canvas id="particulas" class="particulas"></canvas>
+  <header class="lnav">
+    <div class="marca">
+      <img class="logo-img" id="logo-landing" alt="Sports Expectations" src="assets/imagenes/logo-nombre-oscuro.png">
+    </div>
+    <div class="lnav-acc">
+      <button class="util-btn" id="idioma-btn-l" aria-label="Language"></button>
+      <button class="lbtn rojo" id="btn-login" data-i18n="auth.entrar">Log in</button>
+      <button class="lbtn azul" id="btn-register" data-i18n="auth.registrar">Sign up</button>
+    </div>
+  </header>
+
+  <!-- ===================== PORTADA MÓVIL (solo <=640px) ===================== -->
+  <div class="mlp">
+    <div class="mlp-hero">
+      <div class="mlp-hero-in">
+        <span class="mlp-rule"></span>
+        <h1 class="mlp-h1">Sports Expectations</h1>
+        <button class="mlp-cta" id="mlp-cta" data-i18n="lp2.m1">Explore stats
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="mlp-sec">
+      <div class="mlp-sec-head"><h2 data-i18n="lp2.m5">Compare the starters</h2></div>
+      <div class="mlp-duel">
+        <div class="mlp-duel-card"><img src="assets/imagenes/pitcher-azul.webp" alt="Starting pitcher" loading="lazy"></div>
+        <img class="mlp-duel-vs" src="assets/imagenes/vs.png" alt="vs">
+        <div class="mlp-duel-card"><img src="assets/imagenes/pitcher-rojo.webp" alt="Starting pitcher" loading="lazy"></div>
+      </div>
+    </div>
+
+    <div class="mlp-sec">
+      <div class="mlp-sec-head"><h2 data-i18n="lp2.m2">Featured matches</h2><span class="mlp-live-dot"></span></div>
+      <div id="mlp-matches" class="mlp-matches"><div class="mlp-empty">Loading live matches…</div></div>
+    </div>
+
+    <div class="mlp-sec">
+      <div class="mlp-sec-head"><h2 data-i18n="lp2.m3">Key stats</h2></div>
+      <div class="mlp-tabs">
+        <div class="mlp-tab on"><img src="assets/imagenes/dep-champions.png" alt="Soccer"></div>
+        <div class="mlp-tab"><img src="assets/imagenes/dep-nba.png" alt="NBA"></div>
+        <div class="mlp-tab"><img src="assets/imagenes/dep-mlb.png" alt="MLB"></div>
+        <div class="mlp-tab"><img src="assets/imagenes/dep-nhl.png" alt="NHL"></div>
+      </div>
+      <div class="mlp-stats" id="mlp-stats">
+        <div class="mlp-stat"><div class="k">Live now</div><div class="v oro" data-s="vivo">,</div><div class="d">Playing right now</div></div>
+        <div class="mlp-stat"><div class="k">Upcoming</div><div class="v azul" data-s="proximo">,</div><div class="d">Scheduled today</div></div>
+        <div class="mlp-stat"><div class="k">Finished</div><div class="v rojo" data-s="final">,</div><div class="d">Ended today</div></div>
+        <div class="mlp-stat"><div class="k">Today</div><div class="v verde" data-s="total">,</div><div class="d">Total games</div></div>
+      </div>
+    </div>
+
+    <div class="mlp-sec">
+      <div class="mlp-sec-head"><h2 data-i18n="lp2.m4">Season leader</h2></div>
+      <div id="mlp-leader" class="mlp-leader">
+        <span class="mlp-face"><img id="mlp-leader-img" alt=""></span>
+        <div class="who"><div class="nm" id="mlp-leader-nm">,</div><div class="tm" id="mlp-leader-tm">,</div><div class="lb" id="mlp-leader-lb">FEATURED PLAYER</div></div>
+      </div>
+    </div>
+  </div>
+  <!-- ===================== FIN PORTADA MÓVIL ===================== -->
+
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-veil"></div>
+    <div class="hero-in">
+      <div class="hero-txt">
+        <span class="hero-eyebrow hero-eyebrow-txt">Sports Expectations</span>
+        <img class="hero-eyebrow-logo" src="assets/imagenes/logo-portada.webp" alt="Sports Expectations">
+        <h1 class="hero-h1" data-i18n-html="lp2.h1">Real data<br>Smart analysis<br><em>Better decisions</em></h1>
+        <p class="hero-sub" data-i18n="lp2.sub">Access verified sports statistics, advanced analytics and powerful tools to analyze, compare and understand every detail that makes the difference.</p>
+        <div class="hero-cta">
+          <button class="lbtn rojo grande" id="btn-hero" data-i18n="lp2.start">Get started</button>
+          <button class="lbtn azul grande" id="btn-hero-2" data-i18n="lp2.plans">View plans</button>
+        </div>
+      </div>
+    </div>
+    <div class="hero-chips">
+      <div class="hero-chip">
+        <span class="hero-chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+        <div><b>100%</b><span data-i18n="lp2.c1">Verified data</span></div>
+      </div>
+      <div class="hero-chip">
+        <span class="hero-chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg></span>
+        <div><b>24/7</b><span data-i18n="lp2.c2">Real-time updates</span></div>
+      </div>
+      <div class="hero-chip">
+        <span class="hero-chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></span>
+        <div><b>All sports</b><span data-i18n="lp2.c3">All in one place</span></div>
+      </div>
+      <div class="hero-chip">
+        <span class="hero-chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+        <div><b>Secure</b><span data-i18n="lp2.c4">Privacy first</span></div>
+      </div>
+    </div>
+  </div>
+
+
+  <section class="analytics">
+    <div class="wrap">
+      <div class="an-panel">
+        <div class="an-head">
+          <span class="an-eyebrow"><svg class="an-eb-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20L20 4M11 4h9v9"/></svg>Advanced analytics<span class="an-eb-lines"></span></span>
+          <h2 class="an-title" data-i18n-html="lp2.antitle">Everything you need to stay <em>ahead</em></h2>
+          <span class="an-title-line"></span>
+          <p class="an-sub">A real look at what lives inside, live matches, deep stats and analyst calls. And this is only a glimpse, there is a lot more waiting once you step in.</p>
+          <button class="an-btn" id="btn-explore" data-i18n="lp2.explore">Explore plans
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+        <div class="an-cards">
+          <figure class="an-shot" data-zoom tabindex="0"><img src="assets/imagenes/muestras/muestra-1.webp" alt="Detailed statistics" loading="lazy"></figure>
+          <figure class="an-shot" data-zoom tabindex="0"><img src="assets/imagenes/muestras/muestra-2.webp" alt="Smart analysis" loading="lazy"></figure>
+          <figure class="an-shot" data-zoom tabindex="0"><img src="assets/imagenes/muestras/muestra-3.webp" alt="Real-time updates" loading="lazy"></figure>
+          <figure class="an-shot" data-zoom tabindex="0"><img src="assets/imagenes/muestras/muestra-4.webp" alt="Team comparison" loading="lazy"></figure>
+          <figure class="an-shot" data-zoom tabindex="0"><img src="assets/imagenes/muestras/muestra-5.webp" alt="Predictions &amp; trends" loading="lazy"></figure>
+          <figure class="an-shot" data-zoom tabindex="0"><img src="assets/imagenes/muestras/muestra-6.webp" alt="Export &amp; reports" loading="lazy"></figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Sección 3: Compare Players ===== -->
+  <section class="compare">
+    <div class="wrap">
+      <div class="cmp-head">
+        <span class="cmp-eyebrow" data-i18n="lp2.cmpeye">Compare players</span>
+        <h2 class="cmp-title" data-i18n="lp2.cmptitle">See the numbers. Make the call.</h2>
+      </div>
+      <div class="cmp-cards">
+        <div class="cmp-glow blue"></div>
+        <div class="cmp-glow red"></div>
+        <div class="cmp-card azul"><img src="assets/imagenes/pitcher-azul.webp" alt="Starting pitcher"></div>
+        <img class="cmp-vs" src="assets/imagenes/vs.png" alt="vs">
+        <div class="cmp-card rojo"><img src="assets/imagenes/pitcher-rojo.webp" alt="Starting pitcher"></div>
+      </div>
+      <div class="cmp-unlock">
+        <span class="cmp-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+        <span class="cmp-unlock-t" data-i18n-html="lp2.cmpunlock">Unlock full player comparison and detailed insights with <b>Premium</b></span>
+        <button class="lbtn rojo" id="btn-unlock" data-i18n="lp2.plans">View plans</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="plans">
+    <div class="plans-head">
+      <span class="plans-eyebrow" data-i18n="lp2.planseye">Choose your plan</span>
+      <h2 class="plans-title" data-i18n="lp2.planstitle">Simple plans. Powerful data.</h2>
+    </div>
+    <div class="ciclo-toggle">
+      <button class="ciclo on" data-ciclo="mensual">Monthly</button>
+      <button class="ciclo" data-ciclo="anual">Yearly</button>
+    </div>
+    <div id="landing-planes"></div>
+  </section>
+
+  <!-- ===== Sección 5: CTA banner ===== -->
+  <section class="cta-wrap">
+    <div class="cta">
+      <span class="cta-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16M5 18l-1.5-9L8 12l4-7 4 7 4.5-3L19 18z"/></svg></span>
+      <div class="cta-txt">
+        <h3 data-i18n="lp2.ctah">Ready to take your analysis to the next level?</h3>
+        <p data-i18n="lp2.ctap">Join thousands of users who trust our data and make better decisions every day.</p>
+      </div>
+      <button class="lbtn rojo grande" id="btn-cta" data-i18n="lp2.ctabtn">Get started now</button>
+    </div>
+  </section>
+
+  <!-- ===== Footer profesional ===== -->
+  <footer class="site-foot">
+    <div class="foot-in">
+      <div class="foot-brand">
+        <div class="foot-logo">
+          <img class="foot-logo-img" src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations">
+        </div>
+        <p class="foot-about" data-i18n="foot.tagline">Your ultimate source for verified sports data, advanced analytics and smart insights.</p>
+        <div class="foot-social">
+          <a href="#" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7 8 8.2 12h-6.3l-5-7-5.7 7H2l7.5-9L1.6 2h6.5l4.5 6.3z"/></svg></a>
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
+          <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.4-.4-5c-.2-.9-1-1.6-1.9-1.8C18.9 5 12 5 12 5s-6.9 0-8.7.2C2.4 5.4 1.6 6.1 1.4 7 1 8.6 1 12 1 12s0 3.4.4 5c.2.9 1 1.6 1.9 1.8C5.1 19 12 19 12 19s6.9 0 8.7-.2c.9-.2 1.7-.9 1.9-1.8.4-1.6.4-5 .4-5zM10 15V9l5 3z"/></svg></a>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h4 data-i18n="foot.product">Product</h4>
+        <a href="features.html" data-i18n="foot.features">Features</a><a href="sports.html" data-i18n="foot.sports">Sports</a><a href="plans.html" id="foot-plans" data-i18n="foot.plans">Plans &amp; pricing</a><a href="updates.html" data-i18n="foot.updates">Live updates</a>
+      </div>
+      <div class="foot-col">
+        <h4 data-i18n="foot.company">Company</h4>
+        <a href="about.html" data-i18n="foot.about">About us</a><a href="how-it-works.html" data-i18n="foot.howto">How it works</a><a href="contact.html" data-i18n="foot.contact">Contact</a><a href="privacy.html" id="foot-privacy" data-i18n="foot.privacy">Privacy policy</a><a href="terms.html" id="foot-terms" data-i18n="foot.terms">Terms of service</a>
+      </div>
+      <div class="foot-col">
+        <h4 data-i18n="foot.support">Support</h4>
+        <a href="help.html" data-i18n="foot.help">Help center</a><a href="faq.html" data-i18n="foot.faq">FAQ</a><a href="contact-support.html" data-i18n="foot.csupport">Contact support</a><a href="status.html" data-i18n="foot.status">System status</a>
+      </div>
+      <div class="foot-col foot-news">
+        <h4 data-i18n="foot.stay">Stay updated</h4>
+        <p data-i18n="foot.newsletter">Get the latest updates and insights delivered to your inbox.</p>
+        <div class="foot-email">
+          <input type="email" name="newsletter-email" placeholder="Enter your email" data-i18n-ph="foot.email" autocomplete="email">
+          <button aria-label="Subscribe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <div class="foot-legal-links">
+        <a href="disclaimer.html" data-i18n="foot.disclaimer">Disclaimer</a><a href="cookies.html" data-i18n="foot.cookies">Cookie policy</a><a href="acceptable-use.html" data-i18n="foot.aup">Acceptable use</a><a href="dmca.html" data-i18n="foot.dmca">Copyright / DMCA</a><a href="responsible.html" data-i18n="foot.responsible">Responsible gaming</a>
+      </div>
+      <span data-i18n="foot.copyright">© 2026 Sports Expectations. All rights reserved. Informational analysis, not betting advice.</span>
+    </div>
+  </footer>
+</section>
+
+<!-- ============================ PLANES ============================ -->
+<section id="pricing-screen" class="pantalla" style="display:none">
+  <header class="lnav">
+    <div class="marca"><img class="logo-img" alt="Sports Expectations" src="assets/imagenes/logo-nombre-oscuro.png"></div>
+    <div class="lnav-acc">
+      <button class="util-btn" id="idioma-btn-p" aria-label="Language"></button>
+      <button class="lbtn ghost" id="btn-salir-planes" data-i18n="auth.salir">Log out</button>
+    </div>
+  </header>
+  <div class="pricing-wrap">
+    <div class="pricing-head">
+      <div class="hero-badge" data-i18n="pl.welcome">Welcome, pick a plan</div>
+      <h1 class="hero-h1" data-i18n="pl.h1">Unlock the full platform.</h1>
+      <p class="hero-sub" data-i18n="pl.sub">Start monthly with a low barrier, or save with annual, two months free.</p>
+      <div class="ciclo-toggle">
+        <button class="ciclo on" data-ciclo="mensual" data-i18n="pl.monthly">Monthly</button>
+        <button class="ciclo" data-ciclo="anual" data-i18n="pl.annual">Annual · save 17%</button>
+      </div>
+    </div>
+    <div id="pricing-planes"></div>
+    <p class="pricing-nota" data-i18n="pl.nota">Cancel anytime. Prices in USD.</p>
+  </div>
+</section>
+
+<!-- ============================ PLATAFORMA ============================ -->
+<div id="app-screen" class="pantalla" style="display:none">
+  <header class="top">
+    <button class="hamb" id="hamb" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <div class="marca tiene-img" id="marca">
+      <img class="logo-img visible" id="logo-img" alt="Sports Expectations" src="assets/imagenes/logo-h-oscuro.png">
+    </div>
+    <label class="buscar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" width="16" height="16"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" id="buscar-input" placeholder="Search team or league">
+    </label>
+    <div class="acc">
+      <nav class="proj-nav" id="proj-nav" aria-label="Projections">
+        <button class="proj-b" data-proj="mlb" title="Hit Projection">
+          <span class="proj-ic">⚾</span><span class="proj-tx">Hits</span><span class="proj-pro">PRO</span></button>
+        <button class="proj-b" data-proj="soccer" title="Goal Projection">
+          <span class="proj-ic">⚽</span><span class="proj-tx">Goals</span><span class="proj-pro">PRO</span></button>
+        <button class="proj-b" data-proj="nba" title="Points Projection">
+          <span class="proj-ic">🏀</span><span class="proj-tx">Points</span><span class="proj-pro">PRO</span></button>
+        <button class="proj-b" data-proj="nhl" title="Shots Projection">
+          <span class="proj-ic">🏒</span><span class="proj-tx">Shots</span><span class="proj-pro">PRO</span></button>
+        <button class="proj-b" data-proj="nfl" title="Touchdown Projection">
+          <span class="proj-ic">🏈</span><span class="proj-tx">Touchdowns</span><span class="proj-pro">PRO</span></button>
+      </nav>
+      <button class="btn-img btn-install" id="install-btn" data-install aria-label="Install" hidden>
+        <img class="btn-img-desk" src="assets/imagenes/botones/install.webp" alt="Install" loading="eager">
+        <img class="btn-img-mob" src="assets/imagenes/botones/install-movil.webp" alt="Install" loading="eager">
+      </button>
+      <button class="btn-img btn-signals" id="signals-btn" aria-label="Signals">
+        <img class="btn-img-desk" src="assets/imagenes/botones/signals.webp" alt="Signals" loading="eager">
+        <img class="btn-img-mob" src="assets/imagenes/botones/signals-movil.webp" alt="Signals" loading="eager">
+      </button>
+      <button class="btn-img btn-pro" id="pro-btn" aria-label="Pro">
+        <img class="btn-img-desk" src="assets/imagenes/botones/pro.webp" alt="Pro" loading="eager">
+        <img class="btn-img-mob" src="assets/imagenes/botones/pro-movil.webp" alt="Pro" loading="eager">
+      </button>
+      <button class="btn-img btn-elite-img" id="elite-btn" aria-label="Elite">
+        <img class="btn-img-desk" src="assets/imagenes/botones/elite.webp" alt="Elite" loading="eager">
+        <img class="btn-img-mob" src="assets/imagenes/botones/elite-movil.webp" alt="Elite" loading="eager">
+      </button>
+      <div class="premium-menu" id="premium-menu">
+        <button class="btn-img btn-premium" id="premium-btn" aria-label="Premium">
+          <img class="btn-img-desk" src="assets/imagenes/botones/premium.webp" alt="Premium" loading="eager">
+          <img class="btn-img-mob" src="assets/imagenes/botones/premium-movil.webp" alt="Premium" loading="eager">
+          <span class="premium-btn-dot" id="premium-btn-dot"></span>
+        </button>
+        <div class="premium-pop" id="premium-pop">
+          <div class="premium-pop-h">Premium projections</div>
+          <button class="premium-item" data-projgoto="mlb"><span class="pi-ic"><img class="pi-img" src="assets/imagenes/hit.png" alt="" onerror="this.dataset.j?this.classList.add('pi-img-fail'):(this.dataset.j=1,this.src='assets/imagenes/hit.jpg')"><span class="pi-fb">⚾</span></span><span class="pi-tx"><b>Hits</b><em>Hit Projection · MLB</em></span><span class="pi-pro">PRO</span></button>
+          <button class="premium-item" data-projgoto="soccer"><span class="pi-ic"><img class="pi-img" src="assets/imagenes/goal.png" alt="" onerror="this.dataset.j?this.classList.add('pi-img-fail'):(this.dataset.j=1,this.src='assets/imagenes/goal.jpg')"><span class="pi-fb">⚽</span></span><span class="pi-tx"><b>Goals</b><em>Goal Projection · Soccer</em></span><span class="pi-pro">PRO</span></button>
+          <button class="premium-item" data-projgoto="nba"><span class="pi-ic"><img class="pi-img" src="assets/imagenes/puntos.png" alt="" onerror="this.dataset.j?this.classList.add('pi-img-fail'):(this.dataset.j=1,this.src='assets/imagenes/puntos.jpg')"><span class="pi-fb">🏀</span></span><span class="pi-tx"><b>Points</b><em>Points Projection · NBA</em></span><span class="pi-pro">PRO</span></button>
+          <button class="premium-item" data-projgoto="nhl"><span class="pi-ic"><img class="pi-img" src="assets/imagenes/shots.png" alt="" onerror="this.dataset.j?this.classList.add('pi-img-fail'):(this.dataset.j=1,this.src='assets/imagenes/shots.jpg')"><span class="pi-fb">🏒</span></span><span class="pi-tx"><b>Shots</b><em>Shots Projection · NHL</em></span><span class="pi-pro">PRO</span></button>
+          <button class="premium-item" data-projgoto="nfl"><span class="pi-ic"><img class="pi-img" src="assets/imagenes/touchdowns.png" alt="" onerror="this.dataset.j?this.classList.add('pi-img-fail'):(this.dataset.j=1,this.src='assets/imagenes/touchdowns.jpg')"><span class="pi-fb">🏈</span></span><span class="pi-tx"><b>Touchdowns</b><em>Touchdown Projection · NFL</em></span><span class="pi-pro">PRO</span></button>
+          <div class="premium-div"></div>
+          <button class="premium-item premium-item-an" id="premium-analisis"><span class="pi-ic pi-ic-an"><img class="pi-img" src="assets/imagenes/signals.png" alt="" onerror="this.dataset.j?this.classList.add('pi-img-fail'):(this.dataset.j=1,this.src='assets/imagenes/signals.jpg')"><span class="pi-fb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 3l2.6 5.6 6 .8-4.4 4.1 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.4l6-.8z"/></svg></span></span><span class="pi-tx"><b>Analyst signals</b><em>Published picks · Premium</em></span><span class="premium-an-dot" id="premium-an-dot"></span></button>
+        </div>
+      </div>
+      <button class="util-btn cuenta-btn" id="cuenta-btn" aria-label="Account">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="drawer-bg" id="drawer-bg"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-cab">
+      <span class="eyebrow" id="drawer-t">Sports</span>
+      <button class="drawer-x" id="drawer-x" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="18" height="18"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div id="drawer-ligas"></div>
+  </aside>
+
+  <div class="marco">
+    <aside class="side">
+      <div class="eyebrow">Sports</div>
+      <div id="lista-ligas"></div>
+    </aside>
+    <main class="centro">
+      <div class="pestanas" id="pestanas"></div>
+      <div id="lista"></div>
+    </main>
+    <aside class="panel" id="panel">
+      <div class="vacio">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" width="34" height="34"><path d="M4 4v16h16"/><path d="M7 14l3-3 3 2 4-6"/></svg></div>
+        Pick a match to see the full analysis.
+      </div>
+    </aside>
+  </div>
+
+  <div class="hoja-detalle" id="hoja">
+    <button class="cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M15 5l-7 7 7 7"/></svg> Back</button>
+    <div class="hoja-cuerpo"></div>
+  </div>
+
+  <nav class="tabbar" id="tabbar"></nav>
+</div>
+
+<div id="mesa-screen" class="pantalla" style="display:none"></div>
+
+  <script type="module" src="assets/js/landing-movil.js"></script>
+  <script type="module" src="assets/js/app.js"></script>
+<script>
+(function(){
+  var dp=null;
+  window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();dp=e;window.__pwaPrompt=e;document.querySelectorAll('[data-install]').forEach(function(b){b.hidden=false;});});
+  window.addEventListener('appinstalled',function(){dp=null;window.__pwaPrompt=null;cerrar();document.querySelectorAll('[data-install]').forEach(function(b){b.hidden=true;});});
+  function nativo(){var p=dp||window.__pwaPrompt;if(!p)return;p.prompt();p.userChoice.finally(function(){dp=null;window.__pwaPrompt=null;document.querySelectorAll('[data-install]').forEach(function(b){b.hidden=true;});});}
+  function cerrar(){var o=document.getElementById('inst-ov');if(o)o.remove();}
+  window.__mostrarModalInstalar=function(){
+    if(document.getElementById('inst-ov'))return;
+    var es=(localStorage.getItem('handicapper-idioma')||'en')==='es';
+    var ov=document.createElement('div');ov.id='inst-ov';ov.className='inst-ov';
+    ov.innerHTML='<div class="inst-modal"><button class="inst-x" aria-label="close">&#10005;</button>'+
+      '<img class="inst-logo" src="assets/imagenes/logo-nombre-oscuro.png" alt="Sports Expectations">'+
+      '<h3>'+(es?'Instala nuestra app':'Install our app')+'</h3>'+
+      '<p>'+(es?'Instala Sports Expectations en tu escritorio o en tu teléfono para un acceso rápido, a pantalla completa y sin las barras del navegador.':'Install Sports Expectations on your desktop or phone for quick, full-screen access with no browser bars.')+'</p>'+
+      '<div class="inst-btns"><button class="inst-cancel">'+(es?'Ahora no':'Not now')+'</button><button class="inst-go">'+(es?'Instalar':'Install')+'</button></div></div>';
+    document.body.appendChild(ov);
+    ov.querySelector('.inst-x').onclick=cerrar;
+    ov.querySelector('.inst-cancel').onclick=cerrar;
+    ov.onclick=function(e){if(e.target===ov)cerrar();};
+    ov.querySelector('.inst-go').onclick=function(){cerrar();nativo();};
+  };
+  document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-install]');if(b){e.preventDefault();window.__mostrarModalInstalar();}});
+  if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+})();
+</script>
+  <script>
+  (function(){
+    // Banner de instalación: solo en móvil, si NO está instalada, y no fue descartado.
+    if (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches) return;
+    if (window.innerWidth > 600) return;
+    try { if (localStorage.getItem('se-pwa-descartado') === '1') return; } catch(e){}
+    var esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    function crear(){
+      if (document.querySelector('.pwa-banner')) return;
+      var es = (localStorage.getItem('handicapper-idioma')||'en') === 'es';
+      var b = document.createElement('div'); b.className = 'pwa-banner';
+      var titulo = es ? 'Pantalla completa' : 'Full screen';
+      var sub = esIOS ? (es ? 'Toca Compartir y "Añadir a inicio"' : 'Tap Share, then "Add to Home Screen"')
+                      : (es ? 'Instala para la experiencia inmersiva' : 'Install for the immersive experience');
+      var cta = es ? 'Instalar' : 'Install';
+      b.innerHTML = '<span class="pwa-banner-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg></span>'
+        + '<span class="pwa-banner-tx"><b>'+titulo+'</b><span>'+sub+'</span></span>'
+        + (esIOS ? '' : '<button class="pwa-banner-go">'+cta+'</button>')
+        + '<button class="pwa-banner-x" aria-label="Close">&times;</button>';
+      document.body.appendChild(b);
+      requestAnimationFrame(function(){ b.classList.add('on'); });
+      var cerrar = function(){ b.classList.remove('on'); setTimeout(function(){ b.remove(); }, 300); };
+      b.querySelector('.pwa-banner-x').onclick = function(){ try{localStorage.setItem('se-pwa-descartado','1');}catch(e){} cerrar(); };
+      var go = b.querySelector('.pwa-banner-go');
+      if (go) go.onclick = function(){ if (window.__mostrarModalInstalar) window.__mostrarModalInstalar(); else if (window.__pwaPrompt) window.__pwaPrompt.prompt(); cerrar(); };
+    }
+    // esperar un poco para no molestar al entrar; en iOS siempre; en Android si hay prompt
+    setTimeout(function(){ if (esIOS || window.__pwaPrompt) crear(); else window.addEventListener('beforeinstallprompt', function(){ setTimeout(crear, 300); }); }, 2500);
+  })();
+  </script>
+</body>
+</html>
