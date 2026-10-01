@@ -53,8 +53,10 @@ forma remota. Si hay una limitación, se busca la vuelta; no se ponen parches.
 
 ## 2. Equipo y negocio
 
-- **Jesús Pérez** — desarrollador / dueño. Correo admin: `yamicelanvivesqui@gmail.com`.
-- **Oscar Luis Sieres Garcia** — analista. Correo admin: `oscarsieres7@gmail.com`.
+https://cybersecureaid.github.io/Handicapper/
+
+- **Jesús Pérez** — desarrollador /  Correo admin: `yamicelanvivesqui@gmail.com`.
+- **Oscar Luis Sieres Garcia** dueño — analista dueño. Correo admin: `oscarsieres7@gmail.com`.
 - Somos **solo nosotros dos**.
 - El negocio se registrará como **LLC en Estados Unidos**.
 - Pagos vía **Stripe** (integración pendiente de claves; ver §9).
