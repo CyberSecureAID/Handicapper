@@ -19,6 +19,7 @@ import { analizar } from '../analisis/motor.js';
 import { enriquecerMLB } from './mlb-oficial.js';
 import { comparativaEquiposESPN } from './equipos-stats.js';
 import { fotosSportsDB } from './proveedor-sportsdb.js';
+import { ordenar } from './relevancia.js';
 
 /* Mapa de nuestras ligas -> ruta ESPN {deporte}/{liga} */
 const RUTA = {
@@ -372,11 +373,11 @@ export async function listarPartidos(ligaId = null) {
       await cargarStandings(id, ruta);   // tabla real (récord+posición), cacheada
       const data = await pedir(`${BASE}/${ruta}/scoreboard`);
       const eventos = data?.events || [];
-      return eventos.slice(0, ligaId ? 40 : 6).map(ev => aMatch(ev, id, nombre(id)));
+      const todos = eventos.map(ev => aMatch(ev, id, nombre(id)));
+      return ordenar(todos).slice(0, ligaId ? 40 : 6);   // relevancia primero, luego recorta
     } catch (_) { return []; }
   }));
-  const orden = { vivo: 0, proximo: 1, final: 2 };
-  return listas.flat().sort((a, b) => (orden[a.estado] - orden[b.estado]));
+  return ordenar(listas.flat());   // estado (vivo/proximo/final) y, dentro, por relevancia
 }
 
 /* ---- Tabla de posiciones REAL (récord, % victorias, puesto) ---- */
