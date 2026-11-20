@@ -11,6 +11,7 @@
 
 import * as N from './nucleo.js';
 import { detallePartido } from '../datos/proveedor-api.js';
+import { pedirJSON } from '../datos/red.js';
 
 const API = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl';
 const UMBRAL = 1;              // línea de referencia: 1+ touchdown
@@ -19,11 +20,7 @@ const TD_LIGA = 2.6;          // TD ofensivos permitidos por partido, media apro
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const num = (v) => { const n = Number(v); return isFinite(n) ? n : null; };
 
-async function pedir(url) {
-  const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  return r.json();
-}
+async function pedir(url) { return pedirJSON(url); }   // red compartida: timeout + respaldo de proxy
 
 /* --------- MODELO PROPIO: P(>=1 TD) ---------
    jugador: { tdRate (TD por partido), gp, pos, titular }

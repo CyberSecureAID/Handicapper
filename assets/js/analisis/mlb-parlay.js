@@ -14,6 +14,7 @@
    ============================================================ */
 
 import * as N from './nucleo.js';
+import { pedirJSON } from '../datos/red.js';
 
 const API = 'https://statsapi.mlb.com/api/v1';
 
@@ -21,12 +22,7 @@ const API = 'https://statsapi.mlb.com/api/v1';
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
-async function pedir(url, proxy) {
-  const full = proxy ? proxy + encodeURIComponent(url) : url;
-  const r = await fetch(full, { headers: { 'Accept': 'application/json' } });
-  if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + url);
-  return r.json();
-}
+async function pedir(url, proxy) { return pedirJSON(url); }   // red compartida (el proxy ahora lo maneja red.js)
 
 /* Factor de parque (índice de hits; 1.00 = neutro). Aproximado y editable. */
 const PARK = { 'Coors Field': 1.10, 'Fenway Park': 1.05, 'Great American Ball Park': 1.04, 'Chase Field': 1.03,

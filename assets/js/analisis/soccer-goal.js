@@ -8,6 +8,7 @@
    ============================================================ */
 
 import * as N from './nucleo.js';
+import { pedirJSON } from '../datos/red.js';
 
 const API = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 const LIGAS = { epl: 'eng.1', laliga: 'esp.1', seriea: 'ita.1', bundes: 'ger.1', ucl: 'uefa.champions', ligue1: 'fra.1' };
@@ -16,11 +17,7 @@ const GA_MEDIA = 1.35;   // goles encajados por partido, media aproximada de lig
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const num = (v) => { const n = Number(v); return isFinite(n) ? n : null; };
 
-async function pedir(url) {
-  const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  return r.json();
-}
+async function pedir(url) { return pedirJSON(url); }   // red compartida: timeout + respaldo de proxy
 
 /* ¿La posición corresponde a un jugador de ataque? (mayor prob. de gol) */
 function perfilPosicion(pos) {
