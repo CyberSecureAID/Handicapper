@@ -13,6 +13,7 @@ import { topPointsProjection } from '../analisis/nba-points.js';
 import { topShotsProjection } from '../analisis/nhl-shots.js';
 import { topTouchdownProjection } from '../analisis/nfl-touchdowns.js';
 import { eliteDelDia } from '../analisis/elite.js';
+import { calendarioVacioHTML } from './calendario-vacio.js';
 import { abrirTracker, abrirTrackerGoles } from './tracker.js';
 import { idiomaActual } from './idioma.js';
 
@@ -715,9 +716,9 @@ function sinJuegosHTML(cont, cfg, meta, brutos) {
   } else {
     msg = L('No picks to show right now. Check back shortly.', 'No hay picks que mostrar ahora mismo. Vuelve en un rato.');
   }
-  // Línea de diagnóstico discreta (para depurar sin F12).
-  const diag = '';   // diagnóstico oculto para el usuario (queda en la consola)
-  cont.innerHTML = `<div class="ply">${heroHTML(cfg, { fecha: hoyISO() }, false)}<div class="ply-note ply-note-big"><i></i>${msg}</div>${diag}</div>`;
+  // Calendario bonito (hoy marcado; y si se conoce, el camino al proximo juego).
+  const cal = calendarioVacioHTML({ hoy: hoyISO(), proxima: (meta && meta.proxima) || null, nota: msg, idioma: ES ? 'es' : 'en' });
+  cont.innerHTML = `<div class="ply">${heroHTML(cfg, { fecha: hoyISO() }, false)}<div style="margin-top:14px">${cal}</div></div>`;
 }
 function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
   cfg._count = jugadores.length;
