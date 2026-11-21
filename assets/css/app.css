@@ -141,6 +141,47 @@
 
 .seccion-t { font-family: var(--display); font-weight: 800; font-size: 16px; color: var(--tinta); margin: 6px 2px 14px; }
 
+/* ===== Partidos del momento (banda "el boom") ===== */
+.hot-band { margin: 2px 0 20px; padding: 16px; border-radius: 18px; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, rgba(226,59,63,.10), rgba(29,155,240,.08)); border: 1px solid rgba(232,196,106,.25); }
+.hot-band::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, #e23b3f, #e8c46a, #1d9bf0); }
+.hot-band-h { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.hot-flama { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: linear-gradient(135deg, #e23b3f, #ff8a3d); color: #fff; box-shadow: 0 6px 16px rgba(226,59,63,.4); }
+.hot-flama svg { width: 22px; height: 22px; }
+.hot-band-t { font-family: var(--display); font-weight: 800; font-size: 18px; color: var(--tinta); }
+.hot-band-s { font-size: 12px; color: var(--tinta-2); margin-top: 1px; }
+/* Movil: strip con scroll horizontal, una tarjeta visible + asomo de la siguiente (snap, nunca cortada a la mitad). */
+.hot-strip { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scroll-padding-left: 2px; }
+.hot-strip::-webkit-scrollbar { height: 5px; }
+.hot-strip::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 3px; }
+.hot-c { scroll-snap-align: center; flex: 0 0 84%; max-width: 300px; display: flex; flex-direction: column; background: var(--tarjeta, #10151d); border: 1px solid var(--linea, rgba(255,255,255,.1)); border-radius: 14px; padding: 13px; cursor: pointer; transform-style: preserve-3d; transition: transform .18s ease, border-color .15s, box-shadow .18s; }
+.hot-c:hover { transform: translateY(-2px); border-color: rgba(232,196,106,.45); }
+.hot-c:focus-visible { outline: 2px solid var(--oro, #e8c46a); outline-offset: 2px; }
+.hot-c-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.hot-liga { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--oro, #e8c46a); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hot-when { font-size: 10.5px; font-weight: 700; color: var(--tinta-2); white-space: nowrap; }
+.hot-live { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; letter-spacing: .05em; color: #ff5a5f; white-space: nowrap; }
+.hot-live i { width: 7px; height: 7px; border-radius: 50%; background: #ff5a5f; animation: hot-pulse 1.4s infinite; }
+@keyframes hot-pulse { 0% { box-shadow: 0 0 0 0 rgba(255,90,95,.55); } 70% { box-shadow: 0 0 0 6px rgba(255,90,95,0); } 100% { box-shadow: 0 0 0 0 rgba(255,90,95,0); } }
+.hot-c-teams { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex: 1; }
+.hot-team { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+.hot-logo { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--fondo-2, #0e131c); border: 1px solid var(--linea, rgba(255,255,255,.1)); flex: none; }
+.hot-logo img { width: 100%; height: 100%; object-fit: cover; }
+.hot-logo-fb { font-family: var(--display); font-weight: 800; font-size: 12px; color: var(--tinta-2); }
+.hot-ab { font-family: var(--display); font-weight: 700; font-size: 12.5px; color: var(--tinta); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.hot-vs { font-size: 11px; font-weight: 800; color: var(--tinta-3); flex: none; }
+.hot-score { font-family: var(--display); font-weight: 800; font-size: 17px; color: var(--oro, #e8c46a); flex: none; }
+.hot-watch { margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 7px; text-decoration: none; padding: 9px; border-radius: 10px; font-family: var(--display); font-weight: 700; font-size: 12px; color: #fff; background: linear-gradient(135deg, #e23b3f, #c1282c); box-shadow: 0 4px 12px rgba(226,59,63,.35); transition: filter .15s; }
+.hot-watch:hover { filter: brightness(1.08); }
+.hot-watch svg { width: 16px; height: 16px; }
+/* Escritorio: las tarjetas ocupan TODO el ancho, repartidas por igual y centradas (sin scroll, sin quedar a la izquierda). */
+@media (min-width: 640px) {
+  .hot-strip { overflow: visible; flex-wrap: nowrap; }
+  .hot-c { flex: 1 1 0; max-width: none; perspective: 700px; }
+  .hot-c:hover { box-shadow: 0 14px 30px rgba(0,0,0,.45); }
+}
+@media (max-width: 560px) { .hot-band { padding: 14px; } }
+
 /* ---------- Tarjeta de partido (premium) ---------- */
 .pmatch {
   position: relative;
@@ -1379,6 +1420,7 @@
 .pl-m-list li { font-size: 11.8px !important; gap: 8px !important; align-items: center !important; color: #c3ccd6; }
 .pl-m-list li.off { color: #6b7683 !important; }
 .pl-m-list li.off span { text-decoration: line-through; text-decoration-thickness: 1px; }
+.pl-m-ciclo { margin: 20px auto 20px !important; }
 .pl-m-list li .pl-no { color: #56606e !important; }
 .pl-m-list li i { font-style: normal; color: #8fb3ff; font-size: 10.5px; margin-left: 4px; font-weight: 700; }
 .pl-yes { width: 14px !important; height: 14px !important; color: #3ecf8e !important; flex: none; margin-top: 0 !important; }
