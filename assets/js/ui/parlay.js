@@ -410,15 +410,13 @@ function confPorProb(prob, cfg) {
    alto del deporte). Calidad, no cantidad: mejor mostrar 1 o 2 monstruos que
    rellenar con dudosos. Si nadie califica, la vista queda vacía (con aviso). */
 function curar(jugadores, cfg) {
-  const S = FRASES[cfg.metric] || FRASES._def;
   let arr = (jugadores || []).slice();
-  if (arr.some(j => j.score != null)) {
-    arr.sort((a, b) => (b.score || 0) - (a.score || 0));
-    arr = arr.filter(j => (j.prob || 0) >= S.hi);   // solo alta confianza
-    return arr.slice(0, 9).map((j, i) => ({ ...j, rank: i + 1 }));
-  }
-  arr.sort((a, b) => (b.prob || 0) - (a.prob || 0));
-  arr = arr.filter(j => (j.prob || 0) >= S.hi);      // REGLA: solo alta confianza
+  // Mostrar TODO, con los mejores arriba. Antes se ocultaba lo que no llegaba al
+  // umbral de alta confianza y por eso NBA/NFL (y los partidos parejos pero
+  // estelares, p.ej. Madrid vs Barcelona) salian vacios. Ahora se muestran todos;
+  // la etiqueta de confianza (alta/media/baja) sigue distinguiendo la calidad.
+  const porScore = arr.some(j => j.score != null);
+  arr.sort((a, b) => porScore ? ((b.score || 0) - (a.score || 0)) : ((b.prob || 0) - (a.prob || 0)));
   return arr.slice(0, 9).map((j, i) => ({ ...j, rank: i + 1 }));
 }
 
