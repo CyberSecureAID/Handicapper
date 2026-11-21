@@ -1675,8 +1675,9 @@
 /* ===== Banner de instalación (identidad de marca: navy + filo azul/dorado/rojo) ===== */
 .pwa-banner { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom,0)); z-index: 9500;
   display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 15px; border-radius: 16px; overflow: hidden;
-  background: linear-gradient(135deg, #16202f, #0c1522); border: 1px solid var(--linea);
-  box-shadow: 0 18px 50px -12px rgba(0,0,0,.72); transform: translateY(150%); transition: transform .35s cubic-bezier(.2,.9,.3,1); }
+  background: linear-gradient(135deg, rgba(22,32,47,.64), rgba(10,16,26,.80)); border: 1px solid rgba(255,255,255,.10);
+  backdrop-filter: blur(16px) saturate(120%); -webkit-backdrop-filter: blur(16px) saturate(120%);
+  box-shadow: 0 18px 50px -14px rgba(0,0,0,.66), inset 0 1px 0 rgba(255,255,255,.06); transform: translateY(150%); transition: transform .35s cubic-bezier(.2,.9,.3,1); }
 .pwa-banner.on { transform: translateY(0); }
 .pwa-banner::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
   background: linear-gradient(180deg, var(--azul) 0%, var(--oro) 50%, var(--rojo) 100%); }
