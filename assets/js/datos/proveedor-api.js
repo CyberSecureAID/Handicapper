@@ -36,6 +36,8 @@ const RUTA = {
   bundes: 'soccer/ger.1',
   mexliga:'soccer/mex.1',    // Liga MX (futbol latino, misma fuente ESPN)
   mls:    'soccer/usa.1',    // MLS / Inter Miami
+  libertadores: 'soccer/conmebol.libertadores',   // Copa Libertadores (la copa top de Sudamerica)
+  sudamericana: 'soccer/conmebol.sudamericana',    // Copa Sudamericana
   // 'invierno' (Ligas Invernales) NO va aqui: no esta en ESPN, se sirve aparte.
 };
 
@@ -47,6 +49,8 @@ export const LIGAS = [
   { id: 'nfl',    nombre: 'NFL',              corto: 'NFL',      logo: 'assets/imagenes/dep-nfl.png' },
   { id: 'nhl',    nombre: 'NHL',              corto: 'NHL',      logo: 'assets/imagenes/dep-nhl.png' },
   { id: 'mexliga',nombre: 'Liga MX',          corto: 'Liga MX',  logo: 'assets/imagenes/dep-mexliga.png' },
+  { id: 'libertadores', nombre: 'Copa Libertadores', corto: 'Libertadores', icono: 'estrella' },
+  { id: 'sudamericana', nombre: 'Copa Sudamericana', corto: 'Sudamericana', icono: 'estrella' },
   { id: 'mls',    nombre: 'MLS',              corto: 'MLS',      logo: 'assets/imagenes/dep-mls.png' },
   { id: 'epl',    nombre: 'Premier League',   corto: 'Premier',  logo: 'assets/imagenes/dep-premier.png' },
   { id: 'laliga', nombre: 'LaLiga',           corto: 'LaLiga',   logo: 'assets/imagenes/dep-laliga.png' },
@@ -372,7 +376,7 @@ function lesionadosDe(summary, localId, visitaId) {
 export async function listarPartidos(ligaId = null) {
   // "Todos" = todas las ligas en temporada; por liga = solo esa.
   // 'invierno' va primero: en nov-feb MLB para y el beisbol del Caribe llena el hueco.
-  const ids = ligaId ? [ligaId] : ['invierno', 'mlb', 'mexliga', 'mls', 'epl', 'laliga', 'seriea', 'bundes', 'ucl', 'nba', 'nfl', 'nhl'];
+  const ids = ligaId ? [ligaId] : ['invierno', 'mlb', 'mexliga', 'libertadores', 'sudamericana', 'mls', 'epl', 'laliga', 'seriea', 'bundes', 'ucl', 'nba', 'nfl', 'nhl'];
   const nombre = (id) => (LIGAS.find(l => l.id === id) || {}).nombre || id.toUpperCase();
   const listas = await Promise.all(ids.map(async id => {
     // Ligas Invernales del Caribe: fuente propia (MLB Stats API sportId=17), no ESPN.
