@@ -102,7 +102,7 @@ function lideresTD(comp) {
       out.push({ id: at.id, nombre: at.displayName || at.shortName || at.fullName, pos: (at.position && at.position.abbreviation) || '', tdRate: rate, gp: null, tdTot: null });
     });
   };
-  tomar('rushing', 0.6); tomar('receiving', 0.45);
+  tomar('rushing', 0.9); tomar('receiving', 0.65);   // tasas realistas de anotador (no relleno de 37%)
   return out;
 }
 
@@ -175,9 +175,9 @@ function tdDeDetalle(lista) {
     const e = (j.etiqueta || '').toLowerCase(); const pos = (j.pos || '').toUpperCase();
     const val = parseFloat(String(j.dato).replace(/[^0-9.]/g, '')) || 0;
     let tdRate = null;
-    if (/touchdown|td/.test(e)) tdRate = Math.min(0.75, val / 12);
-    else if (/rush/.test(e)) tdRate = 0.55;
-    else if (/receiv|recep/.test(e)) tdRate = 0.45;
+    if (/touchdown|td/.test(e)) tdRate = Math.min(1.1, Math.max(0.5, val / 10));
+    else if (/rush/.test(e)) tdRate = 0.9;    // RB lider: anytime-TD realista ~55-65%
+    else if (/receiv|recep/.test(e)) tdRate = 0.65;   // WR/TE lider: ~45-52%
     if (tdRate && j.nombre && j.id && !seen.has(j.id) && /RB|WR|TE|QB|FB|-|^$/.test(pos)) { seen.add(j.id); out.push({ id: j.id, nombre: j.nombre, pos, tdRate, gp: null, tdTot: null, foto: j.foto || null }); }
   });
   return out;
