@@ -50,7 +50,7 @@ function pintarDrawer() {
   const items = [{ id: null, nombre: t('liga.todos'), corto: t('liga.todos'), logo: 'assets/imagenes/dep-todos.png' }, ...LIGAS];
   cont.innerHTML = items.map(l => `
     <button class="liga ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">
-      <span class="ic">${ligaIcono(l)}</span>${l.corto || l.nombre}
+      <span class="ic">${ligaIcono(l)}</span>${ligaCortoL(l)}
     </button>`).join('');
   cont.querySelectorAll('.liga').forEach(b => b.onclick = () => {
     ligaActiva = b.dataset.liga || null; proyActiva = null; try { localStorage.setItem('se-vista', 'partidos'); } catch (_) {} marcarProyeccion();
@@ -67,6 +67,17 @@ function ligaIcono(l) {
   return IC[l.icono] || IC.diana;
 }
 
+/* Nombre de liga localizado. Solo "Ligas Invernales" cambia entre idiomas
+   (Liga MX y MLS son iguales en ingles y espanol; el resto son nombres propios). */
+function ligaNombre(l) {
+  if (l && l.id === 'invierno') return idiomaActual() === 'es' ? 'Ligas Invernales' : 'Winter Leagues';
+  return l.nombre;
+}
+function ligaCortoL(l) {
+  if (l && l.id === 'invierno') return idiomaActual() === 'es' ? 'Invernal' : 'Winter';
+  return l.corto || l.nombre;
+}
+
 /* -------- Sidebar de ligas -------- */
 function pintarLigas() {
   const cont = $('lista-ligas');
@@ -74,7 +85,7 @@ function pintarLigas() {
   const items = [{ id: null, nombre: t('liga.todos'), logo: 'assets/imagenes/dep-todos.png' }, ...LIGAS];
   cont.innerHTML = items.map(l => `
     <button class="liga ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">
-      <span class="ic">${ligaIcono(l)}</span>${l.nombre}
+      <span class="ic">${ligaIcono(l)}</span>${ligaNombre(l)}
     </button>`).join('');
   cont.querySelectorAll('.liga').forEach(b => b.onclick = () => {
     ligaActiva = b.dataset.liga || null; proyActiva = null; try { localStorage.setItem('se-vista', 'partidos'); } catch (_) {} marcarProyeccion(); pintarLigas(); pintarPestanas(); cargarLista();
@@ -85,7 +96,7 @@ function pintarLigas() {
 function pintarPestanas() {
   const cont = $('pestanas');
   if (!cont) return;
-  const items = [{ id: null, nombre: t('liga.todos') }, ...LIGAS.map(l => ({ id: l.id, nombre: l.nombre }))];
+  const items = [{ id: null, nombre: t('liga.todos') }, ...LIGAS.map(l => ({ id: l.id, nombre: ligaNombre(l) }))];
   cont.innerHTML = items.map(l => `
     <button class="pestana ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">${l.nombre}</button>`).join('');
   cont.querySelectorAll('.pestana').forEach(b => b.onclick = () => {
