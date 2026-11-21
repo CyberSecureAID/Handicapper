@@ -157,27 +157,31 @@ export async function compartirJugador(p, cfg = {}) {
   const h = p.hist || null;
   const nom = (p.nombre || '').toUpperCase();
   const equipoA = p.equipoAbrev || '', equipoB = p.rivalAbrev || '';
+  const nomA = (p.nomLocal || equipoA || '').toUpperCase(), nomB = (p.nomVisita || equipoB || '').toUpperCase();
   const cv = base(true, (g, conLogos) => {
     if (tpl) g.drawImage(tpl, 0, 0, N, N); else { g.fillStyle = '#0a0d11'; g.fillRect(0, 0, N, N); }
     marca(g);
-    // Matchup compacto arriba
-    logoCirc(g, conLogos ? ll : null, 520, 205, 54, equipoA);
-    logoCirc(g, conLogos ? lv : null, 734, 205, 54, equipoB);
-    if (vs) { const w = 120, hh = w * (vs.height / vs.width); g.drawImage(vs, 627 - w / 2, 205 - hh / 2, w, hh); }
-    C(g, `${equipoA}  vs  ${equipoB}`, 627, 300, '800 26px "Chakra Petch", sans-serif', GRIS);
-    // Nombre del jugador grande
-    let sz = fit(g, nom, 1040, 86, '"Chakra Petch", sans-serif'); plateado(g, nom, 627, 404, sz);
-    // Linea
-    if (linea) C(g, linea.toUpperCase(), 627, 486, '800 32px "Chakra Petch", sans-serif', ORO);
+    // Matchup: logos GRANDES y SEPARADOS + VS grande (igual que la de Goals)
+    logoCirc(g, conLogos ? ll : null, EQ.izq, 236, 78, equipoA);
+    logoCirc(g, conLogos ? lv : null, EQ.der, 236, 78, equipoB);
+    if (vs) { const w = 230, hh = w * (vs.height / vs.width); g.save(); g.shadowColor = 'rgba(0,0,0,.55)'; g.shadowBlur = 18; g.shadowOffsetY = 6; g.drawImage(vs, 627 - w / 2, 236 - hh / 2, w, hh); g.restore(); }
+    else C(g, 'VS', 627, 236, '800 66px "Chakra Petch", sans-serif', '#eef5fb');
+    // Nombre de equipo bajo cada logo (secundario, nunca redundante con el escudo)
+    let sa = fit(g, nomA, 300, 30, '"Chakra Petch", sans-serif'); C(g, nomA, EQ.izq, 346, `800 ${sa}px "Chakra Petch", sans-serif`, GRIS);
+    let sb = fit(g, nomB, 300, 30, '"Chakra Petch", sans-serif'); C(g, nomB, EQ.der, 346, `800 ${sb}px "Chakra Petch", sans-serif`, GRIS);
+    // Nombre del jugador: el protagonista
+    let sz = fit(g, nom, 1060, 84, '"Chakra Petch", sans-serif'); plateado(g, nom, 627, 452, sz);
+    // Linea (mercado)
+    if (linea) C(g, linea.toUpperCase(), 627, 534, '800 34px "Chakra Petch", sans-serif', ORO);
     // Probabilidad grande + barra
-    C(g, L('CHANCE TO HIT', 'PROBABILIDAD'), 627, 572, '800 20px "Inter", sans-serif', GRIS);
+    C(g, L('CHANCE TO HIT THE LINE', 'PROBABILIDAD DE LOGRARLO'), 627, 618, '800 20px "Inter", sans-serif', GRIS);
     const col = p.prob >= 66 ? VERDE : (p.prob >= 55 ? ORO : GRIS);
-    C(g, (p.prob || 0) + '%', 627, 648, '800 108px "Chakra Petch", sans-serif', col);
-    barra(g, p.prob || 0, [ORO2, ORO], 730);
-    // Ultimos 10
+    C(g, (p.prob || 0) + '%', 627, 706, '800 112px "Chakra Petch", sans-serif', col);
+    barra(g, p.prob || 0, [ORO2, ORO], 792);
+    // Ultimos 10 (hit/fallo)
     if (h && h.muestra) {
-      C(g, L(`${h.aciertos} OF HIS LAST ${h.muestra} GAMES OVER THE LINE`, `${h.aciertos} DE SUS ULTIMOS ${h.muestra} SOBRE LA LINEA`), 627, 838, '800 26px "Chakra Petch", sans-serif', '#dfe6ee');
-      const n = Math.min(10, h.muestra), aciertos = Math.min(h.aciertos, n), sq = 74, gap = 16, totalW = n * sq + (n - 1) * gap, x0 = 627 - totalW / 2, yy = 900;
+      C(g, L(`${h.aciertos} OF HIS LAST ${h.muestra} GAMES OVER THE LINE`, `${h.aciertos} DE SUS ULTIMOS ${h.muestra} SOBRE LA LINEA`), 627, 892, '800 26px "Chakra Petch", sans-serif', '#dfe6ee');
+      const n = Math.min(10, h.muestra), aciertos = Math.min(h.aciertos, n), sq = 70, gap = 15, totalW = n * sq + (n - 1) * gap, x0 = 627 - totalW / 2, yy = 948;
       for (let i = 0; i < n; i++) {
         const hit = i < aciertos; const x = x0 + i * (sq + gap);
         g.fillStyle = hit ? VERDE : '#2a333f'; g.beginPath(); g.roundRect(x, yy, sq, sq, 14); g.fill();
@@ -221,4 +225,43 @@ export async function compartirGoles(p) {
   const texto = L(`${p.localNom || p.equipoAbrev} vs ${p.visitaNom || p.rivalAbrev}: ${p15}% for 2+ goals. More on ${SITIO}`,
                   `${p.localNom || p.equipoAbrev} vs ${p.visitaNom || p.rivalAbrev}: ${p15}% de 2+ goles. Mas en ${SITIO}`);
   await compartirImagen(cv, texto, `se-goles-${p.equipoAbrev}-${p.rivalAbrev}`);
+}
+
+/* ===== 4) COMBINADA (pick'em): la jugada armada por el usuario ===== */
+export async function compartirSlip(picks, extra = {}) {
+  const tpl = await cargarImg(TPL);
+  const n = picks.length;
+  const pc = extra.pc != null ? extra.pc : Math.round(picks.reduce((a, x) => a * ((x.prob || 0) / 100), 1) * 100);
+  const mult = extra.mult != null ? extra.mult : 0;
+  const cv = base(false, (g) => {
+    if (tpl) g.drawImage(tpl, 0, 0, N, N); else { g.fillStyle = '#0a0d11'; g.fillRect(0, 0, N, N); }
+    marca(g);
+    C(g, L('MY PICK’EM', 'MI COMBINADA'), 627, 152, '800 42px "Chakra Petch", sans-serif', ORO);
+    C(g, `${n} ${L('picks · all must hit', 'picks · deben cumplirse todas')}`, 627, 198, '700 20px "Inter", sans-serif', GRIS);
+    const y0 = 266, y1 = Math.min(266 + n * 98, 876), rh = n ? (y1 - y0) / n : 0;
+    picks.forEach((x, i) => {
+      const y = y0 + rh * i + rh / 2;
+      if (i > 0) { g.strokeStyle = 'rgba(255,255,255,.1)'; g.lineWidth = 1; g.beginPath(); g.moveTo(170, y0 + rh * i); g.lineTo(1084, y0 + rh * i); g.stroke(); }
+      g.fillStyle = 'rgba(232,184,75,.16)'; g.beginPath(); g.roundRect(176, y - 26, 52, 52, 13); g.fill();
+      C(g, String(i + 1), 202, y, '800 26px "Chakra Petch", sans-serif', ORO);
+      const nombre = String(x.esPartido ? `${x.nomLocal} vs ${x.nomVisita}` : x.nombre).toUpperCase();
+      g.textAlign = 'left'; g.textBaseline = 'middle';
+      let ns = 30; g.font = `800 ${ns}px "Chakra Petch", sans-serif`; while (g.measureText(nombre).width > 600 && ns > 15) { ns--; g.font = `800 ${ns}px "Chakra Petch", sans-serif`; }
+      g.fillStyle = '#eef2f7'; g.fillText(nombre, 258, y - 13);
+      g.font = '600 20px "Inter", sans-serif'; g.fillStyle = GRIS; g.fillText(String(x.linea || '').toUpperCase(), 258, y + 16);
+      const col = x.prob >= 66 ? VERDE : (x.prob >= 55 ? ORO : GRIS);
+      C(g, (x.prob || 0) + '%', 1024, y, '800 34px "Chakra Petch", sans-serif', col);
+    });
+    const sy = 968;
+    g.fillStyle = 'rgba(255,255,255,.045)'; g.beginPath(); g.roundRect(185, sy - 62, 418, 124, 18); g.fill();
+    C(g, L('COMBINED CHANCE', 'PROB. COMBINADA'), 394, sy - 28, '700 18px "Inter", sans-serif', GRIS);
+    C(g, pc + '%', 394, sy + 20, '800 66px "Chakra Petch", sans-serif', '#eef2f7');
+    g.fillStyle = 'rgba(232,184,75,.09)'; g.beginPath(); g.roundRect(651, sy - 62, 418, 124, 18); g.fill();
+    C(g, L('TYPICAL MULTIPLIER', 'MULT. TIPICO'), 860, sy - 28, '700 18px "Inter", sans-serif', GRIS);
+    C(g, mult + 'x', 860, sy + 20, '800 66px "Chakra Petch", sans-serif', ORO);
+    pie(g);
+  });
+  const texto = L(`My pick’em: ${n} picks, ${pc}% combined. Build yours on ${SITIO}`,
+                  `Mi combinada: ${n} picks, ${pc}% combinada. Arma la tuya en ${SITIO}`);
+  await compartirImagen(cv, texto, 'se-pickem');
 }

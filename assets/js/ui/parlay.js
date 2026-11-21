@@ -16,6 +16,7 @@ import { eliteDelDia } from '../analisis/elite.js';
 import { calendarioVacioHTML } from './calendario-vacio.js';
 import { abrirTracker, abrirTrackerGoles } from './tracker.js';
 import { idiomaActual } from './idioma.js';
+import { toggleSlip, enSlip, pickKey } from './pickem.js';
 
 const ES = () => idiomaActual() === 'es';
 const L = (en, es) => (ES() ? es : en);
@@ -298,6 +299,11 @@ function inyectarCSS() {
   .ply-share:hover{filter:brightness(1.07);transform:translateY(-1px)}
   .ply-share:active{transform:translateY(0) scale(.97)}
   .ply-share svg{width:21px;height:21px}
+  .ply-slip{flex:0 0 auto;width:46px;display:flex;align-items:center;justify-content:center;background:var(--fondo-2,#0e131c);color:var(--oro,#e8c46a);border:1px solid rgba(232,184,75,.45);border-radius:10px;cursor:pointer;transition:all .15s}
+  .ply-slip svg{width:22px;height:22px}
+  .ply-slip:hover{border-color:var(--oro,#e8c46a);background:var(--oro-suave,rgba(232,184,75,.14))}
+  .ply-slip.on{background:linear-gradient(135deg,var(--oro,#e8c46a),#f6e2a6);color:#241a06;border-color:transparent;box-shadow:0 3px 10px rgba(232,184,75,.3)}
+  .ply-slip:active{transform:scale(.96)}
   .ply-foot{color:var(--tx3);font-size:11.5px;line-height:1.6;text-align:center;margin-top:20px;padding:0 10px}
   .ply-lock{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line);isolation:isolate}
   .ply-lock-in{position:relative;z-index:2;padding:56px 26px;text-align:center}
@@ -313,6 +319,14 @@ function inyectarCSS() {
 /* ---------- Render ---------- */
 const tagTxt = (t) => (typeof t === 'function' ? t() : t);
 const IC_LUPA = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/></svg>`;
+const IC_MAS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`;
+const IC_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`;
+/* Boton "+" para agregar un pick a la combinada (pick'em). */
+function botonSlip(p, cfg) {
+  const k = pickKey(p, cfg);
+  const en = enSlip(k);
+  return `<button class="ply-slip ${en ? 'on' : ''}" data-slip="${p.rank}" data-slipkey="${esc(k)}" aria-label="${L('Add to pick’em', 'Agregar a la combinada')}" title="Pick'em">${en ? IC_CHECK : IC_MAS}</button>`;
+}
 const IC_WA = `<svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.1 1.6 5.9L4 29l8.3-2.2c1.7.9 3.6 1.4 5.5 1.4h.2C24.6 28.2 30 22.8 30 16.2 30 9.6 24.6 3 16 3zm0 22.9h-.1c-1.7 0-3.4-.5-4.9-1.4l-.3-.2-4.9 1.3 1.3-4.8-.2-.4c-1-1.6-1.5-3.4-1.5-5.3C5.2 10 10 5.2 16 5.2s10.8 4.8 10.8 10.8S22 25.9 16 25.9z"/><path d="M22 18.3c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-1.8-.9-3-1.6-4.2-3.6-.3-.5.3-.5.8-1.6.1-.2 0-.4 0-.5-.1-.1-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.3 5.2 4.6 1.9.8 2.7.9 3.6.8.6-.1 1.9-.8 2.1-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z"/></svg>`;
 /* Compartir un pick como IMAGEN de marca (hoja nativa en movil con el archivo
    para WhatsApp/TikTok/IG; en escritorio descarga la imagen y abre WhatsApp).
@@ -628,6 +642,7 @@ function cardPartidoHTML(p, cfg) {
     <span class="ply-conf ${conf}"><i></i>${L('Confidence', 'Confianza')} ${esc(confLabel(conf))}</span>
     <div class="ply-actions">
       <button class="ply-analyze" data-analyze="${p.rank}">${IC_LUPA}${L('Analyze · Goals', 'Analizar · Goles')}</button>
+      ${botonSlip(p, cfg)}
       <button class="ply-share" data-share="${p.rank}" aria-label="${L('Share on WhatsApp', 'Compartir en WhatsApp')}" title="WhatsApp">${IC_WA}</button>
     </div>
   </article>`;
@@ -673,6 +688,7 @@ function cardHTML(p, cfg) {
     <span class="ply-conf ${conf}"><i></i>${L('Confidence', 'Confianza')} ${esc(confLabel(conf))}</span>
     <div class="ply-actions">
       <button class="ply-analyze" data-analyze="${p.rank}">${IC_LUPA}${L('Analyze · Last 10', 'Analizar · Últimos 10')}</button>
+      ${botonSlip(p, cfg)}
       <button class="ply-share" data-share="${p.rank}" aria-label="${L('Share on WhatsApp', 'Compartir en WhatsApp')}" title="WhatsApp">${IC_WA}</button>
     </div>
   </article>`;
@@ -731,6 +747,7 @@ function wireBets(cont) {
           : `<div class="ply-note"><i></i>${L('No standout home run picks for today\u2019s games.', 'Hoy no hay bateadores que cumplan el nivel de HR.')}</div>`;
         animar(cont);
         grid.querySelectorAll('.ply-share[data-share]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); compartirPick(jug[+b.dataset.share - 1], CFG_HR); }));
+        grid.querySelectorAll('.ply-slip[data-slip]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); const j = jug[+b.dataset.slip - 1]; if (!j) return; const added = toggleSlip(j, CFG_HR); b.classList.toggle('on', added); b.innerHTML = added ? IC_CHECK : IC_MAS; b.setAttribute('data-slipkey', pickKey(j, CFG_HR)); }));
         grid.querySelectorAll('.ply-analyze[data-analyze]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); const j = jug[+b.dataset.analyze - 1]; if (j) abrirTracker(j, 'mlb', 'hr'); }));
         grid.querySelectorAll('.ply-c[data-idx]').forEach(el => el.addEventListener('click', () => { const j = jug[+el.dataset.idx - 1]; if (j) abrirTracker(j, 'mlb', 'hr'); }));
       } catch (_) {
@@ -780,6 +797,7 @@ function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
   const abrir = (idx) => { const j = jugadores[idx - 1]; if (!j) return; if (j.esPartido) abrirTrackerGoles(j); else abrirTracker(j, cfg._sport); };
   cont.querySelectorAll('.ply-analyze[data-analyze]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); abrir(+b.dataset.analyze); }));
   cont.querySelectorAll('.ply-share[data-share]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); compartirPick(jugadores[+b.dataset.share - 1], cfg); }));
+  cont.querySelectorAll('.ply-slip[data-slip]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); const j = jugadores[+b.dataset.slip - 1]; if (!j) return; const added = toggleSlip(j, cfg); b.classList.toggle('on', added); b.innerHTML = added ? IC_CHECK : IC_MAS; b.setAttribute('data-slipkey', pickKey(j, cfg)); }));
   cont.querySelectorAll('.ply-c[data-idx]').forEach(el => el.addEventListener('click', () => abrir(+el.dataset.idx)));
 }
 
