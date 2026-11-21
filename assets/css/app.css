@@ -72,9 +72,10 @@
 }
 .util-btn:hover { border-color: var(--oro); color: var(--oro); transform: translateY(-1px); }
 .util-btn svg { width: 19px; height: 19px; }
-/* Acceso directo a Analyst Signals en la barra (web): estrella dorada + puntico verde */
-.signals-star { position: relative; color: var(--oro); }
-.signals-star:hover { color: var(--oro); }
+/* Acceso directo a Analyst Signals en la barra (web): su LOGO real + puntico verde */
+.signals-star { position: relative; padding: 0 9px; }
+.signals-star-img { width: 23px; height: 23px; object-fit: contain; border-radius: 5px; display: block; }
+.signals-star-img.fail { display: none; }
 
 .btn-oro {
   height: 40px; padding: 0 18px; border: 0; border-radius: 11px;
@@ -1765,7 +1766,7 @@
 .chatm::before { content: ''; position: absolute; inset: 0; z-index: 0; background: url('../imagenes/fondos/fondo-pagina.webp') center/cover no-repeat; }
 .chatm::after { content: ''; position: absolute; inset: 0; z-index: 0; background: linear-gradient(180deg, rgba(8,11,18,.9), rgba(6,9,15,.94)); }
 .chatm-body { position: relative; z-index: 1; height: 100%; }
-.chatm-x { position: absolute; top: 12px; right: 12px; z-index: 5; width: 34px; height: 34px; border-radius: 50%;
+.chatm-x { position: absolute; top: 12px; right: 12px; z-index: 5; width: 36px; height: 36px; border-radius: 10px;
   border: 1px solid rgba(255,255,255,.14); background: rgba(20,26,36,.9); color: #cdd6e2; cursor: pointer; display: grid; place-items: center; }
 .chatm-x:hover { color: #fff; border-color: rgba(240,53,58,.5); background: rgba(240,53,58,.15); }
 .chatm-x svg { width: 17px; height: 17px; }
@@ -1799,6 +1800,6 @@
 /* ===== Chat: header con campana de avisos de analistas ===== */
 .chat-head { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
 .chat-head-l { min-width: 0; }
-.chat-bell { flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color: #9aa4b2; cursor: pointer; display: grid; place-items: center; transition: all .15s; }
+.chat-bell { flex: none; width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color: #9aa4b2; cursor: pointer; display: grid; place-items: center; transition: all .15s; }
 .chat-bell svg { width: 19px; height: 19px; }
 .chat-bell.on { color: #e8c46a; border-color: rgba(232,196,106,.5); background: rgba(232,196,106,.14); }
