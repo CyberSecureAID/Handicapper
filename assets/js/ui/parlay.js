@@ -432,48 +432,54 @@ function analisisPick(p, cfg) {
   const es = ES();
   const L2 = (en, esT) => es ? esT : en;
   const nom = (p.nombre || '').split(' ').slice(-2).join(' ');
-  const riv = p.rivalAbrev || (es ? 'el rival' : 'the opponent');
+  const riv = p.rivalAbrev || L2('the opponent', 'el rival');
   const pr = p.prob;
   const M = cfg.metric;
-  // semilla determinista
-  const sem = String((p.nombre || '') + (p.rivalAbrev || '') + M);
-  let h = 0; for (let i = 0; i < sem.length; i++) h = (h * 33 + sem.charCodeAt(i)) & 0x7fffffff;
-  const pick = (arr, off) => arr[((h >> off) & 0x3fffffff) % arr.length];
+  const h = p.hist || null;
 
-  // Debilidad del rival, según el deporte (usa el dato real que ya trae el pick)
-  let debil = null;
-  if (M === 'P(1+ TD)' && p.tdPermRival != null && p.tdPermRival >= 2.8) debil = L2(`a defense that's been leaking touchdowns`, `una defensa que viene regalando touchdowns`);
-  else if ((M === 'P(≥1 hit)') && p.pitcherEra != null && +p.pitcherEra >= 4.2) debil = L2(`a starter who's been very hittable`, `un abridor al que le conectan con facilidad`);
-  else if (M === 'P(≥1 goal)' && p.gaRival != null && +p.gaRival >= 1.4) debil = L2(`a back line that concedes chances`, `una zaga que concede ocasiones`);
-  else if (M === 'P(20+ pts)' && p.ptsPermRival != null && +p.ptsPermRival >= 115) debil = L2(`a defense that can't slow scorers`, `una defensa que no frena a los anotadores`);
-  else if (M === 'P(2+ SOG)' && p.saRival != null && +p.saRival >= 31) debil = L2(`a team that gives up shot volume`, `un equipo que permite mucho volumen de tiro`);
+  // Vocabulario por deporte (la linea y la unidad reales).
+  const VOC = {
+    'P(20+ pts)': { linea: L2('20 points', '20 puntos'), u: L2('points', 'puntos') },
+    'P(≥1 hit)':  { linea: L2('a hit', 'un hit'),         u: L2('hits', 'hits') },
+    'P(2+ SOG)':  { linea: L2('2 shots', '2 tiros'),      u: L2('shots', 'tiros') },
+    'P(1+ TD)':   { linea: L2('a touchdown', 'un touchdown'), u: '' },
+    'P(2+ goals)':{ linea: L2('2 goals', '2 goles'),      u: L2('goals', 'goles') },
+  }[M] || { linea: L2('the line', 'la línea'), u: '' };
 
-  // Verbo del deporte
-  const meta = { 'P(1+ TD)': L2('find the end zone','ver la end zone'), 'P(≥1 hit)': L2('connect','conectar'),
-    'P(≥1 goal)': L2('find the net','ver puerta'), 'P(20+ pts)': L2('go off','explotar'),
-    'P(2+ SOG)': L2('pepper the net','tirar a puerta'), 'P(1+ HR)': L2('go deep','volarla') }[M] || L2('deliver','responder');
+  // Semilla que incluye los NUMEROS del jugador -> cada tarjeta es unica.
+  const sem = String((p.nombre || '') + riv + M + (h ? `${h.aciertos}-${h.muestra}-${h.mejor}` : pr));
+  let hs = 0; for (let i = 0; i < sem.length; i++) hs = (hs * 33 + sem.charCodeAt(i)) & 0x7fffffff;
+  const pick = (arr, off) => arr[((hs >> off) & 0x3fffffff) % arr.length];
 
-  // Apertura: el spot (con o sin debilidad concreta del rival)
-  const spot = debil
-    ? pick([
-        L2(`${nom} against ${riv}, ${debil}, is the kind of spot you circle.`, `${nom} contra ${riv}, ${debil}, es de esos partidos que uno marca.`),
-        L2(`Put ${nom} in front of ${debil} and the matchup does half the work.`, `Pon a ${nom} frente a ${debil} y el cruce hace la mitad del trabajo.`),
-        L2(`This is the matchup to target: ${nom} versus ${riv}, ${debil}.`, `Este es el cruce a buscar: ${nom} contra ${riv}, ${debil}.`)], 3)
-    : pick([
-        L2(`${nom} has been the reliable one here, and the role is exactly what you want.`, `${nom} ha sido el fiable aquí, y el rol es justo el que quieres.`),
-        L2(`${nom} keeps getting the looks that matter, and that's what tips this.`, `${nom} sigue recibiendo las oportunidades que importan, y eso es lo que lo inclina.`),
-        L2(`Volume and role make ${nom} the sensible name against ${riv}.`, `Volumen y rol hacen de ${nom} el nombre sensato frente a ${riv}.`)], 3);
+  if (h && h.muestra) {
+    // Parrafo basado en el HISTORIAL REAL: nunca el mismo (los numeros cambian) y variado.
+    const rec = pick([
+      L2(`${nom} has cleared ${VOC.linea} in ${h.aciertos} of his last ${h.muestra}`, `${nom} ha superado ${VOC.linea} en ${h.aciertos} de sus últimos ${h.muestra}`),
+      L2(`In his last ${h.muestra} games, ${nom} got there ${h.aciertos} times`, `En sus últimos ${h.muestra} partidos, ${nom} lo logró ${h.aciertos} veces`),
+      L2(`${h.aciertos} of ${nom}'s last ${h.muestra} went over ${VOC.linea}`, `${h.aciertos} de los últimos ${h.muestra} de ${nom} pasaron de ${VOC.linea}`),
+      L2(`The tape backs ${nom}: ${h.aciertos} games over ${VOC.linea} in his last ${h.muestra}`, `La evidencia respalda a ${nom}: ${h.aciertos} partidos sobre ${VOC.linea} en sus últimos ${h.muestra}`),
+    ], 3);
+    const alto = (h.mejor && VOC.u) ? pick([
+      L2(`, as high as ${h.mejor} ${VOC.u}`, `, con hasta ${h.mejor} ${VOC.u}`),
+      L2(` (peak of ${h.mejor})`, ` (tope de ${h.mejor})`),
+      L2(`, with a ${h.mejor}-${VOC.u} high`, `, con un máximo de ${h.mejor} ${VOC.u}`),
+      ``,
+    ], 7) : '';
+    const cierre = pick([
+      L2(` At ${pr}%, the sample does the talking against ${riv}.`, ` Con ${pr}%, la muestra habla frente a ${riv}.`),
+      L2(` That consistency is why he tops the board today, not a hunch.`, ` Esa constancia es por lo que encabeza el tablero hoy, no una corazonada.`),
+      L2(` Measurable and repeatable: exactly what you pay for here.`, ` Medible y repetible: justo lo que pagas aquí.`),
+      L2(` Against ${riv}, that track record is the real edge.`, ` Contra ${riv}, ese historial es la ventaja real.`),
+    ], 13);
+    return `${rec}${alto}.${cierre}`;
+  }
 
-  // Cierre: el número como remate (sin prometer)
-  const cierre = pr >= 70
-    ? pick([
-        L2(`At ${pr}%, this is one of the cleaner looks to ${meta} on the board today.`, `Con ${pr}%, es de las opciones más limpias para ${meta} en toda la jornada.`),
-        L2(`${pr}% to ${meta} is a strong number, and I'd trust it.`, `${pr}% para ${meta} es un número fuerte, y me fío de él.`)], 9)
-    : pick([
-        L2(`${pr}% to ${meta} isn't a lock, but it's real value in a good spot.`, `${pr}% para ${meta} no es seguro, pero es valor real en un buen sitio.`),
-        L2(`At ${pr}%, the edge is there without needing everything to break right.`, `Con ${pr}%, la ventaja está sin necesitar que todo salga perfecto.`)], 9);
-
-  return `${spot} ${cierre}`;
+  // Sin historial (p.ej. mercados por partido): texto variado por jugador.
+  return pick([
+    L2(`${nom} profiles as the sharpest look here at ${pr}%.`, `${nom} es la opción más clara aquí con ${pr}%.`),
+    L2(`At ${pr}%, ${nom} is the name to circle against ${riv}.`, `Con ${pr}%, ${nom} es el nombre a marcar frente a ${riv}.`),
+    L2(`${nom} brings the role and the volume this spot rewards.`, `${nom} aporta el rol y el volumen que este cruce premia.`),
+  ], 5);
 }
 
 function veredicto(p, cfg) {
