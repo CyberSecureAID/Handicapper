@@ -282,6 +282,12 @@ function inyectarCSS() {
   .ply-analyze{margin-top:15px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#241a06;background:linear-gradient(90deg,#e8c46a,#f6e2a6);border:0;border-radius:10px;padding:11px 12px;cursor:pointer;transition:filter .15s}
   .ply-analyze:hover{filter:brightness(1.06)}
   .ply-analyze svg{width:15px;height:15px}
+  .ply-actions{display:flex;gap:8px;margin-top:15px;align-items:stretch}
+  .ply-actions .ply-analyze{margin-top:0;flex:1 1 auto}
+  .ply-share{flex:0 0 auto;width:46px;display:flex;align-items:center;justify-content:center;background:linear-gradient(150deg,#25d366,#11924c);color:#fff;border:0;border-radius:10px;cursor:pointer;transition:filter .15s,transform .1s;box-shadow:0 3px 11px rgba(18,140,75,.38)}
+  .ply-share:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .ply-share:active{transform:translateY(0) scale(.97)}
+  .ply-share svg{width:21px;height:21px}
   .ply-foot{color:var(--tx3);font-size:11.5px;line-height:1.6;text-align:center;margin-top:20px;padding:0 10px}
   .ply-lock{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line);isolation:isolate}
   .ply-lock-in{position:relative;z-index:2;padding:56px 26px;text-align:center}
@@ -297,6 +303,34 @@ function inyectarCSS() {
 /* ---------- Render ---------- */
 const tagTxt = (t) => (typeof t === 'function' ? t() : t);
 const IC_LUPA = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/></svg>`;
+const IC_WA = `<svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.1 1.6 5.9L4 29l8.3-2.2c1.7.9 3.6 1.4 5.5 1.4h.2C24.6 28.2 30 22.8 30 16.2 30 9.6 24.6 3 16 3zm0 22.9h-.1c-1.7 0-3.4-.5-4.9-1.4l-.3-.2-4.9 1.3 1.3-4.8-.2-.4c-1-1.6-1.5-3.4-1.5-5.3C5.2 10 10 5.2 16 5.2s10.8 4.8 10.8 10.8S22 25.9 16 25.9z"/><path d="M22 18.3c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-1.8-.9-3-1.6-4.2-3.6-.3-.5.3-.5.8-1.6.1-.2 0-.4 0-.5-.1-.1-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.3 5.2 4.6 1.9.8 2.7.9 3.6.8.6-.1 1.9-.8 2.1-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z"/></svg>`;
+const SITIO = 'https://cybersecureaid.github.io/Handicapper/';
+/* Mensaje para compartir (WhatsApp): limpio, sin emojis, en el idioma del usuario. */
+function textoCompartir(p, que) {
+  const pct = p.prob != null ? `${p.prob}%` : '';
+  const a = p.nomLocal || p.equipoAbrev || '', b = p.nomVisita || p.rivalAbrev || '';
+  const duelo = (a && b) ? `${a} vs ${b}` : (a || b || '');
+  const qt = String(que || '').replace(/<br>/g, ' ').trim();
+  return L(
+    `Sports Expectations - Today's pick\n${p.nombre}: ${pct} to hit ${qt}\n${duelo}\nFull breakdown: ${SITIO}`,
+    `Sports Expectations - Pick del dia\n${p.nombre}: ${pct} de lograr ${qt}\n${duelo}\nAnalisis completo: ${SITIO}`
+  );
+}
+/* Compartir a WhatsApp: listener delegado unico (captura), corta el click de la
+   tarjeta y abre wa.me con el texto del pick. Sirve en todas las secciones. */
+let _shareWired = false;
+function wireShareGlobal() {
+  if (_shareWired || typeof document === 'undefined') return;
+  _shareWired = true;
+  document.addEventListener('click', (e) => {
+    const b = e.target && e.target.closest && e.target.closest('.ply-share[data-sharetext]');
+    if (!b) return;
+    e.stopPropagation(); e.preventDefault();
+    const t = b.dataset.sharetext || '';
+    try { window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank', 'noopener'); } catch (_) {}
+  }, true);
+}
+wireShareGlobal();   // queda cableado al cargar el modulo, cubre todas las vistas
 
 const APUESTAS = [
   { id: 'hits', cls: 'hits', label: () => L('Hits', 'Hits') },
@@ -626,7 +660,10 @@ function cardHTML(p, cfg) {
     <div class="ply-track"><div class="ply-fill" data-w="${p.prob}"></div></div>
     <div class="ply-verdict ${vd.tono}">${esc(vd.texto)}</div>
     <span class="ply-conf ${conf}"><i></i>${L('Confidence', 'Confianza')} ${esc(confLabel(conf))}</span>
-    <button class="ply-analyze" data-analyze="${p.rank}">${IC_LUPA}${L('Analyze · Last 10', 'Analizar · Últimos 10')}</button>
+    <div class="ply-actions">
+      <button class="ply-analyze" data-analyze="${p.rank}">${IC_LUPA}${L('Analyze · Last 10', 'Analizar · Últimos 10')}</button>
+      <button class="ply-share" data-share="${p.rank}" aria-label="${L('Share on WhatsApp', 'Compartir en WhatsApp')}" title="WhatsApp" data-sharetext="${esc(textoCompartir(p, que))}">${IC_WA}</button>
+    </div>
   </article>`;
 }
 
@@ -728,6 +765,7 @@ function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
   </div>`;
   animar(cont);
   wireBets(cont);
+  wireShareGlobal();
   const abrir = (idx) => { const j = jugadores[idx - 1]; if (!j) return; if (j.esPartido) abrirTrackerGoles(j); else abrirTracker(j, cfg._sport); };
   cont.querySelectorAll('.ply-analyze[data-analyze]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); abrir(+b.dataset.analyze); }));
   cont.querySelectorAll('.ply-c[data-idx]').forEach(el => el.addEventListener('click', () => abrir(+el.dataset.idx)));
