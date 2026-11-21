@@ -156,7 +156,7 @@ async function enviarMsg({ texto, sticker = null }) {
   const doc = {
     uid: _yo.uid || null,
     nombre: _yo.nombre || (ES ? 'Usuario' : 'User'),
-    foto: _nivel === 'premium' ? (_yo.foto || null) : null,
+    foto: _yo.foto || null,   // foto para cualquier usuario que pueda chatear, no solo Premium
     nivel: _nivel, texto: (texto || '').slice(0, MAX_LEN), ts: _S.serverTimestamp(),
   };
   if (sticker) doc.sticker = sticker;
