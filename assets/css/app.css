@@ -117,6 +117,9 @@
 .side .liga:hover { background: rgba(255,255,255,.07); color: #fff; }
 .side .liga.on { background: var(--oro-suave); border-color: rgba(232,184,75,.5); color: var(--oro); }
 .side .liga.on .ic { color: var(--oro); }
+/* Glosario: enlace de utilidad, separado de la lista de ligas por un hilo fino */
+.liga-glosario { margin-top: 12px; position: relative; }
+.liga-glosario::before { content: ""; position: absolute; top: -6px; left: 13px; right: 13px; height: 1px; background: var(--linea); }
 /* En tema claro el dorado sobre blanco se pierde: seleccionado = chip oscuro legible */
 [data-tema="claro"] .side .liga.on,
 [data-tema="claro"] .drawer .liga.on {
