@@ -20,6 +20,7 @@ import { enriquecerMLB } from './mlb-oficial.js';
 import { comparativaEquiposESPN } from './equipos-stats.js';
 import { fotosSportsDB } from './proveedor-sportsdb.js';
 import { ordenar } from './relevancia.js';
+import { pedirJSON } from './red.js';
 
 /* Mapa de nuestras ligas -> ruta ESPN {deporte}/{liga} */
 const RUTA = {
@@ -63,9 +64,7 @@ const TTL = 60 * 1000;             // 60s
 async function pedir(url) {
   const c = _cache.get(url);
   if (c && (Date.now() - c.t) < TTL) return c.data;
-  const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
-  if (!r.ok) throw new Error('ESPN ' + r.status);
-  const data = await r.json();
+  const data = await pedirJSON(url);   // red compartida: tope de tiempo + respaldo de proxy (directo primero)
   _cache.set(url, { t: Date.now(), data });
   return data;
 }
