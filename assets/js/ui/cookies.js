@@ -34,11 +34,11 @@ function inyectar() {
   const st = document.createElement('style'); st.id = 'ck-css';
   st.textContent = `
   /* ===== Escritorio: barra horizontal ancha y baja ===== */
-  .ck-card{position:fixed;z-index:1200;right:40px;bottom:clamp(182px,22vh,248px);
+  .ck-card{position:fixed;z-index:1200;right:40px;bottom:clamp(110px,calc(54vh - 210px),380px);
     width:min(720px,calc(100vw - 72px));
-    display:flex;align-items:center;gap:18px;
+    display:flex;align-items:center;gap:16px;
     padding:14px 18px;border-radius:18px;
-    background:linear-gradient(120deg,rgba(17,25,38,.72),rgba(8,13,21,.80));
+    background:linear-gradient(120deg,rgba(17,25,38,.56),rgba(8,13,21,.66));
     border:1px solid rgba(255,255,255,.10);
     box-shadow:0 30px 64px -22px rgba(0,0,0,.72),0 12px 26px -16px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08);
     backdrop-filter:blur(17px) saturate(122%);-webkit-backdrop-filter:blur(17px) saturate(122%);
@@ -49,12 +49,10 @@ function inyectar() {
   .ck-card::before{content:"";position:absolute;left:0;top:13px;bottom:13px;width:4px;border-radius:0 6px 6px 0;
     background:linear-gradient(180deg,var(--azul,#1d9bf0),var(--oro,#E8B84B),var(--rojo,#e23b3f))}
   .ck-top{display:flex;align-items:center;gap:14px;flex:1;min-width:0;margin:0}
-  .ck-ic{flex:none;width:48px;height:48px;border-radius:13px;overflow:hidden;display:grid;place-items:center;
-    background:radial-gradient(120% 120% at 30% 25%,#3a2a16,#1a1206);
-    border:1px solid rgba(232,184,75,.30);
-    box-shadow:0 8px 18px -6px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.14)}
-  .ck-ic img{width:100%;height:100%;object-fit:cover;display:block}
-  .ck-ic svg{width:28px;height:28px}
+  .ck-ic{flex:none;width:48px;height:48px;display:grid;place-items:center;overflow:visible;
+    background:none;border:0;box-shadow:none;border-radius:0}
+  .ck-ic img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 4px 10px rgba(0,0,0,.45))}
+  .ck-ic svg{width:40px;height:40px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.45))}
   .ck-htx{min-width:0;flex:1}
   .ck-ttl{font-family:var(--display,"Chakra Petch",sans-serif);font-weight:800;font-size:15.5px;
     letter-spacing:.01em;color:var(--tinta,#f2f5f8);line-height:1.15}
@@ -79,7 +77,7 @@ function inyectar() {
     .ck-card.on{transform:none}
     .ck-card::before{top:12px;bottom:12px}
     .ck-top{gap:11px;flex:none}
-    .ck-ic{width:40px;height:40px;border-radius:11px}.ck-ic svg{width:23px;height:23px}
+    .ck-ic{width:40px;height:40px}.ck-ic svg{width:34px;height:34px}
     .ck-ttl{font-size:13px}
     .ck-sub{font-size:11px}
     .ck-x{display:grid;flex:none;width:30px;height:30px;border-radius:9px;place-items:center;cursor:pointer;
