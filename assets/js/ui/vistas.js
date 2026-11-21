@@ -12,6 +12,7 @@ const LIGA_ICONO = {
   mlb: 'dep-mlb', nba: 'dep-nba', nfl: 'dep-nfl', nhl: 'dep-nhl',
   epl: 'dep-premier', laliga: 'dep-laliga', ucl: 'dep-champions',
   seriea: 'dep-seriea', bundes: 'dep-bundesliga',
+  invierno: 'dep-invierno', mexliga: 'dep-mexliga', mls: 'dep-mls',
 };
 function ligaCuno(p) {
   const k = LIGA_ICONO[p.ligaId];
@@ -363,7 +364,7 @@ export function detalle(p, opciones = {}) {
     nhl: { C: 'Center|Centro', LW: 'Left Wing|Ala izq.', RW: 'Right Wing|Ala der.', W: 'Winger|Extremo', D: 'Defenseman|Defensa', G: 'Goalie|Portero' },
     nfl: { QB: 'Quarterback|QB', RB: 'Running Back|RB', WR: 'Wide Receiver|WR', TE: 'Tight End|TE', K: 'Kicker|Pateador' },
   };
-  const grupoLiga = (id) => (['epl', 'laliga', 'ucl', 'seriea', 'bundes', 'ligue1'].includes(id) ? 'soccer' : id);
+  const grupoLiga = (id) => (['epl', 'laliga', 'ucl', 'seriea', 'bundes', 'ligue1', 'mexliga', 'mls'].includes(id) ? 'soccer' : id);
   function rolLegible(pos) {
     const raw = String(pos || '').toUpperCase().trim(); if (!raw) return '';
     const g = ROL_MAP[grupoLiga(p.ligaId)] || {};

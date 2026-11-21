@@ -16,9 +16,9 @@ const FONDO = 'assets/imagenes/fondos';
 
 /* Deporte por liga */
 function deporteDe(ligaId) {
-  if (ligaId === 'mlb') return 'beisbol';
+  if (ligaId === 'mlb' || ligaId === 'invierno') return 'beisbol';
   if (ligaId === 'nba') return 'basket';
-  if (['epl', 'laliga', 'ucl', 'seriea', 'bundes'].includes(ligaId)) return 'futbol';
+  if (['epl', 'laliga', 'ucl', 'seriea', 'bundes', 'mexliga', 'mls'].includes(ligaId)) return 'futbol';
   return 'futbol'; // NFL/NHL u otros: figura neutra de respaldo
 }
 
