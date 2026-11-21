@@ -11,6 +11,7 @@ import * as N from './nucleo.js';
 import { detallePartido } from '../datos/proveedor-api.js';
 import { pedirJSON } from '../datos/red.js';
 import { calendarioEventos } from './calendario.js';
+import { rankearPorHistorial } from '../datos/historial.js';
 
 const API = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
 const UMBRAL = 20;               // línea de referencia (puntos)
@@ -235,26 +236,27 @@ export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {
       let count = 0;
       for (const jug of roster) {
         if (count >= maxPorEquipo) break;
-        if ((jug.ppg || 0) < 8) continue;   // solo anotadores relevantes
-        const est = estimarPuntos({ jugador: { ...jug, titular: true }, oponente, local: lado.local, lineupConfirmado: false });
+        if ((jug.ppg || 0) < 8) continue;   // prior de temporada: anotadores relevantes
         candidatos.push({
           id: jug.id, nombre: jug.nombre, equipoAbrev: lado.equipo.abbreviation, rivalAbrev: lado.rival.abbreviation,
-          ppg: jug.ppg, mpg: jug.mpg, local: lado.local, cuando: ev.date, logoLocal: lado.equipo.logo || (lado.equipo.logos && lado.equipo.logos[0] && lado.equipo.logos[0].href) || null, logoVisita: lado.rival.logo || (lado.rival.logos && lado.rival.logos[0] && lado.rival.logos[0].href) || null, nomLocal: lado.equipo.shortDisplayName || lado.equipo.name, nomVisita: lado.rival.shortDisplayName || lado.rival.name,  ptsPermRival: oponente.ptsPermitidos, ...est,
+          ppg: jug.ppg, mpg: jug.mpg, local: lado.local, cuando: ev.date,
+          logoLocal: lado.equipo.logo || (lado.equipo.logos && lado.equipo.logos[0] && lado.equipo.logos[0].href) || null,
+          logoVisita: lado.rival.logo || (lado.rival.logos && lado.rival.logos[0] && lado.rival.logos[0].href) || null,
+          nomLocal: lado.equipo.shortDisplayName || lado.equipo.name, nomVisita: lado.rival.shortDisplayName || lado.rival.name,
+          ptsPermRival: oponente.ptsPermitidos,
         });
         count++;
       }
     }
   }
 
-  candidatos.sort((a, b) => (new Date(a.cuando) - new Date(b.cuando)) || (b.prob - a.prob) || (b.proj - a.proj));
-  // Calidad: prioriza a los anotadores de verdad (evita relleno de bajo promedio).
-  let elegidos = candidatos.filter(c => (c.ppg || 0) >= 15);
-  if (elegidos.length < 4) elegidos = candidatos.filter(c => (c.ppg || 0) >= 12);
-  if (elegidos.length < 3) elegidos = candidatos;
-  const top = elegidos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
-  try { console.log(`[NBA-DIAG] eventos=${eventos.length} candidatos=${candidatos.length} elegidos=${elegidos.length}`); } catch(_){}
+  // Ordena por señal de temporada (prior) y RANQUEA por el historial REAL de los
+  // ultimos 10: la probabilidad = aciertos reales / muestra. Solo lo mejor (>=55%),
+  // sin inventar a quien no tiene historial verificable.
+  candidatos.sort((a, b) => (b.ppg || 0) - (a.ppg || 0));
+  const top = await rankearPorHistorial('nba', candidatos, { n });
   return {
     jugadores: top,
-    meta: { fecha, fuente: 'ESPN', modelo: `P(${UMBRAL}+ pts) = Φ((μ − ${UMBRAL})/σ) · estimación propia`, candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)] },
+    meta: { fecha, fuente: 'ESPN', modelo: 'P(20+ pts) = aciertos reales en los ultimos 10 partidos', candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)] },
   };
 }

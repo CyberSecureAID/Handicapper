@@ -13,6 +13,7 @@ import * as N from './nucleo.js';
 import { detallePartido } from '../datos/proveedor-api.js';
 import { pedirJSON } from '../datos/red.js';
 import { calendarioEventos } from './calendario.js';
+import { rankearPorHistorial } from '../datos/historial.js';
 
 const API = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl';
 const UMBRAL = 1;              // línea de referencia: 1+ touchdown
@@ -217,23 +218,25 @@ export async function topTouchdownProjection({ fecha, n = 9, maxPorEquipo = 5 } 
       let count = 0;
       for (const jug of roster) {
         if (count >= maxPorEquipo) break;
-        if ((jug.tdRate || 0) <= 0) continue;   // solo quien ha anotado
-        const est = estimarTD({ jugador: { ...jug, titular: true }, oponente, local: lado.local, lineupConfirmado: false });
+        if ((jug.tdRate || 0) <= 0) continue;   // prior de temporada: quien anota
         candidatos.push({
           id: jug.id, nombre: jug.nombre, pos: jug.pos,
-          equipoAbrev: lado.equipo.abbreviation, rivalAbrev: lado.rival.abbreviation, cuando: ev.date, logoLocal: lado.equipo.logo || (lado.equipo.logos && lado.equipo.logos[0] && lado.equipo.logos[0].href) || null, logoVisita: lado.rival.logo || (lado.rival.logos && lado.rival.logos[0] && lado.rival.logos[0].href) || null, nomLocal: lado.equipo.shortDisplayName || lado.equipo.name, nomVisita: lado.rival.shortDisplayName || lado.rival.name, 
-          tdRate: jug.tdRate, tdTot: jug.tdTot, local: lado.local,
-          tdPermRival: oponente.tdPermPorPartido, ...est,
+          equipoAbrev: lado.equipo.abbreviation, rivalAbrev: lado.rival.abbreviation, cuando: ev.date,
+          logoLocal: lado.equipo.logo || (lado.equipo.logos && lado.equipo.logos[0] && lado.equipo.logos[0].href) || null,
+          logoVisita: lado.rival.logo || (lado.rival.logos && lado.rival.logos[0] && lado.rival.logos[0].href) || null,
+          nomLocal: lado.equipo.shortDisplayName || lado.equipo.name, nomVisita: lado.rival.shortDisplayName || lado.rival.name,
+          tdRate: jug.tdRate, local: lado.local, tdPermRival: oponente.tdPermPorPartido,
         });
         count++;
       }
     }
   }
 
-  candidatos.sort((a, b) => (new Date(a.cuando) - new Date(b.cuando)) || (b.prob - a.prob) || ((b.tdRate || 0) - (a.tdRate || 0)));
-  const top = candidatos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
+  // Prob = veces que SI anotó TD en sus ultimos partidos reales. Solo los mejores.
+  candidatos.sort((a, b) => (b.tdRate || 0) - (a.tdRate || 0));
+  const top = await rankearPorHistorial('nfl', candidatos, { n });
   return {
     jugadores: top,
-    meta: { fecha, fuente: 'ESPN', modelo: 'P(1+ TD) = 1 - e^(-lambda) · estimación propia', candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)] },
+    meta: { fecha, fuente: 'ESPN', modelo: 'P(1+ TD) = veces que anotó en los ultimos 10 partidos', candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)] },
   };
 }

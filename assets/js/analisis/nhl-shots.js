@@ -10,6 +10,7 @@
 
 import * as N from './nucleo.js';
 import { detallePartido, listarPartidos } from '../datos/proveedor-api.js';
+import { rankearPorHistorial } from '../datos/historial.js';
 
 const WEB = 'https://api-web.nhle.com/v1';
 const STATS = 'https://api.nhle.com/stats/rest/en';
@@ -192,24 +193,20 @@ export async function topShotsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}
       let count = 0;
       for (const jug of lista) {
         if (count >= maxPorEquipo) break;
-        if (jug.spg < 1.5) continue;
-        const est = estimarTiros({ jugador: { ...jug, titular: true }, oponente: {}, local: lado.local, lineupConfirmado: false });
+        if (jug.spg < 1.5) continue;   // prior de temporada
         candidatos.push({
           id: jug.id, nombre: jug.nombre, foto: jug.foto,
           equipoAbrev: lado.equipo.abrev, rivalAbrev: lado.rival.abrev,
           nomLocal: lado.equipo.nombre, nomVisita: lado.rival.nombre,
           logoLocal: lado.equipo.logo, logoVisita: lado.rival.logo,
-          pos: jug.pos, spg: jug.spg, local: lado.local, cuando: p.cuando, ...est,
+          pos: jug.pos, spg: jug.spg, local: lado.local, cuando: p.cuando,
         });
         count++;
       }
     }
   }
 
-  candidatos.sort((a, b) => (new Date(a.cuando) - new Date(b.cuando)) || (b.prob - a.prob) || (b.proj - a.proj));
-  let elegidos = candidatos.filter(c => (c.spg || 0) >= 2.5);
-  if (elegidos.length < 4) elegidos = candidatos.filter(c => (c.spg || 0) >= 2);
-  if (elegidos.length < 3) elegidos = candidatos;
-  const top = elegidos.slice(0, n).map((c, i) => ({ rank: i + 1, ...c }));
-  return { jugadores: top, meta: { fecha, fuente: 'ESPN', modelo: 'P(2+ tiros) = 1 - e^(-λ)(1+λ)', candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)] } };
+  candidatos.sort((a, b) => (b.spg || 0) - (a.spg || 0));
+  const top = await rankearPorHistorial('nhl', candidatos, { n });
+  return { jugadores: top, meta: { fecha, fuente: 'ESPN', modelo: 'P(2+ tiros) = veces con 2+ tiros en los ultimos 10 partidos', candidatosEvaluados: candidatos.length, avisos: [...new Set(avisos)] } };
 }
