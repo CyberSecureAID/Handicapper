@@ -212,11 +212,20 @@ function inyectarCSS() {
   .ply-note{display:flex;gap:9px;align-items:center;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--tx2);font-size:12px;padding:9px 13px;border-radius:10px;margin-bottom:16px}
   .ply-note i{width:6px;height:6px;border-radius:50%;background:var(--oro);flex:0 0 auto}
   .ply-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
-  .ply-skel{border:1px solid var(--line);border-radius:16px;padding:18px;height:190px;position:relative;overflow:hidden;background:rgba(255,255,255,.02)}
-  .ply-skel::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);transform:translateX(-100%);animation:ply-shimmer 1.3s infinite}
-  .ply-skel b{display:block;height:12px;border-radius:6px;background:rgba(255,255,255,.06);margin-bottom:12px}
-  .ply-skel b.w1{width:55%;height:16px}.ply-skel b.w2{width:38%}.ply-skel b.w3{width:80%;margin-top:20px}.ply-skel b.w4{width:70%}
+  .ply-skel{border:1px solid var(--line);border-radius:16px;padding:16px;position:relative;overflow:hidden;background:rgba(255,255,255,.02)}
+  .ply-skel::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);transform:translateX(-100%);animation:ply-shimmer 1.25s infinite}
+  .sk-el{background:rgba(255,255,255,.07);border-radius:8px;display:block}
+  .sk-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .sk-rank{width:34px;height:34px;border-radius:9px}
+  .sk-when{width:86px;height:16px;border-radius:7px}
+  .sk-match{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px}
+  .sk-logo{width:44px;height:44px;border-radius:50%}
+  .sk-vs{width:24px;height:12px}
+  .sk-line{height:12px;border-radius:6px;margin-bottom:10px}
+  .sk-line.w1{width:72%}.sk-line.w2{width:46%}
+  .sk-btn{height:38px;border-radius:10px;margin-top:16px}
   @keyframes ply-shimmer{100%{transform:translateX(100%)}}
+  .elite-loadwrap{margin-top:16px}
   .ply-c{position:relative;border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;overflow:hidden;cursor:pointer;
     background:linear-gradient(180deg,rgba(17,25,37,.90),rgba(11,17,25,.95)),url('${TEXTURA}') center/cover;
     transition:transform .16s ease,border-color .16s ease}
@@ -247,9 +256,10 @@ function inyectarCSS() {
   .ply-fill{height:100%;border-radius:6px;width:0;transition:width 1s cubic-bezier(.2,.7,.2,1);background:linear-gradient(90deg,var(--oro2),#f6e2a6);box-shadow:0 0 14px rgba(232,196,106,.4)}
   .ply-conf{display:inline-flex;align-items:center;gap:7px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:5px 12px}
   .ply-cg{text-align:center}
-  .plyg-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-  .plyg-when{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:#0f1622;background:linear-gradient(180deg,#e8c46a,#cfa63f);border-radius:6px;padding:3px 8px}
-  .plyg-top .ply-conf{margin-left:6px}
+  .plyg-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:10px}
+  .plyg-top .ply-rank{justify-self:start}
+  .plyg-when{justify-self:center;font-size:10px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:#0f1622;background:linear-gradient(180deg,#e8c46a,#cfa63f);border-radius:6px;padding:3px 10px;white-space:nowrap}
+  .plyg-top .ply-conf{justify-self:end;margin-left:0}
   .plyg-match{display:flex;align-items:center;justify-content:center;gap:14px;margin:4px 0 14px}
   .plyg-side{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1 1 0;min-width:0}
   .plyg-logo{width:58px;height:58px;display:grid;place-items:center}
@@ -304,7 +314,7 @@ function inyectarCSS() {
 const tagTxt = (t) => (typeof t === 'function' ? t() : t);
 const IC_LUPA = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/></svg>`;
 const IC_WA = `<svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.1 1.6 5.9L4 29l8.3-2.2c1.7.9 3.6 1.4 5.5 1.4h.2C24.6 28.2 30 22.8 30 16.2 30 9.6 24.6 3 16 3zm0 22.9h-.1c-1.7 0-3.4-.5-4.9-1.4l-.3-.2-4.9 1.3 1.3-4.8-.2-.4c-1-1.6-1.5-3.4-1.5-5.3C5.2 10 10 5.2 16 5.2s10.8 4.8 10.8 10.8S22 25.9 16 25.9z"/><path d="M22 18.3c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-1.8-.9-3-1.6-4.2-3.6-.3-.5.3-.5.8-1.6.1-.2 0-.4 0-.5-.1-.1-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.3 5.2 4.6 1.9.8 2.7.9 3.6.8.6-.1 1.9-.8 2.1-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z"/></svg>`;
-const SITIO = 'https://cybersecureaid.github.io/Handicapper/';
+const SITIO = 'https://sportsexpectations.com';
 /* Mensaje para compartir (WhatsApp): limpio, sin emojis, en el idioma del usuario. */
 function textoCompartir(p, que) {
   const pct = p.prob != null ? `${p.prob}%` : '';
@@ -441,18 +451,30 @@ function confPorProb(prob, cfg) {
   return 'baja';
 }
 
-/* Curación (regla obligatoria): SOLO jugadores de ALTA confianza (prob >= umbral
-   alto del deporte). Calidad, no cantidad: mejor mostrar 1 o 2 monstruos que
-   rellenar con dudosos. Si nadie califica, la vista queda vacía (con aviso). */
+/* Piso de probabilidad por mercado: por debajo de esto NO se muestra en Premium.
+   Un 55% o un 5-de-10 es irrelevante para quien apuesta: es relleno. Cada mercado
+   tiene su piso real (los jonrones y los goles de jugador son raros por naturaleza,
+   por eso su piso es mas bajo, pero sigue siendo "lo fuerte" de ese mercado). */
+const PISO = {
+  'P(≥1 hit)': 64,     // hit: lo normal ronda 65%, lo fuerte 70%+
+  'P(2+ goals)': 62,   // over 1.5 del partido: duelos con gol de sobra
+  'P(20+ pts)': 63,    // anotadores de fiar
+  'P(2+ SOG)': 64,     // volumen de tiro alto
+  'P(1+ TD)': 62,      // corta el relleno de 55-61% que no sirve
+  'P(1+ HR)': 28,      // el HR es raro: 28%+ ya es un bate de poder real
+  'P(≥1 goal)': 42,    // jugador marca gol (mercado raro)
+};
+
+/* Curación (regla obligatoria): SOLO lo fuerte de verdad. Calidad, no cantidad:
+   mejor 2 o 3 monstruos que rellenar con dudosos. Nunca se rellena por debajo del
+   piso; si nadie califica, la vista queda vacía (con aviso claro), jamás con humo. */
 function curar(jugadores, cfg) {
   let arr = (jugadores || []).slice();
   const porScore = arr.some(j => j.score != null);
   arr.sort((a, b) => porScore ? ((b.score || 0) - (a.score || 0)) : ((b.prob || 0) - (a.prob || 0)));
-  // Muestra al mejor de cada partido (nunca vacio si hay juegos). La CALIDAD del
-  // numero depende del modelo/datos, no de ocultar: por eso se arregla el modelo
-  // para que el mejor de cada juego tenga probabilidad alta y real, y el parrafo
-  // sea distinto en cada tarjeta.
-  return arr.slice(0, 9).map((j, i) => ({ ...j, rank: i + 1 }));
+  const piso = PISO[cfg.metric] != null ? PISO[cfg.metric] : 60;
+  const fuertes = arr.filter(j => (j.prob || 0) >= piso);
+  return fuertes.slice(0, 9).map((j, i) => ({ ...j, rank: i + 1 }));
 }
 
 
@@ -608,7 +630,7 @@ function cardPartidoHTML(p, cfg) {
   const p15 = p.probOver15 != null ? p.probOver15 : p.prob;
   const barra = (lab, val, color) => `<div class="plyg-bar"><div class="plyg-bar-top"><span>${lab}</span><b>${val == null ? '—' : val + '%'}</b></div><div class="plyg-bar-tr"><u style="width:${val || 0}%;background:${color}"></u></div></div>`;
   return `<article class="ply-c ply-cg r${p.rank}" data-idx="${p.rank}">
-    <div class="plyg-top"><div class="ply-rank">${p.rank}</div>${cuando ? `<span class="plyg-when">${esc(cuando)}</span>` : ''}<span class="ply-conf ${conf}"><i></i>${esc(confLabel(conf))}</span></div>
+    <div class="plyg-top"><div class="ply-rank">${p.rank}</div>${cuando ? `<span class="plyg-when">${esc(cuando)}</span>` : ''}</div>
     <div class="plyg-match">
       <div class="plyg-side">${_goalLogo(p.logoLocal, p.equipoAbrev)}<span class="plyg-nm">${esc(p.localNom || p.equipoAbrev || '')}</span></div>
       <div class="plyg-vs">VS</div>
@@ -619,6 +641,10 @@ function cardPartidoHTML(p, cfg) {
       ${barra(ES ? '2 o más goles' : '2+ goals', p15, '#e8c46a')}
     </div>
     <div class="ply-verdict bueno">${esc(analisisGoles(p, ES))}</div>
+    <span class="ply-conf ${conf}"><i></i>${L('Confidence', 'Confianza')} ${esc(confLabel(conf))}</span>
+    <div class="ply-actions">
+      <button class="ply-analyze" data-analyze="${p.rank}">${IC_LUPA}${L('Analyze · Goals', 'Analizar · Goles')}</button>
+    </div>
   </article>`;
 }
 
@@ -775,13 +801,23 @@ function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
 const conTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
 
 /* Esqueleto de carga: 9 tarjetas fantasma (nunca "solo 3") */
+/* Skeleton con forma de tarjeta real (rank, logos, lineas, boton): la carga se
+   siente intencional y premium, no un texto suelto. Se usa igual en Premium y Elite. */
+function skelCards(n) {
+  let s = '';
+  for (let i = 0; i < n; i++) s += `<div class="ply-skel">
+    <div class="sk-top"><span class="sk-el sk-rank"></span><span class="sk-el sk-when"></span></div>
+    <div class="sk-match"><span class="sk-el sk-logo"></span><span class="sk-el sk-vs"></span><span class="sk-el sk-logo"></span></div>
+    <span class="sk-el sk-line w1"></span><span class="sk-el sk-line w2"></span>
+    <span class="sk-el sk-btn"></span></div>`;
+  return s;
+}
+
 function pintarCargando(cont, cfg) {
-  var cards = '';
-  for (var i = 0; i < 9; i++) cards += '<div class="ply-skel"><b class="w1"></b><b class="w2"></b><b class="w3"></b><b class="w4"></b></div>';
   cont.innerHTML = `<div class="ply">
     ${heroHTML(cfg, { fecha: hoyISO() }, true)}
     <div class="ply-note"><i></i>${L('Loading top picks for today…', 'Cargando los mejores del día…')}</div>
-    <div class="ply-grid">${cards}</div>
+    <div class="ply-grid">${skelCards(4)}</div>
   </div>`;
 }
 
@@ -907,7 +943,9 @@ export async function pintarElite(cont, { nivel = 'basic', abrirPlanes } = {}) {
       <div class="ply-title">${L("The Day's", 'La Élite')} <em>${L('Elite', 'del Día')}</em></div>
       <div class="ply-lead">${L('One elite pick per sport, combined into a single multi-sport play. Only the clearest calls make the cut.', 'Un pick de élite por deporte, combinados en una sola jugada multideporte. Solo lo más evidente entra.')}</div>
     </div></div>`;
-  cont.innerHTML = `<div class="ply">${banner}<div class="elite-load">${L("Building today's Elite…", 'Armando la Élite de hoy…')}</div></div>`;
+  cont.innerHTML = `<div class="ply">${banner}<div class="elite-loadwrap">
+    <div class="ply-note"><i></i>${L("Building today's Elite…", 'Armando la Élite de hoy…')}</div>
+    <div class="elite-grid">${skelCards(3)}</div></div></div>`;
 
   let r;
   try {
@@ -917,7 +955,7 @@ export async function pintarElite(cont, { nivel = 'basic', abrirPlanes } = {}) {
     ]);
   } catch (_) { r = { picks: [], probComb: null }; }
   const picks = r.picks || [];
-  const slot = cont.querySelector('.elite-load'); if (!slot) return;
+  const slot = cont.querySelector('.elite-loadwrap'); if (!slot) return;
   if (!picks.length) {
     slot.outerHTML = `<div class="elite-empty">${L('No standout multi-sport plays today. The Elite only shows the clearest calls, so check back later.', 'Hoy no hay jugadas multideporte evidentes. La Élite solo muestra lo más claro, así que vuelve más tarde.')}</div>`;
     return;
