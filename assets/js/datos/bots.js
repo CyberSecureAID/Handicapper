@@ -94,6 +94,26 @@ export function prestigioReal(a) {
   return baseDe(a.uid) + (Number(a.prestigioAjuste) || 0) + (Number(a.prestigioAuto) || 0);
 }
 
+/* Prestigio MOSTRADO = real + un movimiento determinista por semana (sube/baja,
+   con sesgo positivo porque son analistas de la casa), para que no se vea
+   congelado. Es una simulacion ESTABLE: no cambia entre recargas dentro de la
+   misma semana. El prestigio por resolucion real de predicciones vive en
+   prestigio.js; mostrarlo en vivo a TODOS los usuarios necesitaria un backend
+   (hoy las reglas de Firestore solo dejan leerlo al admin). */
+function _hashP(s) { let h = 2166136261; for (let i = 0; i < String(s).length; i++) { h ^= String(s).charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+export function driftPrestigio(a) {
+  const bot = a && botPorUid(a.uid); if (!bot) return 0;
+  const desde = (a && a.desde) || bot.desde; if (!desde) return 0;
+  const semanas = Math.max(0, Math.floor((Date.now() - new Date(desde).getTime()) / (7 * 864e5)));
+  let d = 0;
+  for (let w = 1; w <= semanas; w++) {
+    const r = _hashP(a.uid + ':' + w) % 5;   // 0,1,2 -> +1 ; 3 -> 0 ; 4 -> -1  (sesgo positivo)
+    d += r <= 2 ? 1 : (r === 3 ? 0 : -1);
+  }
+  return d;
+}
+export function prestigioMostrado(a) { return prestigioReal(a) + driftPrestigio(a); }
+
 /* Seguidores mostrados = base figurativa + 1/semana + ajuste admin + seguidores REALES.
    Funciona con un bot (tiene 'followers'/'desde') o con un analista real (solo ajuste + reales). */
 export function seguidoresBot(a, real = 0) {
