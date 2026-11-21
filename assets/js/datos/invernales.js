@@ -37,10 +37,12 @@ function temporadaInv() {
   return d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1;
 }
 
-/* Foto oficial del pelotero (con respaldo generico incorporado: no da 404) */
+/* Foto oficial del pelotero. SIN respaldo generico: si el pelotero de la liga
+   invernal no tiene foto, la URL da 404 y el onerror del avatar cae en las
+   iniciales, en vez de mostrar la silueta gris sobre blanco (se veia rota). */
 function fotoMLB(id) {
   if (!id) return null;
-  return `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto:best/v1/people/${id}/headshot/67/current`;
+  return `https://img.mlbstatic.com/mlb-photos/image/upload/w_120,q_auto:best/v1/people/${id}/headshot/67/current`;
 }
 
 function equipoInv(side, caribe) {

@@ -3,8 +3,9 @@
 
    RUTAS OFICIALES GRATUITAS (todas por ID, sin clave ni backend):
    - MLB : https://img.mlbstatic.com/mlb-photos/image/upload/
-           d_people:generic:headshot:67:current.png/w_360,q_auto:best/
-           v1/people/{mlbId}/headshot/67/current
+           w_360,q_auto:best/v1/people/{mlbId}/headshot/67/current
+           (sin d_people:generic a proposito: si no hay foto, da 404 y el
+            onerror cae en las iniciales, no en la silueta gris)
            (ID vía MLB Stats API: https://statsapi.mlb.com/api/v1/…)
    - NBA : https://cdn.nba.com/headshots/nba/latest/1040x760/{nbaId}.png
    - NHL : https://assets.nhle.com/mugs/nhl/{temporada}/{EQ}/{nhlId}.png
@@ -31,7 +32,10 @@ function href(h) {
 /* URL oficial de MLB por ID de MLB Stats API */
 export function fotoMLB(mlbId, w = 360) {
   if (!mlbId) return null;
-  return `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_${w},q_auto:best/v1/people/${mlbId}/headshot/67/current`;
+  // SIN respaldo generico (d_people:generic): si el pelotero no tiene foto
+  // (comun en ligas invernales), la URL da 404 y el onerror cae en las
+  // iniciales, en vez de mostrar la fea silueta gris sobre blanco.
+  return `https://img.mlbstatic.com/mlb-photos/image/upload/w_${w},q_auto:best/v1/people/${mlbId}/headshot/67/current`;
 }
 /* URL oficial de NBA por ID de stats.nba.com */
 export function fotoNBA(nbaId) {
