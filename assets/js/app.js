@@ -990,12 +990,12 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   // NO entramos automáticamente al cargar: el usuario llega al lobby y entra por su elección.
   // Solo entramos directo si el login fue una acción intencional (tocó "Entrar"/"Registrarse").
   if (extra && extra.intencional) { entrarSegunAcceso(); return; }
-  // Refresco: si el usuario estaba DENTRO de la app, devolverlo ahí (a su misma vista)
+  // Refresco: si el usuario estaba DENTRO de la app, devolverlo a la plataforma.
+  // SIEMPRE aterriza en All Sports (partidos), nunca en la ultima vista guardada:
+  // entrar directo a Analyst Signals u otra seccion se considera un error.
   let _restaurar = false; try { _restaurar = localStorage.getItem('se-en-app') === '1'; } catch (_) {}
   if (_restaurar && (_esAdmin || _esAnalista || tieneAcceso())) {
-    let _v = null; try { _v = localStorage.getItem('se-vista'); } catch (_) {}   // leer ANTES
     entrarPlataforma();
-    if (_v && _v !== 'partidos') setTimeout(() => { const tb = document.querySelector(`#tabbar .t[data-vista="${_v}"]`); if (tb) tb.click(); }, 90);
     return;
   }
   mostrarPantalla('landing');
