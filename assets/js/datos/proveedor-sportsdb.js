@@ -19,7 +19,10 @@ async function buscarEquipo(nombre) {
   if (_cacheEquipo.has(nombre)) return _cacheEquipo.get(nombre);
   let dato = null;
   try {
-    const r = await fetch(`${BASE}/searchteams.php?t=${encodeURIComponent(nombre)}`);
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch(`${BASE}/searchteams.php?t=${encodeURIComponent(nombre)}`, { signal: ctrl.signal });
+    clearTimeout(to);
     if (r.ok) {
       const j = await r.json();
       const t = j?.teams?.[0];
@@ -36,6 +39,13 @@ async function buscarEquipo(nombre) {
   } catch (_) { dato = null; }
   _cacheEquipo.set(nombre, dato);
   return dato;
+}
+
+/* Escudo REAL del equipo (strBadge de TheSportsDB), cacheado. Devuelve la URL
+   del logo oficial o null. Lo usan las Ligas Invernales, que no traen logo propio. */
+export async function escudoEquipo(nombre) {
+  const info = await buscarEquipo(nombre);
+  return (info && info.escudo) || null;
 }
 
 export async function detalleEnriquecer(base) {
