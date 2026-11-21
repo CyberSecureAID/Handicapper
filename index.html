@@ -448,7 +448,8 @@
     // Banner de instalación: solo en móvil, si NO está instalada, y no fue descartado.
     if (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches) return;
     if (window.innerWidth > 600) return;
-    try { if (localStorage.getItem('se-pwa-descartado') === '1') return; } catch(e){}
+    // Descarte TEMPORAL: si lo cerraste, reaparece a los ~12 dias (no desaparece para siempre).
+    try { var _d = localStorage.getItem('se-pwa-descartado'); if (_d && (Date.now() - (parseInt(_d,10)||0) < 12*864e5)) return; } catch(e){}
     var esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
     function crear(){
       if (document.querySelector('.pwa-banner')) return;
@@ -465,7 +466,7 @@
       document.body.appendChild(b);
       requestAnimationFrame(function(){ b.classList.add('on'); });
       var cerrar = function(){ b.classList.remove('on'); setTimeout(function(){ b.remove(); }, 300); };
-      b.querySelector('.pwa-banner-x').onclick = function(){ try{localStorage.setItem('se-pwa-descartado','1');}catch(e){} cerrar(); };
+      b.querySelector('.pwa-banner-x').onclick = function(){ try{localStorage.setItem('se-pwa-descartado', String(Date.now()));}catch(e){} cerrar(); };
       var go = b.querySelector('.pwa-banner-go');
       if (go) go.onclick = function(){ if (window.__mostrarModalInstalar) window.__mostrarModalInstalar(); else if (window.__pwaPrompt) window.__pwaPrompt.prompt(); cerrar(); };
     }
