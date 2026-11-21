@@ -13,7 +13,7 @@ import { initAuthUI, abrirAuth } from './auth/auth-ui.js';
 import { initNavegacion, mostrarPantalla, aplicarI18n } from './ui/navegacion.js';
 import { fijarSuscripcion, tieneAcceso, limpiarVistaPrevia, marcarVistaPrevia, planActual } from './auth/estado-pago.js';
 import { pintarParlay, pintarElite } from './ui/parlay.js';
-import { initPickem } from './ui/pickem.js';
+import { initPickem, setPremium, setVerPlanes } from './ui/pickem.js';
 import { pintarSenales, cargarSenales, contarSenales } from './ui/senales.js';
 import { pintarChat, cerrarChat } from './ui/chat.js';
 
@@ -729,6 +729,7 @@ function init() {
   initProyeccion();
   initGlosario();
   initPickem();
+  setVerPlanes(() => mostrarPantalla('pricing'));   // el teaser Premium del pick'em lleva a planes
 
   // Hamburguesa / drawer (móvil)
   $('hamb')?.addEventListener('click', abrirDrawer);
@@ -1026,6 +1027,7 @@ async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   pintarCuenta(usuario);   // repinta para mostrar la opción de panel si es admin
   if ((location.hash || '').toLowerCase() === '#mesa') { try { history.replaceState(null, '', location.pathname); } catch (_) {} }
   if (_esAdmin) marcarVistaPrevia('premium');   // el admin tiene acceso total cuando entre
+  setPremium(_esAdmin || planActual() === 'premium');   // la Combinada del Día es exclusiva Premium
   if (_esAdmin) publicarBotsSiEsNuevoDia();     // señales de bots automáticas (1 vez al día)
   vigilarChatAvisos();                          // punto en el tab del chat cuando un bot avisa (Premium o quien sigue)
   if (_esAdmin) resolverPrestigioSiToca();      // resuelve predicciones terminadas -> prestigio
@@ -1364,6 +1366,7 @@ async function _abrirPlanesModal() {
     { t: 'Fútbol Rubio', b: false, p: L('Limited', 'Limitado'), pr: L('Full', 'Completo') },
     { t: L('Analyst signals access', 'Acceso a señales de analistas'), b: false, p: L('Limited', 'Limitado'), pr: '~50%' },
     { t: L("The Day's Elite (multi-sport)", 'La Élite del Día (multideporte)'), b: false, p: false, pr: true },
+    { t: L('Pick’em builder & Combo of the Day', 'Constructor de pick’em y Combinada del Día'), b: false, p: false, pr: true },
     { t: L('Push notifications', 'Notificaciones push'), b: false, p: false, pr: true },
     { t: L('Profile photo', 'Foto de perfil'), b: false, p: false, pr: true },
   ];
