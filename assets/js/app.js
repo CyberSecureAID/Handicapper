@@ -256,10 +256,26 @@ function bandaHot(lista) {
   const hot = _partidosHot(lista);
   if (hot.length < 2) return '';
   const ES = idiomaActual() === 'es';
+  const dots = hot.map((_, i) => `<span class="hot-dot${i === 0 ? ' on' : ''}"></span>`).join('');
   return `<div class="hot-band">
     <div class="hot-band-h"><span class="hot-flama">${IC_FLAMA}</span><div class="hot-band-tx"><div class="hot-band-t">${ES ? 'Partidos del momento' : 'Hot right now'}</div><div class="hot-band-s">${ES ? 'Lo mas caliente del deporte ahora mismo' : "The biggest matches on the board right now"}</div></div></div>
     <div class="hot-strip">${hot.map(tarjetaHot).join('')}</div>
+    <div class="hot-dots" aria-hidden="true">${dots}</div>
   </div>`;
+}
+/* Puntos indicadores en movil: resaltan en que tarjeta estas al deslizar. */
+function _wireHotDots(cont) {
+  const strip = cont.querySelector('.hot-strip');
+  const dots = cont.querySelectorAll('.hot-dot');
+  if (!strip || dots.length < 2) return;
+  const upd = () => {
+    const cards = strip.querySelectorAll('.hot-c');
+    if (!cards.length) return;
+    const paso = cards[0].getBoundingClientRect().width + 12;   // ancho de tarjeta + gap
+    const i = Math.max(0, Math.min(dots.length - 1, Math.round(strip.scrollLeft / paso)));
+    dots.forEach((d, j) => d.classList.toggle('on', j === i));
+  };
+  strip.addEventListener('scroll', () => requestAnimationFrame(upd), { passive: true });
 }
 
 /* Auto refresco del marcador en vivo: cada minuto, si hay partidos en vivo y
@@ -286,6 +302,7 @@ async function _refrescarHot() {
       el.onkeydown = (e) => { if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('[data-stop]')) { e.preventDefault(); ir(); } };
     });
     _activarTiltHot(cont);
+    _wireHotDots(cont);
   } catch (_) {}
 }
 
@@ -319,6 +336,7 @@ function pintarLista() {
     el.onkeydown = (e) => { if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('[data-stop]')) { e.preventDefault(); ir(); } };
   });
   _activarTiltHot(cont);
+  _wireHotDots(cont);
   cont.querySelectorAll('.pmatch').forEach(el => {
     el.onclick = (e) => { if (e.target.closest('.pm-fav')) return; abrirDetalle(el.dataset.id, el); };
   });
