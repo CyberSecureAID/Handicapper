@@ -314,33 +314,17 @@ function inyectarCSS() {
 const tagTxt = (t) => (typeof t === 'function' ? t() : t);
 const IC_LUPA = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/></svg>`;
 const IC_WA = `<svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.1 1.6 5.9L4 29l8.3-2.2c1.7.9 3.6 1.4 5.5 1.4h.2C24.6 28.2 30 22.8 30 16.2 30 9.6 24.6 3 16 3zm0 22.9h-.1c-1.7 0-3.4-.5-4.9-1.4l-.3-.2-4.9 1.3 1.3-4.8-.2-.4c-1-1.6-1.5-3.4-1.5-5.3C5.2 10 10 5.2 16 5.2s10.8 4.8 10.8 10.8S22 25.9 16 25.9z"/><path d="M22 18.3c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-1.8-.9-3-1.6-4.2-3.6-.3-.5.3-.5.8-1.6.1-.2 0-.4 0-.5-.1-.1-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.3 5.2 4.6 1.9.8 2.7.9 3.6.8.6-.1 1.9-.8 2.1-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z"/></svg>`;
-const SITIO = 'https://sportsexpectations.com';
-/* Mensaje para compartir (WhatsApp): limpio, sin emojis, en el idioma del usuario. */
-function textoCompartir(p, que) {
-  const pct = p.prob != null ? `${p.prob}%` : '';
-  const a = p.nomLocal || p.equipoAbrev || '', b = p.nomVisita || p.rivalAbrev || '';
-  const duelo = (a && b) ? `${a} vs ${b}` : (a || b || '');
-  const qt = String(que || '').replace(/<br>/g, ' ').trim();
-  return L(
-    `Sports Expectations - Today's pick\n${p.nombre}: ${pct} to hit ${qt}\n${duelo}\nFull breakdown: ${SITIO}`,
-    `Sports Expectations - Pick del dia\n${p.nombre}: ${pct} de lograr ${qt}\n${duelo}\nAnalisis completo: ${SITIO}`
-  );
+/* Compartir un pick como IMAGEN de marca (hoja nativa en movil con el archivo
+   para WhatsApp/TikTok/IG; en escritorio descarga la imagen y abre WhatsApp).
+   Jugador -> imagen de prop; partido de goles -> imagen de goles. */
+async function compartirPick(j, cfg) {
+  if (!j) return;
+  try {
+    const mod = await import('./compartir.js');
+    if (j.esPartido) mod.compartirGoles({ ...j, veredictoTxt: analisisGoles(j, ES()) });
+    else mod.compartirJugador(j, cfg);
+  } catch (_) {}
 }
-/* Compartir a WhatsApp: listener delegado unico (captura), corta el click de la
-   tarjeta y abre wa.me con el texto del pick. Sirve en todas las secciones. */
-let _shareWired = false;
-function wireShareGlobal() {
-  if (_shareWired || typeof document === 'undefined') return;
-  _shareWired = true;
-  document.addEventListener('click', (e) => {
-    const b = e.target && e.target.closest && e.target.closest('.ply-share[data-sharetext]');
-    if (!b) return;
-    e.stopPropagation(); e.preventDefault();
-    const t = b.dataset.sharetext || '';
-    try { window.open('https://wa.me/?text=' + encodeURIComponent(t), '_blank', 'noopener'); } catch (_) {}
-  }, true);
-}
-wireShareGlobal();   // queda cableado al cargar el modulo, cubre todas las vistas
 
 const APUESTAS = [
   { id: 'hits', cls: 'hits', label: () => L('Hits', 'Hits') },
@@ -644,6 +628,7 @@ function cardPartidoHTML(p, cfg) {
     <span class="ply-conf ${conf}"><i></i>${L('Confidence', 'Confianza')} ${esc(confLabel(conf))}</span>
     <div class="ply-actions">
       <button class="ply-analyze" data-analyze="${p.rank}">${IC_LUPA}${L('Analyze · Goals', 'Analizar · Goles')}</button>
+      <button class="ply-share" data-share="${p.rank}" aria-label="${L('Share on WhatsApp', 'Compartir en WhatsApp')}" title="WhatsApp">${IC_WA}</button>
     </div>
   </article>`;
 }
@@ -688,7 +673,7 @@ function cardHTML(p, cfg) {
     <span class="ply-conf ${conf}"><i></i>${L('Confidence', 'Confianza')} ${esc(confLabel(conf))}</span>
     <div class="ply-actions">
       <button class="ply-analyze" data-analyze="${p.rank}">${IC_LUPA}${L('Analyze · Last 10', 'Analizar · Últimos 10')}</button>
-      <button class="ply-share" data-share="${p.rank}" aria-label="${L('Share on WhatsApp', 'Compartir en WhatsApp')}" title="WhatsApp" data-sharetext="${esc(textoCompartir(p, que))}">${IC_WA}</button>
+      <button class="ply-share" data-share="${p.rank}" aria-label="${L('Share on WhatsApp', 'Compartir en WhatsApp')}" title="WhatsApp">${IC_WA}</button>
     </div>
   </article>`;
 }
@@ -730,8 +715,7 @@ function wireBets(cont) {
     if (bet === 'hr' && !hrCargado) {
       hrCargado = true;
       const grid = cont.querySelector('[data-hr-grid]'); if (!grid) return;
-      let sk = ''; for (let i = 0; i < 6; i++) sk += '<div class="ply-skel"><b class="w1"></b><b class="w2"></b><b class="w3"></b><b class="w4"></b></div>';
-      grid.innerHTML = sk;
+      grid.innerHTML = skelCards(4);
       try {
         const cached = CACHE.get('mlb:hr');
         let jug;
@@ -746,6 +730,8 @@ function wireBets(cont) {
         grid.innerHTML = jug.length ? jug.map(p => cardHTML(p, CFG_HR)).join('')
           : `<div class="ply-note"><i></i>${L('No standout home run picks for today\u2019s games.', 'Hoy no hay bateadores que cumplan el nivel de HR.')}</div>`;
         animar(cont);
+        grid.querySelectorAll('.ply-share[data-share]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); compartirPick(jug[+b.dataset.share - 1], CFG_HR); }));
+        grid.querySelectorAll('.ply-analyze[data-analyze]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); const j = jug[+b.dataset.analyze - 1]; if (j) abrirTracker(j, 'mlb', 'hr'); }));
         grid.querySelectorAll('.ply-c[data-idx]').forEach(el => el.addEventListener('click', () => { const j = jug[+el.dataset.idx - 1]; if (j) abrirTracker(j, 'mlb', 'hr'); }));
       } catch (_) {
         grid.innerHTML = `<div class="ply-note"><i></i>${L('Could not load home runs.', 'No se pudo cargar home runs.')}</div>`;
@@ -791,9 +777,9 @@ function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
   </div>`;
   animar(cont);
   wireBets(cont);
-  wireShareGlobal();
   const abrir = (idx) => { const j = jugadores[idx - 1]; if (!j) return; if (j.esPartido) abrirTrackerGoles(j); else abrirTracker(j, cfg._sport); };
   cont.querySelectorAll('.ply-analyze[data-analyze]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); abrir(+b.dataset.analyze); }));
+  cont.querySelectorAll('.ply-share[data-share]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); compartirPick(jugadores[+b.dataset.share - 1], cfg); }));
   cont.querySelectorAll('.ply-c[data-idx]').forEach(el => el.addEventListener('click', () => abrir(+el.dataset.idx)));
 }
 
