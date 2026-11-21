@@ -704,8 +704,9 @@ function sinJuegosHTML(cont, cfg, meta, brutos) {
   } else {
     msg = L('No picks to show right now. Check back shortly.', 'No hay picks que mostrar ahora mismo. Vuelve en un rato.');
   }
-  // Calendario bonito (hoy marcado; y si se conoce, el camino al proximo juego).
-  const cal = calendarioVacioHTML({ hoy: hoyISO(), proxima: (meta && meta.proxima) || null, nota: msg, idioma: ES ? 'es' : 'en' });
+  // Calendario horizontal (web): hoy + cuando vuelve la accion (proximo partido real).
+  const calTitulo = (cfg.eyebrow || '').replace(/^\s*(Premium|Pro)\s*[·.]\s*/i, '');
+  const cal = calendarioVacioHTML({ titulo: calTitulo, hoy: hoyISO(), proxima: (meta && meta.proxima) || null, contexto: (meta && meta.contexto) || null, nota: msg, idioma: ES ? 'es' : 'en' });
   cont.innerHTML = `<div class="ply">${heroHTML(cfg, { fecha: hoyISO() }, false)}<div style="margin-top:14px">${cal}</div></div>`;
 }
 function pintarGrid(cont, cfg, jugadores, meta, preliminar) {

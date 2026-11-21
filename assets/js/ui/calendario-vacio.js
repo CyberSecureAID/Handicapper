@@ -1,23 +1,23 @@
 /* ============================================================
-   calendario-vacio.js — estado "sin juegos / fuera de temporada" con
-   un calendario bonito y responsivo (web y movil). UNA responsabilidad:
-   devolver el HTML de ese calendario.
+   calendario-vacio.js — estado "sin juegos / fuera de temporada" con un
+   calendario HORIZONTAL en web (y apilado en movil). UNA responsabilidad:
+   devolver el HTML.
 
-   Marca HOY y, si se conoce la fecha del proximo partido, dibuja el
-   camino de dias hasta el y una cuenta regresiva. Si no se conoce
-   (receso largo), muestra el mes actual con hoy marcado y un aviso.
+   Muestra HOY y el PROXIMO partido real (con cuenta regresiva). Si el proximo
+   partido esta cerca (<= 12 dias), dibuja la tira de dias en cuadraditos de hoy
+   hasta ese dia. Si esta lejos (receso), muestra hoy y la fecha del proximo
+   partido como dos anclas, con los dias que faltan.
 
-   Usa los tokens del tema (var(--...)), asi se adapta a claro/oscuro.
-   Sin emojis.
+   Usa los tokens del tema (var(--...)), asi se adapta a claro/oscuro. Sin emojis.
    ============================================================ */
 
 const MESES = {
-  en: ['January','February','March','April','May','June','July','August','September','October','November','December'],
-  es: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+  en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+  es: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
 };
-const SEMANA = {
-  en: ['Su','Mo','Tu','We','Th','Fr','Sa'],
-  es: ['Do','Lu','Ma','Mi','Ju','Vi','Sa'],
+const DIAS = {
+  en: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+  es: ['Dom','Lun','Mar','Mie','Jue','Vie','Sab'],
 };
 
 function _fecha(v) {
@@ -30,96 +30,104 @@ function _esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ 
 
 const CSS = `
 <style id="cal-vacio-css">
-.calv{max-width:420px;margin:0 auto;background:var(--tarjeta);border:1px solid var(--linea);
-  border-radius:var(--r-xl,22px);box-shadow:var(--sombra-tarjeta);padding:18px 18px 16px;
-  font-family:var(--sans);color:var(--tinta)}
-.calv-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px}
-.calv-mes{font-family:var(--display);font-weight:700;font-size:1.18rem;letter-spacing:.3px;color:var(--tinta)}
-.calv-tit{font-size:.72rem;color:var(--tinta-2);text-transform:uppercase;letter-spacing:.9px;font-weight:600;text-align:right}
-.calv-sem{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
-.calv-sem span{text-align:center;font-size:.68rem;color:var(--tinta-3);font-weight:700;letter-spacing:.5px}
-.calv-dias{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.calv-d{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;
-  border-radius:var(--r-sm,8px);font-size:.9rem;color:var(--tinta-2);background:var(--fondo-2);
-  border:1px solid transparent;transition:transform .15s ease}
-.calv-d.vacia{background:transparent}
-.calv-d.camino{color:var(--tinta);background:var(--tarjeta-alta);border-color:var(--linea)}
-.calv-d.hoy{background:var(--oro);color:#1a1205;font-weight:800;box-shadow:0 0 0 3px var(--oro-suave)}
-.calv-d.prox{background:var(--verde-suave);color:var(--verde);font-weight:800;border-color:rgba(46,158,87,.55)}
-.calv-d.prox::after{content:"";position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;background:var(--verde)}
-.calv-foot{margin-top:15px;padding-top:13px;border-top:1px solid var(--linea-suave);display:flex;align-items:center;gap:12px}
-.calv-cta{flex:0 0 auto;min-width:54px;text-align:center}
-.calv-cta b{display:block;font-family:var(--display);font-weight:800;font-size:1.5rem;line-height:1;color:var(--oro)}
-.calv-cta i{font-style:normal;font-size:.64rem;text-transform:uppercase;letter-spacing:.6px;color:var(--tinta-3)}
-.calv-nota{font-size:.85rem;color:var(--tinta-2);line-height:1.45}
-.calv-nota b{color:var(--tinta);font-weight:700}
-.calv-ley{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap}
-.calv-ley span{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;color:var(--tinta-3)}
-.calv-ley i{width:11px;height:11px;border-radius:3px;display:inline-block}
-.calv-ley .l-hoy{background:var(--oro)}
-.calv-ley .l-prox{background:var(--verde)}
-@media (max-width:520px){
-  .calv{padding:14px 14px 13px;border-radius:var(--r-lg,16px)}
-  .calv-mes{font-size:1.05rem}
-  .calv-sem,.calv-dias{gap:5px}
-  .calv-d{font-size:.8rem;border-radius:7px}
-  .calv-cta b{font-size:1.3rem}
+.calv{background:var(--tarjeta);border:1px solid var(--linea);border-radius:var(--r-xl,22px);
+  box-shadow:var(--sombra-tarjeta);padding:20px 22px;font-family:var(--sans);color:var(--tinta)}
+.calv-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px}
+.calv-tit{font-family:var(--display);font-weight:700;font-size:1.05rem;letter-spacing:.3px;color:var(--tinta)}
+.calv-sub{font-size:.78rem;color:var(--tinta-2);text-transform:uppercase;letter-spacing:.8px;font-weight:600;text-align:right}
+/* FILA HORIZONTAL (web): hoy -> conector -> proximo */
+.calv-fila{display:flex;align-items:stretch;gap:18px}
+.calv-dia{flex:0 0 auto;width:112px;border-radius:var(--r-lg,16px);background:var(--fondo-2);
+  border:1px solid var(--linea);padding:14px 10px;text-align:center}
+.calv-dia.hoy{background:var(--oro);border-color:var(--oro);color:#1a1205}
+.calv-dia.prox{background:var(--verde-suave);border-color:rgba(46,158,87,.55)}
+.calv-dia .d-sem{font-size:.72rem;font-weight:700;letter-spacing:.6px;text-transform:uppercase;opacity:.85}
+.calv-dia .d-num{font-family:var(--display);font-weight:800;font-size:2.1rem;line-height:1.05;margin:2px 0}
+.calv-dia .d-mes{font-size:.82rem;font-weight:700}
+.calv-dia.prox .d-num,.calv-dia.prox .d-mes{color:var(--verde)}
+.calv-dia .d-rot{font-size:.64rem;text-transform:uppercase;letter-spacing:.5px;opacity:.7;margin-top:3px}
+.calv-con{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;position:relative}
+.calv-con::before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;
+  background:linear-gradient(90deg,var(--oro),var(--verde));opacity:.5}
+.calv-cuenta{position:relative;background:var(--tarjeta);border:1px solid var(--linea);border-radius:999px;
+  padding:7px 16px;display:inline-flex;align-items:baseline;gap:7px;box-shadow:var(--sombra-boton)}
+.calv-cuenta b{font-family:var(--display);font-weight:800;font-size:1.25rem;color:var(--oro);line-height:1}
+.calv-cuenta i{font-style:normal;font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;color:var(--tinta-3)}
+.calv-ctx{position:relative;font-size:.76rem;color:var(--tinta-2);background:var(--tarjeta);padding:0 8px}
+/* Tira de dias en cuadraditos (cuando el proximo esta cerca) */
+.calv-tira{display:flex;gap:7px;flex-wrap:wrap}
+.calv-sq{flex:0 0 auto;width:58px;aspect-ratio:1;border-radius:var(--r-sm,10px);background:var(--fondo-2);
+  border:1px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.calv-sq .s-sem{font-size:.6rem;font-weight:700;text-transform:uppercase;color:var(--tinta-3);letter-spacing:.4px}
+.calv-sq .s-num{font-family:var(--display);font-weight:800;font-size:1.15rem;color:var(--tinta-2)}
+.calv-sq.hoy{background:var(--oro)}.calv-sq.hoy .s-num,.calv-sq.hoy .s-sem{color:#1a1205}
+.calv-sq.prox{background:var(--verde-suave);border-color:rgba(46,158,87,.55)}
+.calv-sq.prox .s-num,.calv-sq.prox .s-sem{color:var(--verde)}
+.calv-sq.camino{background:var(--tarjeta-alta);border-color:var(--linea)}
+.calv-pie{margin-top:14px;font-size:.84rem;color:var(--tinta-2);line-height:1.45}
+.calv-pie b{color:var(--tinta)}
+@media (max-width:620px){
+  .calv{padding:16px}
+  .calv-fila{flex-direction:column;gap:12px}         /* MOVIL: apilado/vertical */
+  .calv-dia{width:auto}
+  .calv-con{flex-direction:row;gap:12px;padding:4px 0}
+  .calv-con::before{left:12px;right:12px}
+  .calv-sq{width:calc((100% - 42px)/7)}
 }
 </style>`;
 
-/* opciones: { titulo, hoy, proxima, nota, idioma } */
+function _bloqueDia(d, idioma, clase, rotulo) {
+  return `<div class="calv-dia ${clase}">
+    <div class="d-sem">${DIAS[idioma][d.getDay()]}</div>
+    <div class="d-num">${d.getDate()}</div>
+    <div class="d-mes">${MESES[idioma][d.getMonth()]}${clase === 'prox' ? ' ' + d.getFullYear() : ''}</div>
+    ${rotulo ? `<div class="d-rot">${_esc(rotulo)}</div>` : ''}
+  </div>`;
+}
+
+/* opciones: { titulo, hoy, proxima, nota, contexto, idioma } */
 export function calendarioVacioHTML(opts = {}) {
   const idioma = opts.idioma === 'es' ? 'es' : 'en';
+  const L = (en, es) => idioma === 'es' ? es : en;
   const hoy = _soloDia(_fecha(opts.hoy));
   const prox = opts.proxima ? _soloDia(_fecha(opts.proxima)) : null;
+  const dias = prox ? Math.round((prox - hoy) / 86400000) : null;
+  const titulo = opts.titulo ? `<div class="calv-sub">${_esc(opts.titulo)}</div>` : '';
+  const encabezado = L('Next game', 'Proximo partido');
 
-  // Mes a dibujar: el de hoy (si el proximo partido cae este mes, se marca y
-  // se dibuja el camino; si cae en otro mes, se marca solo la cuenta abajo).
-  const anio = hoy.getFullYear(), mes = hoy.getMonth();
-  const primero = new Date(anio, mes, 1);
-  const dias = new Date(anio, mes + 1, 0).getDate();
-  const offset = primero.getDay();   // 0=domingo
-
-  const proxEsteMes = prox && prox.getFullYear() === anio && prox.getMonth() === mes;
-  const diasHasta = prox ? Math.round((prox - hoy) / 86400000) : null;
-
-  let celdas = '';
-  for (let i = 0; i < offset; i++) celdas += '<div class="calv-d vacia"></div>';
-  for (let d = 1; d <= dias; d++) {
-    const esHoy = d === hoy.getDate();
-    const esProx = proxEsteMes && d === prox.getDate();
-    const enCamino = proxEsteMes && d > hoy.getDate() && d < prox.getDate();
-    let cls = 'calv-d';
-    if (esHoy) cls += ' hoy'; else if (esProx) cls += ' prox'; else if (enCamino) cls += ' camino';
-    celdas += `<div class="${cls}">${d}</div>`;
-  }
-
-  const semana = SEMANA[idioma].map(s => `<span>${s}</span>`).join('');
-  const titulo = opts.titulo ? `<div class="calv-tit">${_esc(opts.titulo)}</div>` : '';
-
-  // Pie: cuenta regresiva si se conoce el proximo partido; si no, el aviso.
-  const L = (en, es) => idioma === 'es' ? es : en;
-  let pie;
-  if (prox && diasHasta != null && diasHasta >= 0) {
-    const etiqueta = diasHasta === 0 ? L('today', 'hoy') : diasHasta === 1 ? L('day', 'dia') : L('days', 'dias');
-    const fechaProx = `${SEMANA[idioma][prox.getDay()]} ${prox.getDate()} ${MESES[idioma][prox.getMonth()]}`;
-    pie = `<div class="calv-foot">
-      <div class="calv-cta"><b>${diasHasta}</b><i>${etiqueta}</i></div>
-      <div class="calv-nota">${L('Next games', 'Proximos juegos')}: <b>${_esc(fechaProx)}</b>.
-      ${opts.nota ? _esc(opts.nota) : ''}</div>
-    </div>
-    <div class="calv-ley"><span><i class="l-hoy"></i>${L('Today','Hoy')}</span><span><i class="l-prox"></i>${L('Next game day','Dia de juego')}</span></div>`;
+  let cuerpo;
+  if (prox && dias != null && dias >= 0 && dias <= 12) {
+    // Cerca: tira de cuadraditos de hoy hasta el proximo partido.
+    let sq = '';
+    for (let i = 0; i <= dias; i++) {
+      const d = new Date(hoy); d.setDate(hoy.getDate() + i);
+      const cls = i === 0 ? 'hoy' : (i === dias ? 'prox' : 'camino');
+      sq += `<div class="calv-sq ${cls}"><div class="s-sem">${DIAS[idioma][d.getDay()]}</div><div class="s-num">${d.getDate()}</div></div>`;
+    }
+    const cuando = `${DIAS[idioma][prox.getDay()]} ${prox.getDate()} ${MESES[idioma][prox.getMonth()]}`;
+    cuerpo = `<div class="calv-tira">${sq}</div>
+      <div class="calv-pie">${L('Next game', 'Proximo partido')}: <b>${_esc(cuando)}</b> ${dias === 0 ? '' : `· ${L('in', 'en')} ${dias} ${dias === 1 ? L('day','dia') : L('days','dias')}`}${opts.contexto ? ' · ' + _esc(opts.contexto) : ''}.</div>`;
+  } else if (prox && dias != null && dias >= 0) {
+    // Lejos (receso): hoy -> proximo, horizontal, con cuenta regresiva.
+    cuerpo = `<div class="calv-fila">
+        ${_bloqueDia(hoy, idioma, 'hoy', L('Today', 'Hoy'))}
+        <div class="calv-con">
+          <div class="calv-cuenta"><b>${dias}</b><i>${dias === 1 ? L('day','dia') : L('days','dias')}</i></div>
+          ${opts.contexto ? `<div class="calv-ctx">${_esc(opts.contexto)}</div>` : ''}
+        </div>
+        ${_bloqueDia(prox, idioma, 'prox', encabezado)}
+      </div>
+      ${opts.nota ? `<div class="calv-pie">${_esc(opts.nota)}</div>` : ''}`;
   } else {
-    pie = `<div class="calv-foot">
-      <div class="calv-nota">${opts.nota ? _esc(opts.nota) : L('No games scheduled right now. The day in gold is today.', 'No hay juegos programados ahora mismo. El dia en oro es hoy.')}</div>
-    </div>
-    <div class="calv-ley"><span><i class="l-hoy"></i>${L('Today','Hoy')}</span></div>`;
+    // Sin fecha de proximo partido conocida: hoy y un aviso.
+    cuerpo = `<div class="calv-fila">
+        ${_bloqueDia(hoy, idioma, 'hoy', L('Today', 'Hoy'))}
+        <div class="calv-con"><div class="calv-ctx">${opts.nota ? _esc(opts.nota) : L('No games scheduled right now.', 'No hay partidos programados ahora mismo.')}</div></div>
+      </div>`;
   }
 
   return `${CSS}<div class="calv">
-    <div class="calv-top"><div class="calv-mes">${MESES[idioma][mes]} ${anio}</div>${titulo}</div>
-    <div class="calv-sem">${semana}</div>
-    <div class="calv-dias">${celdas}</div>
-    ${pie}
+    <div class="calv-top"><div class="calv-tit">${L('Match calendar', 'Calendario de partidos')}</div>${titulo}</div>
+    ${cuerpo}
   </div>`;
 }
