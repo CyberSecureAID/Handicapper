@@ -107,7 +107,7 @@ function VISTA(sport) {
               'Los partidos con mayor probabilidad estimada de tener dos o más goles hoy (Over 1.5, el mercado de goles más popular).'),
       foot: L('Model probability estimates, not betting advice. Football is high-variance: a high probability is not a certainty.',
               'Estimaciones probabilísticas del modelo, no asesoría de apuestas. El fútbol es de alta varianza: una probabilidad alta no es certeza.'),
-      toCard: (p) => ({ ...p, tags: p.tags || [ (p.proj != null ? `${(+p.proj).toFixed(1)} ${L('exp. goals', 'goles esp.')}` : ''), ...(p.factores || []).slice(0, 2) ].filter(Boolean) }),
+      toCard: (p) => ({ ...p, tags: p.tags || [ (p.proj != null ? `${(+p.proj).toFixed(1)} ${L('exp. goals', 'goles esp.')}` : ''), (p.gfLocal != null ? `${p.equipoAbrev || 'H'} ${(+p.gfLocal).toFixed(1)} ${L('GF/g', 'GF/p')}` : ''), (p.gfVisita != null ? `${p.rivalAbrev || 'A'} ${(+p.gfVisita).toFixed(1)} ${L('GF/g', 'GF/p')}` : '') ].filter(Boolean) }),
     },
     nba: {
       activo: true, img: 'fondo-points.jpg', run: () => topPointsProjection({ fecha: hoyISO(), n: 9 }), demo: DEMO_NBA,
@@ -412,12 +412,12 @@ function confPorProb(prob, cfg) {
    rellenar con dudosos. Si nadie califica, la vista queda vacía (con aviso). */
 function curar(jugadores, cfg) {
   let arr = (jugadores || []).slice();
-  // Mostrar TODO, con los mejores arriba. Antes se ocultaba lo que no llegaba al
-  // umbral de alta confianza y por eso NBA/NFL (y los partidos parejos pero
-  // estelares, p.ej. Madrid vs Barcelona) salian vacios. Ahora se muestran todos;
-  // la etiqueta de confianza (alta/media/baja) sigue distinguiendo la calidad.
   const porScore = arr.some(j => j.score != null);
   arr.sort((a, b) => porScore ? ((b.score || 0) - (a.score || 0)) : ((b.prob || 0) - (a.prob || 0)));
+  // Muestra al mejor de cada partido (nunca vacio si hay juegos). La CALIDAD del
+  // numero depende del modelo/datos, no de ocultar: por eso se arregla el modelo
+  // para que el mejor de cada juego tenga probabilidad alta y real, y el parrafo
+  // sea distinto en cada tarjeta.
   return arr.slice(0, 9).map((j, i) => ({ ...j, rank: i + 1 }));
 }
 
@@ -477,32 +477,20 @@ function analisisPick(p, cfg) {
 }
 
 function veredicto(p, cfg) {
-  const es = ES();
   const pr = p.prob, conf = p.confianza;
-  const fav = (p.factores || [])[0];
-  const rsk = (p.riesgos || [])[0];
+  const S = FRASES[cfg.metric] || FRASES._def;
   const baja = (conf === 'baja' || conf === 'muy baja');
   const muyBaja = conf === 'muy baja';
-  const S = FRASES[cfg.metric] || FRASES._def;
-  const line = (o) => (es ? o.es(pr) : o.en(pr));
-  const F = fav ? (es ? ` A favor: ${fav.toLowerCase()}.` : ` In favor: ${fav.toLowerCase()}.`) : '';
-  const R = rsk ? (es ? ` Cuidado: ${rsk.toLowerCase()}.` : ` Watch out: ${rsk.toLowerCase()}.`) : '';
-  let tono, txt;
-
-  if (muyBaja) {
-    tono = 'malo';
-    txt = line(S.flojo) + (rsk ? (es ? ` ${rsk}.` : ` ${rsk}.`) : '') + (es ? ' No te apoyes solo en esto.' : " Don't lean on it alone.");
-  } else if (pr >= S.hi) {
-    tono = baja ? 'medio' : 'bueno';
-    txt = baja ? (line(S.alta) + F + (es ? ' Aún con reservas.' : ' Still with reservations.')) : analisisPick(p, cfg);
-  } else if (pr >= S.mid) {
-    tono = 'medio';
-    txt = line(S.mod) + F;
-  } else {
-    tono = 'medio';
-    txt = line(S.parejo) + R;
-  }
-  return { texto: txt, tono };
+  // Texto SIEMPRE por jugador y variado (regla: nunca el mismo parrafo), y bilingue
+  // (respeta el idioma elegido, no fuerza ingles). Antes, los picks que no eran de
+  // alta confianza usaban una plantilla FIJA repetida y le pegaban el factor en
+  // espanol (p.ej. "In favor: juega en casa"): esa era la fuente del parrafo igual
+  // y del idioma mezclado. analisisPick arma el texto desde los datos del pick.
+  const texto = analisisPick(p, cfg);
+  let tono = 'medio';
+  if (pr >= S.hi && !baja) tono = 'bueno';
+  else if (muyBaja || pr < S.mid) tono = 'malo';
+  return { texto, tono };
 }
 
 function horaPartido(cuando) {
