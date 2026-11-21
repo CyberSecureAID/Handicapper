@@ -13,6 +13,7 @@ import { initAuthUI, abrirAuth } from './auth/auth-ui.js';
 import { initNavegacion, mostrarPantalla, aplicarI18n } from './ui/navegacion.js';
 import { fijarSuscripcion, tieneAcceso, limpiarVistaPrevia, marcarVistaPrevia, planActual } from './auth/estado-pago.js';
 import { pintarParlay, pintarElite } from './ui/parlay.js';
+import { initPickem } from './ui/pickem.js';
 import { pintarSenales, cargarSenales, contarSenales } from './ui/senales.js';
 import { pintarChat, cerrarChat } from './ui/chat.js';
 
@@ -185,17 +186,20 @@ function pintarLista() {
     cont.innerHTML = `<div class="vacio" style="padding:50px;text-align:center">${t('vacio.lista')}</div>`;
     return;
   }
+  // Favoritos al tope: lo que marcas con la estrella sube de primero (orden estable).
+  const favs = _favs();
+  if (favs.length) lista = lista.slice().sort((a, b) => (favs.includes(b.id) ? 1 : 0) - (favs.includes(a.id) ? 1 : 0));
   const titulo = q ? t('seccion.partidos')
     : (ligaActiva === 'mimiami' ? (idiomaActual() === 'es' ? 'Mi Miami' : 'My Miami')
     : (ligaActiva ? t('seccion.partidos') : t('seccion.destacados')));
   cont.innerHTML = `<div class="seccion-t">${titulo}</div>` + lista.map(tarjetaPartido).join('');
-  const favs = _favs();
   cont.querySelectorAll('.pmatch').forEach(el => {
     el.onclick = (e) => { if (e.target.closest('.pm-fav')) return; abrirDetalle(el.dataset.id, el); };
   });
   cont.querySelectorAll('.pm-fav').forEach(b => {
     if (favs.includes(b.dataset.fav)) b.classList.add('on');
-    b.onclick = (e) => { e.stopPropagation(); _toggleFav(b.dataset.fav); b.classList.toggle('on'); };
+    // Al marcar/desmarcar, repinta: el favorito sube al tope al instante.
+    b.onclick = (e) => { e.stopPropagation(); _toggleFav(b.dataset.fav); pintarLista(); };
   });
 }
 
@@ -724,6 +728,7 @@ function init() {
   initBotonIdioma();
   initProyeccion();
   initGlosario();
+  initPickem();
 
   // Hamburguesa / drawer (móvil)
   $('hamb')?.addEventListener('click', abrirDrawer);
