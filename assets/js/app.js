@@ -47,7 +47,7 @@ function actualizarLogo() {
 function pintarDrawer() {
   const cont = $('drawer-ligas');
   if (!cont) return;
-  const items = [{ id: null, nombre: t('liga.todos'), corto: t('liga.todos'), logo: 'assets/imagenes/dep-todos.png' }, ...LIGAS];
+  const items = [{ id: null, nombre: t('liga.todos'), corto: t('liga.todos'), logo: 'assets/imagenes/dep-todos.png' }, MIAMI_ITEM, ...LIGAS];
   cont.innerHTML = items.map(l => `
     <button class="liga ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">
       <span class="ic">${ligaIcono(l)}</span>${ligaCortoL(l)}
@@ -67,22 +67,40 @@ function ligaIcono(l) {
   return IC[l.icono] || IC.diana;
 }
 
-/* Nombre de liga localizado. Solo "Ligas Invernales" cambia entre idiomas
-   (Liga MX y MLS son iguales en ingles y espanol; el resto son nombres propios). */
+/* Nombre de liga localizado. Solo "Ligas Invernales" y "Mi Miami" cambian entre
+   idiomas (Liga MX y MLS son iguales; el resto son nombres propios). */
 function ligaNombre(l) {
   if (l && l.id === 'invierno') return idiomaActual() === 'es' ? 'Ligas Invernales' : 'Winter Leagues';
+  if (l && l.id === 'mimiami') return idiomaActual() === 'es' ? 'Mi Miami' : 'My Miami';
   return l.nombre;
 }
 function ligaCortoL(l) {
   if (l && l.id === 'invierno') return idiomaActual() === 'es' ? 'Invernal' : 'Winter';
+  if (l && l.id === 'mimiami') return 'Miami';
   return l.corto || l.nombre;
+}
+
+/* Filtro "Mi Miami": los equipos mas vistos del area (GMU). No es una liga de
+   datos, es un filtro sobre varias ligas. */
+const MIAMI_ITEM = { id: 'mimiami', nombre: 'Mi Miami', corto: 'Miami', logo: 'assets/imagenes/dep-mimiami.png' };
+const MIAMI_EQUIPOS = {
+  nba: ['heat'], nfl: ['dolphins'], nhl: ['panthers', 'florida'],
+  mls: ['inter miami', 'miami'], mlb: ['marlins'],
+};
+function _esEquipoMiami(ligaId, eq) {
+  const claves = MIAMI_EQUIPOS[ligaId]; if (!claves || !eq) return false;
+  const n = String(eq.nombre || '').toLowerCase(), a = String(eq.abrev || '').toLowerCase();
+  return claves.some(k => n.includes(k)) || (ligaId !== 'nhl' && a === 'mia') || (ligaId === 'nhl' && a === 'fla');
+}
+function _esPartidoMiami(p) {
+  return _esEquipoMiami(p.ligaId, p.local) || _esEquipoMiami(p.ligaId, p.visita);
 }
 
 /* -------- Sidebar de ligas -------- */
 function pintarLigas() {
   const cont = $('lista-ligas');
   if (!cont) return;
-  const items = [{ id: null, nombre: t('liga.todos'), logo: 'assets/imagenes/dep-todos.png' }, ...LIGAS];
+  const items = [{ id: null, nombre: t('liga.todos'), logo: 'assets/imagenes/dep-todos.png' }, MIAMI_ITEM, ...LIGAS];
   cont.innerHTML = items.map(l => `
     <button class="liga ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">
       <span class="ic">${ligaIcono(l)}</span>${ligaNombre(l)}
@@ -96,7 +114,7 @@ function pintarLigas() {
 function pintarPestanas() {
   const cont = $('pestanas');
   if (!cont) return;
-  const items = [{ id: null, nombre: t('liga.todos') }, ...LIGAS.map(l => ({ id: l.id, nombre: ligaNombre(l) }))];
+  const items = [{ id: null, nombre: t('liga.todos') }, { id: 'mimiami', nombre: ligaNombre(MIAMI_ITEM) }, ...LIGAS.map(l => ({ id: l.id, nombre: ligaNombre(l) }))];
   cont.innerHTML = items.map(l => `
     <button class="pestana ${ (l.id===ligaActiva) ? 'on':'' }" data-liga="${l.id ?? ''}">${l.nombre}</button>`).join('');
   cont.querySelectorAll('.pestana').forEach(b => b.onclick = () => {
@@ -126,6 +144,14 @@ async function cargarLista() {
     return;
   }
   cont.innerHTML = `<div class="seccion-t">${t('cargando')}</div>`;
+  if (ligaActiva === 'mimiami') {
+    // Mi Miami: equipos mas vistos del area (Heat, Dolphins, Marlins, Panthers, Inter Miami).
+    const ligas = Object.keys(MIAMI_EQUIPOS);   // nba, nfl, nhl, mls, mlb
+    const listas = await Promise.all(ligas.map(id => listarPartidos(id).catch(() => [])));
+    _partidos = listas.flat().filter(_esPartidoMiami);
+    pintarLista();
+    return;
+  }
   _partidos = await listarPartidos(ligaActiva);
   pintarLista();
 }
@@ -145,7 +171,9 @@ function pintarLista() {
     cont.innerHTML = `<div class="vacio" style="padding:50px;text-align:center">${t('vacio.lista')}</div>`;
     return;
   }
-  const titulo = q ? t('seccion.partidos') : (ligaActiva ? t('seccion.partidos') : t('seccion.destacados'));
+  const titulo = q ? t('seccion.partidos')
+    : (ligaActiva === 'mimiami' ? (idiomaActual() === 'es' ? 'Mi Miami' : 'My Miami')
+    : (ligaActiva ? t('seccion.partidos') : t('seccion.destacados')));
   cont.innerHTML = `<div class="seccion-t">${titulo}</div>` + lista.map(tarjetaPartido).join('');
   const favs = _favs();
   cont.querySelectorAll('.pmatch').forEach(el => {
