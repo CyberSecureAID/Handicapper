@@ -23,13 +23,36 @@ let _app = null, _auth = null, _db = null;
 let _fbAuth = null, _fbStore = null;
 let _usuario = null;
 
-/* Carga perezosa de los SDK solo si Firebase está configurado */
-async function cargar() {
-  if (_app) return true;
-  if (!firebaseListo) return false;
+/* Promesa con tope de tiempo: si no resuelve en `ms`, rechaza (no deja colgado). */
+function _conTimeout(promesa, ms) {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('timeout')), ms);
+    Promise.resolve(promesa).then(
+      (v) => { clearTimeout(t); resolve(v); },
+      (e) => { clearTimeout(t); reject(e); }
+    );
+  });
+}
+
+async function _importarSDK() {
   const appMod = await import(U('app'));
   _fbAuth = await import(U('auth'));
   _fbStore = await import(U('firestore'));
+  return appMod;
+}
+
+/* Carga perezosa de los SDK solo si Firebase está configurado.
+   Con tope de tiempo y un reintento: si el CDN se cuelga, lanza en vez de
+   dejar el login congelado para siempre. */
+async function cargar() {
+  if (_app) return true;
+  if (!firebaseListo) return false;
+  let appMod, ultimo;
+  for (let intento = 0; intento < 2 && !appMod; intento++) {
+    try { appMod = await _conTimeout(_importarSDK(), 12000); }
+    catch (e) { ultimo = e; }
+  }
+  if (!appMod) { const e = new Error('No se pudo cargar Firebase'); e.code = 'red'; throw e; }
   _app = appMod.initializeApp(firebaseConfig);
   _auth = _fbAuth.getAuth(_app);
   _db = _fbStore.getFirestore(_app);
@@ -45,31 +68,61 @@ export function _obtenerDB() { return _db; }
 export function _obtenerStore() { return _fbStore; }
 export function _obtenerAuth() { return _auth; }
 
+/* Aplica al usuario en memoria los campos del perfil de Firestore. */
+function _aplicarPerfil(perfil) {
+  if (!perfil || !_usuario) return;
+  _usuario.suscripcion = perfil.suscripcion || null;
+  _usuario.rol = perfil.rol || 'usuario';
+  _usuario.usuario = perfil.usuario || '';
+  if (perfil.foto) _usuario.foto = perfil.foto;   // foto real del perfil (Firestore)
+}
+
 /* Arranca la autenticación y avisa cada vez que cambia el estado */
 export async function iniciarAuth(alCambiar) {
-  const ok = await cargar();
+  let ok;
+  try { ok = await cargar(); }
+  catch (_) { alCambiar?.(null, { error: 'red' }); return; }   // SDK no cargó: entra como invitado, no congela
   if (!ok) { alCambiar?.(null); return; }
   _fbAuth.onAuthStateChanged(_auth, async (u) => {
     const intencional = _intencional; _intencional = false;
-    if (u) {
-      _usuario = { uid: u.uid, email: u.email, nombre: u.displayName || (u.email || '').split('@')[0], foto: u.photoURL || null };
-      const perfil = await asegurarPerfil(_usuario);
-      // Si el administrador bloqueó esta cuenta, se cierra la sesión de inmediato.
-      if (perfil && perfil.bloqueado) {
-        _usuario = null;
-        try { await _fbAuth.signOut(_auth); } catch (_) {}
-        alCambiar?.(null, { bloqueado: true });
-        return;
-      }
-      if (perfil) {
-        _usuario.suscripcion = perfil.suscripcion || null; _usuario.rol = perfil.rol || 'usuario'; _usuario.usuario = perfil.usuario || '';
-        if (perfil.foto) _usuario.foto = perfil.foto;   // foto real del perfil (Firestore)
-      }
-    } else {
+    if (!u) { _usuario = null; alCambiar?.(null, { intencional }); return; }
+    _usuario = { uid: u.uid, email: u.email, nombre: u.displayName || (u.email || '').split('@')[0], foto: u.photoURL || null };
+    // Perfil con TOPE de tiempo: no bloquea la entrada si la red va lenta.
+    let perfil = null;
+    try { perfil = await _conTimeout(asegurarPerfil(_usuario), 6000); } catch (_) { perfil = null; }
+    // Si el administrador bloqueó esta cuenta, se cierra la sesión de inmediato.
+    if (perfil && perfil.bloqueado) {
       _usuario = null;
+      try { await _fbAuth.signOut(_auth); } catch (_) {}
+      alCambiar?.(null, { bloqueado: true });
+      return;
     }
-    alCambiar?.(_usuario, { intencional });
+    _aplicarPerfil(perfil);
+    alCambiar?.(_usuario, { intencional });                 // navega YA, con lo que haya
+    if (!perfil) _reintentarPerfil(alCambiar, intencional);  // completa el perfil en segundo plano
   });
+}
+
+/* Si el perfil no cargó a tiempo (red lenta), reintenta en segundo plano y
+   re-notifica para aplicar suscripción/rol/foto, sin bloquear la entrada. */
+async function _reintentarPerfil(alCambiar, intencional) {
+  const uid0 = _usuario && _usuario.uid;
+  for (let i = 0; i < 3; i++) {
+    await new Promise(r => setTimeout(r, 3000 * (i + 1)));
+    if (!_usuario || _usuario.uid !== uid0) return;   // la sesión cambió o se cerró
+    let perfil = null;
+    try { perfil = await _conTimeout(asegurarPerfil(_usuario), 6000); } catch (_) {}
+    if (!perfil) continue;
+    if (perfil.bloqueado) {
+      _usuario = null;
+      try { await _fbAuth.signOut(_auth); } catch (_) {}
+      alCambiar?.(null, { bloqueado: true });
+      return;
+    }
+    _aplicarPerfil(perfil);
+    alCambiar?.(_usuario, { intencional, perfilTardio: true });
+    return;
+  }
 }
 
 /* Crea el documento de perfil si no existe; devuelve el perfil actual */
@@ -247,6 +300,7 @@ export function mensajeError(e, idioma = 'en') {
     'auth/email-already-in-use': 'Ese correo ya está registrado.',
     'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
     'auth/popup-closed-by-user': 'Se cerró la ventana de Google.',
+    'red': 'Problema de conexión. Revisa tu internet e intenta de nuevo.',
   };
   const en = {
     'auth/invalid-email': 'Invalid email.',
@@ -256,6 +310,7 @@ export function mensajeError(e, idioma = 'en') {
     'auth/email-already-in-use': 'That email is already registered.',
     'auth/weak-password': 'Password must be at least 6 characters.',
     'auth/popup-closed-by-user': 'Google sign-in window was closed.',
+    'red': 'Connection problem. Check your internet and try again.',
   };
   const tabla = idioma === 'es' ? es : en;
   return tabla[code] || (idioma === 'es' ? 'No se pudo completar. Intenta de nuevo.' : 'Could not complete. Try again.');
