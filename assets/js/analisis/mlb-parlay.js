@@ -210,11 +210,29 @@ async function tasaJuegosConHit(id, season, proxy) {
   } catch (_) { return null; }
 }
 
+/* Busca el PROXIMO juego de MLB desde la fecha (ventana amplia), para que el
+   calendario diga cuando vuelve la accion cuando hoy no hay juegos (receso). */
+async function proximoJuego(fecha, proxy) {
+  try {
+    const d0 = new Date((fecha || new Date().toISOString().slice(0, 10)) + 'T12:00:00');
+    const d1 = new Date(d0); d1.setDate(d1.getDate() + 170);
+    const ini = d0.toISOString().slice(0, 10), fin = d1.toISOString().slice(0, 10);
+    const data = await pedir(`${API}/schedule?sportId=1&startDate=${ini}&endDate=${fin}&hydrate=team`, proxy);
+    const dias = (data?.dates || []).filter(x => (x.games || []).length);
+    if (!dias.length) return null;
+    const tipo = dias[0].games?.[0]?.gameType;
+    return { fecha: dias[0].date, contexto: tipo === 'S' ? 'Spring Training' : (tipo === 'E' ? 'Exhibition' : null) };
+  } catch (_) { return null; }
+}
+
 export async function topParlayHits({ fecha, n = 9, proxy = '', maxPorEquipo = 6 } = {}) {
   const avisos = [];
   const season = new Date(fecha + 'T12:00:00').getFullYear();
   const juegos = await cartelera(fecha, proxy);
-  if (!juegos.length) return { jugadores: [], meta: { fecha, fuente: 'MLB Stats API', avisos: ['No hay juegos para la fecha'] } };
+  if (!juegos.length) {
+    const prox = await proximoJuego(fecha, proxy);
+    return { jugadores: [], meta: { fecha, fuente: 'MLB Stats API', avisos: ['No hay juegos para la fecha'], proxima: prox ? prox.fecha : null, contexto: prox ? prox.contexto : null } };
+  }
 
   // Cache de stats de pitcher por id
   const pitCache = new Map();
