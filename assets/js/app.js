@@ -408,6 +408,7 @@ function actualizarPuntoSenales() {
   $('tab-dot')?.classList.toggle('on', has);
   $('premium-btn-dot')?.classList.toggle('on', has);
   $('premium-an-dot')?.classList.toggle('on', has);
+  $('signals-star-dot')?.classList.toggle('on', has);   // acceso directo en la barra (web)
 }
 
 /* -------- Botón de idioma -------- */
@@ -474,6 +475,10 @@ function initProyeccion() {
   const proBtn = document.getElementById('pro-btn');
   const sigBtn = document.getElementById('signals-btn');
   if (sigBtn) sigBtn.addEventListener('click', (e) => { e.stopPropagation(); abrirDirectorioSenales(); });
+  // Acceso directo de Analyst Signals en la barra superior (solo web): reusa el
+  // mismo destino que el item del popup (no lo quita de ahi).
+  const sigStar = document.getElementById('signals-star');
+  if (sigStar) sigStar.addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('premium-analisis')?.click(); });
   const pBtn = document.getElementById('premium-btn');
   const pPop = document.getElementById('premium-pop');
   if (pBtn && pPop) {
