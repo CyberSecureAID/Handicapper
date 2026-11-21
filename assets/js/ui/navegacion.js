@@ -127,6 +127,7 @@ export function pintarPlanes() {
     { t: L('Analyst signals access', 'Acceso a señales de analistas'), b: false, p: L('Limited', 'Limitado'), pr: '~50%' },
     { t: L('Community chat access', 'Acceso al chat de la comunidad'), b: false, p: true, pr: true },
     { t: L("The Day's Elite (multi-sport)", 'La Élite del Día (multideporte)'), b: false, p: false, pr: true },
+    { t: L('Pick’em builder & Combo of the Day', 'Constructor de pick’em y Combinada del Día'), b: false, p: false, pr: true },
     { t: L('Push notifications', 'Notificaciones push'), b: false, p: false, pr: true },
     { t: L('Profile photo', 'Foto de perfil'), b: false, p: false, pr: true },
   ];

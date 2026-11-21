@@ -20,6 +20,14 @@ const MULT = { 2: 3, 3: 5, 4: 10, 5: 20, 6: 37.5 };
 
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+/* Gating: la Combinada del Día es exclusiva del plan Premium (futura
+   integración con Stripe). app.js fija el estado con setPremium(). */
+let _premium = false;
+let _verPlanes = null;
+export function setPremium(v) { _premium = !!v; try { actualizarFAB(); } catch (_) {} }
+export function esPremium() { return _premium; }
+export function setVerPlanes(fn) { _verPlanes = (typeof fn === 'function') ? fn : null; }
+
 function _load() { try { return JSON.parse(localStorage.getItem(LS) || '[]'); } catch (_) { return []; } }
 function _save(a) { try { localStorage.setItem(LS, JSON.stringify(a)); } catch (_) {} }
 
@@ -234,13 +242,21 @@ function cuerpo(arr) {
     legs = arr.map(legHTML).join('');
   } else {
     const dia = combinadaDelDia();
-    if (dia.length >= 2) {
+    if (dia.length >= 2 && _premium) {
       const dpc = Math.round(probComb(dia) * 100);
       legs = `<div class="slip-dia">
         <div class="slip-dia-h"><span class="slip-dia-eye">${L('Today’s combo', 'Combinada del día')}</span><b>${dia.length} picks · ${dpc}%</b></div>
         ${dia.map(legDiaHTML).join('')}
         <button class="slip-dia-go" id="slip-dia-go">${L('Build this combo', 'Armar esta combinada')}</button>
         <div class="slip-dia-or">${L('or add your own with the + on any card', 'o agrega los tuyos con el + de cualquier tarjeta')}</div>
+      </div>`;
+    } else if (dia.length >= 2) {
+      // Hay combinada del día pero el usuario no es Premium: teaser bloqueado.
+      legs = `<div class="slip-dia slip-dia-lock">
+        <div class="slip-dia-h"><span class="slip-dia-eye">${L('Today’s combo', 'Combinada del día')}</span><span class="slip-dia-prem">${LOCK}Premium</span></div>
+        <div class="slip-dia-blur">${dia.slice(0, 3).map(legDiaHTML).join('')}</div>
+        <div class="slip-dia-locktx">${L('Get the auto-built Combo of the Day with Premium.', 'Obtén la Combinada del Día automática con Premium.')}</div>
+        <button class="slip-dia-go" id="slip-prem-go">${L('See Premium', 'Ver Premium')}</button>
       </div>`;
     } else {
       legs = `<div class="slip-empty">${L('Add picks with the + on any card to build your pick’em.', 'Agrega picks con el + de cualquier tarjeta para armar tu combinada.')}</div>`;
@@ -300,12 +316,14 @@ function wire(ov) {
     _load().forEach(x => document.querySelectorAll(`.ply-slip[data-slipkey="${CSS.escape(x.key)}"]`).forEach(btn => { btn.classList.add('on'); btn.innerHTML = IC_CHECK; }));
     refrescar();
   });
+  ov.querySelector('#slip-prem-go')?.addEventListener('click', () => { cerrarSlip(); try { _verPlanes && _verPlanes(); } catch (_) {} });
 }
 
 const X = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
 const DL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 4 5-4M5 20h14"/></svg>`;
 const WA = `<svg viewBox="0 0 32 32" fill="currentColor" width="17" height="17"><path d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.1 1.6 5.9L4 29l8.3-2.2c1.7.9 3.6 1.4 5.5 1.4h.2C24.6 28.2 30 22.8 30 16.2 30 9.6 24.6 3 16 3z"/><path d="M22 18.3c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-1.8-.9-3-1.6-4.2-3.6-.3-.5.3-.5.8-1.6.1-.2 0-.4 0-.5-.1-.1-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.3 5.2 4.6 1.9.8 2.7.9 3.6.8.6-.1 1.9-.8 2.1-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z" fill="#0b1f14"/></svg>`;
 const BADGE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9h10M7 13h7"/></svg>`;
+const LOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>`;
 
 function inyectar() {
   if (document.getElementById('pickem-css')) return;
@@ -360,6 +378,9 @@ function inyectar() {
   .slip-dia-go{width:100%;margin-top:12px;padding:12px;border-radius:11px;border:0;cursor:pointer;background:linear-gradient(135deg,var(--oro,#e8c46a),#f6e2a6);color:#241a06;font-family:var(--display,"Chakra Petch",sans-serif);font-weight:800;font-size:13.5px}
   .slip-dia-go:hover{filter:brightness(1.04)}
   .slip-dia-or{margin-top:9px;text-align:center;font-size:11px;color:var(--tinta-3,#6b7686)}
+  .slip-dia-prem{display:inline-flex;align-items:center;gap:5px;font-family:var(--display,"Chakra Petch",sans-serif);font-size:11px;font-weight:800;color:#241a06;background:linear-gradient(135deg,var(--oro,#e8c46a),#f6e2a6);padding:3px 9px;border-radius:20px}
+  .slip-dia-blur{position:relative;filter:blur(3px);opacity:.5;pointer-events:none;max-height:120px;overflow:hidden}
+  .slip-dia-locktx{margin-top:12px;text-align:center;font-size:12.5px;line-height:1.5;color:var(--tinta-2,#9aa6b2)}
   .slip-sum{display:flex;gap:12px;padding:14px 20px 4px}
   .slip-sum-b{flex:1;background:var(--fondo-2,#0e131c);border:1px solid var(--linea,rgba(255,255,255,.1));border-radius:14px;padding:13px;text-align:center}
   .slip-sum-b span{display:block;font-size:11px;color:var(--tinta-2,#9aa6b2);text-transform:uppercase;letter-spacing:.05em}
