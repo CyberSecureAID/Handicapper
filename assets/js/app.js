@@ -73,6 +73,9 @@ function ligaIcono(l) {
 function ligaNombre(l) {
   if (l && l.id === 'invierno') return idiomaActual() === 'es' ? 'Ligas Invernales' : 'Winter Leagues';
   if (l && l.id === 'mimiami') return idiomaActual() === 'es' ? 'Mi Miami' : 'My Miami';
+  // Copas sudamericanas: ingles por defecto; espanol solo si el usuario cambia el idioma.
+  if (l && l.id === 'libertadores') return idiomaActual() === 'es' ? 'Copa Libertadores' : 'Libertadores Cup';
+  if (l && l.id === 'sudamericana') return idiomaActual() === 'es' ? 'Copa Sudamericana' : 'Sudamericana Cup';
   return l.nombre;
 }
 function ligaCortoL(l) {
@@ -171,6 +174,121 @@ async function cargarLista() {
   pintarLista();
 }
 
+/* ============================================================
+   PARTIDOS DEL MOMENTO ("el boom"): banda propia y prominente arriba del
+   lobby con lo mas caliente AHORA: partidos en vivo y las competencias
+   estelares del momento (Copa Libertadores, Copa Sudamericana, Champions).
+   Es su propia seccion, no va dentro del pick'em. Reusa el detalle normal.
+   ============================================================ */
+const IC_FLAMA = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c0 3-4 4.5-4 8.5a4 4 0 008 0c0-1.3-.5-2.3-1-3 .2 1 .3 2-.6 2.6-.2-2.1-1.5-3.6-2.4-5.1C11.3 5.7 12 4 12 2z"/><path d="M12 22a6 6 0 006-6c0-2.5-1.6-4.2-2.7-5.6.2 2-.6 3.4-1.8 4.3.2-1.6-.3-2.8-1-3.9-.4 2.3-2.5 3.2-2.5 5.2A5.8 5.8 0 0012 22z" opacity=".55"/></svg>';
+const MARQUEE_LIGAS = ['libertadores', 'sudamericana', 'ucl'];
+function _esHoyFecha(cuando) { try { return cuando && new Date(cuando).toDateString() === new Date().toDateString(); } catch (_) { return false; } }
+function _horaHot(cuando) {
+  try {
+    const d = new Date(cuando); if (isNaN(d)) return '';
+    const es = idiomaActual() === 'es';
+    const h = d.toLocaleTimeString(es ? 'es' : 'en', { hour: 'numeric', minute: '2-digit' });
+    return _esHoyFecha(cuando) ? h : d.toLocaleDateString(es ? 'es' : 'en', { weekday: 'short' }) + ' ' + h;
+  } catch (_) { return ''; }
+}
+function _partidosHot(lista) {
+  const marquee = new Set(MARQUEE_LIGAS);
+  const puntos = (p) => {
+    let s = 0;
+    if (p.estado === 'vivo') s += 100;
+    if (marquee.has(p.ligaId)) s += 45;
+    if (_esHoyFecha(p.cuando)) s += 20;
+    return s;
+  };
+  return (lista || [])
+    .filter(p => p && (p.estado === 'vivo' || marquee.has(p.ligaId) || _esHoyFecha(p.cuando)) && p.estado !== 'final')
+    .map(p => ({ p, s: puntos(p) }))
+    .sort((a, b) => b.s - a.s)
+    .slice(0, 6)
+    .map(x => x.p);
+}
+function _logoHot(eq) {
+  const ab = esc((eq && (eq.abrev || eq.nombre) || '?').slice(0, 4).toUpperCase());
+  return eq && eq.logo
+    ? `<span class="hot-logo"><img src="${esc(eq.logo)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="hot-logo-fb" style="display:none">${ab}</span></span>`
+    : `<span class="hot-logo"><span class="hot-logo-fb" style="display:flex">${ab}</span></span>`;
+}
+const IC_YT = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2a2.8 2.8 0 00-2-2C17.9 4.8 12 4.8 12 4.8s-5.9 0-7.6.4a2.8 2.8 0 00-2 2A29 29 0 002 12a29 29 0 00.4 4.8 2.8 2.8 0 002 2c1.7.4 7.6.4 7.6.4s5.9 0 7.6-.4a2.8 2.8 0 002-2A29 29 0 0022 12a29 29 0 00-.4-4.8zM10 15V9l5 3z"/></svg>';
+function _ytBusqueda(p) {
+  const a = (p.local && (p.local.nombre || p.local.abrev)) || '';
+  const b = (p.visita && (p.visita.nombre || p.visita.abrev)) || '';
+  const es = idiomaActual() === 'es';
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${a} vs ${b} ${es ? 'en vivo' : 'live'}`)}`;
+}
+function tarjetaHot(p) {
+  const live = p.estado === 'vivo';
+  const ES = idiomaActual() === 'es';
+  const marca = live ? `<span class="hot-live"><i></i>${ES ? 'EN VIVO' : 'LIVE'}</span>` : `<span class="hot-when">${esc(_horaHot(p.cuando))}</span>`;
+  const centro = (p.marcador && p.marcador.local != null)
+    ? `<span class="hot-score">${esc(p.marcador.local)} : ${esc(p.marcador.visita)}</span>`
+    : `<span class="hot-vs">VS</span>`;
+  const verVivo = live ? `<a class="hot-watch" href="${esc(_ytBusqueda(p))}" target="_blank" rel="noopener noreferrer" data-stop="1">${IC_YT}${ES ? 'Ver en vivo' : 'Watch live'}</a>` : '';
+  return `<article class="hot-c" data-id="${esc(p.id)}" tabindex="0" role="button">
+    <div class="hot-c-top"><span class="hot-liga">${esc(p.liga || '')}</span>${marca}</div>
+    <div class="hot-c-teams">
+      <div class="hot-team">${_logoHot(p.local)}<span class="hot-ab">${esc((p.local && (p.local.abrev || p.local.nombre)) || '')}</span></div>
+      ${centro}
+      <div class="hot-team">${_logoHot(p.visita)}<span class="hot-ab">${esc((p.visita && (p.visita.abrev || p.visita.nombre)) || '')}</span></div>
+    </div>
+    ${verVivo}
+  </article>`;
+}
+/* Efecto 3D (tilt que sigue el cursor) en las tarjetas del boom. Solo en
+   dispositivos con mouse (hover fino): en movil estorbaria el scroll. */
+function _activarTiltHot(cont) {
+  if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  cont.querySelectorAll('.hot-c').forEach(card => {
+    card.addEventListener('pointermove', (e) => {
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      const rx = (0.5 - py) * 7, ry = (px - 0.5) * 9;
+      card.style.transform = `perspective(700px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-3px)`;
+    });
+    card.addEventListener('pointerleave', () => { card.style.transform = ''; });
+  });
+}
+function bandaHot(lista) {
+  const hot = _partidosHot(lista);
+  if (hot.length < 2) return '';
+  const ES = idiomaActual() === 'es';
+  return `<div class="hot-band">
+    <div class="hot-band-h"><span class="hot-flama">${IC_FLAMA}</span><div class="hot-band-tx"><div class="hot-band-t">${ES ? 'Partidos del momento' : 'Hot right now'}</div><div class="hot-band-s">${ES ? 'Lo mas caliente del deporte ahora mismo' : "The biggest matches on the board right now"}</div></div></div>
+    <div class="hot-strip">${hot.map(tarjetaHot).join('')}</div>
+  </div>`;
+}
+
+/* Auto refresco del marcador en vivo: cada minuto, si hay partidos en vivo y
+   estamos en la vista por defecto, re-lee los datos (ESPN, gratis) y reemplaza
+   SOLO la banda del boom, sin mover la lista ni el scroll del usuario. */
+let _hotTimer = null;
+async function _refrescarHot() {
+  try {
+    if (ligaActiva || proyActiva || (_busqueda && _busqueda.trim())) return;
+    if (document.visibilityState && document.visibilityState !== 'visible') return;
+    if (!(_partidos || []).some(p => p && p.estado === 'vivo')) return;   // solo si hay algo en vivo
+    const nuevos = await listarPartidos(null);
+    if (ligaActiva || proyActiva || (_busqueda && _busqueda.trim())) return;   // el usuario navego mientras cargaba
+    _partidos = nuevos;
+    const cont = $('lista'); if (!cont) return;
+    const banda = cont.querySelector('.hot-band'); if (!banda) return;
+    const nueva = bandaHot(_partidos);
+    if (!nueva) { banda.remove(); return; }
+    const tmp = document.createElement('div'); tmp.innerHTML = nueva;
+    banda.replaceWith(tmp.firstElementChild);
+    cont.querySelectorAll('.hot-c[data-id]').forEach(el => {
+      const ir = () => abrirDetalle(el.dataset.id, el);
+      el.onclick = (e) => { if (e.target.closest('[data-stop]')) return; ir(); };
+      el.onkeydown = (e) => { if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('[data-stop]')) { e.preventDefault(); ir(); } };
+    });
+    _activarTiltHot(cont);
+  } catch (_) {}
+}
+
 function pintarLista() {
   const cont = $('lista');
   if (!cont) return;
@@ -192,7 +310,15 @@ function pintarLista() {
   const titulo = q ? t('seccion.partidos')
     : (ligaActiva === 'mimiami' ? (idiomaActual() === 'es' ? 'Mi Miami' : 'My Miami')
     : (ligaActiva ? t('seccion.partidos') : t('seccion.destacados')));
-  cont.innerHTML = `<div class="seccion-t">${titulo}</div>` + lista.map(tarjetaPartido).join('');
+  // Banda "Partidos del momento" (el boom): solo en la vista por defecto (sin liga ni busqueda).
+  const banda = (!q && !ligaActiva) ? bandaHot(lista) : '';
+  cont.innerHTML = banda + `<div class="seccion-t">${titulo}</div>` + lista.map(tarjetaPartido).join('');
+  cont.querySelectorAll('.hot-c[data-id]').forEach(el => {
+    const ir = () => abrirDetalle(el.dataset.id, el);
+    el.onclick = (e) => { if (e.target.closest('[data-stop]')) return; ir(); };   // el boton de YouTube no abre el detalle
+    el.onkeydown = (e) => { if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('[data-stop]')) { e.preventDefault(); ir(); } };
+  });
+  _activarTiltHot(cont);
   cont.querySelectorAll('.pmatch').forEach(el => {
     el.onclick = (e) => { if (e.target.closest('.pm-fav')) return; abrirDetalle(el.dataset.id, el); };
   });
@@ -730,6 +856,7 @@ function init() {
   initGlosario();
   initPickem();
   setVerPlanes(() => mostrarPantalla('pricing'));   // el teaser Premium del pick'em lleva a planes
+  if (!_hotTimer) _hotTimer = setInterval(_refrescarHot, 60000);   // marcador en vivo al dia
 
   // Hamburguesa / drawer (móvil)
   $('hamb')?.addEventListener('click', abrirDrawer);
@@ -1374,6 +1501,11 @@ async function _abrirPlanesModal() {
   const cross = '<svg class="pl-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   const celda = (v) => v === true ? chk : (v === false || v == null) ? cross : `${chk}<i>${esc(v)}</i>`;
   const key = (p) => p.id === 'basic' ? 'b' : p.id === 'pro' ? 'p' : 'pr';
+  // Ciclo mensual/anual (mismo toggle que afuera, en la landing). Por defecto mensual.
+  let ciclo = 'mensual';
+  const precioHTML = (p) => ciclo === 'anual'
+    ? `$${(+p.anual).toFixed(2)}<span>/${L('yr', 'año')}</span>`
+    : `$${(+p.mensual).toFixed(2)}<span>/${L('mo', 'mes')}</span>`;
   const card = (p) => {
     const k = key(p);
     const filas = F.map(f => `<li class="${(f[k] === false || f[k] == null) ? 'off' : ''}">${celda(f[k])}<span>${esc(f.t)}</span></li>`).join('');
@@ -1382,20 +1514,33 @@ async function _abrirPlanesModal() {
       <div class="pl-m-top">
         ${p.etiqueta ? `<span class="pl-m-tag">${esc(ES ? p.etiqueta.es : p.etiqueta.en)}</span>` : '<span class="pl-m-tag ghost"></span>'}
         <div class="pl-m-name">${esc(p.nombre)}</div>
-        <div class="pl-m-price">$${p.mensual}<span>/${L('mo', 'mes')}</span></div>
+        <div class="pl-m-price">${precioHTML(p)}</div>
       </div>
       <ul class="pl-m-list">${filas}</ul>
       <button class="pl-m-btn ${actual ? 'on' : ''}" ${actual ? 'disabled' : ''}>${actual ? L('Your current plan', 'Tu plan actual') : L('Choose plan', 'Elegir plan')}</button>
     </div>`;
   };
+  const toggleHTML = `<div class="ciclo-toggle pl-m-ciclo">
+    <button class="ciclo on" data-ciclo="mensual">${L('Monthly', 'Mensual')}</button>
+    <button class="ciclo" data-ciclo="anual">${L('Annual · save 17%', 'Anual · ahorra 17%')}</button>
+  </div>`;
   const ov = document.createElement('div'); ov.id = 'pl-ov'; ov.className = 'bz-ov';
   ov.innerHTML = `<div class="bz-modal pl-modal"><button class="bz-x" aria-label="close">✕</button>
     <div class="bz-head"><h3>${L('Plans & pricing', 'Planes y precios')}</h3><p>${L('Choose the plan that fits you best.', 'Elige el plan que mejor se adapta a ti.')}</p></div>
+    ${toggleHTML}
     <div class="bz-body"><div class="pl-m-grid">${PLANES.map(card).join('')}</div></div></div>`;
   document.body.appendChild(ov);
+  const grid = ov.querySelector('.pl-m-grid');
+  const wireBtns = () => ov.querySelectorAll('.pl-m-btn:not([disabled])').forEach(b => b.onclick = () => { ov.remove(); const pp = document.getElementById('pp-ov'); if (pp) pp.remove(); document.body.style.overflow = ''; mostrarPantalla('pricing'); });
   ov.querySelector('.bz-x').onclick = () => ov.remove();
   ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
-  ov.querySelectorAll('.pl-m-btn:not([disabled])').forEach(b => b.onclick = () => { ov.remove(); const pp = document.getElementById('pp-ov'); if (pp) pp.remove(); document.body.style.overflow = ''; mostrarPantalla('pricing'); });
+  ov.querySelectorAll('.ciclo').forEach(b => b.onclick = () => {
+    ciclo = b.dataset.ciclo;
+    ov.querySelectorAll('.ciclo').forEach(x => x.classList.toggle('on', x === b));
+    grid.innerHTML = PLANES.map(card).join('');
+    wireBtns();
+  });
+  wireBtns();
 }
 
 /* Modal grande del Buzón de señales (Fase 4). Las caducadas ya vienen filtradas por cargarSenales. */
