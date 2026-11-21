@@ -455,11 +455,11 @@
       if (document.querySelector('.pwa-banner')) return;
       var es = (localStorage.getItem('handicapper-idioma')||'en') === 'es';
       var b = document.createElement('div'); b.className = 'pwa-banner';
-      var titulo = es ? 'Pantalla completa' : 'Full screen';
-      var sub = esIOS ? (es ? 'Toca Compartir y "Añadir a inicio"' : 'Tap Share, then "Add to Home Screen"')
-                      : (es ? 'Instala para la experiencia inmersiva' : 'Install for the immersive experience');
+      var titulo = es ? 'Instalar app' : 'Install app';
+      var sub = esIOS ? (es ? 'Toca Compartir y luego "Anadir a inicio"' : 'Tap Share, then "Add to Home Screen"')
+                      : (es ? 'Acceso directo, a pantalla completa' : 'Quick access, full screen');
       var cta = es ? 'Instalar' : 'Install';
-      b.innerHTML = '<span class="pwa-banner-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg></span>'
+      b.innerHTML = '<img class="pwa-banner-logo" src="assets/imagenes/logo-h-oscuro.png" alt="Sports Expectations">'
         + '<span class="pwa-banner-tx"><b>'+titulo+'</b><span>'+sub+'</span></span>'
         + (esIOS ? '' : '<button class="pwa-banner-go">'+cta+'</button>')
         + '<button class="pwa-banner-x" aria-label="Close">&times;</button>';
