@@ -15,8 +15,6 @@ import { idiomaActual } from './idioma.js';
 const L = (en, es) => (idiomaActual() === 'es' ? es : en);
 const LS = 'se-slip-v1';
 const MAX = 6;
-/* Multiplicador tipico "todas deben cumplirse" (estilo PrizePicks Power / Underdog). */
-const MULT = { 2: 3, 3: 5, 4: 10, 5: 20, 6: 37.5 };
 
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -140,7 +138,17 @@ function avisoMax() {
 }
 
 function probComb(arr) { return arr.reduce((a, x) => a * ((x.prob || 0) / 100), 1); }
-function multDe(n) { return MULT[n] || (n < 2 ? 0 : MULT[6]); }
+/* El pick mas débil del combo: el que tiene menor probabilidad. Es el eslabon
+   que mas puede hundir la combinada (analisis, no pago de casa de apuestas). */
+function _weakest(arr) { return arr.length ? Math.min(...arr.map(x => x.prob || 0)) : 0; }
+/* Lectura honesta del combo, sin lenguaje de apuestas. */
+function _lecturaCombo(arr, pc, L) {
+  const w = _weakest(arr), n = arr.length;
+  if (pc >= 55 && w >= 70) return L(`A strong, tight combo. All ${n} picks sit high and the combined read holds up.`, `Un combo fuerte y parejo. Los ${n} picks estan altos y la lectura combinada aguanta.`);
+  if (pc >= 35) return L(`Solid combo. The weakest pick at ${w}% is the one to watch.`, `Combo solido. El pick mas débil, con ${w}%, es el que hay que vigilar.`);
+  if (pc >= 20) return L(`Ambitious combo. Each extra pick lowers the combined chance, so keep it tight.`, `Combo ambicioso. Cada pick extra baja la probabilidad combinada, asi que mantenlo corto.`);
+  return L(`Long shot. With ${n} picks the combined chance drops fast, that is the cost of stacking.`, `Muy arriesgado. Con ${n} picks la probabilidad combinada cae rapido, ese es el precio de apilar.`);
+}
 
 /* ---------- Boton flotante (FAB) con el contador ---------- */
 export function actualizarFAB() {
@@ -176,7 +184,7 @@ function explicarPickem(onConfirm) {
             'El <b>+</b> suma este pick a tu combinada: tu propia jugada con 2 a 6 de nuestros picks.')}</p>
       <ul class="pe-list">
         <li>${L('Pick 2 to 6 of our plays and stack them.', 'Elige de 2 a 6 de nuestros picks y combinalos.')}</li>
-        <li>${L('We show the <b>combined chance</b> (all must hit) and the <b>typical multiplier</b>.', 'Te mostramos la <b>probabilidad combinada</b> (deben cumplirse todas) y el <b>multiplicador tipico</b>.')}</li>
+        <li>${L('We show the <b>combined chance</b> (all must hit) and flag the <b>weakest pick</b>.', 'Te mostramos la <b>probabilidad combinada</b> (deben cumplirse todas) y señalamos el <b>pick mas débil</b>.')}</li>
         <li>${L('Share it as an image to WhatsApp or download it.', 'Compartela como imagen por WhatsApp o descargala.')}</li>
       </ul>
       <div class="pe-dis">${L('We analyze; we are not a sportsbook. You bet where you choose.', 'Nosotros analizamos; no somos casa de apuestas. Tu apuestas donde elijas.')}</div>
@@ -236,7 +244,6 @@ function legDiaHTML(x, i) {
 function cuerpo(arr) {
   const n = arr.length;
   const pc = Math.round(probComb(arr) * 100);
-  const mult = multDe(n);
   let legs;
   if (arr.length) {
     legs = arr.map(legHTML).join('');
@@ -265,8 +272,9 @@ function cuerpo(arr) {
   const resumen = n >= 2 ? `
     <div class="slip-sum">
       <div class="slip-sum-b"><span>${L('Combined chance', 'Probabilidad combinada')}</span><b>${pc}%</b><small>${L('all must hit', 'deben cumplirse todas')}</small></div>
-      <div class="slip-sum-b"><span>${L('Typical multiplier', 'Multiplicador tipico')}</span><b class="oro">${mult}x</b><small>${L('pick’em payout', 'pago de pick’em')}</small></div>
-    </div>` : (n === 1 ? `<div class="slip-hint">${L('Add one more pick to see the combined odds.', 'Agrega un pick mas para ver la combinada.')}</div>` : '');
+      <div class="slip-sum-b"><span>${L('Weakest leg', 'Pick mas débil')}</span><b>${_weakest(arr)}%</b><small>${L('lowest in the combo', 'el mas bajo del combo')}</small></div>
+    </div>
+    <div class="slip-read">${_lecturaCombo(arr, pc, L)}</div>` : (n === 1 ? `<div class="slip-hint">${L('Add one more pick to see the combined odds.', 'Agrega un pick mas para ver la combinada.')}</div>` : '');
   return `
     <div class="slip-head">
       <div><div class="slip-eyebrow">${L('Sports Expectations', 'Sports Expectations')}</div><h3>${L('My pick’em', 'Mi combinada')}</h3></div>
@@ -294,7 +302,7 @@ async function compartirSlipImg(modo) {
   try {
     const mod = await import('./compartir.js');
     const arr = _load();
-    mod.compartirSlip(arr, { pc: Math.round(probComb(arr) * 100), mult: multDe(arr.length), modo });
+    mod.compartirSlip(arr, { pc: Math.round(probComb(arr) * 100), weakest: _weakest(arr), modo });
   } catch (_) {}
 }
 
@@ -331,7 +339,7 @@ function inyectar() {
   st.textContent = `
   .slip-fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0));z-index:1150;display:flex;align-items:center;gap:9px;padding:12px 18px 12px 16px;border:0;border-radius:40px;cursor:pointer;
     background:linear-gradient(135deg,var(--oro,#e8c46a),#f6e2a6);color:#241a06;font-family:var(--display,"Chakra Petch",sans-serif);font-weight:800;font-size:13.5px;letter-spacing:.02em;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 8px 24px rgba(232,184,75,.4);transform:translateY(20px) scale(.9);opacity:0;transition:transform .25s,opacity .25s}
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 16px 34px rgba(0,0,0,.55),0 6px 14px rgba(0,0,0,.4);transform:translateY(20px) scale(.9);opacity:0;transition:transform .25s,opacity .25s}
   .slip-fab.on{transform:none;opacity:1}
   .slip-fab:hover{filter:brightness(1.04)}
   .slip-fab:active{transform:scale(.97)}
@@ -387,6 +395,7 @@ function inyectar() {
   .slip-sum-b b{display:block;font-family:var(--display,"Chakra Petch",sans-serif);font-weight:800;font-size:30px;color:var(--tinta,#eef2f7);margin:3px 0 1px}
   .slip-sum-b b.oro{color:var(--oro,#e8c46a)}
   .slip-sum-b small{font-size:10.5px;color:var(--tinta-3,#6b7686)}
+  .slip-read{margin:10px 20px 0;padding:11px 14px;border-radius:12px;background:var(--oro-suave,rgba(232,184,75,.08));border:1px solid rgba(232,184,75,.22);font-size:12.5px;line-height:1.5;color:var(--tinta,#eef2f7)}
   .slip-acts{display:flex;gap:10px;padding:16px 20px calc(18px + env(safe-area-inset-bottom,0))}
   .slip-clear{flex:none;padding:13px 16px;border-radius:12px;border:1px solid var(--linea,rgba(255,255,255,.1));background:var(--fondo-2,#0e131c);color:var(--tinta-2,#9aa6b2);font-family:var(--display,"Chakra Petch",sans-serif);font-weight:700;font-size:13px;cursor:pointer}
   .slip-clear:disabled{opacity:.4;cursor:default}

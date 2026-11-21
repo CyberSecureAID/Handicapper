@@ -227,7 +227,7 @@ function inyectarCSS() {
   .sk-btn{height:38px;border-radius:10px;margin-top:16px}
   @keyframes ply-shimmer{100%{transform:translateX(100%)}}
   .elite-loadwrap{margin-top:16px}
-  .ply-c{position:relative;border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;overflow:hidden;cursor:pointer;
+  .ply-c{position:relative;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;overflow:hidden;cursor:pointer;height:100%;
     background:linear-gradient(180deg,rgba(17,25,37,.90),rgba(11,17,25,.95)),url('${TEXTURA}') center/cover;
     transition:transform .16s ease,border-color .16s ease}
   .ply-c:hover{transform:translateY(-2px);border-color:rgba(232,196,106,.45)}
@@ -293,7 +293,7 @@ function inyectarCSS() {
   .ply-analyze{margin-top:15px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;font-family:"Chakra Petch",sans-serif;font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#241a06;background:linear-gradient(90deg,#e8c46a,#f6e2a6);border:0;border-radius:10px;padding:11px 12px;cursor:pointer;transition:filter .15s}
   .ply-analyze:hover{filter:brightness(1.06)}
   .ply-analyze svg{width:15px;height:15px}
-  .ply-actions{display:flex;gap:8px;margin-top:15px;align-items:stretch}
+  .ply-actions{display:flex;gap:8px;margin-top:auto;padding-top:15px;align-items:stretch}
   .ply-actions .ply-analyze{margin-top:0;flex:1 1 auto}
   .ply-share{flex:0 0 auto;width:46px;display:flex;align-items:center;justify-content:center;background:linear-gradient(150deg,#25d366,#11924c);color:#fff;border:0;border-radius:10px;cursor:pointer;transition:filter .15s,transform .1s;box-shadow:0 3px 11px rgba(18,140,75,.38)}
   .ply-share:hover{filter:brightness(1.07);transform:translateY(-1px)}
@@ -500,10 +500,10 @@ function analisisPick(p, cfg) {
     'P(2+ goals)':{ linea: L2('2 goals', '2 goles'),      u: L2('goals', 'goles') },
   }[M] || { linea: L2('the line', 'la línea'), u: '' };
 
-  // Semilla que incluye los NUMEROS del jugador -> cada tarjeta es unica.
-  const sem = String((p.nombre || '') + riv + M + (h ? `${h.aciertos}-${h.muestra}-${h.mejor}` : pr));
-  let hs = 0; for (let i = 0; i < sem.length; i++) hs = (hs * 33 + sem.charCodeAt(i)) & 0x7fffffff;
-  const pick = (arr, off) => arr[((hs >> off) & 0x3fffffff) % arr.length];
+  // Semilla que incluye los NUMEROS del jugador y el rank -> cada tarjeta es unica.
+  const sem = String((p.nombre || '') + riv + M + (h ? `${h.aciertos}.${h.muestra}.${h.mejor}` : pr) + (p.rank || ''));
+  let hs = 0; for (let i = 0; i < sem.length; i++) hs = (hs * 131 + sem.charCodeAt(i)) & 0x7fffffff;
+  const pick = (arr, salt) => arr[(((hs ^ (salt * 2654435761)) >>> 0)) % arr.length];
 
   if (h && h.muestra) {
     // Parrafo basado en el HISTORIAL REAL: nunca el mismo (los numeros cambian) y variado.
@@ -511,19 +511,26 @@ function analisisPick(p, cfg) {
       L2(`${nom} has cleared ${VOC.linea} in ${h.aciertos} of his last ${h.muestra}`, `${nom} ha superado ${VOC.linea} en ${h.aciertos} de sus últimos ${h.muestra}`),
       L2(`In his last ${h.muestra} games, ${nom} got there ${h.aciertos} times`, `En sus últimos ${h.muestra} partidos, ${nom} lo logró ${h.aciertos} veces`),
       L2(`${h.aciertos} of ${nom}'s last ${h.muestra} went over ${VOC.linea}`, `${h.aciertos} de los últimos ${h.muestra} de ${nom} pasaron de ${VOC.linea}`),
-      L2(`The tape backs ${nom}: ${h.aciertos} games over ${VOC.linea} in his last ${h.muestra}`, `La evidencia respalda a ${nom}: ${h.aciertos} partidos sobre ${VOC.linea} en sus últimos ${h.muestra}`),
+      L2(`The tape backs ${nom}, ${h.aciertos} games over ${VOC.linea} in his last ${h.muestra}`, `La evidencia respalda a ${nom}, ${h.aciertos} partidos sobre ${VOC.linea} en sus últimos ${h.muestra}`),
+      L2(`${nom} keeps hitting it, ${h.aciertos} times in his last ${h.muestra}`, `${nom} lo sigue cumpliendo, ${h.aciertos} veces en sus últimos ${h.muestra}`),
+      L2(`Look at the run: ${nom} cleared ${VOC.linea} in ${h.aciertos} of ${h.muestra}`, `Mira la racha, ${nom} superó ${VOC.linea} en ${h.aciertos} de ${h.muestra}`),
+      L2(`Over his last ${h.muestra}, ${nom} delivered ${h.aciertos} times`, `En sus últimos ${h.muestra}, ${nom} respondió ${h.aciertos} veces`),
     ], 3);
     const alto = (h.mejor && VOC.u) ? pick([
       L2(`, as high as ${h.mejor} ${VOC.u}`, `, con hasta ${h.mejor} ${VOC.u}`),
       L2(` (peak of ${h.mejor})`, ` (tope de ${h.mejor})`),
-      L2(`, with a ${h.mejor}-${VOC.u} high`, `, con un máximo de ${h.mejor} ${VOC.u}`),
+      L2(`, topping out at ${h.mejor} ${VOC.u}`, `, con un máximo de ${h.mejor} ${VOC.u}`),
+      L2(`, including a ${h.mejor} ${VOC.u} ceiling`, `, con un techo de ${h.mejor} ${VOC.u}`),
       ``,
     ], 7) : '';
     const cierre = pick([
       L2(` At ${pr}%, the sample does the talking against ${riv}.`, ` Con ${pr}%, la muestra habla frente a ${riv}.`),
       L2(` That consistency is why he tops the board today, not a hunch.`, ` Esa constancia es por lo que encabeza el tablero hoy, no una corazonada.`),
-      L2(` Measurable and repeatable: exactly what you pay for here.`, ` Medible y repetible: justo lo que pagas aquí.`),
+      L2(` Measurable and repeatable, exactly what you pay for here.`, ` Medible y repetible, justo lo que pagas aquí.`),
       L2(` Against ${riv}, that track record is the real edge.`, ` Contra ${riv}, ese historial es la ventaja real.`),
+      L2(` The matchup with ${riv} only adds to a number already earned.`, ` El cruce con ${riv} solo suma a un número ya ganado.`),
+      L2(` At ${pr}%, this is form you can lean on, not a coin flip.`, ` Con ${pr}%, es forma en la que apoyarse, no un volado.`),
+      L2(` The floor is high and the role is locked in against ${riv}.`, ` El piso es alto y el rol está fijo frente a ${riv}.`),
     ], 13);
     return `${rec}${alto}.${cierre}`;
   }
@@ -533,6 +540,10 @@ function analisisPick(p, cfg) {
     L2(`${nom} profiles as the sharpest look here at ${pr}%.`, `${nom} es la opción más clara aquí con ${pr}%.`),
     L2(`At ${pr}%, ${nom} is the name to circle against ${riv}.`, `Con ${pr}%, ${nom} es el nombre a marcar frente a ${riv}.`),
     L2(`${nom} brings the role and the volume this spot rewards.`, `${nom} aporta el rol y el volumen que este cruce premia.`),
+    L2(`Usage and matchup both favor ${nom} here, hence the ${pr}%.`, `El uso y el cruce favorecen a ${nom} aquí, de ahí el ${pr}%.`),
+    L2(`${nom} sits at the top of this board for a reason at ${pr}%.`, `${nom} está arriba en este tablero por algo, con ${pr}%.`),
+    L2(`The spot sets up well for ${nom} against ${riv}.`, `El escenario le sienta bien a ${nom} frente a ${riv}.`),
+    L2(`${nom} gets the minutes and the touches this one calls for.`, `${nom} tiene los minutos y los balones que pide este partido.`),
   ], 5);
 }
 
@@ -571,9 +582,10 @@ function analisisGoles(p, ES) {
   const L2 = (en, es) => ES ? es : en;
   const A = p.localNom || p.equipoAbrev || (ES ? 'el local' : 'the home side');
   const B = p.visitaNom || p.rivalAbrev || (ES ? 'la visita' : 'the away side');
-  const sem = String((p.equipoAbrev || '') + (p.rivalAbrev || '') + (p.prob || ''));
-  let h = 0; for (let i = 0; i < sem.length; i++) h = (h * 33 + sem.charCodeAt(i)) & 0x7fffffff;
-  const pick = (arr, off) => arr[((h >> off) & 0x3fffffff) % arr.length];
+  const sem = String((p.equipoAbrev || '') + (p.rivalAbrev || '') + (p.prob || '') + (p.rank || ''));
+  let h = 0; for (let i = 0; i < sem.length; i++) h = (h * 131 + sem.charCodeAt(i)) & 0x7fffffff;
+  // Indices independientes y bien repartidos (sal distinta por ranura -> casi nunca se repiten dos tarjetas)
+  const pick = (arr, salt) => arr[(((h ^ (salt * 2654435761)) >>> 0)) % arr.length];
   const alto = p.prob >= 78, medio = p.prob >= 66;
   const gfA = p.gfLocal, gfB = p.gfVisita, gaA = p.gaLocal, gaB = p.gaVisita;
   const ambosMarcan = (gfA != null && gfA >= 1.4) && (gfB != null && gfB >= 1.2);
@@ -583,33 +595,60 @@ function analisisGoles(p, ES) {
   const abre = alto
     ? [ L2(`This one has goals written all over it.`, `Este partido tiene pinta de goles por todos lados.`),
         L2(`If you like watching the net bulge, circle this one.`, `Si te gusta ver el balón entrar, marca este.`),
-        L2(`Everything here points to an open, high-scoring night.`, `Todo aquí apunta a una noche abierta y de goles.`),
-        L2(`Hard to see this one staying quiet.`, `Cuesta ver este cruce quedándose callado.`) ]
+        L2(`Everything here points to an open, high scoring night.`, `Todo aquí apunta a una noche abierta y de goles.`),
+        L2(`Hard to see this one staying quiet.`, `Cuesta ver este cruce quedándose callado.`),
+        L2(`${A} and ${B} both love a shootout, and tonight sets up for one.`, `A ${A} y a ${B} les va el ida y vuelta, y hoy se arma para eso.`),
+        L2(`The setup screams goals from the first whistle.`, `El planteamiento grita goles desde el primer pitazo.`),
+        L2(`Two sides that would rather outscore you than shut you down.`, `Dos equipos que prefieren superarte en goles que cerrarte el arco.`),
+        L2(`This has the makings of an end to end watch.`, `Esto tiene pinta de un partido de pura ida y vuelta.`),
+        L2(`Goals have followed both of these teams around all season.`, `Los goles han seguido a estos dos equipos toda la temporada.`) ]
     : medio
     ? [ L2(`There should be goals in this one, without being a certainty.`, `Debería haber goles en este, sin ser una certeza.`),
         L2(`The pieces are there for a couple of goals.`, `Las piezas están para un par de goles.`),
-        L2(`Lean toward goals here, but keep your eyes open.`, `Inclínate por los goles aquí, pero con los ojos abiertos.`) ]
+        L2(`Lean toward goals here, but keep your eyes open.`, `Inclínate por los goles aquí, pero con los ojos abiertos.`),
+        L2(`A fair bet to open up, even if it takes a while.`, `Una apuesta razonable a que se abra, aunque tarde un poco.`),
+        L2(`Goals feel more likely than not, with a touch of caution.`, `Los goles se sienten más probables que no, con algo de cautela.`),
+        L2(`${A} against ${B} carries quiet over potential.`, `${A} contra ${B} trae potencial silencioso de over.`) ]
     : [ L2(`A tighter one, though a single goal is very likely.`, `Uno más cerrado, aunque un gol es muy probable.`),
-        L2(`Don't expect a shootout, but goals aren't off the table.`, `No esperes una fiesta de goles, pero tampoco están descartados.`) ];
+        L2(`Don't expect a shootout, but goals aren't off the table.`, `No esperes una fiesta de goles, pero tampoco están descartados.`),
+        L2(`Could stay low, yet one goal looks well within reach.`, `Puede quedarse bajo, pero un gol se ve al alcance.`),
+        L2(`Cagey on paper, with a goal still the sensible call.`, `Trabado en el papel, con un gol como la lectura sensata.`) ];
 
   // Cuerpo con datos reales
   const cuerpo = [];
   if (ambosMarcan) cuerpo.push(pick([
     L2(`Both ${A} and ${B} find the net regularly, and that combination is exactly what feeds the over.`, `Tanto ${A} como ${B} ven puerta con regularidad, y esa combinación es justo lo que alimenta el over.`),
-    L2(`Two attacks that show up week after week tend to produce, and these two do.`, `Dos ataques que aparecen semana tras semana suelen producir, y estos dos lo hacen.`)], 5));
+    L2(`Two attacks that show up week after week tend to produce, and these two do.`, `Dos ataques que aparecen semana tras semana suelen producir, y estos dos lo hacen.`),
+    L2(`${A} scores at home and ${B} travels with bite, so goals tend to come from both ends.`, `${A} anota en casa y ${B} viaja con mordida, así que los goles suelen venir por los dos lados.`),
+    L2(`When both teams carry this kind of scoring rate, the over usually takes care of itself.`, `Cuando ambos cargan este ritmo goleador, el over suele resolverse solo.`),
+    L2(`Neither of these sides sits back, and that shared appetite is the engine of the pick.`, `Ninguno de estos equipos se echa atrás, y ese apetito compartido es el motor del pick.`)], 101));
   if (defsFlojas) cuerpo.push(pick([
     L2(`Neither back line has been a wall lately, which only helps the case.`, `Ninguna zaga ha sido un muro últimamente, lo que solo ayuda al argumento.`),
-    L2(`There are cracks at the back on at least one side, and that usually shows up on the scoreboard.`, `Hay grietas atrás en al menos uno de los dos, y eso suele reflejarse en el marcador.`)], 11));
+    L2(`There are cracks at the back on at least one side, and that usually shows up on the scoreboard.`, `Hay grietas atrás en al menos uno de los dos, y eso suele reflejarse en el marcador.`),
+    L2(`The defending has been shaky enough that chances should be there for the taking.`, `La defensa ha estado floja como para que las ocasiones aparezcan.`),
+    L2(`One of these rearguards keeps leaking, and good attacks punish that.`, `Una de estas defensas sigue filtrando, y los buenos ataques lo castigan.`),
+    L2(`Soft spots at the back on both ends tilt this toward a busy scoreboard.`, `Puntos débiles atrás en ambos lados inclinan esto a un marcador movido.`)], 211));
   if (!cuerpo.length) cuerpo.push(pick([
     L2(`The scoring numbers on both sides make a couple of goals the sensible read.`, `Los números de goles de ambos hacen que un par de goles sea la lectura sensata.`),
-    L2(`Recent scoring form is what tips this toward the over.`, `La forma goleadora reciente es lo que inclina esto hacia el over.`)], 5));
+    L2(`Recent scoring form is what tips this toward the over.`, `La forma goleadora reciente es lo que inclina esto hacia el over.`),
+    L2(`The underlying numbers lean to goals even if the names don't jump out.`, `Los números de fondo se inclinan a goles aunque los nombres no salten.`),
+    L2(`Pace and shot volume both point the same way here, toward the over.`, `El ritmo y el volumen de tiro apuntan al mismo lado, al over.`),
+    L2(`Form over the last month reads like a side that keeps finding goals.`, `La forma del último mes se lee como la de un equipo que sigue encontrando goles.`)], 101));
 
   // Cierre con la probabilidad
   const cierra = alto
-    ? pick([ L2(`At ${p.prob}%, the two-goal line is one of the cleaner looks on today's board.`, `Con ${p.prob}%, la línea de dos goles es de las más limpias del día.`),
-             L2(`${p.prob}% for 2+ is a number I trust here.`, `${p.prob}% de 2+ es un número en el que me fío aquí.`)], 17)
+    ? pick([ L2(`At ${p.prob}%, the two goal line is one of the cleaner looks on today's board.`, `Con ${p.prob}%, la línea de dos goles es de las más limpias del día.`),
+             L2(`${p.prob}% for 2+ is a number I trust here.`, `${p.prob}% de 2+ es un número en el que me fío aquí.`),
+             L2(`At ${p.prob}%, this is about as solid as the goals market gets today.`, `Con ${p.prob}%, esto es de lo más sólido que da el mercado de goles hoy.`),
+             L2(`${p.prob}% says the model likes it, and the eye test agrees.`, `${p.prob}% dice que al modelo le gusta, y la vista coincide.`),
+             L2(`At ${p.prob}%, the over is the read I keep coming back to.`, `Con ${p.prob}%, el over es la lectura a la que vuelvo.`),
+             L2(`The ${p.prob}% here is backed by both form and matchup.`, `El ${p.prob}% aquí lo respaldan la forma y el cruce.`)], 307)
     : pick([ L2(`${p.prob}% for 2+ isn't a lock, but it's fair value in a good spot.`, `${p.prob}% de 2+ no es seguro, pero es valor justo en un buen sitio.`),
-             L2(`At ${p.prob}%, the edge is there without needing a goal-fest.`, `Con ${p.prob}%, la ventaja está sin necesitar una fiesta de goles.`)], 17);
+             L2(`At ${p.prob}%, the edge is there without needing a goal fest.`, `Con ${p.prob}%, la ventaja está sin necesitar una fiesta de goles.`),
+             L2(`${p.prob}% is a sensible number, not a sure thing, so size it right.`, `${p.prob}% es un número sensato, no una certeza, así que mídelo bien.`),
+             L2(`At ${p.prob}%, treat it as a lean rather than a banker.`, `Con ${p.prob}%, tómalo como inclinación, no como fijo.`),
+             L2(`${p.prob}% leaves room for a quiet night, but the value holds.`, `${p.prob}% deja margen para una noche callada, pero el valor aguanta.`),
+             L2(`The ${p.prob}% read is modest and honest, which is the whole point.`, `La lectura de ${p.prob}% es modesta y honesta, que es justo el punto.`)], 307);
 
   return `${pick(abre, 0)} ${cuerpo.slice(0, 2).join(' ')} ${cierra}`;
 }

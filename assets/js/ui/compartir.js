@@ -304,7 +304,7 @@ export async function compartirSlip(picks, extra = {}) {
   const tpl = await cargarImg(TPL);
   const n = picks.length;
   const pc = extra.pc != null ? extra.pc : Math.round(picks.reduce((a, x) => a * ((x.prob || 0) / 100), 1) * 100);
-  const mult = extra.mult != null ? extra.mult : 0;
+  const weakest = extra.weakest != null ? extra.weakest : (picks.length ? Math.min(...picks.map(x => x.prob || 0)) : 0);
   const cv = base(false, (g) => {
     if (tpl) g.drawImage(tpl, 0, 0, N, N); else { g.fillStyle = '#0a0d11'; g.fillRect(0, 0, N, N); }
     marca(g);
@@ -329,8 +329,8 @@ export async function compartirSlip(picks, extra = {}) {
     C(g, L('COMBINED CHANCE', 'PROB. COMBINADA'), 394, sy - 28, '700 18px "Inter", sans-serif', GRIS);
     C(g, pc + '%', 394, sy + 20, '800 66px "Chakra Petch", sans-serif', '#eef2f7');
     g.fillStyle = 'rgba(232,184,75,.09)'; g.beginPath(); g.roundRect(651, sy - 62, 418, 124, 18); g.fill();
-    C(g, L('TYPICAL MULTIPLIER', 'MULT. TIPICO'), 860, sy - 28, '700 18px "Inter", sans-serif', GRIS);
-    C(g, mult + 'x', 860, sy + 20, '800 66px "Chakra Petch", sans-serif', ORO);
+    C(g, L('WEAKEST LEG', 'PICK MAS DEBIL'), 860, sy - 28, '700 18px "Inter", sans-serif', GRIS);
+    C(g, weakest + '%', 860, sy + 20, '800 66px "Chakra Petch", sans-serif', ORO);
     pie(g);
   });
   const texto = L(`My pick’em: ${n} picks, ${pc}% combined. Build yours on ${SITIO}`,
