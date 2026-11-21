@@ -96,6 +96,20 @@ function _esPartidoMiami(p) {
   return _esEquipoMiami(p.ligaId, p.local) || _esEquipoMiami(p.ligaId, p.visita);
 }
 
+/* Glosario: accesible en web (sidebar) y movil (drawer), para todos los usuarios. */
+function initGlosario() {
+  const label = () => idiomaActual() === 'es' ? 'Glosario' : 'Glossary';
+  const set = () => document.querySelectorAll('#side-glosario .gl-tx, #drawer-glosario .gl-tx').forEach(e => e.textContent = label());
+  set();
+  const abrir = async () => {
+    try { cerrarDrawer(); } catch (_) {}
+    try { const m = await import('./ui/glosario.js'); m.abrirGlosario(); } catch (_) {}
+  };
+  $('side-glosario')?.addEventListener('click', abrir);
+  $('drawer-glosario')?.addEventListener('click', abrir);
+  document.addEventListener('idioma-cambio', set);
+}
+
 /* -------- Sidebar de ligas -------- */
 function pintarLigas() {
   const cont = $('lista-ligas');
@@ -709,6 +723,7 @@ function init() {
   initTabbar();
   initBotonIdioma();
   initProyeccion();
+  initGlosario();
 
   // Hamburguesa / drawer (móvil)
   $('hamb')?.addEventListener('click', abrirDrawer);
