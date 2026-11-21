@@ -17,6 +17,7 @@
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports';
 import { analizar } from '../analisis/motor.js';
 import { enriquecerMLB } from './mlb-oficial.js';
+import { listarInvernales, detalleInvernal } from './invernales.js';
 import { comparativaEquiposESPN } from './equipos-stats.js';
 import { fotosSportsDB } from './proveedor-sportsdb.js';
 import { ordenar } from './relevancia.js';
@@ -33,14 +34,20 @@ const RUTA = {
   ucl:    'soccer/uefa.champions',
   seriea: 'soccer/ita.1',
   bundes: 'soccer/ger.1',
+  mexliga:'soccer/mex.1',    // Liga MX (futbol latino, misma fuente ESPN)
+  mls:    'soccer/usa.1',    // MLS / Inter Miami
+  // 'invierno' (Ligas Invernales) NO va aqui: no esta en ESPN, se sirve aparte.
 };
 
 /* Misma lista de ligas que el demo (con logos e iconos locales) */
 export const LIGAS = [
+  { id: 'invierno',nombre: 'Ligas Invernales', corto: 'Invernal', logo: 'assets/imagenes/dep-invierno.png' },
   { id: 'mlb',    nombre: 'MLB',              corto: 'MLB',      logo: 'assets/imagenes/dep-mlb.png' },
   { id: 'nba',    nombre: 'NBA',              corto: 'NBA',      logo: 'assets/imagenes/dep-nba.png' },
   { id: 'nfl',    nombre: 'NFL',              corto: 'NFL',      logo: 'assets/imagenes/dep-nfl.png' },
   { id: 'nhl',    nombre: 'NHL',              corto: 'NHL',      logo: 'assets/imagenes/dep-nhl.png' },
+  { id: 'mexliga',nombre: 'Liga MX',          corto: 'Liga MX',  logo: 'assets/imagenes/dep-mexliga.png' },
+  { id: 'mls',    nombre: 'MLS',              corto: 'MLS',      logo: 'assets/imagenes/dep-mls.png' },
   { id: 'epl',    nombre: 'Premier League',   corto: 'Premier',  logo: 'assets/imagenes/dep-premier.png' },
   { id: 'laliga', nombre: 'LaLiga',           corto: 'LaLiga',   logo: 'assets/imagenes/dep-laliga.png' },
   { id: 'ucl',    nombre: 'Champions League', corto: 'Champions',logo: 'assets/imagenes/dep-champions.png' },
@@ -363,10 +370,15 @@ function lesionadosDe(summary, localId, visitaId) {
 /* --- Interfaz pública --- */
 
 export async function listarPartidos(ligaId = null) {
-  // "Todos" = todas las ligas en temporada; por liga = solo esa
-  const ids = ligaId ? [ligaId] : ['mlb', 'epl', 'laliga', 'seriea', 'bundes', 'ucl', 'nba', 'nfl', 'nhl'];
+  // "Todos" = todas las ligas en temporada; por liga = solo esa.
+  // 'invierno' va primero: en nov-feb MLB para y el beisbol del Caribe llena el hueco.
+  const ids = ligaId ? [ligaId] : ['invierno', 'mlb', 'mexliga', 'mls', 'epl', 'laliga', 'seriea', 'bundes', 'ucl', 'nba', 'nfl', 'nhl'];
   const nombre = (id) => (LIGAS.find(l => l.id === id) || {}).nombre || id.toUpperCase();
   const listas = await Promise.all(ids.map(async id => {
+    // Ligas Invernales del Caribe: fuente propia (MLB Stats API sportId=17), no ESPN.
+    if (id === 'invierno') {
+      try { return ordenar(await listarInvernales()).slice(0, ligaId ? 40 : 6); } catch (_) { return []; }
+    }
     const ruta = RUTA[id]; if (!ruta) return [];
     try {
       await cargarStandings(id, ruta);   // tabla real (récord+posición), cacheada
@@ -434,6 +446,8 @@ export async function resultadoPartido(ligaId, matchId) {
 
 export async function detallePartido(id) {
   const [ligaId, evId] = String(id).split(':');
+  // Ligas Invernales: detalle desde su fuente propia (MLB Stats API sportId=17).
+  if (ligaId === 'invierno') { try { return await detalleInvernal(evId); } catch (_) { return null; } }
   const ruta = RUTA[ligaId]; if (!ruta) return null;
   const nombre = (LIGAS.find(l => l.id === ligaId) || {}).nombre || ligaId.toUpperCase();
   const futbol = esFutbol(ligaId);

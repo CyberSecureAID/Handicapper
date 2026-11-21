@@ -19,6 +19,7 @@
 const ESPN_BUCKET = {
   mlb: 'mlb', nba: 'nba', nfl: 'nfl', nhl: 'nhl',
   epl: 'soccer', laliga: 'soccer', ucl: 'soccer', seriea: 'soccer', bundes: 'soccer',
+  mexliga: 'soccer', mls: 'soccer', invierno: 'mlb',
 };
 
 function href(h) {

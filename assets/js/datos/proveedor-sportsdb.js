@@ -61,6 +61,7 @@ export async function detalleEnriquecer(base) {
 const _SPORT = {
   mlb: 'Baseball', nba: 'Basketball', nfl: 'American Football', nhl: 'Ice Hockey',
   epl: 'Soccer', laliga: 'Soccer', ucl: 'Soccer', seriea: 'Soccer', bundes: 'Soccer', ligue1: 'Soccer',
+  mexliga: 'Soccer', mls: 'Soccer', invierno: 'Baseball',
 };
 const _normNom = (s) => String(s || '').toLowerCase().normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
