@@ -16,7 +16,7 @@ import { eliteDelDia } from '../analisis/elite.js';
 import { calendarioVacioHTML } from './calendario-vacio.js';
 import { abrirTracker, abrirTrackerGoles } from './tracker.js';
 import { idiomaActual } from './idioma.js';
-import { toggleSlip, enSlip, pickKey } from './pickem.js';
+import { clicMas, enSlip, pickKey, aSlipItem } from './pickem.js';
 
 const ES = () => idiomaActual() === 'es';
 const L = (en, es) => (ES() ? es : en);
@@ -702,8 +702,8 @@ function animar(cont) {
 function soonPanelHTML(bet) {
   const T = bet === 'hr' ? L('Home runs', 'Home runs') : L('Total bases', 'Bases totales');
   const D = bet === 'hr'
-    ? L('The players most likely to hit a home run today — the most popular MLB prop. Building it now.',
-        'Los jugadores con mayor probabilidad de pegar un cuadrangular hoy — el prop más popular de la MLB. En construcción.')
+    ? L('The players most likely to hit a home run today, the most popular MLB prop. Building it now.',
+        'Los jugadores con mayor probabilidad de pegar un cuadrangular hoy, el prop más popular de la MLB. En construcción.')
     : L('The players most likely to rack up 2+ total bases today. Building it now.',
         'Los jugadores con mayor probabilidad de sumar 2+ bases totales hoy. En construcción.');
   return `<div class="ply-panel ply-soon ${bet}" data-bet-panel="${bet}" hidden>
@@ -747,7 +747,7 @@ function wireBets(cont) {
           : `<div class="ply-note"><i></i>${L('No standout home run picks for today\u2019s games.', 'Hoy no hay bateadores que cumplan el nivel de HR.')}</div>`;
         animar(cont);
         grid.querySelectorAll('.ply-share[data-share]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); compartirPick(jug[+b.dataset.share - 1], CFG_HR); }));
-        grid.querySelectorAll('.ply-slip[data-slip]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); const j = jug[+b.dataset.slip - 1]; if (!j) return; const added = toggleSlip(j, CFG_HR); b.classList.toggle('on', added); b.innerHTML = added ? IC_CHECK : IC_MAS; b.setAttribute('data-slipkey', pickKey(j, CFG_HR)); }));
+        grid.querySelectorAll('.ply-slip[data-slip]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); const j = jug[+b.dataset.slip - 1]; if (j) clicMas(j, CFG_HR, b); }));
         grid.querySelectorAll('.ply-analyze[data-analyze]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); const j = jug[+b.dataset.analyze - 1]; if (j) abrirTracker(j, 'mlb', 'hr'); }));
         grid.querySelectorAll('.ply-c[data-idx]').forEach(el => el.addEventListener('click', () => { const j = jug[+el.dataset.idx - 1]; if (j) abrirTracker(j, 'mlb', 'hr'); }));
       } catch (_) {
@@ -797,7 +797,7 @@ function pintarGrid(cont, cfg, jugadores, meta, preliminar) {
   const abrir = (idx) => { const j = jugadores[idx - 1]; if (!j) return; if (j.esPartido) abrirTrackerGoles(j); else abrirTracker(j, cfg._sport); };
   cont.querySelectorAll('.ply-analyze[data-analyze]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); abrir(+b.dataset.analyze); }));
   cont.querySelectorAll('.ply-share[data-share]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); compartirPick(jugadores[+b.dataset.share - 1], cfg); }));
-  cont.querySelectorAll('.ply-slip[data-slip]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); const j = jugadores[+b.dataset.slip - 1]; if (!j) return; const added = toggleSlip(j, cfg); b.classList.toggle('on', added); b.innerHTML = added ? IC_CHECK : IC_MAS; b.setAttribute('data-slipkey', pickKey(j, cfg)); }));
+  cont.querySelectorAll('.ply-slip[data-slip]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); const j = jugadores[+b.dataset.slip - 1]; if (j) clicMas(j, cfg, b); }));
   cont.querySelectorAll('.ply-c[data-idx]').forEach(el => el.addEventListener('click', () => abrir(+el.dataset.idx)));
 }
 
@@ -831,6 +831,25 @@ function limitarPro(jug, modo) {
   return jug.slice(0, 1);   // Pro: SOLO 1 pick (el de mayor probabilidad/average)
 }
 
+/* Guarda el MEJOR pick del deporte (mayor prob) para la "combinada del dia" del
+   pick'em. Solo escribe en localStorage; si algo falla, no afecta el render. */
+function guardarMejorDelDia(cfg, jugadores) {
+  try {
+    if (!jugadores || !jugadores.length) return;
+    const probDe = (x) => (x.probOver15 != null ? x.probOver15 : x.prob) || 0;
+    const top = jugadores.slice().sort((a, b) => probDe(b) - probDe(a))[0];
+    if (!top) return;
+    const item = aSlipItem(top, cfg);
+    if (!item || item.prob == null) return;
+    const hoy = new Date().toISOString().slice(0, 10);
+    let raw = {};
+    try { raw = JSON.parse(localStorage.getItem('se-mejores-v1') || '{}'); } catch (_) {}
+    if (!raw || raw.fecha !== hoy || !raw.picks) raw = { fecha: hoy, picks: {} };
+    raw.picks[cfg._sport || 'x'] = item;
+    localStorage.setItem('se-mejores-v1', JSON.stringify(raw));
+  } catch (_) {}
+}
+
 export async function pintarParlay(cont, { sport = 'mlb', nivel = 'basic', modo = 'premium', esPremium, abrirPlanes } = {}) {
   inyectarCSS();
   const cfg = VISTA(sport); cfg._sport = sport;
@@ -857,7 +876,7 @@ export async function pintarParlay(cont, { sport = 'mlb', nivel = 'basic', modo 
 
   const cached = CACHE.get(sport);
   const fresco = cached && (Date.now() - cached.ts < 120000);
-  if (fresco) pintarGrid(cont, cfg, limitarPro(cached.jugadores, modo), cached.meta, false);
+  if (fresco) { pintarGrid(cont, cfg, limitarPro(cached.jugadores, modo), cached.meta, false); guardarMejorDelDia(cfg, cached.jugadores); }
   else pintarCargando(cont, cfg);
 
   if (!fresco) {
@@ -869,6 +888,7 @@ export async function pintarParlay(cont, { sport = 'mlb', nivel = 'basic', modo 
         if (jug.length) {
           CACHE.set(sport, { jugadores: jug, meta: r.meta, ts: Date.now() });
           pintarGrid(cont, cfg, limitarPro(jug, modo), r.meta, false);
+          guardarMejorDelDia(cfg, jug);
         } else {
           sinJuegosHTML(cont, cfg, r.meta, bruto.length);   // hay candidatos pero ninguno pasa el umbral
         }

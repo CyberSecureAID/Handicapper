@@ -77,25 +77,97 @@ function envolver(g, texto, maxW, font) {
   return lineas.slice(0, 3);
 }
 
-/* ---- Mecanismo de compartir: hoja nativa con el archivo, o descarga + WhatsApp ---- */
-async function compartirImagen(canvas, texto, nombreArchivo) {
-  const blob = await new Promise(res => { try { canvas.toBlob(res, 'image/png'); } catch (_) { res(null); } });
-  if (!blob) return;
-  const file = new File([blob], (nombreArchivo || 'sports-expectations') + '.png', { type: 'image/png' });
-  try {
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], text: texto });
-      return;
-    }
-  } catch (_) { return; }   // el usuario cancelo la hoja nativa
-  // Escritorio: descarga la imagen y abre WhatsApp con el enlace
+/* ---- Mecanismo de compartir ----
+   modo:
+     'descargar' -> descarga el PNG al dispositivo.
+     'whatsapp'  -> movil: hoja nativa con el ARCHIVO (el usuario elige WhatsApp y
+                    manda la imagen); escritorio: descarga el PNG y abre WhatsApp
+                    con el texto (WhatsApp Web no recibe archivos por URL).
+     'elegir' (por defecto) -> popup de marca para que el usuario elija entre
+                    WhatsApp o Descargar. Lo pide el usuario: desde escritorio la
+                    hoja nativa sola es confusa, asi que damos las dos opciones. */
+function _descargarBlob(blob, nombreArchivo) {
   try {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = file.name;
+    const a = document.createElement('a'); a.href = url; a.download = (nombreArchivo || 'sports-expectations') + '.png';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   } catch (_) {}
+}
+async function _whatsappBlob(blob, texto, nombreArchivo) {
+  const file = new File([blob], (nombreArchivo || 'sports-expectations') + '.png', { type: 'image/png' });
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], text: texto });   // movil: adjunta la imagen
+      return;
+    }
+  } catch (_) { return; }   // el usuario cancelo la hoja nativa
+  _descargarBlob(blob, nombreArchivo);
   try { window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank', 'noopener'); } catch (_) {}
+}
+async function compartirImagen(canvas, texto, nombreArchivo, modo) {
+  const blob = await new Promise(res => { try { canvas.toBlob(res, 'image/png'); } catch (_) { res(null); } });
+  if (!blob) return;
+  modo = modo || 'elegir';
+  if (modo === 'descargar') return _descargarBlob(blob, nombreArchivo);
+  if (modo === 'whatsapp') return _whatsappBlob(blob, texto, nombreArchivo);
+  _hojaElegir(blob, texto, nombreArchivo);
+}
+
+/* ---- Popup de marca: elegir WhatsApp o Descargar (responsivo) ---- */
+const _IC_WA = `<svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.1 1.6 5.9L4 29l8.3-2.2c1.7.9 3.6 1.4 5.5 1.4h.2C24.6 28.2 30 22.8 30 16.2 30 9.6 24.6 3 16 3z"/><path d="M22 18.3c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-1.8-.9-3-1.6-4.2-3.6-.3-.5.3-.5.8-1.6.1-.2 0-.4 0-.5-.1-.1-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.3 5.2 4.6 1.9.8 2.7.9 3.6.8.6-.1 1.9-.8 2.1-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z" fill="#0b1f14"/></svg>`;
+const _IC_DL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 4 5-4M5 20h14"/></svg>`;
+const _IC_X = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+function _inyCssHoja() {
+  if (document.getElementById('share-sheet-css')) return;
+  const st = document.createElement('style'); st.id = 'share-sheet-css';
+  st.textContent = `
+  .share-ov{position:fixed;inset:0;z-index:1400;background:rgba(4,7,12,.76);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s}
+  .share-ov.on{opacity:1}
+  .share-modal{width:100%;max-width:440px;background:var(--tarjeta,#10151d);border:1px solid var(--linea,rgba(255,255,255,.1));border-radius:20px 20px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.5);transform:translateY(24px);transition:transform .24s;overflow:hidden}
+  .share-ov.on .share-modal{transform:none}
+  @media(min-width:620px){.share-ov{align-items:center;padding:18px}.share-modal{border-radius:20px}}
+  .share-head{display:flex;align-items:center;gap:12px;padding:17px 18px 13px;border-bottom:1px solid var(--linea,rgba(255,255,255,.1));position:relative}
+  .share-head::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--azul,#1d9bf0),var(--oro,#e8c46a),var(--rojo,#e23b3f))}
+  .share-eyebrow{font-family:var(--mono,"Chakra Petch",sans-serif);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--oro,#e8c46a)}
+  .share-head h3{margin:2px 0 0;font-family:var(--display,"Chakra Petch",sans-serif);font-weight:800;font-size:19px;color:var(--tinta,#eef2f7)}
+  .share-x{margin-left:auto;flex:none;width:34px;height:34px;border-radius:10px;border:1px solid var(--linea,rgba(255,255,255,.1));background:var(--fondo-2,#0e131c);color:var(--tinta-2,#9aa6b2);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .share-x svg{width:16px;height:16px}.share-x:hover{color:var(--oro,#e8c46a);border-color:var(--oro,#e8c46a)}
+  .share-prev{display:flex;justify-content:center;padding:16px 18px 4px}
+  .share-prev img{width:148px;height:148px;object-fit:cover;border-radius:14px;border:1px solid var(--linea,rgba(255,255,255,.12));box-shadow:0 8px 22px rgba(0,0,0,.4)}
+  .share-acts{display:flex;gap:10px;padding:14px 18px calc(18px + env(safe-area-inset-bottom,0))}
+  .share-acts button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:13px;border:0;cursor:pointer;font-family:var(--display,"Chakra Petch",sans-serif);font-weight:800;font-size:14px}
+  .share-acts button svg{width:20px;height:20px}
+  .share-wa{background:linear-gradient(150deg,#25d366,#11924c);color:#fff;box-shadow:0 4px 14px rgba(18,140,75,.34)}
+  .share-dl{background:var(--oro-suave,rgba(232,184,75,.12));color:var(--oro,#e8c46a);border:1px solid rgba(232,184,75,.5)!important}
+  .share-acts button:hover{filter:brightness(1.05)}
+  .share-acts button:active{transform:scale(.98)}
+  `;
+  document.head.appendChild(st);
+}
+function _hojaElegir(blob, texto, nombreArchivo) {
+  _inyCssHoja();
+  if (document.getElementById('share-ov')) return;
+  let url = ''; try { url = URL.createObjectURL(blob); } catch (_) {}
+  const ov = document.createElement('div'); ov.className = 'share-ov'; ov.id = 'share-ov';
+  ov.innerHTML = `<div class="share-modal" role="dialog" aria-modal="true">
+    <div class="share-head">
+      <div><div class="share-eyebrow">Sports Expectations</div><h3>${L('Share this image', 'Compartir esta imagen')}</h3></div>
+      <button class="share-x" id="share-x" aria-label="Close">${_IC_X}</button>
+    </div>
+    ${url ? `<div class="share-prev"><img src="${url}" alt=""></div>` : ''}
+    <div class="share-acts">
+      <button class="share-wa" id="share-wa">${_IC_WA}<span>WhatsApp</span></button>
+      <button class="share-dl" id="share-dl">${_IC_DL}<span>${L('Download', 'Descargar')}</span></button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('on'));
+  const cerrar = () => { ov.classList.remove('on'); setTimeout(() => { try { if (url) URL.revokeObjectURL(url); } catch (_) {} ov.remove(); }, 200); };
+  ov.onclick = (e) => { if (e.target === ov) cerrar(); };
+  ov.querySelector('#share-x').addEventListener('click', cerrar);
+  ov.querySelector('#share-wa').addEventListener('click', () => { _whatsappBlob(blob, texto, nombreArchivo); cerrar(); });
+  ov.querySelector('#share-dl').addEventListener('click', () => { _descargarBlob(blob, nombreArchivo); cerrar(); });
 }
 
 function base(conLogos, dibujar) {
@@ -145,9 +217,9 @@ export async function compartirPartido(p) {
     });
     pie(g);
   });
-  const texto = L(`${p.local.nombre} vs ${p.visita.nombre} — full breakdown on ${SITIO}`,
-                  `${p.local.nombre} vs ${p.visita.nombre} — analisis completo en ${SITIO}`);
-  await compartirImagen(cv, texto, `se-${p.local.abrev}-${p.visita.abrev}`);
+  const texto = L(`${p.local.nombre} vs ${p.visita.nombre} · full breakdown on ${SITIO}`,
+                  `${p.local.nombre} vs ${p.visita.nombre} · analisis completo en ${SITIO}`);
+  await compartirImagen(cv, texto, `se-${p.local.abrev}-${p.visita.abrev}`, p.modo);
 }
 
 /* ===== 2) PROP DE JUGADOR (Hits / Points / Shots / Touchdown) ===== */
@@ -193,7 +265,7 @@ export async function compartirJugador(p, cfg = {}) {
   });
   const texto = L(`${p.nombre}: ${p.prob}% to hit ${linea}${equipoB ? ` (${equipoA} vs ${equipoB})` : ''}. More on ${SITIO}`,
                   `${p.nombre}: ${p.prob}% de lograr ${linea}${equipoB ? ` (${equipoA} vs ${equipoB})` : ''}. Mas en ${SITIO}`);
-  await compartirImagen(cv, texto, `se-${(p.nombre || 'pick').replace(/\s+/g, '-')}`);
+  await compartirImagen(cv, texto, `se-${(p.nombre || 'pick').replace(/\s+/g, '-')}`, (cfg && cfg.modo) || p.modo);
 }
 
 /* ===== 3) MERCADO DE GOLES (Goals) ===== */
@@ -224,7 +296,7 @@ export async function compartirGoles(p) {
   });
   const texto = L(`${p.localNom || p.equipoAbrev} vs ${p.visitaNom || p.rivalAbrev}: ${p15}% for 2+ goals. More on ${SITIO}`,
                   `${p.localNom || p.equipoAbrev} vs ${p.visitaNom || p.rivalAbrev}: ${p15}% de 2+ goles. Mas en ${SITIO}`);
-  await compartirImagen(cv, texto, `se-goles-${p.equipoAbrev}-${p.rivalAbrev}`);
+  await compartirImagen(cv, texto, `se-goles-${p.equipoAbrev}-${p.rivalAbrev}`, p.modo);
 }
 
 /* ===== 4) COMBINADA (pick'em): la jugada armada por el usuario ===== */
@@ -263,5 +335,5 @@ export async function compartirSlip(picks, extra = {}) {
   });
   const texto = L(`My pick’em: ${n} picks, ${pc}% combined. Build yours on ${SITIO}`,
                   `Mi combinada: ${n} picks, ${pc}% combinada. Arma la tuya en ${SITIO}`);
-  await compartirImagen(cv, texto, 'se-pickem');
+  await compartirImagen(cv, texto, 'se-pickem', extra.modo);
 }
