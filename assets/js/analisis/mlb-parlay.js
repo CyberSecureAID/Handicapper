@@ -8,9 +8,9 @@
      const r = await topParlayHits({ fecha:'2026-08-27', n:9 });
      // r.jugadores -> array ordenado; r.meta -> fecha/hora/fuente/avisos
 
-   CORS: si el navegador bloquea statsapi.mlb.com, define PROXY:
-     topParlayHits({ proxy:'https://tu-worker.workers.dev/?url=' })
-   El proxy antepone y reenvía la URL (ver worker de ejemplo en el README).
+   CORS: lo resuelve la red compartida (assets/js/datos/red.js): intenta
+   directo y, si falla, cae a proxies publicos con tope de tiempo. No hay
+   que configurar nada aqui.
    ============================================================ */
 
 import * as N from './nucleo.js';
