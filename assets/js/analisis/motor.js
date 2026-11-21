@@ -25,10 +25,10 @@ import * as N from './nucleo.js';
 /* Ventaja de localía por deporte, ya en LOG-ODDS (ln(p/(1-p))).
    mlb .54, nba .60, nfl .57, nhl .55, fútbol ~.50 (el empate se separa aparte). */
 const HFA_LOGIT = {
-  mlb: 0.16, nba: 0.41, nfl: 0.28, nhl: 0.20, nba_default: 0.30, _soc: 0.22,
+  mlb: 0.16, invierno: 0.16, nba: 0.41, nfl: 0.28, nhl: 0.20, nba_default: 0.30, _soc: 0.22,
 };
 /* Prior (partidos "fantasma" a 50%) para la regresión. Ligero: deja hablar al récord. */
-const PRIOR_N = { _soc: 5, mlb: 8, nba: 5, nfl: 6, nhl: 6, _def: 5 };
+const PRIOR_N = { _soc: 5, mlb: 8, invierno: 8, nba: 5, nfl: 6, nhl: 6, _def: 5 };
 
 /* Pesos del modelo */
 const W = {

@@ -12,7 +12,7 @@ import { pedirJSON } from '../datos/red.js';
 import { calendarioEventos } from './calendario.js';
 
 const API = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
-const LIGAS = { epl: 'eng.1', laliga: 'esp.1', seriea: 'ita.1', bundes: 'ger.1', ucl: 'uefa.champions', ligue1: 'fra.1' };
+const LIGAS = { epl: 'eng.1', laliga: 'esp.1', seriea: 'ita.1', bundes: 'ger.1', ucl: 'uefa.champions', ligue1: 'fra.1', mexliga: 'mex.1', mls: 'usa.1' };
 const GA_MEDIA = 1.35;   // goles encajados por partido, media aproximada de liga top
 
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -178,7 +178,7 @@ function _rango(fecha, dias) {
 }
 
 export async function topGoalsMatchProjection({ fecha, n = 9, ligas } = {}) {
-  const ids = ligas || ['epl', 'laliga', 'seriea', 'bundes', 'ucl', 'ligue1'];
+  const ids = ligas || ['epl', 'laliga', 'seriea', 'bundes', 'ucl', 'ligue1', 'mexliga', 'mls'];
   const candidatos = [];
   for (const ligaId of ids) {
     const ruta = LIGAS[ligaId]; if (!ruta) continue;
@@ -257,7 +257,7 @@ async function rosterConGoles(ruta, teamId) {
 /* --------- Orquestador --------- */
 export async function topGoalProjection({ fecha, n = 9, maxPorEquipo = 6, ligas } = {}) {
   const avisos = [];
-  const ids = ligas || ['epl', 'laliga', 'seriea', 'bundes', 'ucl', 'ligue1'];
+  const ids = ligas || ['epl', 'laliga', 'seriea', 'bundes', 'ucl', 'ligue1', 'mexliga', 'mls'];
   const candidatos = [];
 
   for (const ligaId of ids) {
