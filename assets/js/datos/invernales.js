@@ -14,7 +14,7 @@
    ===================================================================== */
 import { pedirJSON } from './red.js';
 import { analizar } from '../analisis/motor.js';
-import { escudoEquipo } from './proveedor-sportsdb.js';   // logo REAL del equipo (strBadge)
+import { escudoEquipo, escudoCache } from './proveedor-sportsdb.js';   // logo REAL del equipo (TheSportsDB/Wikipedia, cacheado)
 
 const API = 'https://statsapi.mlb.com/api/v1';
 
@@ -137,19 +137,24 @@ export async function listarInvernales() {
   return limpio;
 }
 
-/* Rellena el logo REAL de cada equipo (strBadge de TheSportsDB), cacheado. No
-   bloquea el tablero mas de ~3.5s; lo que no llegue, se cachea para la proxima.
-   Si un equipo no tiene escudo en la fuente, queda sin logo (nunca inventado). */
+/* Rellena el logo REAL de cada equipo. Primero lo que ya esta en cache (instante);
+   luego resuelve en red solo lo que falta (TheSportsDB/Wikipedia), con un tope
+   corto. Lo resuelto queda cacheado para siempre, asi que a la proxima es
+   instantaneo y los equipos nuevos se resuelven la primera vez y se quedan.
+   Si ninguna fuente tiene al equipo, queda sin logo (nunca inventado). */
 async function resolverEscudos(matches) {
   const nombres = [...new Set(matches.flatMap(m => [m.local.nombre, m.visita.nombre]).filter(Boolean))];
   if (!nombres.length) return;
-  const mapa = {};
-  const trabajo = Promise.all(nombres.map(async n => { try { mapa[n] = await escudoEquipo(n); } catch (_) { mapa[n] = null; } }));
-  await Promise.race([trabajo, new Promise(r => setTimeout(r, 3500))]);
-  matches.forEach(m => {
-    if (mapa[m.local.nombre]) m.local.logo = mapa[m.local.nombre];
-    if (mapa[m.visita.nombre]) m.visita.logo = mapa[m.visita.nombre];
+  const poner = () => matches.forEach(m => {
+    const a = escudoCache(m.local.nombre); if (a) m.local.logo = a;
+    const b = escudoCache(m.visita.nombre); if (b) m.visita.logo = b;
   });
+  poner();   // 1) lo ya conocido, al instante
+  const faltan = nombres.filter(n => escudoCache(n) === undefined);
+  if (!faltan.length) return;
+  const trabajo = Promise.all(faltan.map(n => escudoEquipo(n).catch(() => null)));
+  await Promise.race([trabajo, new Promise(r => setTimeout(r, 4500))]);
+  poner();   // 2) lo recien resuelto
 }
 
 /* ---- Estadisticas reales para la ventana de comparacion ---- */
