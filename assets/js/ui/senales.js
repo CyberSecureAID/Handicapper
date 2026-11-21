@@ -7,7 +7,7 @@
    Bilingüe (inglés por defecto). Responsivo.
    ============================================================ */
 import { listarAnalisis, listarAnalistas, misSeguidos, seguirAnalista, dejarDeSeguir, contarSeguidores, misVotos, votarSenal, quitarVoto, contarVotos, misApoyos, apoyarAnalista, cancelarApoyo, contarApoyos, reportarSenal, miReporte } from '../mesa/mesa-datos.js';
-import { BOTS, botPorUid, seguidoresBot, prestigioReal, baseDe } from '../datos/bots.js';
+import { BOTS, botPorUid, seguidoresBot, prestigioReal, prestigioMostrado, baseDe } from '../datos/bots.js';
 
 import { usuarioActual } from '../auth/auth.js';
 import { planPorId } from '../datos/planes.js';
@@ -117,8 +117,12 @@ function inyectarCSS() {
   .sn-c-ava2 svg{width:22px;height:22px;color:var(--acc)}
   .sn-c-who{min-width:0}
   .sn-c-who > b{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:15px;color:#fff;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .sn-c-who .sn-c-fol{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#8a95a3;margin-top:1px}
+  .sn-c-who .sn-c-meta{display:flex;align-items:center;flex-wrap:wrap;gap:3px 12px;margin-top:2px}
+  .sn-c-who .sn-c-fol{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#8a95a3;margin-top:0}
   .sn-c-who .sn-c-fol svg{width:13px;height:13px}
+  .sn-c-who .sn-c-prest{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#e8b84b;font-weight:700}
+  .sn-c-who .sn-c-prest svg{width:13px;height:13px;opacity:.9}
+  .sn-c-who .sn-c-prest b{color:#f0d79a;font-weight:800}
   .sn-c-verdict{display:flex;align-items:center;gap:11px;margin:14px 0 9px}
   .sn-c-arrow{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:color-mix(in srgb,var(--acc) 16%,transparent);color:var(--acc);flex:none}
   .sn-c-arrow svg{width:18px;height:18px}
@@ -325,12 +329,13 @@ function bloqueDescubrir(analistas, ctx) {
     const ava = an.foto
       ? `<img src="assets/imagenes/analistas/${String(an.foto).toLowerCase()}.webp" alt="" loading="lazy">`
       : (est.emblemaSVG || ini);
+    const presAn = prestigioMostrado(an);
     return `<div class="sn-disc-card${an.foto ? ' con-foto' : ''}" data-cat="${_catDisc(an.deporte)}" data-nom="${esc(String(an.firma||an.nombre||'').toLowerCase())}" style="${est.varCss}">
       <div class="sn-disc-ava">${ava}</div>
       <div class="sn-disc-firma">${esc(an.firma || '')}</div>
       <div class="sn-disc-sport">${esc(depenNombre(an.deporte))}</div>
       <div class="sn-disc-fol" data-discfol="${esc(an.uid)}">…</div>
-      <div class="sn-disc-prest ${(Number(an.prestigio)||0)<0?'neg':''}" title="${L('Prestige','Prestigio')}"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2l2.6 6.3 6.8.5-5.2 4.4 1.7 6.6L12 16.9 6.1 20.3l1.7-6.6L2.6 8.8l6.8-.5z"/></svg><span>${(Number(an.prestigio)||0)>0?'+':''}${Number(an.prestigio)||0}</span> ${L('prestige','prestigio')}</div>
+      <div class="sn-disc-prest ${presAn<0?'neg':''}" title="${L('Prestige','Prestigio')}"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M12 2l2.6 6.3 6.8.5-5.2 4.4 1.7 6.6L12 16.9 6.1 20.3l1.7-6.6L2.6 8.8l6.8-.5z"/></svg><span>${presAn>0?'+':''}${presAn}</span> ${L('prestige','prestigio')}</div>
       ${puede ? `<button class="sn-disc-follow ${sigo ? 'on' : ''}" data-follow="${esc(an.uid)}" data-firma="${esc(an.firma || '')}">${sigo ? L('Following', 'Siguiendo') : L('Follow', 'Seguir')}</button>` : ''}
     </div>`;
   }).join('');
@@ -466,9 +471,11 @@ function analisisSenal(a, ES) {
   const acciones = btnFollow ? `<div class="sn-c-actions">${btnFollow}</div>` : '';
   const fotoUid = a.foto || (ctx.fotoPorUid && ctx.fotoPorUid[uid]) || null;
   const avaHdr = fotoUid ? `<img src="assets/imagenes/analistas/${String(fotoUid).toLowerCase()}.webp" alt="" loading="lazy">` : (est.emblemaSVG || IPen);
+  const IStar = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.6 6.3 6.8.5-5.2 4.4 1.7 6.6L12 16.9 6.1 20.3l1.7-6.6L2.6 8.8l6.8-.5z"/></svg>';
+  const pres = prestigioMostrado({ uid, desde: a.desde, prestigioAjuste: a.prestigioAjuste, prestigioAuto: a.prestigioAuto });
   const header = `<div class="sn-c-hdr">
       <div class="sn-c-analyst"><span class="sn-c-ava2">${avaHdr}</span>
-        <div class="sn-c-who"><b>${esc(firma || 'Analyst')}</b>${uid ? `<span class="sn-c-fol" data-fol="${esc(uid)}">${IUsers}<b>·</b> ${L('followers', 'seguidores')}</span>` : ''}</div></div>
+        <div class="sn-c-who"><b>${esc(firma || 'Analyst')}</b><div class="sn-c-meta">${uid ? `<span class="sn-c-fol" data-fol="${esc(uid)}">${IUsers}<b>·</b> ${L('followers', 'seguidores')}</span>` : ''}${pres > 0 ? `<span class="sn-c-prest" title="${L('Prestige','Prestigio')}">${IStar}<b>${pres}</b> ${L('prestige','prestigio')}</span>` : ''}</div></div></div>
       <span class="sn-c-conf ${conf}">${esc(confTx(conf))}</span>
     </div>`;
 
