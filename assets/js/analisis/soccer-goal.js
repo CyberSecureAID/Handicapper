@@ -9,6 +9,7 @@
 
 import * as N from './nucleo.js';
 import { pedirJSON } from '../datos/red.js';
+import { calendarioEventos } from './calendario.js';
 
 const API = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 const LIGAS = { epl: 'eng.1', laliga: 'esp.1', seriea: 'ita.1', bundes: 'ger.1', ucl: 'uefa.champions', ligue1: 'fra.1' };
@@ -181,10 +182,7 @@ export async function topGoalsMatchProjection({ fecha, n = 9, ligas } = {}) {
   const candidatos = [];
   for (const ligaId of ids) {
     const ruta = LIGAS[ligaId]; if (!ruta) continue;
-    let data;
-    try { data = await pedir(`${API}/${ruta}/scoreboard?dates=${_rango(fecha, 8)}`); }
-    catch (_) { continue; }
-    let eventos = (data?.events || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 12);
+    const eventos = await calendarioEventos({ pedir, scoreboardUrl: `${API}/${ruta}/scoreboard`, fecha, dias: 8, max: 12 });
     if (!eventos.length) continue;
     const goles = await golesDeLiga(ruta);
     for (const ev of eventos) {

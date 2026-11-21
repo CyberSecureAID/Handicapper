@@ -10,6 +10,7 @@
 import * as N from './nucleo.js';
 import { detallePartido } from '../datos/proveedor-api.js';
 import { pedirJSON } from '../datos/red.js';
+import { calendarioEventos } from './calendario.js';
 
 const API = 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba';
 const UMBRAL = 20;               // línea de referencia (puntos)
@@ -204,12 +205,8 @@ function puntosDeDetalle(lista) {
 export async function topPointsProjection({ fecha, n = 9, maxPorEquipo = 6 } = {}) {
   const avisos = [];
   const candidatos = [];
-  let data;
-  try { data = await pedir(`${API}/scoreboard?dates=${_rango(fecha, 10)}`); }
-  catch (_) { return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['No se pudo leer el calendario NBA'] } }; }
-  let eventos = (data?.events || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
-  eventos = eventos.slice(0, 5);   // los 5 juegos más cercanos
-  if (!eventos.length) return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['Sin juegos NBA hoy'] } };
+  const eventos = await calendarioEventos({ pedir, scoreboardUrl: `${API}/scoreboard`, fecha, dias: 10, max: 5 });
+  if (!eventos.length) return { jugadores: [], meta: { fecha, fuente: 'ESPN', avisos: ['Sin juegos NBA en los proximos dias'] } };
 
   const [defensas, ligaLeaders] = await Promise.all([defensasNBA(), leadersLigaNBA()]);
   const _det = {};
