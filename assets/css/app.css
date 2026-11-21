@@ -53,7 +53,7 @@
 .marca.tiene-img .logo-txt { display: none; }
 
 .top .buscar {
-  flex: 1; max-width: 340px; height: 40px; display: flex; align-items: center; gap: 9px;
+  flex: 1; max-width: 240px; height: 40px; display: flex; align-items: center; gap: 9px;
   padding: 0 14px; background: var(--fondo-2); border: 1px solid var(--linea);
   border-radius: 11px; color: var(--tinta-3); font-size: 14px; transition: border-color var(--trans), box-shadow var(--trans);
   box-shadow: var(--sombra-input);
@@ -72,9 +72,14 @@
 }
 .util-btn:hover { border-color: var(--oro); color: var(--oro); transform: translateY(-1px); }
 .util-btn svg { width: 19px; height: 19px; }
-/* Acceso directo a Analyst Signals en la barra (web): su LOGO real + puntico verde */
-.signals-star { position: relative; padding: 0 9px; }
-.signals-star-img { width: 23px; height: 23px; object-fit: contain; border-radius: 5px; display: block; }
+/* Acceso directo a Analyst Signals en la barra (web): el LOGO es todo el boton,
+   igual que los demas botones de imagen (sin borde ni fondo), con puntico verde. */
+.signals-star { position: relative; background: none; border: 0; padding: 0; box-shadow: none;
+  cursor: pointer; display: inline-flex; align-items: center; flex: 0 0 auto; height: 40px; }
+.signals-star-img { width: 40px; height: 40px; object-fit: contain; border-radius: 9px; display: block;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,.55)); transition: filter .16s, transform .1s; }
+.signals-star:hover .signals-star-img { filter: drop-shadow(0 3px 8px rgba(0,0,0,.5)) brightness(1.07); transform: translateY(-1px); }
+.signals-star:active .signals-star-img { transform: translateY(0) scale(.97); }
 .signals-star-img.fail { display: none; }
 
 .btn-oro {
