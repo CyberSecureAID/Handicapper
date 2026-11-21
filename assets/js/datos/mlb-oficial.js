@@ -19,19 +19,37 @@ async function j(url) {
   return r.json();
 }
 
-/* Encuentra el gamePk del partido por fecha + equipos (abreviatura o nombre) */
-async function buscarGame(fechaISO, localAbrev, visitaAbrev) {
-  const d = fechaISO ? new Date(fechaISO) : new Date();
-  const ymd = d.toISOString().slice(0, 10);
+const _norm = (s) => String(s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Z0-9 ]/g, '').trim();
+const _apodo = (n) => (_norm(n).split(' ').pop() || '');
+
+/* ¿El equipo de la MLB API es el mismo que el equipo de la app?
+   Empareja por abreviatura O por nombre (ESPN y MLB usan codigos distintos,
+   p.ej. CHW vs CWS), asi que el nombre/apodo manda. */
+function _mismoEquipo(mlbTeam, appAbrev, appNombre) {
+  const a = _norm(mlbTeam?.abbreviation), n = _norm(mlbTeam?.name);
+  const aa = _norm(appAbrev), an = _norm(appNombre);
+  if (a && aa && a === aa) return true;
+  if (n && an && (n === an || n.includes(an) || an.includes(n))) return true;
+  if (n && an && _apodo(n) && _apodo(n) === _apodo(an)) return true;   // "Yankees" == "Yankees"
+  return false;
+}
+
+/* Encuentra el juego cuyos DOS equipos coinciden con {local, visita}, en
+   cualquier orientacion. SIN fallback a "el primer juego del dia" (eso pegaba
+   bateadores de un equipo que no tiene nada que ver). Fecha sin corrimiento UTC. */
+async function buscarGame(fechaISO, local, visita) {
+  let ymd;
+  if (fechaISO && /^\d{4}-\d{2}-\d{2}/.test(String(fechaISO))) ymd = String(fechaISO).slice(0, 10);
+  else { const d = fechaISO ? new Date(fechaISO) : new Date(); ymd = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
   const data = await j(`${API}/schedule?sportId=1&date=${ymd}&hydrate=probablePitcher,team`);
   const juegos = (data.dates?.[0]?.games) || [];
-  const norm = (s) => String(s || '').toUpperCase();
-  const match = juegos.find(g => {
-    const h = g.teams?.home?.team, a = g.teams?.away?.team;
-    return (norm(h?.abbreviation) === norm(localAbrev) || norm(h?.name).includes(norm(localAbrev)))
-        && (norm(a?.abbreviation) === norm(visitaAbrev) || norm(a?.name).includes(norm(visitaAbrev)));
-  }) || juegos[0];
-  return match || null;
+  const g = juegos.find(gm => {
+    const h = gm.teams?.home?.team, a = gm.teams?.away?.team;
+    const ok1 = _mismoEquipo(h, local.abrev, local.nombre) && _mismoEquipo(a, visita.abrev, visita.nombre);
+    const ok2 = _mismoEquipo(h, visita.abrev, visita.nombre) && _mismoEquipo(a, local.abrev, local.nombre);
+    return ok1 || ok2;
+  });
+  return g || null;
 }
 
 /* Stats de pitcheo de la temporada actual para un jugador */
@@ -115,10 +133,17 @@ function comparativa(L, V) {
 
 export async function enriquecerMLB(fechaISO, local, visita) {
   try {
-    const g = await buscarGame(fechaISO, local.abrev, visita.abrev);
+    const g = await buscarGame(fechaISO, local, visita);
     if (!g) return null;
-    const homeId = g.teams?.home?.team?.id, awayId = g.teams?.away?.team?.id;
-    const ppH = g.teams?.home?.probablePitcher, ppA = g.teams?.away?.probablePitcher;
+    const h = g.teams?.home, a = g.teams?.away;
+    // Asocia cada equipo de la app (local/visita) con su equipo MLB por IDENTIDAD,
+    // no asumiendo que local = casa. Asi cada equipo recibe SUS propios datos,
+    // aunque ESPN y MLB discrepen en quien es casa/visita. Nunca se intercambian.
+    const laLocalEsCasa = _mismoEquipo(h?.team, local.abrev, local.nombre);
+    const paraLocal = laLocalEsCasa ? h : a;
+    const paraVisita = laLocalEsCasa ? a : h;
+    const idL = paraLocal?.team?.id, idV = paraVisita?.team?.id;
+    const ppL = paraLocal?.probablePitcher, ppV = paraVisita?.probablePitcher;
     const anio = new Date().getFullYear();
 
     const armar = async (pp) => {
@@ -130,14 +155,14 @@ export async function enriquecerMLB(fechaISO, local, visita) {
         num: st.num, pos: st.pos, edad: st.edad, altura: st.altura, peso: st.peso,
       };
     };
-    const [abH, abA, batH, batA, seqH, seqA] = await Promise.all([
-      armar(ppH), armar(ppA), bateadoresEquipo(homeId), bateadoresEquipo(awayId),
-      statsEquipo(homeId, anio), statsEquipo(awayId, anio),
+    const [abL, abV, batL, batV, seqL, seqV] = await Promise.all([
+      armar(ppL), armar(ppV), bateadoresEquipo(idL), bateadoresEquipo(idV),
+      statsEquipo(idL, anio), statsEquipo(idV, anio),
     ]);
     return {
-      abridor: { local: abH, visita: abA },
-      bateadores: { local: batH, visita: batA },
-      comparativa: comparativa(seqH, seqA),
+      abridor: { local: abL, visita: abV },
+      bateadores: { local: batL, visita: batV },
+      comparativa: comparativa(seqL, seqV),
     };
   } catch (_) { return null; }
 }
