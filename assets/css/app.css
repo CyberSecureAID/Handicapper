@@ -1621,11 +1621,19 @@
 .disc-ov.on .disc { transform: scale(1) translateY(0); }
 .disc-img { flex: 0 0 38%; height: 100%; object-fit: cover; object-position: center; display: block; }
 .disc-imgm { display: none; }
-.disc-body { position: relative; flex: 1 1 auto; min-width: 0; }
+.disc-body { position: relative; flex: 1 1 auto; min-width: 0; overflow: hidden; }
 .disc-bg { position: absolute; inset: 0; background: url('../imagenes/fondos/fondo-pagina.webp') center/cover; filter: blur(11px) brightness(.4); transform: scale(1.25); }
 .disc-veil { position: absolute; inset: 0; background: linear-gradient(160deg, rgba(15,21,33,.84), rgba(8,11,18,.95)); }
 .disc-in { position: relative; padding: 30px 28px; overflow-y: auto; max-height: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; }
 .disc-badge { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #e8c46a; background: rgba(232,196,106,.12); border: 1px solid rgba(232,196,106,.32); border-radius: 999px; padding: 5px 13px; margin-bottom: 14px; }
+/* Rotulo "DISCLAIMER" tornasol, centrado, sin brillo neon */
+.disc-top { text-align: center; }
+.disc-dtag { display: block; text-align: center; font-family: "Chakra Petch","Poppins",sans-serif; font-weight: 800; font-size: 13px; letter-spacing: .36em; text-transform: uppercase; margin: 2px 0 12px; padding-left: .36em;
+  background: linear-gradient(100deg, #9db8ff, #c7a9ff 28%, #f0d7a4 52%, #9fe3d4 76%, #9db8ff); background-size: 200% auto;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+  animation: disc-tornasol 7s linear infinite; }
+@keyframes disc-tornasol { to { background-position: 200% center; } }
+@media (prefers-reduced-motion: reduce) { .disc-dtag { animation: none; } }
 .disc h3 { font-family: "Poppins",sans-serif; font-weight: 700; font-size: 22px; color: #fff; margin: 0 0 12px; }
 .disc-in p { font-size: 13.5px; line-height: 1.6; color: #cdd6e2; margin: 0 0 4px; }
 .disc-in p b { color: #fff; }
