@@ -1021,8 +1021,30 @@ function abrirPagoAnalista(firma, onPagar) {
   btn.onclick = async () => { btn.disabled = true; try { await onPagar(); } catch (_) {} cerrar(); };
 }
 
+/* Canje de código promocional pendiente (guardado al registrarse). Da tiempo gratis de un plan. */
+async function _canjearPromoPendiente(uid) {
+  let code = null;
+  try { code = sessionStorage.getItem('se-promo-pendiente'); } catch (_) {}
+  if (!code) return;
+  try { sessionStorage.removeItem('se-promo-pendiente'); } catch (_) {}
+  try {
+    const { buscarPromo, fijarSuscripcionMerge } = await import('./mesa/mesa-datos.js');
+    const promo = await buscarPromo(code);
+    if (!promo) return;
+    const dias = Number(promo.dias) || 30;
+    const sub = { activo: true, plan: promo.plan || 'premium', vence: new Date(Date.now() + dias * 86400000).toISOString(), metodo: 'promo', codigo: promo.codigo };
+    await fijarSuscripcionMerge(uid, sub);
+    fijarSuscripcion(sub);
+    actualizarBotonNivel();
+    setPremium(_esAdmin || planActual() === 'premium');
+    const ES = idiomaActual() === 'es';
+    avisoToast(ES ? `Código ${promo.codigo} aplicado: ${dias} días de ${promo.plan} gratis.` : `Code ${promo.codigo} applied: ${dias} days of ${promo.plan} free.`);
+  } catch (_) {}
+}
+
 async function onSesion(usuario, extra) {  pintarCuenta(usuario);
   fijarSuscripcion(usuario?.suscripcion || null);
+  try { if (usuario && usuario.uid && !(usuario.suscripcion && usuario.suscripcion.activo)) _canjearPromoPendiente(usuario.uid); } catch (_) {}
   actualizarBotonNivel();
   if (extra && extra.bloqueado) { mostrarPantalla('landing'); avisarBloqueo(); return; }
   if (!usuario) { _esAdmin = false; _esAnalista = false; mostrarPantalla('landing'); return; }
