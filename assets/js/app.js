@@ -1191,9 +1191,9 @@ function mostrarDisclaimerEntrada() {
       <div class="disc-body">
         <div class="disc-bg"></div><div class="disc-veil"></div>
         <div class="disc-in">
-          <div class="disc-top"><span class="disc-badge">${L('Important notice', 'Aviso importante')}</span>
+          <div class="disc-top"><span class="disc-dtag">DISCLAIMER</span>
           <h3>${L('Before you step in', 'Antes de entrar')}</h3></div>
-          <div class="disc-mid"><p>${L('Sports Expectations is a sports information and analytics platform. We are <b>not a sportsbook</b>: we do not accept bets or pay winnings. Our signals and probabilities are opinions and estimates, <b>not guarantees</b>. Any decision you make is yours and at your own risk.', 'Sports Expectations es una plataforma de información y análisis deportivo. <b>No somos una casa de apuestas</b>: no aceptamos apuestas ni pagamos premios. Nuestras señales y probabilidades son opiniones y estimaciones, <b>no garantías</b>. Las decisiones que tomes son tuyas y bajo tu propia responsabilidad.')}</p>
+          <div class="disc-mid"><p>${L('Sports Expectations provides sports information, statistics and analytical estimates only. We are <b>not a sportsbook</b> and we neither accept bets nor pay winnings. We <b>do not guarantee</b> any profit, return, accuracy or result: our signals and probabilities are opinions, never promises. All payments are <b>non-refundable</b>, and we are <b>not liable</b> for any decision you take or for any use or misuse of our content. By tapping the button below you confirm you are of legal age and that you <b>fully accept all of our policies</b>, using the platform entirely at your own risk.', 'Sports Expectations ofrece únicamente información, estadísticas y estimaciones analíticas deportivas. <b>No somos una casa de apuestas</b> y no aceptamos apuestas ni pagamos premios. <b>No garantizamos</b> ninguna ganancia, rentabilidad, acierto ni resultado: nuestras señales y probabilidades son opiniones, nunca promesas. Todos los pagos son <b>no reembolsables</b>, y <b>no nos hacemos responsables</b> de ninguna decisión que tomes ni del uso o mal uso de nuestro contenido. Al pulsar el botón confirmas que eres mayor de edad y que <b>aceptas por completo todas nuestras políticas</b>, usando la plataforma bajo tu entera responsabilidad.')}</p>
           <div class="disc-links">
             <a href="terms.html" target="_blank" rel="noopener">${L('Terms', 'Términos')}</a>
             <a href="privacy.html" target="_blank" rel="noopener">${L('Privacy', 'Privacidad')}</a>
@@ -1201,7 +1201,7 @@ function mostrarDisclaimerEntrada() {
             <a href="responsible.html" target="_blank" rel="noopener">${L('Responsible play', 'Juego responsable')}</a>
           </div></div>
           <div class="disc-bot"><button class="disc-go" id="disc-go">${L('I understand and agree', 'Entiendo y acepto')}</button>
-          <p class="disc-fine">${L('By continuing you confirm you are of legal age and accept our Terms.', 'Al continuar confirmas que eres mayor de edad y aceptas nuestros Términos.')}</p></div>
+          <p class="disc-fine">${L("Tapping 'I understand and agree' is your binding acceptance of this agreement and of our Terms, Privacy, Disclaimer and Responsible Play policies.", "Pulsar 'Entiendo y acepto' constituye tu aceptación vinculante de este acuerdo y de nuestras políticas de Términos, Privacidad, Descargo y Juego Responsable.")}</p></div>
         </div>
       </div>
     </div>`;
