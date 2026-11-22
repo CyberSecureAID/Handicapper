@@ -15,6 +15,7 @@ import { fijarSuscripcion, tieneAcceso, limpiarVistaPrevia, marcarVistaPrevia, p
 import { pintarParlay, pintarElite } from './ui/parlay.js';
 import { initPickem, setPremium, setVerPlanes } from './ui/pickem.js';
 import { initCookies } from './ui/cookies.js';
+import { initHistorial } from './extras/historial.js';
 import { pintarSenales, cargarSenales, contarSenales } from './ui/senales.js';
 import { pintarChat, cerrarChat } from './ui/chat.js';
 
@@ -734,6 +735,7 @@ function init() {
   initGlosario();
   initPickem();
   initCookies();   // aviso de cookies (una sola vez), LLC de Florida
+  initHistorial(); // extra modular: historial/track record de analistas
   setVerPlanes(() => mostrarPantalla('pricing'));   // el teaser Premium del pick'em lleva a planes
 
   // Hamburguesa / drawer (móvil)
@@ -961,7 +963,7 @@ async function abrirDirectorioSenales() {
       <span class="sd-sport">${esc(DEP[a.deporte] || a.deporte || '')}</span>
       <div class="sd-stats">
         <div><b>${f.toLocaleString()}</b><em>${Lp('Followers','Seguidores')}</em></div>
-        <div>${(() => { const pv = bots.prestigioReal(a); return `<b class="sd-prest ${pv<0?'neg':''}">${pv>0?'+':''}${pv}</b>`; })()}<em>${Lp('Prestige','Prestigio')}</em></div>
+        <div>${(() => { const pv = bots.prestigioMostrado(a); return `<b class="sd-prest ${pv<0?'neg':''}">${pv>0?'+':''}${pv}</b>`; })()}<em>${Lp('Prestige','Prestigio')}</em></div>
       </div>
       <button class="sd-follow ${sig ? 'on' : ''}" data-sdfollow="${esc(a.uid)}" data-sdfirma="${esc(a.firma || '')}">${sig ? Lp('Following','Siguiendo') : Lp('Follow','Seguir')}</button>
     </div>`;
@@ -1606,7 +1608,7 @@ function abrirPanelPerfil() {
   };
   const item = (id, ic, txt, badge2, extra) => `<button class="pp-item ${extra || ''}" data-pp="${id}">${ic}<span>${txt}</span>${badge2 ? `<em class="pp-badge">${badge2}</em>` : ''}</button>`;
 
-  const banderaES = `<svg viewBox="0 0 30 20" width="21" height="14" style="border-radius:3px;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.4)"><rect width="30" height="20" fill="#fff"/><rect width="30" height="4" fill="#002a8f"/><rect width="30" height="4" y="8" fill="#002a8f"/><rect width="30" height="4" y="16" fill="#002a8f"/><path d="M0 0L13 10 0 20Z" fill="#cb1515"/><path d="M4.3 7.2 5.2 9.5 7.6 9.5 5.7 11 6.4 13.3 4.3 11.9 2.2 13.3 2.9 11 1 9.5 3.4 9.5Z" fill="#fff"/></svg>`;
+  const banderaES = `<svg viewBox="0 0 30 20" width="21" height="14" style="border-radius:3px;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.4)"><rect width="30" height="20" fill="#aa151b"/><rect width="30" height="10" y="5" fill="#f1bf00"/></svg>`;
   const banderaEN = `<svg viewBox="0 0 30 20" width="21" height="14" style="border-radius:3px;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.4)"><rect width="30" height="20" fill="#fff"/><rect width="30" height="1.54" y="0.00" fill="#b22234"/><rect width="30" height="1.54" y="3.08" fill="#b22234"/><rect width="30" height="1.54" y="6.15" fill="#b22234"/><rect width="30" height="1.54" y="9.23" fill="#b22234"/><rect width="30" height="1.54" y="12.31" fill="#b22234"/><rect width="30" height="1.54" y="15.38" fill="#b22234"/><rect width="30" height="1.54" y="18.46" fill="#b22234"/><rect width="13" height="10.77" fill="#3c3b6e"/></svg>`;
   const flag = idiomaActual() === 'es' ? banderaES : banderaEN;
   const menu = `
