@@ -62,8 +62,8 @@ function _css() {
   @keyframes histPulse{0%,100%{transform:scale(1);box-shadow:0 5px 13px -5px rgba(201,120,26,.5),inset 0 1px 0 rgba(255,255,255,.4)}50%{transform:scale(1.045);box-shadow:0 9px 22px -4px rgba(240,169,58,.8),inset 0 1px 0 rgba(255,255,255,.55)}}
   @media(prefers-reduced-motion:reduce){.sd-modal.sd-hist .sd-follow{animation:none}}
 
-  .sn-fs .sn-fs-search{min-width:150px}
   .hist-fs-btn{height:40px;padding:0 14px;font-size:12px}
+  @media(max-width:560px){.sn-fs .hist-fs-btn{flex:1}}
 
   .hist-toast{position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:360;max-width:calc(100% - 32px);display:flex;align-items:center;gap:9px;padding:13px 18px;border-radius:13px;background:linear-gradient(180deg,rgba(20,27,40,.98),rgba(13,18,28,.99));border:1px solid rgba(240,169,58,.42);box-shadow:0 20px 50px -16px rgba(0,0,0,.8);color:#eef3f9;font-size:13.5px;font-weight:600;animation:histToast .25s ease}
   .hist-toast svg{width:18px;height:18px;color:#f0a93a;flex:none}
