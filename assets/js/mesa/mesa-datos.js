@@ -381,6 +381,42 @@ export async function guardarConfigContacto(cfg) {
   return true;
 }
 
+/* Códigos promocionales editables desde el panel: config/promos = { codigos: [ {codigo, plan, dias, activo} ] }.
+   Dan a los nuevos usuarios tiempo gratis de un plan al registrarse con el código. */
+export async function leerPromos() {
+  if (!await _asegurarListo()) return null;
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const snap = await S.getDoc(S.doc(db, 'config', 'promos'));
+    return snap.exists() ? snap.data() : null;
+  } catch (_) { return null; }
+}
+export async function guardarPromos(cfg) {
+  if (!await _asegurarListo()) return false;
+  const S = _obtenerStore(), db = _obtenerDB();
+  await S.setDoc(S.doc(db, 'config', 'promos'), { ...cfg, actualizado: S.serverTimestamp() }, { merge: true });
+  return true;
+}
+/* Valida un código al registrarse (cualquier usuario). Devuelve {codigo, plan, dias} activo o null. */
+export async function buscarPromo(codigo) {
+  if (!await _asegurarListo()) return null;
+  try {
+    const S = _obtenerStore(), db = _obtenerDB();
+    const snap = await S.getDoc(S.doc(db, 'config', 'promos'));
+    if (!snap.exists()) return null;
+    const cod = String(codigo || '').trim().toUpperCase();
+    if (!cod) return null;
+    const hit = (snap.data().codigos || []).find(c => String(c.codigo || '').toUpperCase() === cod && c.activo !== false);
+    return hit || null;
+  } catch (_) { return null; }
+}
+/* Fija la suscripción del propio usuario (canje de promo al registrarse). setDoc merge: crea si no existe. */
+export async function fijarSuscripcionMerge(uid, sub) {
+  const S = _obtenerStore(), db = _obtenerDB();
+  await S.setDoc(S.doc(db, 'usuarios', uid), { suscripcion: sub }, { merge: true });
+  return true;
+}
+
 /* ============================================================
    FASE 7 — LIKES / DISLIKES (colección 'votos')
    Doc id = `${uid}__${signalId}` = { uid, signalId, valor: 1|-1, fecha }

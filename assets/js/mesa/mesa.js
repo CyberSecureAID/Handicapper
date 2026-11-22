@@ -3,7 +3,7 @@
    Secciones: Overview · Users · Analysis.
    Solo visible si esAdmin() (verificado en Firestore).
    ============================================================ */
-import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte, asignarFotoAnalista, quitarFotoAnalista, ajustarContadorAnalista, leerFichaAnalista, guardarPerfilAnalista, leerConfigContacto, guardarConfigContacto, listarSeguidoresDe } from './mesa-datos.js';
+import { esAdmin, listarUsuarios, listarAdmins, fijarBloqueo, fijarSuscripcionUsuario, guardarAnalisis, borrarAnalisis, listarAnalisis, esAnalista, listarAnalistas, guardarAnalista, fijarAnalista, eliminarAnalista, leerModeracion, guardarModeracion, resumenIngresos, contarApoyos, listarReportes, resolverReporte, borrarReporte, asignarFotoAnalista, quitarFotoAnalista, ajustarContadorAnalista, leerFichaAnalista, guardarPerfilAnalista, leerConfigContacto, guardarConfigContacto, leerPromos, guardarPromos, listarSeguidoresDe } from './mesa-datos.js';
 import { rutaFotoAnalista } from '../datos/fotos-analistas.js';
 import { seguidoresBot, likesDe, dislikesDe, botPorUid, prestigioReal, baseDe } from '../datos/bots.js';
 import { abrirSelectorFotos } from '../ui/selector-fotos.js';
@@ -16,7 +16,7 @@ import { salir, usuarioActual } from '../auth/auth.js';
 import { marcarVistaPrevia } from '../auth/estado-pago.js';
 import { idiomaActual } from '../ui/idioma.js';
 
-let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = [], _contactoCfg = null, _soloLectura = false;
+let _cont = null, _usuarios = [], _analisis = [], _tab = 'resumen', _admins = [], _contactoCfg = null, _promosCfg = null, _soloLectura = false;
 let _ligaSel = null, _partidos = [], _cargandoPart = false;
 let _rol = 'admin', _deporteAnalista = null, _analistas = [];
 /* Candado de solo lectura para Visitantes: bloquea cualquier acción que mute datos. */
@@ -116,7 +116,8 @@ function render() {
        <button data-tab="monitoreo" class="${_tab==='monitoreo'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg> ${ML('Monitoring','Monitoreo')}</button>
        <button data-tab="moderacion" class="${_tab==='moderacion'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M12 3l7 3v5c0 4.4-3 7.4-7 9-4-1.6-7-4.6-7-9V6l7-3z"/></svg> ${ML('Moderation','Moderación')}</button>
        <button data-tab="reportes" class="${_tab==='reportes'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V4"/></svg> ${ML('Reports','Reportes')}${_reportesAbiertos() ? `<span class="mesa-nav-badge">${_reportesAbiertos()}</span>` : ''}</button>
-       <button data-tab="contacto" class="${_tab==='contacto'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M4 5h16v11H6l-2 3z"/><path d="M8 9h8M8 12h5"/></svg> ${ML('Contact','Contacto')}</button>`;
+       <button data-tab="contacto" class="${_tab==='contacto'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M4 5h16v11H6l-2 3z"/><path d="M8 9h8M8 12h5"/></svg> ${ML('Contact','Contacto')}</button>
+       <button data-tab="promos" class="${_tab==='promos'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L2 12V3h9l8.6 8.6a2 2 0 010 2.8z"/><path d="M7 7h.01"/></svg> ${ML('Promos','Promociones')}</button>`;
   _cont.innerHTML = `
     <div class="mesa">
       <aside class="mesa-side" id="mesa-side">
@@ -204,7 +205,7 @@ async function cargarDatos() {
   try { _admins = await listarAdmins(); } catch (_) { _admins = []; }
   if (_rol === 'admin') { try { _analistas = await listarAnalistas(); } catch (_) { _analistas = []; } }
   if (_rol === 'admin') { try { _ingresos = await resumenIngresos(); } catch (_) { _ingresos = {}; } }
-  if (_rol === 'admin') { try { _contactoCfg = await leerConfigContacto(); } catch (_) { _contactoCfg = null; } }
+  if (_rol === 'admin') { try { _contactoCfg = await leerConfigContacto(); } catch (_) { _contactoCfg = null; } try { _promosCfg = await leerPromos(); } catch (_) { _promosCfg = null; } }
   pintarTab();
 }
 function rolAdmin(u) {
@@ -291,6 +292,58 @@ function enlazarContacto() {
   });
 }
 
+/* ===== Promociones: códigos que dan tiempo gratis de un plan a nuevos usuarios ===== */
+function vistaPromos() {
+  const cfg = _promosCfg || { codigos: [] };
+  const codigos = cfg.codigos || [];
+  const planOpts = (sel) => PLANES.map(p => `<option value="${p.id}" ${sel === p.id ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('');
+  const DUR = [[7, ML('7 days', '7 días')], [15, ML('15 days', '15 días')], [30, ML('30 days', '30 días')], [90, ML('3 months', '3 meses')], [180, ML('6 months', '6 meses')], [365, ML('1 year', '1 año')]];
+  const durOpts = (sel) => DUR.map(([d, l]) => `<option value="${d}" ${Number(sel) === d ? 'selected' : ''}>${esc(l)}</option>`).join('');
+  const fila = (c, i) => `
+    <div class="promo-row" data-pi="${i}">
+      <input class="u-input promo-cod" data-pf="codigo" placeholder="${ML('CODE (e.g. CHANNEL)', 'CÓDIGO (ej. CANAL)')}" value="${esc(c.codigo || '')}" maxlength="24">
+      <select class="u-input" data-pf="plan">${planOpts(c.plan || 'premium')}</select>
+      <select class="u-input" data-pf="dias">${durOpts(c.dias || 30)}</select>
+      <label class="promo-sw"><input type="checkbox" data-pf="activo" ${c.activo !== false ? 'checked' : ''}><span></span><em>${ML('Active', 'Activo')}</em></label>
+      <button class="mesa-btn ghost sm promo-del" data-pdel="${i}">${ML('Remove', 'Quitar')}</button>
+    </div>`;
+  return `
+    <div class="mesa-head"><h1>${ML('Promo codes', 'Códigos promocionales')}</h1><p>${ML('Codes that give new users free plan time (influencer / YouTube promos). Editable and saved to Firebase.', 'Códigos que dan a los nuevos usuarios tiempo gratis de un plan (promos con influencers / YouTube). Editables y guardados en Firebase.')}</p></div>
+    <div class="ct-card promo-card">
+      <label class="ct-label">${ML('Promo codes', 'Códigos promocionales')}</label>
+      <div id="promo-list" class="promo-list">${codigos.length ? codigos.map(fila).join('') : `<div class="promo-empty">${ML('No codes yet. Add one below.', 'Aún no hay códigos. Agrega uno abajo.')}</div>`}</div>
+      <button class="mesa-btn ghost" id="promo-add">+ ${ML('Add code', 'Agregar código')}</button>
+    </div>
+    <div class="ct-save-row">
+      <button class="mesa-btn oro" id="promo-save">${ML('Save changes', 'Guardar cambios')}</button>
+      <span id="promo-status" class="ct-status"></span>
+    </div>`;
+}
+function _recogerPromos() {
+  const codigos = [..._cont.querySelectorAll('#promo-list .promo-row')].map(el => {
+    const g = (k) => { const i = el.querySelector(`[data-pf="${k}"]`); return i ? i.value.trim() : ''; };
+    const chk = el.querySelector('[data-pf="activo"]');
+    return { codigo: g('codigo').toUpperCase(), plan: g('plan') || 'premium', dias: Number(g('dias')) || 30, activo: chk ? chk.checked : true };
+  }).filter(c => c.codigo);
+  return { codigos };
+}
+function enlazarPromos() {
+  const add = _cont.querySelector('#promo-add');
+  if (add) add.onclick = () => { const cfg = _recogerPromos(); cfg.codigos.push({ codigo: '', plan: 'premium', dias: 30, activo: true }); _promosCfg = cfg; pintarTab(); };
+  _cont.querySelectorAll('[data-pdel]').forEach(b => b.onclick = () => { const cfg = _recogerPromos(); cfg.codigos.splice(Number(b.dataset.pdel), 1); _promosCfg = cfg; pintarTab(); });
+  const save = _cont.querySelector('#promo-save');
+  if (save) save.onclick = async () => {
+    const st = _cont.querySelector('#promo-status');
+    const cfg = _recogerPromos();
+    const vistos = {};
+    for (const c of cfg.codigos) { const k = c.codigo.toUpperCase(); if (vistos[k]) { st.textContent = ML('Duplicate code: ', 'Código repetido: ') + c.codigo; st.className = 'ct-status err'; return; } vistos[k] = 1; }
+    save.disabled = true; st.textContent = ML('Saving…', 'Guardando…'); st.className = 'ct-status';
+    try { if (_ro()) { save.disabled = false; return; } await guardarPromos(cfg); _promosCfg = cfg; st.textContent = ML('Saved ✓', 'Guardado ✓'); st.className = 'ct-status ok'; }
+    catch (_) { st.textContent = ML('Error saving', 'Error al guardar'); st.className = 'ct-status err'; }
+    save.disabled = false;
+  };
+}
+
 function pintarTab() {
   const m = document.getElementById('mesa-main');
   if (!m) return;
@@ -302,6 +355,7 @@ function pintarTab() {
   else if (_tab === 'moderacion') { m.innerHTML = vistaModeracion(); enlazarModeracion(); }
   else if (_tab === 'reportes') { m.innerHTML = vistaReportes(); enlazarReportes(); }
   else if (_tab === 'contacto') { m.innerHTML = vistaContacto(); enlazarContacto(); }
+  else if (_tab === 'promos') { m.innerHTML = vistaPromos(); enlazarPromos(); }
 }
 
 /* ================= OVERVIEW ================= */
