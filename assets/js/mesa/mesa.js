@@ -115,8 +115,10 @@ function render() {
        <button data-tab="analistas" class="${_tab==='analistas'?'on':''}">${IC.contrato} ${ML('Staff','Personal')}</button>
        <button data-tab="monitoreo" class="${_tab==='monitoreo'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg> ${ML('Monitoring','Monitoreo')}</button>
        <button data-tab="moderacion" class="${_tab==='moderacion'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M12 3l7 3v5c0 4.4-3 7.4-7 9-4-1.6-7-4.6-7-9V6l7-3z"/></svg> ${ML('Moderation','Moderación')}</button>
-       <button data-tab="reportes" class="${_tab==='reportes'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V4"/></svg> ${ML('Reports','Reportes')}${_reportesAbiertos() ? `<span class="mesa-nav-badge">${_reportesAbiertos()}</span>` : ''}</button>
-       <button data-tab="contacto" class="${_tab==='contacto'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M4 5h16v11H6l-2 3z"/><path d="M8 9h8M8 12h5"/></svg> ${ML('Contact','Contacto')}</button>
+       <div class="mesa-duo-nav">
+         <button data-tab="reportes" class="${_tab==='reportes'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V4"/></svg> Report${_reportesAbiertos() ? `<span class="mesa-nav-badge">${_reportesAbiertos()}</span>` : ''}</button>
+         <button data-tab="contacto" class="${_tab==='contacto'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M4 5h16v11H6l-2 3z"/><path d="M8 9h8M8 12h5"/></svg> Contact</button>
+       </div>
        <button data-tab="promos" class="${_tab==='promos'?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L2 12V3h9l8.6 8.6a2 2 0 010 2.8z"/><path d="M7 7h.01"/></svg> ${ML('Promos','Promociones')}</button>`;
   _cont.innerHTML = `
     <div class="mesa">
@@ -127,8 +129,10 @@ function render() {
         </div>
         <nav class="mesa-nav" id="mesa-nav">
           ${navBtns}
-          <button class="mesa-ver" id="mesa-ver-sitio">${IC.eye} ${ML('View site','Ver sitio')}</button>
-          <button class="mesa-lang" id="mesa-lang">${IC.globe} ${_mesaLang === 'es' ? 'English' : 'Español'}</button>
+          <div class="mesa-duo">
+            <button class="mesa-ver" id="mesa-ver-sitio">${IC.eye} ${ML('View site','Ver sitio')}</button>
+            <button class="mesa-lang" id="mesa-lang">${IC.globe} ${_mesaLang === 'es' ? 'English' : 'Español'}</button>
+          </div>
           <button class="mesa-yo" id="mesa-yo-foto" title="${ML('Set your profile photo', 'Poner tu foto de perfil')}">
             <div class="mesa-yo-av">${_miFoto ? `<img src="${rutaFotoAnalista(_miFoto)}" alt="">` : (u?.nombre || u?.email || '?').charAt(0).toUpperCase()}<span class="mesa-yo-cam">${IC.pen || '✎'}</span></div>
             <div class="mesa-yo-txt"><b>${esc(u?.nombre || '')}</b><span>${_miFoto ? ML('Change photo', 'Cambiar foto') : ML('Set photo', 'Poner foto')}</span></div>
@@ -296,7 +300,8 @@ function enlazarContacto() {
 function vistaPromos() {
   const cfg = _promosCfg || { codigos: [] };
   const codigos = cfg.codigos || [];
-  const planOpts = (sel) => PLANES.map(p => `<option value="${p.id}" ${sel === p.id ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('');
+  const planOpts = (sel) => PLANES.map(p => `<option value="${p.id}" ${sel === p.id ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('')
+    + `<option value="visitante" ${sel === 'visitante' ? 'selected' : ''}>${ML('Visitor (full, free)', 'Visitante (total, sin cobro)')}</option>`;
   const DUR = [[7, ML('7 days', '7 días')], [15, ML('15 days', '15 días')], [30, ML('30 days', '30 días')], [90, ML('3 months', '3 meses')], [180, ML('6 months', '6 meses')], [365, ML('1 year', '1 año')]];
   const durOpts = (sel) => DUR.map(([d, l]) => `<option value="${d}" ${Number(sel) === d ? 'selected' : ''}>${esc(l)}</option>`).join('');
   const fila = (c, i) => `
