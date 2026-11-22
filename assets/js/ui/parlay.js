@@ -267,7 +267,7 @@ function inyectarCSS() {
   .plyg-logo img{max-width:100%;max-height:100%;object-fit:contain}
   .plyg-fb{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--line);display:grid;place-items:center;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:16px;color:var(--tx2)}
   .plyg-nm{font-size:12.5px;font-weight:700;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.15}
-  .plyg-vs{flex:0 0 auto;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:14px;color:var(--oro);opacity:.9}
+  .plyg-vs{flex:0 0 auto;width:50px;height:50px;object-fit:contain}
   .plyg-prob{margin:2px 0 12px}
   .plyg-prob b{display:block;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:42px;line-height:1;background:linear-gradient(180deg,#f6e2a6,#d4a53f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
   .plyg-prob span{display:block;font-size:11px;color:var(--tx3);margin-top:4px;text-transform:uppercase;letter-spacing:.04em}
@@ -670,7 +670,7 @@ function cardPartidoHTML(p, cfg) {
     <div class="plyg-top"><div class="ply-rank">${p.rank}</div>${cuando ? `<span class="plyg-when">${esc(cuando)}</span>` : ''}</div>
     <div class="plyg-match">
       <div class="plyg-side">${_goalLogo(p.logoLocal, p.equipoAbrev)}<span class="plyg-nm">${esc(p.localNom || p.equipoAbrev || '')}</span></div>
-      <div class="plyg-vs">VS</div>
+      <img class="plyg-vs" src="assets/imagenes/vs.png" alt="vs" loading="lazy">
       <div class="plyg-side">${_goalLogo(p.logoVisita, p.rivalAbrev)}<span class="plyg-nm">${esc(p.visitaNom || p.rivalAbrev || '')}</span></div>
     </div>
     <div class="plyg-bars">
