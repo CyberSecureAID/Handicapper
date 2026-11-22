@@ -94,25 +94,29 @@ export function prestigioReal(a) {
   return baseDe(a.uid) + (Number(a.prestigioAjuste) || 0) + (Number(a.prestigioAuto) || 0);
 }
 
-/* Prestigio MOSTRADO = real + un movimiento determinista por semana (sube/baja,
-   con sesgo positivo porque son analistas de la casa), para que no se vea
-   congelado. Es una simulacion ESTABLE: no cambia entre recargas dentro de la
-   misma semana. El prestigio por resolucion real de predicciones vive en
-   prestigio.js; mostrarlo en vivo a TODOS los usuarios necesitaria un backend
-   (hoy las reglas de Firestore solo dejan leerlo al admin). */
-function _hashP(s) { let h = 2166136261; for (let i = 0; i < String(s).length; i++) { h ^= String(s).charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
-export function driftPrestigio(a) {
-  const bot = a && botPorUid(a.uid); if (!bot) return 0;
-  const desde = (a && a.desde) || bot.desde; if (!desde) return 0;
-  const semanas = Math.max(0, Math.floor((Date.now() - new Date(desde).getTime()) / (7 * 864e5)));
-  let d = 0;
-  for (let w = 1; w <= semanas; w++) {
-    const r = _hashP(a.uid + ':' + w) % 5;   // 0,1,2 -> +1 ; 3 -> 0 ; 4 -> -1  (sesgo positivo)
-    d += r <= 2 ? 1 : (r === 3 ? 0 : -1);
-  }
-  return d;
+/* ---- MARCADOR REAL que el publico SI puede leer (coleccion 'marcador',
+   lo llena la resolucion de predicciones via marcador.js). Cache en memoria
+   que marcador.js rellena al cargar; si aun no cargo es 0 y el numero queda
+   en base + ajuste: honesto, sin inventar. ---- */
+const _netoMarcador = new Map();
+export function _fijarMarcadores(mapa) {
+  _netoMarcador.clear();
+  if (!mapa) return;
+  const ent = (mapa instanceof Map) ? mapa.entries() : Object.entries(mapa);
+  for (const [uid, m] of ent) _netoMarcador.set(uid, Number(m && m.neto) || 0);
 }
-export function prestigioMostrado(a) { return prestigioReal(a) + driftPrestigio(a); }
+export function netoMarcador(uid) { return _netoMarcador.get(uid) || 0; }
+
+/* Prestigio MOSTRADO al publico = empujon inicial (base del bot, INTACTA) +
+   ajuste manual del admin + resultado REAL ya resuelto (marcador). Antes llevaba
+   un movimiento semanal simulado; se QUITO: ahora si un analista no ha resuelto
+   picks el numero queda quieto (honesto) y solo se mueve cuando una senal de
+   verdad acierta (+1) o falla (-1), pudiendo ser negativo. El prestigio interno
+   completo (con prestigioAuto, solo admin) sigue en prestigioReal(). */
+export function prestigioMostrado(a) {
+  if (!a) return 0;
+  return baseDe(a.uid) + (Number(a.prestigioAjuste) || 0) + netoMarcador(a.uid);
+}
 
 /* Seguidores mostrados = base figurativa + 1/semana + ajuste admin + seguidores REALES.
    Funciona con un bot (tiene 'followers'/'desde') o con un analista real (solo ajuste + reales). */

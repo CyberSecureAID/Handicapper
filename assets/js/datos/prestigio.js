@@ -6,6 +6,7 @@
    predicción ya quedó registrada (anti-trampa).
    ============================================================ */
 import { _asegurarListo, _obtenerStore, _obtenerDB } from '../auth/auth.js';
+import { anotarResolucion } from './marcador.js';
 
 /* Registra (o actualiza) la predicción de un analista sobre un partido.
    id = analistaUid__matchId  ->  una sola por analista y partido (idempotente). */
@@ -85,6 +86,15 @@ export async function resolverPredicciones(resultadoFn) {
           delta,
           resuelto: S.serverTimestamp(),
         });
+        // Copia el resultado real al MARCADOR PUBLICO (lectura publica) para que
+        // el historial y el prestigio mostrado reflejen aciertos/fallos reales.
+        try {
+          await anotarResolucion(p.analistaUid, {
+            matchId: p.matchId, deporte: p.deporte, favorito: p.favoritoNombre,
+            resultado: res.empate ? 'empate' : (acierto ? 'acierto' : 'fallo'),
+            cuando: p.cuando || null,
+          });
+        } catch (_) {}
         resueltas++;
       } catch (_) {}
     }
