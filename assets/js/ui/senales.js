@@ -618,7 +618,7 @@ export async function pintarSenales(cont, { esPremium = false, nivel = 'basic', 
 
   const ILup2 = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`;
   const filtroSenales = visibles.length ? `<div class="sn-fs">
-      <div class="sn-fs-search">${ILup2}<input id="sn-fs-q" type="text" placeholder="${L('Search signals by team…', 'Buscar señales por equipo…')}"></div>
+      <div class="sn-fs-search">${ILup2}<input id="sn-fs-q" type="text" placeholder="${L('Search teams', 'Buscar equipos')}"></div>
       <div class="sn-dd" data-dd="cat">
         <button class="sn-dd-btn" type="button"><span class="sn-dd-lbl">${L('All', 'Todos')}</span><svg class="sn-dd-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
         <div class="sn-dd-pop" hidden>
