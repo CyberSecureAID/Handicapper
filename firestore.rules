@@ -91,13 +91,6 @@ service cloud.firestore {
       allow read: if true;
       allow write: if esAdmin();
     }
-    // CÓDIGOS PROMOCIONALES — lectura PÚBLICA (el registro necesita validar el código que
-    // escribe el usuario; además los códigos se comparten en público, por ejemplo en YouTube).
-    // Escritura SOLO admin: nadie más puede crear, editar ni borrar códigos promocionales.
-    match /config/promos {
-      allow read: if true;
-      allow write: if esAdmin();
-    }
     match /config/{doc} {
       allow read: if esAdmin() || esAnalista();
       allow write: if esAdmin();
@@ -123,6 +116,13 @@ service cloud.firestore {
       allow create: if request.auth != null && request.auth.uid == uid;
       allow read:   if request.auth != null && (request.auth.uid == uid || esAdmin());
       allow update, delete: if esAdmin();
+    }
+    // MARCADOR PUBLICO (track record): aciertos/fallos/empates ya resueltos por
+    // analista. Lectura publica (todos ven el historial real); escritura SOLO
+    // admin: lo escribe la resolucion de predicciones, nadie lo puede falsear.
+    match /marcador/{uid} {
+      allow read:  if true;
+      allow write: if esAdmin();
     }
   }
 }
