@@ -40,6 +40,7 @@ function construirModal() {
             </button>
           </div>
         </label>
+        <label class="auth-campo promo-campo"><span>${idiomaActual() === 'es' ? 'Código promocional (opcional)' : 'Promo code (optional)'}</span><input type="text" id="auth-promo" autocomplete="off" maxlength="24"></label>
         <div class="auth-error" id="auth-error"></div>
         <button type="submit" class="auth-enviar" id="auth-enviar">${t('auth.entrar')}</button>
       </form>
@@ -51,6 +52,7 @@ function construirModal() {
     modo = m;
     el.querySelectorAll('.auth-tab').forEach(b => b.classList.toggle('on', b.dataset.modo === m));
     el.querySelector('.nombre-campo').style.display = (m === 'registrar') ? 'block' : 'none';
+    { const pc = el.querySelector('.promo-campo'); if (pc) pc.style.display = (m === 'registrar') ? 'block' : 'none'; }
     el.querySelector('#auth-enviar').textContent = (m === 'registrar') ? t('auth.crear') : t('auth.entrar');
     error('');
   };
@@ -81,7 +83,11 @@ function construirModal() {
     const btn = el.querySelector('#auth-enviar');
     btn.disabled = true; btn.textContent = '…';
     try {
-      if (modo === 'registrar') await _acc.registrar(email, pass, nombre);
+      if (modo === 'registrar') {
+        await _acc.registrar(email, pass, nombre);
+        const code = (el.querySelector('#auth-promo')?.value || '').trim();
+        if (code) { try { sessionStorage.setItem('se-promo-pendiente', code); } catch (_) {} }
+      }
       else await _acc.entrar(email, pass);
       cerrarAuth();
     } catch (e) {
