@@ -853,10 +853,10 @@ function abrirModalInfoSenales() {
     <img class="disc-img" src="assets/imagenes/disclaimer-web.webp" alt="">
     <img class="disc-imgm" src="assets/imagenes/disclaimer-movil.webp" alt="">
     <div class="disc-body"><div class="disc-bg"></div><div class="disc-veil"></div><div class="disc-in">
-      <div class="disc-top"><span class="disc-badge">${L('Analyst signals', 'Se\u00f1ales del analista')}</span>
-      <h3>${L('Follow the pros', 'Sigue a los pros')}</h3></div>
-      <div class="disc-mid"><p>${L('Follow analysts, see who is hot, and get their published calls first. Signals are posted only when there is a real edge, not every day.', 'Sigue analistas, mira qui\u00e9n est\u00e1 en racha y recibe sus pron\u00f3sticos primero. Las se\u00f1ales se publican solo cuando hay una ventaja real, no todos los d\u00edas.')}</p>
-      <p class="disc-fine" style="text-align:left">${L('These are the analyst\u2019s opinions for informational purposes, not betting advice. A high probability is never a guarantee.', 'Son opiniones del analista con fines informativos, no asesor\u00eda de apuestas. Una probabilidad alta nunca es garant\u00eda.')}</p></div>
+      <div class="disc-top"><span class="disc-dtag">DISCLAIMER</span>
+      <h3>${L('Before you continue', 'Antes de continuar')}</h3></div>
+      <div class="disc-mid"><p>${L('Analyst signals are opinions and analytical estimates for information only. They are <b>not betting advice</b> and a high probability is <b>never a guarantee</b>. We <b>do not guarantee</b> any profit, return or accuracy, we <b>do not refund</b> payments, and we are <b>not liable</b> for any decision you take or for any use or misuse of these signals or data.', 'Las se\u00f1ales de analistas son opiniones y estimaciones anal\u00edticas solo con fines informativos. <b>No son asesor\u00eda de apuestas</b> y una probabilidad alta <b>nunca es garant\u00eda</b>. <b>No garantizamos</b> ninguna ganancia, rentabilidad ni acierto, <b>no reembolsamos</b> pagos y <b>no nos hacemos responsables</b> de ninguna decisi\u00f3n que tomes ni del uso o mal uso de estas se\u00f1ales o datos.')}</p>
+      <p class="disc-fine" style="text-align:left">${L("By tapping 'Got it' you confirm you are of legal age and that you fully accept all of our policies, using this section at your own risk.", "Al pulsar 'Entendido' confirmas que eres mayor de edad y que aceptas por completo todas nuestras pol\u00edticas, usando esta secci\u00f3n bajo tu responsabilidad.")}</p></div>
       <div class="disc-bot"><button class="disc-go" id="sni-ok">${L('Got it', 'Entendido')}</button></div>
     </div></div>
   </div>`;
